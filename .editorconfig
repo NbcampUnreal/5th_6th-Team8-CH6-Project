@@ -1,0 +1,13 @@
+# 이 파일이 프로젝트의 최상위 설정 파일임을 명시 (상위 폴더로 더 이상 찾지 않음)
+root = true
+
+# 모든 파일에 대한 기본 설정
+[*]
+end_of_line = CRLF
+insert_final_newline = true
+
+# C++ 소스(*.cpp), 헤더(*.h), C# 빌드 스크립트(*.cs)에만 적용
+[*.{cpp,h,cs}]
+charset = utf-8-bom
+indent_style = tab
+indent_size = 4

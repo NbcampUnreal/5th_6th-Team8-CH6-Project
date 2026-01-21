@@ -2,33 +2,35 @@
 
 
 #include "PTWBaseCharacter.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "AbilitySystemComponent.h"
 
-// Sets default values
 APTWBaseCharacter::APTWBaseCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
+	GetCharacterMovement()->JumpZVelocity = 700.f;
+	GetCharacterMovement()->AirControl = 0.35f;
+	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 }
 
-// Called when the game starts or when spawned
-void APTWBaseCharacter::BeginPlay()
+UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
 {
-	Super::BeginPlay();
-	
+	return AbilitySystemComponent;
 }
 
-// Called every frame
-void APTWBaseCharacter::Tick(float DeltaTime)
+void APTWBaseCharacter::InitAbilityActorInfo()
 {
-	Super::Tick(DeltaTime);
 
 }
-
-// Called to bind functionality to input
-void APTWBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
-

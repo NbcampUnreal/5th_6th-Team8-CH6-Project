@@ -3,30 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
-#include "GameplayTagContainer.h"
-#include "PTWBaseCharacter.generated.h"
+#include "GameFramework/PlayerState.h"
+#include "PTWPlayerState.generated.h"
 
 class UAbilitySystemComponent;
 class UAttributeSet;
 
 UCLASS()
-class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterface
+class PTW_API APTWPlayerState : public APlayerState, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
-
+	
 public:
-	APTWBaseCharacter();
+	APTWPlayerState();
 
-	// --- [IAbilitySystemInterface] ---
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
 protected:
-	virtual void InitAbilityActorInfo();
-
-protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
+	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 	UPROPERTY()

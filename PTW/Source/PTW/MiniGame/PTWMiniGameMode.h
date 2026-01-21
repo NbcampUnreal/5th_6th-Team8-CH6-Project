@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameMode.h"
+#include "PTW/CoreFramework/PTWGameMode.h"
 #include "PTWMiniGameMode.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PTW_API APTWMiniGameMode : public AGameMode
+class PTW_API APTWMiniGameMode : public APTWGameMode
 {
 	GENERATED_BODY()
 	

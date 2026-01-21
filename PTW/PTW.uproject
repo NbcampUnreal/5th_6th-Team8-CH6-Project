@@ -7,7 +7,10 @@
 		{
 			"Name": "PTW",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
 		}
 	],
 	"Plugins": [
@@ -24,7 +27,7 @@
 		},
 		{
 			"Name": "OnlineSubsystemSteam",
-        		"Enabled": true
+			"Enabled": true
 		},
 		{
 			"Name": "AdvancedSessions",

@@ -2,12 +2,12 @@
 
 
 #include "GAS/Abilities/PTWGA_Sprint.h"
-#include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "AbilitySystemComponent.h"
 
 UPTWGA_Sprint::UPTWGA_Sprint()
 {
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
 	AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(TEXT("State.Movement.Sprinting")));
 	CancelAbilitiesWithTag.AddTag(FGameplayTag::RequestGameplayTag(TEXT("State.Posture.Crouching")));
@@ -30,14 +30,11 @@ void UPTWGA_Sprint::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		}
 	}
 
-	UAbilityTask_WaitInputRelease* Task = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
-	Task->OnRelease.AddDynamic(this, &UPTWGA_Sprint::OnInputReleased);
-	Task->ReadyForActivation();
 }
 
-void UPTWGA_Sprint::OnInputReleased(float TimeHeld)
+void UPTWGA_Sprint::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
 void UPTWGA_Sprint::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)

@@ -19,12 +19,12 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<USceneComponent> MuzzleSocket;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UStaticMeshComponent> WeaponMesh;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Data")
 	TObjectPtr<UPTWWeaponData> WeaponData;	
 };

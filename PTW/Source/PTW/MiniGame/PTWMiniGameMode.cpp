@@ -3,3 +3,12 @@
 
 #include "PTWMiniGameMode.h"
 
+void APTWMiniGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	TravelLevelName = TEXT("/Game/Developers/wonjun/TestLobby");
+	
+	StartTimer(MiniGameTime);
+	
+}

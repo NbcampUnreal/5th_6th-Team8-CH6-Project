@@ -13,5 +13,13 @@ UCLASS()
 class PTW_API APTWMiniGameMode : public APTWGameMode
 {
 	GENERATED_BODY()
-	
+
+
+protected:
+	virtual void BeginPlay() override;
+
+
+	/** 미니게임 진행 시간 (초) */
+	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
+	float MiniGameTime = 90;
 };

@@ -5,6 +5,15 @@
 
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 
+void APTWLobbyGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	TravelLevelName = TEXT("/Game/Developers/wonjun/TestMini");
+	
+	StartTimer(LobbyWaitingTime);
+}
+
 // void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 // {
 // 	Super::PostLogin(NewPlayer);
@@ -20,9 +29,10 @@
 // 		FTimerHandle WaitingTimerHandle;
 // 		GetWorldTimerManager().SetTimer(WaitingTimerHandle, this, &APTWLobbyGameMode::StartMiniGame, WaitingTime, false);
 // 	}
+// 	
 // }
 
 void APTWLobbyGameMode::StartMiniGame()
 {
-	
+	//TravelLevel();
 }

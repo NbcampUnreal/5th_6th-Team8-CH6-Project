@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h" // ASC 
 
 #include "InGameUI/PTWHealthBar.h"
+#include "InGameUI/PTWKillLogUI.h"
 
 void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 {
@@ -17,6 +18,14 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 
 	/* HealthBar 초기화 */
 	if (HealthBar) HealthBar->InitWithASC(ASC);
+}
+
+void UPTWInGameHUD::AddKillLog(const FString& Killer, const FString& Victim)
+{
+	if (KillLogUI)
+	{
+		KillLogUI->AddKillLog(Killer, Victim);
+	}
 }
 
 bool UPTWInGameHUD::Initialize()

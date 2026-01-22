@@ -28,6 +28,23 @@ void APTWHUD::BeginPlay()
 			InGameHUDInstance->AddToViewport();
 		}
 	}
+
+	/* KillLog 델리게이트 바인드 */
+	if (APTWPlayerController* PC =
+		Cast<APTWPlayerController>(GetOwningPlayerController()))
+	{
+		//PC->OnKillLog.AddUObject(InGameHUDInstance, &UPTWInGameHUD::AddKillLog);
+	}
+	// <PlayerController>
+	// DECLARE_MULTICAST_DELEGATE_TwoParams(FOnKillLog, const FString&, const FString&);
+	// public:
+	// FOnKillLog OnKillLog;
+	// 
+	// <서버에서 킬판정 시>
+	// (각 컨트롤러에게 killer, victim 닉네임 전달해주어야 함)
+	// PC->OnKillLog.Broadcast(Killer, Victim);
+
+	// + 인자에 무기 종류 추가해야함
 }
 
 void APTWHUD::InitializeHUD(UAbilitySystemComponent* ASC)

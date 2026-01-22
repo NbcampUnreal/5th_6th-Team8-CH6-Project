@@ -21,13 +21,15 @@ class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterf
 public:
 	APTWBaseCharacter();
 
+	virtual void BeginPlay() override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
 	virtual void InitAbilityActorInfo();
-
 	void GiveDefaultAbilities();
 	void ApplyDefaultEffects();
+
+public:
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
@@ -39,4 +41,5 @@ protected:
 	TArray<TSubclassOf<UGameplayAbility>> DefaultAbilities;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS|Default")
 	TArray<TSubclassOf<UGameplayEffect>> DefaultEffects;
+
 };

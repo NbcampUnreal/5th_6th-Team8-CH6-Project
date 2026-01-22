@@ -17,13 +17,19 @@ APTWBaseCharacter::APTWBaseCharacter()
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
-	GetCharacterMovement()->JumpZVelocity = 700.f;
+	GetCharacterMovement()->JumpZVelocity = 300.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = 420.f;
 
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+}
+
+void APTWBaseCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
 }
 
 UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
@@ -78,3 +84,4 @@ void APTWBaseCharacter::ApplyDefaultEffects()
 		}
 	}
 }
+

@@ -3,3 +3,9 @@
 
 #include "System/PTWScoreSubsystem.h"
 
+#include "CoreFramework/PTWPlayerState.h"
+
+void UPTWScoreSubsystem::SavePlayersData(TArray<APlayerState> PlayerStates)
+{
+	
+}

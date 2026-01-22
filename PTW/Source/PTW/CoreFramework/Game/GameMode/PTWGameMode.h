@@ -36,9 +36,26 @@ protected:
 	 */
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	/** 플레이어가 서버에서 로그아웃할 때 호출
+	* - 플레이어 수 갱신 및 게임 진행 상태 체크
+	*/
 	virtual void Logout(AController* Exiting) override;
-
+	
+	/** 특정 시간 동안 타이머를 시작
+	 * @param TimeDuration 타이머 지속 시간(초)
+	 */
+	void StartTimer(float TimeDuration);
+	
+	/** 지정한 레벨로 이동 */
+	UFUNCTION()
 	void TravelLevel();
+
+	/** 
+	* 이동할 레벨 이름
+	* - TravelLevel() 호출 시 어떤 레벨로 이동할지 지정
+	* - 런타임에 다른 레벨로 전환할 때 사용
+	*/
+	FString TravelLevelName;
 	
 	/**
 	 * 현재 게임의 상태를 관리하는 GameState 참조
@@ -47,10 +64,11 @@ protected:
 	UPROPERTY()
 	TObjectPtr<APTWGameState> PTWGameState;
 private:
+	/** 타이머 갱신 처리
+	 * - 타이머 종료 시 이벤트 호출
+	 */
+	void UpdateTimer();
 	
-
-	
-
-
-	//FTimerHandle WaitingTimerHandle;
+	/** 내부 타이머 핸들 */
+	FTimerHandle TimerHandle;
 };

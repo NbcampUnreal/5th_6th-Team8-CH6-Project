@@ -15,7 +15,7 @@ class PTW_API UPTWWeaponData : public UDataAsset
 {
 	GENERATED_BODY()
 	
-protected:
+public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	float BaseDamage;

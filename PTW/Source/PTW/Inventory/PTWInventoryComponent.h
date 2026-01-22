@@ -7,6 +7,8 @@
 #include "PTWInventoryComponent.generated.h"
 
 
+class UPTWItemInstance;
+class APTWWeaponActor;
 class UPTWItemDefinition;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -18,14 +20,26 @@ public:
 	// Sets default values for this component's properties
 	UPTWInventoryComponent();
 	
-	void AddItem(const UPTWItemDefinition& AddItemDef);
+	void AddItem(TSubclassOf<UPTWItemDefinition> ItemClass);
 	void SwapWeapon(int32 SlotIndex);
+	void EqiupWeapon(int32 SlotIndex);
+	
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE UPTWItemInstance* GetCurrentWeaponActor() {return CurrentWeapon;}
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UPTWItemInstance> CurrentWeapon;
 	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TArray<UPTWItemInstance*> WeaponArr;
+	
+
+	
 private:
-	
-	
+	//FIXME : 일단 임시로 현재 무기 Actor로 저장
+	//TObjectPtr<UPTWItemInstance> CurrentWeapon;
 };

@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameplayCueNotify_Static.h"
-#include "UGCN_WeaponFire.generated.h"
+#include "GC_WeaponFire.generated.h"
 
 class UNiagaraSystem;
 /**
  * 
  */
 UCLASS()
-class PTW_API UUGCN_WeaponFire : public UGameplayCueNotify_Static
+class PTW_API UGC_WeaponFire : public UGameplayCueNotify_Static
 {
 	GENERATED_BODY()
 	

@@ -11,7 +11,7 @@ UPTWAttributeSet::UPTWAttributeSet()
 {
 	InitHealth(100.0f);
 	InitMaxHealth(100.0f);
-	InitMoveSpeed(600.0f);
+	InitMoveSpeed(500.0f);
 	InitJumpZVelocity(420.0f);
 }
 

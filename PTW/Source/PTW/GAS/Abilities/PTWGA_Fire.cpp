@@ -3,8 +3,19 @@
 
 #include "PTWGA_Fire.h"
 
+#include "AbilitySystemComponent.h"
+#include "CoreFramework/PTWBaseCharacter.h"
+#include "Inventory/PTWInventoryComponent.h"
+#include "Inventory/PTWItemInstance.h"
+#include "Inventory/PTWWeaponActor.h"
+
+UPTWGA_Fire::UPTWGA_Fire()
+{
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+}
+
 void UPTWGA_Fire::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo)
+                               const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
 	StartFire();
@@ -22,7 +33,9 @@ void UPTWGA_Fire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	
+	AutoFire();
+	//FIXME: 테스트 임시 코드
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
 void UPTWGA_Fire::StartFire()
@@ -40,6 +53,21 @@ void UPTWGA_Fire::StopFire()
 
 void UPTWGA_Fire::AutoFire()
 {
-	//TODO : GameplayCue 호출 해서 Muzzle 위치에 나이아가라 이펙트
-	
+	AActor* OwnerActor = GetAvatarActorFromActorInfo();
+	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(OwnerActor))
+	{
+		if (UPTWInventoryComponent* InvenComp = BaseCharacter->FindComponentByClass<UPTWInventoryComponent>())
+		{
+			if (APTWWeaponActor* Weapon = InvenComp->GetCurrentWeaponActor()->SpawnedWeapon)
+			{
+				FGameplayCueParameters CueParams;
+				CueParams.Instigator = Weapon;
+				
+				UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+				ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Fire")), CueParams);
+				InvenComp->GetCurrentWeaponActor()->CurrentAmmo--;
+				UE_LOG(LogTemp, Warning, TEXT("Fire Ability Activate Current Ammo : %d"), InvenComp->GetCurrentWeaponActor()->CurrentAmmo);
+			}
+		}
+	}
 }

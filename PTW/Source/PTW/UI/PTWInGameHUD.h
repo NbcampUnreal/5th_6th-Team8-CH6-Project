@@ -9,6 +9,7 @@
 class UAbilitySystemComponent;
 
 class UPTWHealthBar;
+class UPTWKillLogUI;
 
 /**
  * 
@@ -22,10 +23,17 @@ public:
 	/* 초기화 (HUD 에서 ASC 받고, 하위 위젯에 ASC 전달) */
 	void InitializeUI(UAbilitySystemComponent* ASC);
 
+	// 킬로그
+	UFUNCTION()
+	void AddKillLog(const FString& Killer, const FString& Victim); // 인자에 무기 종류 추가해야함
+
 	/* 위젯 바인딩 */
 	/* 체력바 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWHealthBar> HealthBar;
+	/* 킬로그 */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWKillLogUI> KillLogUI;
 
 protected:
 	virtual bool Initialize() override;

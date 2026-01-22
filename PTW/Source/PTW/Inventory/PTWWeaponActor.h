@@ -6,20 +6,25 @@
 #include "GameFramework/Actor.h"
 #include "PTWWeaponActor.generated.h"
 
+class UPTWWeaponData;
+
 UCLASS()
 class PTW_API APTWWeaponActor : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	APTWWeaponActor();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<USceneComponent> MuzzleSocket;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TObjectPtr<UStaticMeshComponent> WeaponMesh;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Data")
+	TObjectPtr<UPTWWeaponData> WeaponData;	
 };

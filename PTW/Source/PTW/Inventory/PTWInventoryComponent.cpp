@@ -1,17 +1,23 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "PTWInventoryComponent.h"
 
 
-// Sets default values for this component's properties
 UPTWInventoryComponent::UPTWInventoryComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
+	
+	SetIsReplicated(true);
+}
 
-	// ...
+void UPTWInventoryComponent::AddItem(const UPTWItemDefinition& AddItemDef)
+{
+	
+}
+
+void UPTWInventoryComponent::SwapWeapon(int32 SlotIndex)
+{
+	
 }
 
 
@@ -19,18 +25,6 @@ UPTWInventoryComponent::UPTWInventoryComponent()
 void UPTWInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-	
 }
 
-
-// Called every frame
-void UPTWInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                           FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-}
 

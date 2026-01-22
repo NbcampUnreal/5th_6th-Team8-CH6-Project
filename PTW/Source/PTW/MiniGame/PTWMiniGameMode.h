@@ -17,7 +17,7 @@ class PTW_API APTWMiniGameMode : public APTWGameMode
 
 protected:
 	virtual void BeginPlay() override;
-
+	virtual void EndTimer() override;
 
 	/** 미니게임 진행 시간 (초) */
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")

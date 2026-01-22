@@ -20,7 +20,8 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void APTWGameState::DecreaseTimer()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Timer: %d"), RemainTime);
+	if (!HasAuthority()) return;
+	
 	if (RemainTime <= 0)
 	{
 		OnTimerFinished.Broadcast();
@@ -29,9 +30,36 @@ void APTWGameState::DecreaseTimer()
 	{
 		RemainTime--;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Timer: %d"), RemainTime);
+}
+
+void APTWGameState::AdvanceRound()
+{
+	CurrentRound++;	
+}
+
+void APTWGameState::SetRemainTime(int32 NewTime)
+{
+	if (!HasAuthority()) return;
+
+	RemainTime = NewTime;
+}
+
+void APTWGameState::SetCurrentRound(int32 NewRound)
+{
+	if (!HasAuthority()) return;
+	
+	CurrentRound = NewRound;
+
+	UE_LOG(LogTemp, Warning, TEXT("Current Round: %d"), CurrentRound);
 }
 
 void APTWGameState::OnRep_RemainTime()
 {
 	OnRemainTimeChanged.Broadcast(RemainTime);
+}
+
+void APTWGameState::OnRep_CurrentRound()
+{
+	
 }

@@ -41,6 +41,11 @@ public class PTW : ModuleRules
             "OnlineSubsystem",
             "OnlineSubsystemUtils"
         });
+        
+        // 5. Niagara 이펙트 모듈
+        PublicDependencyModuleNames.AddRange(new string[] {
+	       "Niagara"
+        });
 
         // Private Dependencies (내부적으로만 사용하는 모듈)
         PrivateDependencyModuleNames.AddRange(new string[] {

@@ -2,6 +2,8 @@
 
 
 #include "UGCN_WeaponFire.h"
+#include "NiagaraFunctionLibrary.h"
+
 
 
 bool UUGCN_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
@@ -13,6 +15,9 @@ bool UUGCN_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGamepla
 	
 	if (FireVFX)
 	{
-		//UNiagaraFunctionLibaray
+		
 	}
+	
+	
+	return true;
 }

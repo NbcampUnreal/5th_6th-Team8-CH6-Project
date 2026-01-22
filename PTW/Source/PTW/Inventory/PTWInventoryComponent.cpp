@@ -3,16 +3,16 @@
 #include "PTWInventoryComponent.h"
 
 
+
 UPTWInventoryComponent::UPTWInventoryComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-	
-	//SetIsReplicated(true);
+	SetIsReplicatedByDefault(true);
 }
 
 void UPTWInventoryComponent::AddItem(const UPTWItemDefinition& AddItemDef)
 {
-	
+	//WeaponArr.AddUnique(AddItemDef)
 }
 
 void UPTWInventoryComponent::SwapWeapon(int32 SlotIndex)

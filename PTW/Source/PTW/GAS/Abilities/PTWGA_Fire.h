@@ -15,6 +15,8 @@ class PTW_API UPTWGA_Fire : public UPTWGameplayAbility
 	GENERATED_BODY()
 	
 public:
+	UPTWGA_Fire();
+	
 	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, 
 		const FGameplayAbilityActorInfo* ActorInfo, 
 		const FGameplayAbilityActivationInfo ActivationInfo) override;

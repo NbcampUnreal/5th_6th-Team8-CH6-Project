@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "PTWBaseCharacter.h"
 #include "InputActionValue.h"
+#include "PTWInputConfig.h"
 #include "PTWPlayerCharacter.generated.h"
 
 class UCameraComponent;
@@ -29,11 +30,14 @@ protected:
 protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
-
+	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
+	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<UCameraComponent> PlayerCamera;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UPTWInputConfig> InputConfig;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")

@@ -10,6 +10,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "PTWInputComponent.h"
+#include "GAS/PTWGameplayAbility.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -21,6 +23,7 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("PlayerCamera"));
 	PlayerCamera->SetupAttachment(RootComponent);
 	PlayerCamera->bUsePawnControlRotation = true;
+
 }
 
 void APTWPlayerCharacter::BeginPlay()
@@ -44,6 +47,9 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	InitAbilityActorInfo();
+
+	GiveDefaultAbilities();
+	ApplyDefaultEffects();
 }
 
 void APTWPlayerCharacter::OnRep_PlayerState()
@@ -81,6 +87,17 @@ void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		{
 			EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APTWPlayerCharacter::Look);
 		}
+		
+		UPTWInputComponent* PTWInputComp = CastChecked<UPTWInputComponent>(PlayerInputComponent);
+
+		TArray<uint32> BindHandles;
+		PTWInputComp->BindAbilityActions(
+			InputConfig,
+			this,
+			&ThisClass::Input_AbilityInputTagPressed,
+			&ThisClass::Input_AbilityInputTagReleased,
+			BindHandles
+		);
 	}
 }
 
@@ -110,5 +127,21 @@ void APTWPlayerCharacter::Look(const FInputActionValue& Value)
 	{
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void APTWPlayerCharacter::Input_AbilityInputTagPressed(FGameplayTag InputTag)
+{
+	if (UPTWAbilitySystemComponent* PTWASC = Cast<UPTWAbilitySystemComponent>(GetAbilitySystemComponent()))
+	{
+		PTWASC->AbilityInputTagPressed(InputTag);
+	}
+}
+
+void APTWPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
+{
+	if (UPTWAbilitySystemComponent* PTWASC = Cast<UPTWAbilitySystemComponent>(GetAbilitySystemComponent()))
+	{
+		PTWASC->AbilityInputTagReleased(InputTag);
 	}
 }

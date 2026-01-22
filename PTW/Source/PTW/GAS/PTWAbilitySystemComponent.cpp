@@ -4,13 +4,14 @@
 #include "PTWAbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
 
-void UPTWAbilitySystemComponent::Input_Pressed(const FGameplayTag& InputTag)
+void UPTWAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid()) return;
 
+	ABILITYLIST_SCOPE_LOCK();
+
 	for (FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
 	{
-
 		if (Spec.Ability && Spec.DynamicAbilityTags.HasTagExact(InputTag))
 		{
 			AbilitySpecInputPressed(Spec);
@@ -23,9 +24,11 @@ void UPTWAbilitySystemComponent::Input_Pressed(const FGameplayTag& InputTag)
 	}
 }
 
-void UPTWAbilitySystemComponent::Input_Released(const FGameplayTag& InputTag)
+void UPTWAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid()) return;
+
+	ABILITYLIST_SCOPE_LOCK();
 
 	for (FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
 	{

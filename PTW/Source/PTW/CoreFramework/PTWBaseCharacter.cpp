@@ -5,6 +5,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemComponent.h"
+#include "GAS/PTWGameplayAbility.h"
 
 APTWBaseCharacter::APTWBaseCharacter()
 {
@@ -33,4 +34,47 @@ UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
 void APTWBaseCharacter::InitAbilityActorInfo()
 {
 
+}
+
+void APTWBaseCharacter::GiveDefaultAbilities()
+{
+	if (!HasAuthority() || !AbilitySystemComponent) return;
+
+	for (TSubclassOf<UGameplayAbility> AbilityClass : DefaultAbilities)
+	{
+		if (AbilityClass)
+		{
+			FGameplayAbilitySpec Spec(AbilityClass, 1, INDEX_NONE, this);
+
+			if (const UPTWGameplayAbility* PTWAbility = Cast<UPTWGameplayAbility>(AbilityClass->GetDefaultObject()))
+			{
+				if (PTWAbility->StartupInputTag.IsValid())
+				{
+					Spec.DynamicAbilityTags.AddTag(PTWAbility->StartupInputTag);
+				}
+			}
+
+			AbilitySystemComponent->GiveAbility(Spec);
+		}
+	}
+}
+
+void APTWBaseCharacter::ApplyDefaultEffects()
+{
+	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent) return;
+
+	FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
+	ContextHandle.AddSourceObject(this);
+
+	for (TSubclassOf<UGameplayEffect> EffectClass : DefaultEffects)
+	{
+		if (!EffectClass) continue;
+
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, 1.0f, ContextHandle);
+
+		if (SpecHandle.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
 }

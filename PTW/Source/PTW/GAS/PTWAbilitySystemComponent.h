@@ -13,8 +13,8 @@ class PTW_API UPTWAbilitySystemComponent : public UAbilitySystemComponent
 	GENERATED_BODY()
 	
 public:
-	void Input_Pressed(const FGameplayTag& InputTag);
-	void Input_Released(const FGameplayTag& InputTag);
+	void AbilityInputTagPressed(const FGameplayTag& InputTag);
+	void AbilityInputTagReleased(const FGameplayTag& InputTag);
 
 protected:
 

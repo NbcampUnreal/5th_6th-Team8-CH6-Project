@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemComponent.h"
 #include "GAS/PTWGameplayAbility.h"
+#include "Inventory/PTWWeaponActor.h"
 
 APTWBaseCharacter::APTWBaseCharacter()
 {
@@ -24,6 +25,38 @@ APTWBaseCharacter::APTWBaseCharacter()
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+}
+
+void APTWBaseCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (GetWorld())
+	{
+		for (const auto& Pair : WeaponClasses)
+		{
+			FGameplayTag Tag = Pair.Key;
+			TSubclassOf<APTWWeaponActor> ClassToSpawn = Pair.Value;
+
+			if (ClassToSpawn)
+			{
+				FActorSpawnParameters Params;
+				Params.Owner = this;
+
+				APTWWeaponActor* NewWeapon = GetWorld()->SpawnActor<APTWWeaponActor>(ClassToSpawn, Params);
+
+				if (NewWeapon)
+				{
+					NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponSocket"));
+
+					NewWeapon->SetActorHiddenInGame(true);
+					NewWeapon->SetActorEnableCollision(false);
+
+					SpawnedWeapons.Add(Tag, NewWeapon);
+				}
+			}
+		}
+	}
 }
 
 UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
@@ -76,5 +109,49 @@ void APTWBaseCharacter::ApplyDefaultEffects()
 		{
 			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
+	}
+}
+
+void APTWBaseCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
+{
+	if (CurrentWeaponTag == NewWeaponTag)
+	{
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->SetActorHiddenInGame(true);
+			CurrentWeapon->SetActorEnableCollision(false);
+		}
+
+		CurrentWeapon = nullptr;
+		CurrentWeaponTag = FGameplayTag::EmptyTag;
+
+		UE_LOG(LogTemp, Log, TEXT("Weapon Unequipped (Toggle Off)"));
+		return;
+	}
+
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SetActorHiddenInGame(true);
+		CurrentWeapon->SetActorEnableCollision(false);
+	}
+
+	if (APTWWeaponActor** FoundWeaponPtr = SpawnedWeapons.Find(NewWeaponTag))
+	{
+		APTWWeaponActor* NewWeaponActor = *FoundWeaponPtr;
+
+		if (NewWeaponActor)
+		{
+			NewWeaponActor->SetActorHiddenInGame(false);
+
+			CurrentWeapon = NewWeaponActor;
+			CurrentWeaponTag = NewWeaponTag;
+
+
+			UE_LOG(LogTemp, Log, TEXT("Weapon Equipped: %s"), *NewWeaponTag.ToString());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot find weapon with tag: %s"), *NewWeaponTag.ToString());
 	}
 }

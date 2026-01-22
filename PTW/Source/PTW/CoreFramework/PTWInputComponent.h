@@ -34,7 +34,9 @@ void UPTWInputComponent::BindAbilityActions(const UPTWInputConfig* InputConfig, 
 			if (ReleasedFunc)
 			{
 				BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Completed, Object, ReleasedFunc, Action.InputTag).GetHandle());
+				BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Canceled, Object, ReleasedFunc, Action.InputTag).GetHandle());
 			}
+
 		}
 	}
 }

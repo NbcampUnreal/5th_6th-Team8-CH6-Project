@@ -1,6 +1,7 @@
 ﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class PTW : ModuleRules
 {
@@ -8,8 +9,14 @@ public class PTW : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        // 1. Core & Basic Modules (기본 엔진 모듈)
-        PublicDependencyModuleNames.AddRange(new string[] {
+		PrivateIncludePaths.AddRange(
+			new string[] {
+				ModuleDirectory
+			}
+		);
+
+		// 1. Core & Basic Modules (기본 엔진 모듈)
+		PublicDependencyModuleNames.AddRange(new string[] {
             "Core",
             "CoreUObject",
             "Engine",

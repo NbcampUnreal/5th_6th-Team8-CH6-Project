@@ -3,7 +3,6 @@
 
 #include "GAS/Abilities/PTWGA_Crouch.h"
 #include "CoreFramework/PTWBaseCharacter.h"
-#include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "AbilitySystemComponent.h"
 
 UPTWGA_Crouch::UPTWGA_Crouch()
@@ -32,15 +31,11 @@ void UPTWGA_Crouch::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 			ActiveEffectHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
 	}
-
-	UAbilityTask_WaitInputRelease* Task = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
-	Task->OnRelease.AddDynamic(this, &UPTWGA_Crouch::OnInputReleased);
-	Task->ReadyForActivation();
 }
 
-void UPTWGA_Crouch::OnInputReleased(float TimeHeld)
+void UPTWGA_Crouch::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
 void UPTWGA_Crouch::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)

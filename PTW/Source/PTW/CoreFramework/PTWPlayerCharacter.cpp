@@ -17,13 +17,14 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	bUseControllerRotationPitch = true;
 	bUseControllerRotationYaw = true;
 
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("PlayerCamera"));
 	PlayerCamera->SetupAttachment(RootComponent);
 	PlayerCamera->bUsePawnControlRotation = true;
 
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	CrouchedEyeHeight = 40.0f;
 }
 
 void APTWPlayerCharacter::BeginPlay()

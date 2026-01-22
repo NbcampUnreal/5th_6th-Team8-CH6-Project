@@ -15,17 +15,18 @@ void APTWGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//PTWGameState = GetGameState<APTWGameState>();
+	PTWGameState = GetGameState<APTWGameState>();
+
+	if (PTWGameState)
+	{
+		PTWGameState->OnTimerFinished.AddDynamic(this, &APTWGameMode::TravelLevel);
+	}
 }
 
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
-
-	// 플레이어 접속 시 게임 참여 인원 증가
-
-	//FTimerHandle TestHandle;
-	//GetWorldTimerManager().SetTimer(TestHandle, this, &APTWGameMode::TravelLevel, 10.f, false);
+	
 }
 
 void APTWGameMode::Logout(AController* Exiting)
@@ -35,9 +36,27 @@ void APTWGameMode::Logout(AController* Exiting)
 	// 접속 해제 시 게임 참여 인원 감소
 }
 
+void APTWGameMode::StartTimer(float TimeDuration)
+{
+	if (PTWGameState)
+	{
+		PTWGameState->RemainTime = TimeDuration;
+	}
+	
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &APTWGameMode::UpdateTimer, 1.f, true);
+}
+
 void APTWGameMode::TravelLevel()
 {
-	//GetWorld()->ServerTravel("/Game/Developers/wonjun/TestMini");
+	GetWorld()->ServerTravel(TravelLevelName);
+}
+
+void APTWGameMode::UpdateTimer()
+{
+	if (PTWGameState)
+	{
+		PTWGameState->DecreaseTimer();
+	}
 }
 
 

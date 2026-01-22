@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
+#include "Kismet/KismetMathLibrary.h"
 
 void UPTWAnimInstance::NativeInitializeAnimation()
 {
@@ -43,6 +44,20 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsFalling = CharacterMovement->IsFalling();
 
 	bIsCrouching = Character->bIsCrouched;
+
+	if (GroundSpeed > 3.0f)
+	{
+		LocomotionDirection = CalculateDirection(Velocity, Character->GetActorRotation());
+	}
+	else
+	{
+		LocomotionDirection = 0.0f;
+	}
+
+	FRotator AimRotation = Character->GetBaseAimRotation();
+
+	FRotator DeltaRot = AimRotation - Character->GetActorRotation();
+	AimPitch = UKismetMathLibrary::NormalizeAxis(DeltaRot.Pitch);
 
 	if (ASC)
 	{

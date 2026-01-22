@@ -41,4 +41,8 @@ protected:
 	bool bIsCrouching;
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsSprinting;
+	UPROPERTY(BlueprintReadOnly, Category = "AimOffset")
+	float AimPitch;
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float LocomotionDirection;
 };

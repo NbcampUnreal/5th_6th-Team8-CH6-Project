@@ -6,6 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
+#include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 
 UPTWGA_Fire::UPTWGA_Fire()
@@ -57,14 +58,15 @@ void UPTWGA_Fire::AutoFire()
 	{
 		if (UPTWInventoryComponent* InvenComp = BaseCharacter->FindComponentByClass<UPTWInventoryComponent>())
 		{
-			if (APTWWeaponActor* Weapon = InvenComp->GetCurrentWeaponActor())
+			if (APTWWeaponActor* Weapon = InvenComp->GetCurrentWeaponActor()->SpawnedWeapon)
 			{
 				FGameplayCueParameters CueParams;
 				CueParams.Instigator = Weapon;
 				
 				UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 				ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Fire")), CueParams);
-				UE_LOG(LogTemp, Warning, TEXT("TEST WEAPON"));
+				InvenComp->GetCurrentWeaponActor()->CurrentAmmo--;
+				UE_LOG(LogTemp, Warning, TEXT("Fire Ability Activate Current Ammo : %d"), InvenComp->GetCurrentWeaponActor()->CurrentAmmo);
 			}
 		}
 	}

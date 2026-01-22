@@ -6,6 +6,7 @@
 #include "UObject/Object.h"
 #include "PTWItemInstance.generated.h"
 
+class APTWWeaponActor;
 class UPTWItemDefinition;
 /**
  * 
@@ -21,4 +22,7 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	int32 CurrentAmmo;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<APTWWeaponActor> SpawnedWeapon;
 };

@@ -7,7 +7,7 @@ UPTWInventoryComponent::UPTWInventoryComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	
-	SetIsReplicated(true);
+	//SetIsReplicated(true);
 }
 
 void UPTWInventoryComponent::AddItem(const UPTWItemDefinition& AddItemDef)

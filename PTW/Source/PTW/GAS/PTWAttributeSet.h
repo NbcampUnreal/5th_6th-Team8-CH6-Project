@@ -24,6 +24,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Attributes")
 	FGameplayAttributeData Health;
@@ -31,10 +32,20 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHealth, Category = "Attributes")
 	FGameplayAttributeData MaxHealth;
 	ATTRIBUTE_ACCESSORS(UPTWAttributeSet, MaxHealth);
+	UPROPERTY(BlueprintReadOnly, Category = "Movement", ReplicatedUsing = OnRep_MoveSpeed)
+	FGameplayAttributeData MoveSpeed;
+	ATTRIBUTE_ACCESSORS(UPTWAttributeSet, MoveSpeed);
+	UPROPERTY(BlueprintReadOnly, Category = "Movement", ReplicatedUsing = OnRep_JumpZVelocity)
+	FGameplayAttributeData JumpZVelocity;
+	ATTRIBUTE_ACCESSORS(UPTWAttributeSet, JumpZVelocity);
 
 protected:
 	UFUNCTION()
 	void OnRep_Health(const FGameplayAttributeData& OldHealth);
 	UFUNCTION()
 	void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth);
+	UFUNCTION()
+	virtual void OnRep_MoveSpeed(const FGameplayAttributeData& OldMoveSpeed);
+	UFUNCTION()
+	virtual void OnRep_JumpZVelocity(const FGameplayAttributeData& OldJumpZVelocity);
 };

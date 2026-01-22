@@ -10,6 +10,8 @@
 
 class UAbilitySystemComponent;
 class UAttributeSet;
+class UGameplayAbility;
+class UGameplayEffect;
 
 UCLASS()
 class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterface
@@ -19,16 +21,22 @@ class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterf
 public:
 	APTWBaseCharacter();
 
-	// --- [IAbilitySystemInterface] ---
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
 	virtual void InitAbilityActorInfo();
 
+	void GiveDefaultAbilities();
+	void ApplyDefaultEffects();
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
-
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
+
+	UPROPERTY(EditAnywhere, Category = "GAS|Default")
+	TArray<TSubclassOf<UGameplayAbility>> DefaultAbilities;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS|Default")
+	TArray<TSubclassOf<UGameplayEffect>> DefaultEffects;
 };

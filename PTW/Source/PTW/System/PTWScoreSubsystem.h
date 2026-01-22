@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameMode.h"
-#include "PTWGameMode.generated.h"
+#include "Subsystems/GameInstanceSubsystem.h"
+#include "PTWScoreSubsystem.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PTW_API APTWGameMode : public AGameMode
+class PTW_API UPTWScoreSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 	

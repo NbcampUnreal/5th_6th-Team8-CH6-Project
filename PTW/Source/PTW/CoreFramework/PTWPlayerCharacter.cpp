@@ -12,6 +12,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "PTWInputComponent.h"
 #include "GAS/PTWGameplayAbility.h"
+#include "Inventory/PTWInventoryComponent.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -28,6 +29,9 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	CrouchedEyeHeight = 40.0f;
+
+	InventoryComponent = CreateDefaultSubobject<UPTWInventoryComponent>(TEXT("InventoryComponent"));
+	InventoryComponent->SetIsReplicated(true);
 }
 
 void APTWPlayerCharacter::BeginPlay()

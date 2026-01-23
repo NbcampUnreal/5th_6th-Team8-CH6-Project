@@ -27,9 +27,6 @@ void APTWGameMode::BeginPlay()
 			PTWGameState->SetCurrentRound(PTWScoreSubsystem->GetCurrentGameRound()); // 현재 라운드 값 받아서 GameState에 전달
 		}
 	}
-	
-	StartTimer(60);
-
 }
 
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)

@@ -4,23 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "GAS/PTWGameplayAbility.h"
-#include "PTWGA_Reload.generated.h"
+#include "PTWGA_Equip.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PTW_API UPTWGA_Reload : public UPTWGameplayAbility
+class PTW_API UPTWGA_Equip : public UPTWGameplayAbility
 {
 	GENERATED_BODY()
 	
 public:
-	UPTWGA_Reload();
+	UPTWGA_Equip();
 	
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
+	virtual void ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle, 
 		const FGameplayAbilityActorInfo* ActorInfo, 
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
-	
-	
 };

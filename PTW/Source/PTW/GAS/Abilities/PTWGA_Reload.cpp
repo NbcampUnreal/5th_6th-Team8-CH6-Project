@@ -9,10 +9,18 @@
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWWeaponData.h"
 
+UPTWGA_Reload::UPTWGA_Reload()
+{
+	//AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Reload")));
+	ActivationOwnedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Reload")));
+}
+
 void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
                                     const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	
+	//FIXME : 해당 코드 전부 수정 필요 (임시 테스트 코드)
 	
 	APTWBaseCharacter* AvatarActor = Cast<APTWBaseCharacter>(ActorInfo->AvatarActor.Get());
 	if (!AvatarActor) return;
@@ -27,5 +35,10 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	
 	InvenComp->GetCurrentWeaponActor()->CurrentAmmo = MaxAmmo;
 	
+	
+	//TODO: UAbilityTask_PlayMontageAndWait 실행
+	
 	UE_LOG(LogTemp, Warning, TEXT("Reload Ability Activate CurrentWeapon Ammo : %d"), MaxAmmo);
+	
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

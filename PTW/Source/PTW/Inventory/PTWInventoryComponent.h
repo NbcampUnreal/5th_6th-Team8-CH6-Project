@@ -20,8 +20,10 @@ public:
 	// Sets default values for this component's properties
 	UPTWInventoryComponent();
 	
-	void AddItem(TSubclassOf<UPTWItemDefinition> ItemClass);
+	void AddItem(TObjectPtr<UPTWItemDefinition> ItemClass, APTWWeaponActor* WeaponActor);
 	void SwapWeapon(int32 SlotIndex);
+	
+	UFUNCTION(BlueprintCallable)
 	void EqiupWeapon(int32 SlotIndex);
 	
 	UFUNCTION(BlueprintPure)

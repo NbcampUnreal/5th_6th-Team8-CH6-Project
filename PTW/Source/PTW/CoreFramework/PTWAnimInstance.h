@@ -19,6 +19,7 @@ class PTW_API UPTWAnimInstance : public UAnimInstance
 public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Character")
@@ -27,7 +28,13 @@ protected:
 	TObjectPtr<UCharacterMovementComponent> CharacterMovement;
 	UPROPERTY(BlueprintReadOnly, Category = "Character")
 	TObjectPtr<UAbilitySystemComponent> ASC;
+	UPROPERTY(BlueprintReadOnly, Category = "Character")
+	FGameplayTag WeaponStateTag;
+	UPROPERTY(BlueprintReadOnly, Category = "Character")
+	int32 WeaponPoseIndex = 0;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config")
+	TMap<FGameplayTag, int32> WeaponTagToPoseIndex;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	FVector Velocity;

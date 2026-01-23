@@ -25,14 +25,14 @@ class PTW_API UPTWScoreSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
-	
-	int32 CurrentGameRoundNumber = 0;
 	TMap<int32, FPTWPlayerData> SavedPlayersData;
 	
-	void SavePlayersData(TArray<APlayerState> PlayerStates);
-
-private:
+	void SavePlayersData();
+	void SaveCurrentGameRound(int32 NewGameRound);
 	
+	FORCEINLINE int32 GetCurrentGameRound() const {return CurrentGameRound;}
+private:
+	int32 CurrentGameRound = 1;
 
 	
 };

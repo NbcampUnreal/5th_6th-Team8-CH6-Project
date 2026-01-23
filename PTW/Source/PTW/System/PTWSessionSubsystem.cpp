@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PTWSessionSubsystem.h"
+#include "Kismet/GameplayStatics.h"
 
 void UPTWSessionSubsystem::CreateLobbySession_Implementation(const FLobbySettings LobbySettings)
 {
@@ -20,4 +21,9 @@ void UPTWSessionSubsystem::OnFindLobbiesComplete(const TArray<FBlueprintSessionR
 	{
 		OnFindLobbiesCompleteDelegate.Broadcast(SessionResults);
 	}
+}
+
+void UPTWSessionSubsystem::CreateListenServer(FName MapName)
+{
+	UGameplayStatics::OpenLevel(this, MapName, true, TEXT("listen"));
 }

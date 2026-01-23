@@ -12,6 +12,7 @@ class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayAbility;
 class UGameplayEffect;
+class APTWWeaponActor;
 
 UCLASS()
 class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterface
@@ -19,16 +20,31 @@ class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterf
 	GENERATED_BODY()
 
 public:
+	//생성자
 	APTWBaseCharacter();
-
+	
+	virtual void BeginPlay() override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
+
 	virtual void InitAbilityActorInfo();
 
 	void GiveDefaultAbilities();
 	void ApplyDefaultEffects();
 
+public:
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TMap<FGameplayTag, TSubclassOf<APTWWeaponActor>> WeaponClasses;
+	UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
+	FGameplayTag CurrentWeaponTag;
+	UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
+	TMap<FGameplayTag, APTWWeaponActor*> SpawnedWeapons;
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	APTWWeaponActor* CurrentWeapon;
+
+	UFUNCTION(BlueprintCallable)
+	void EquipWeaponByTag(FGameplayTag NewWeaponTag);
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;

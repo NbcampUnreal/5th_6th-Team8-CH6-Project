@@ -95,10 +95,17 @@ void UPTWLobbyBrowser::OnClickedCreateLobbyButton()
 	}
 	
 	UGameInstance* GameInstance = GetGameInstance();
-	if (IsValid(GameInstance))
+	if (!IsValid(GameInstance))
 	{
-		GameInstance->GetSubsystem<UPTWSessionSubsystem>()->CreateLobbySession(SessionData);
+		return;
 	}
+	
+	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
+	if (!IsValid(SessionSubsystem))
+	{
+		return;
+	}
+	SessionSubsystem->CreateLobbySession(SessionData);
 }
 
 void UPTWLobbyBrowser::OnClickedFindLobbyButton()

@@ -16,7 +16,13 @@ class PTW_API APTWWeaponActor : public AActor
 public:
 	APTWWeaponActor();
 	
+	UFUNCTION(BlueprintPure)
 	FORCEINLINE USceneComponent* GetMuzzleComponent() const { return MuzzleSocket; }
+	
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE UPTWWeaponData* GetWeaponData() const {return WeaponData;}
+	
+	
 protected:
 	virtual void BeginPlay() override;
 	
@@ -29,6 +35,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UStaticMeshComponent> WeaponMesh;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Data")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon|Data")
 	TObjectPtr<UPTWWeaponData> WeaponData;	
 };

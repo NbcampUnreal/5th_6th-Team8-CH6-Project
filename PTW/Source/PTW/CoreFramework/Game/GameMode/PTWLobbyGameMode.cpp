@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "PTWLobbyGameMode.h"
@@ -9,7 +9,7 @@ void APTWLobbyGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TravelLevelName = TEXT("/Game/Developers/wonjun/TestMini");
+	TravelLevelName = TEXT("/Game/_PTW/Maps/MiniGame_Bomb");
 	
 	StartTimer(LobbyWaitingTime);
 }

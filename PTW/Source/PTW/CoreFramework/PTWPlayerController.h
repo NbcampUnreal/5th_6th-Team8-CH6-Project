@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -6,6 +6,11 @@
 #include "GameFramework/PlayerController.h"
 #include "PTWPlayerController.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnKillLog, const FString&, const FString&);
+
+class APTWHUD;
+class APTWPlayerState;
+class UAbilitySystemComponent;
 /**
  * 
  */
@@ -14,4 +19,13 @@ class PTW_API APTWPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
+public:
+	virtual void BeginPlay() override;
+
+	virtual void OnRep_PlayerState() override;
+
+	void TryInitializeHUD();
+
+	// KillLog 델리게이트
+	FOnKillLog OnKillLog;
 };

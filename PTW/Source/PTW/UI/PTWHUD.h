@@ -33,4 +33,7 @@ private:
 	/* 실제 뷰포트에 표시될 위젯 인스턴스*/
 	UPROPERTY()
 	TObjectPtr<UPTWInGameHUD> InGameHUDInstance;
+
+	/* 중복초기화 방지 */
+	bool bASCInitialized = false;
 };

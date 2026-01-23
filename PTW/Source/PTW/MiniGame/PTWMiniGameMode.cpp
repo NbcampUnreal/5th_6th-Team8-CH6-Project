@@ -3,10 +3,17 @@
 
 #include "PTWMiniGameMode.h"
 
+#include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
 
 class UPTWScoreSubsystem;
+
+APTWMiniGameMode::APTWMiniGameMode()
+{
+	
+}
+
 
 void APTWMiniGameMode::BeginPlay()
 {
@@ -32,4 +39,12 @@ void APTWMiniGameMode::EndTimer()
 	UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
 
 	Super::EndTimer();
+}
+
+void APTWMiniGameMode::AddWinPoint(APawn* PointPawn, int32 AddPoint)
+{
+	if (APTWPlayerState* PTWPlayerState = PointPawn->GetPlayerState<APTWPlayerState>())
+	{
+		//PTWPlayerState->AddWinPoint(AddPoint);
+	}
 }

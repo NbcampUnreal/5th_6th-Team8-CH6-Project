@@ -17,17 +17,17 @@ void APTWPlayerController::BeginPlay()
 	TryInitializeHUD();
 
 	/* Input Mapping Context 추가 */
-	/*if (ULocalPlayer* LP = GetLocalPlayer())
+	if (ULocalPlayer* LP = GetLocalPlayer())
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 			LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
-	}*/
+	}
 
 	/* 랭킹보드 위젯 생성 */
-	/*if (RankingBoardClass)
+	if (RankingBoardClass)
 	{
 		RankingBoard = CreateWidget<UPTWRankingBoard>(this, RankingBoardClass);
 
@@ -36,7 +36,7 @@ void APTWPlayerController::BeginPlay()
 			RankingBoard->AddToViewport();
 			RankingBoard->SetVisibility(ESlateVisibility::Hidden);
 		}
-	}*/
+	}
 }
 
 void APTWPlayerController::OnRep_PlayerState()

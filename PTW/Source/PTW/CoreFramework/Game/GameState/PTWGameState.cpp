@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "PTWGameState.h"
@@ -29,6 +29,10 @@ void APTWGameState::DecreaseTimer()
 	else
 	{
 		RemainTime--;
+		if (GetNetMode() != NM_DedicatedServer)
+		{
+			OnRemainTimeChanged.Broadcast(RemainTime);
+		}
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Timer: %d"), RemainTime);
 }

@@ -20,6 +20,7 @@ public:
 	// Sets default values for this component's properties
 	UPTWInventoryComponent();
 	
+	//FIXME : 파리미터 임시 추가(WeaponActor)
 	void AddItem(TObjectPtr<UPTWItemDefinition> ItemClass, APTWWeaponActor* WeaponActor);
 	void SwapWeapon(int32 SlotIndex);
 	

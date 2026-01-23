@@ -13,4 +13,12 @@ UCLASS()
 class PTW_API UPTWGA_UnEquip : public UPTWGameplayAbility
 {
 	GENERATED_BODY()
+	
+public:
+	UPTWGA_UnEquip();
+	
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
+		const FGameplayAbilityActorInfo* ActorInfo, 
+		const FGameplayAbilityActivationInfo ActivationInfo, 
+		const FGameplayEventData* TriggerEventData) override;
 };

@@ -22,6 +22,10 @@ public:
 	UFUNCTION(BlueprintPure)
 	FORCEINLINE UPTWWeaponData* GetWeaponData() const {return WeaponData;}
 	
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE UStaticMeshComponent* GetStaticMeshComponent() const {return WeaponMesh;}
+	
+	void SetupVisualPerspective(bool bIs1P);
 	
 protected:
 	virtual void BeginPlay() override;

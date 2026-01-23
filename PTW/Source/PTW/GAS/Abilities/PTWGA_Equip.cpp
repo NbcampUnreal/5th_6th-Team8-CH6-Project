@@ -3,6 +3,7 @@
 
 #include "PTWGA_Equip.h"
 
+#include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "Inventory/PTWItemInstance.h"
@@ -11,7 +12,7 @@
 
 UPTWGA_Equip::UPTWGA_Equip()
 {
-	AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
+	//AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
 }
 
 void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -25,6 +26,13 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		FGameplayTag CurrentWeaponTag = WeaponItemInstance->ItemDef->WeaponTag;
 		APTWBaseCharacter* Character = GetPTWCharacterFromActorInfo();
 		Character->EquipWeaponByTag(CurrentWeaponTag);
+		
+		FGameplayTag StatTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+		
+		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+		
+		if (!ASC) return;
+		ASC->AddLooseGameplayTag(StatTag);
 	}
 	
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);

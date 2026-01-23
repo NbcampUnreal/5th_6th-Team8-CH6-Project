@@ -20,12 +20,14 @@ class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterf
 	GENERATED_BODY()
 
 public:
+	//생성자
 	APTWBaseCharacter();
 	
 	virtual void BeginPlay() override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
+
 	virtual void InitAbilityActorInfo();
 
 	void GiveDefaultAbilities();

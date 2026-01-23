@@ -8,9 +8,11 @@
 #include "PTWInputConfig.h"
 #include "PTWPlayerCharacter.generated.h"
 
+class UPTWItemDefinition;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+class UPTWInventoryComponent;
 
 UCLASS()
 class PTW_API APTWPlayerCharacter : public APTWBaseCharacter
@@ -19,6 +21,12 @@ class PTW_API APTWPlayerCharacter : public APTWBaseCharacter
 	
 public:
 	APTWPlayerCharacter();
+
+	UFUNCTION(BlueprintPure, Category = "Mesh")
+	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
+	UFUNCTION(BlueprintPure, Category = "Mesh")
+	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
 
 protected:
 	//생성자
@@ -40,6 +48,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> Mesh1P;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UPTWInventoryComponent> InventoryComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UPTWInputConfig> InputConfig;
@@ -50,6 +60,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
 
+	//FIXME : 테스트 용도
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Temp")
+	TObjectPtr<UPTWItemDefinition> ItemDef;
+	
 public:
 	FORCEINLINE UCameraComponent* GetPlayerCamera() const { return PlayerCamera; }
+	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 };

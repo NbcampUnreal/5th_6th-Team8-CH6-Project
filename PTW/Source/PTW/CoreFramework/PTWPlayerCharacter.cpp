@@ -12,6 +12,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "PTWInputComponent.h"
 #include "GAS/PTWGameplayAbility.h"
+#include "Inventory/PTWInventoryComponent.h"
+#include "Inventory/PTWWeaponActor.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -28,6 +30,9 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	CrouchedEyeHeight = 40.0f;
+
+	InventoryComponent = CreateDefaultSubobject<UPTWInventoryComponent>(TEXT("InventoryComponent"));
+	InventoryComponent->SetIsReplicated(true);
 }
 
 void APTWPlayerCharacter::BeginPlay()
@@ -50,6 +55,36 @@ void APTWPlayerCharacter::BeginPlay()
 		Mesh1P->SetVisibility(true);
 		Mesh1P->HideBoneByName(FName("head"), EPhysBodyOp::PBO_None);
 	}
+	
+	if (GetWorld())
+	{
+		for (const auto& Pair : WeaponClasses)
+		{
+			FGameplayTag Tag = Pair.Key;
+			TSubclassOf<APTWWeaponActor> ClassToSpawn = Pair.Value;
+
+			if (ClassToSpawn)
+			{
+				FActorSpawnParameters Params;
+				Params.Owner = this;
+
+				APTWWeaponActor* Weapon1P = GetWorld()->SpawnActor<APTWWeaponActor>(ClassToSpawn, Params);
+				APTWWeaponActor* Weapon3P = GetWorld()->SpawnActor<APTWWeaponActor>(ClassToSpawn, Params);
+
+				if (Weapon1P && Weapon3P)
+				{
+					InventoryComponent->AddItem(ItemDef, Weapon1P);
+					SpawnedWeapons.Add(Tag, Weapon1P);
+					Weapon1P->AttachToComponent(GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+					Weapon3P->AttachToComponent(GetMesh3P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+					
+					Weapon1P->SetupVisualPerspective(true);
+					Weapon3P->SetupVisualPerspective(false);
+				}
+			}
+		}
+	}
+	
 }
 
 void APTWPlayerCharacter::PossessedBy(AController* NewController)

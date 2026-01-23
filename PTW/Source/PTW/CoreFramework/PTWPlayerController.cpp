@@ -13,6 +13,11 @@ void APTWPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (!IsLocalController())
+	{
+		return;
+	}
+
 	UE_LOG(LogTemp, Error, TEXT("Controller BeginPlay"));
 	TryInitializeHUD();
 

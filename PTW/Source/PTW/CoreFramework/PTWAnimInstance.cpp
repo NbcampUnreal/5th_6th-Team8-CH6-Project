@@ -65,3 +65,22 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsSprinting = ASC->HasMatchingGameplayTag(SprintTag);
 	}
 }
+
+void UPTWAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
+
+	if (Character)
+	{
+		FGameplayTag CurrentTag = Character->CurrentWeaponTag;
+
+		if (const int32* FoundIndex = WeaponTagToPoseIndex.Find(CurrentTag))
+		{
+			WeaponPoseIndex = *FoundIndex;
+		}
+		else
+		{
+			WeaponPoseIndex = 0;
+		}
+	}
+}

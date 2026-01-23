@@ -36,6 +36,10 @@ protected:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<UCameraComponent> PlayerCamera;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> Mesh1P;
+
+
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UPTWInputConfig> InputConfig;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")

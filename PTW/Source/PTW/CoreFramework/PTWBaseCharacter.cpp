@@ -47,11 +47,6 @@ void APTWBaseCharacter::BeginPlay()
 
 				if (NewWeapon)
 				{
-					NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponSocket"));
-
-					NewWeapon->SetActorHiddenInGame(true);
-					NewWeapon->SetActorEnableCollision(false);
-
 					SpawnedWeapons.Add(Tag, NewWeapon);
 				}
 			}

@@ -9,7 +9,6 @@
 #include "PTWWeaponActor.h"
 #include "PTWWeaponData.h"
 #include "CoreFramework/PTWBaseCharacter.h"
-#include "GeometryCollection/GeometryCollectionParticlesData.h"
 
 
 UPTWInventoryComponent::UPTWInventoryComponent()

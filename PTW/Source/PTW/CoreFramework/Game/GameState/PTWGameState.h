@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -43,7 +43,9 @@ public:
 	
 	void SetRemainTime(int32 NewTime);
 	void SetCurrentRound(int32 NewRound);
-	
+
+	int32 GetRemainTime() const { return RemainTime; }
+
 	/** 남은 시간 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnRemainTimeChanged OnRemainTimeChanged;

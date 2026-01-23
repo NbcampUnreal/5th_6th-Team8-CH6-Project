@@ -7,6 +7,8 @@
 #include "PTWRankingEntry.generated.h"
 
 class UTextBlock;
+struct FPTWPlayerData;
+
 /**
  * 
  */
@@ -16,7 +18,7 @@ class PTW_API UPTWRankingEntry : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	void SetEntry(int32 InRank, const FString& InPlayerName, int32 InWinPoints, float InGold);
+	void SetEntry(int32 InRank, const FPTWPlayerData& InData, bool bIsMe);
 
 protected:
 	virtual void NativeConstruct() override;

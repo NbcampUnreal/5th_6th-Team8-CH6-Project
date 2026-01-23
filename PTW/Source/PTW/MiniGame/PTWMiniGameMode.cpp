@@ -14,7 +14,6 @@ APTWMiniGameMode::APTWMiniGameMode()
 	
 }
 
-
 void APTWMiniGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -33,7 +32,7 @@ void APTWMiniGameMode::EndTimer()
 
 		if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 		{
-			PTWScoreSubsystem->SaveCurrentGameRound(PTWGameState->GetCurrentRound());
+			PTWScoreSubsystem->SaveGameRound(PTWGameState->GetCurrentRound());
 		}
 	}
 	UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));

@@ -40,6 +40,9 @@ public:
 	void OnFindLobbiesComplete(const TArray<FBlueprintSessionResult>& SessionResults);
 	
 	UFUNCTION(BlueprintCallable, Category = "Session")
+	void CreateListenServer(FName MapName);
+	
+	UFUNCTION(BlueprintCallable, Category = "Session")
 	FORCEINLINE TArray<FBlueprintSessionResult> GetLobbyList() const { return LobbyList; };
 
 	UPROPERTY(BlueprintAssignable, Category = "Session")

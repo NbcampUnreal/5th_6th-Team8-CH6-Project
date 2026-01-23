@@ -3,6 +3,11 @@
 
 #include "PTWMiniGameMode.h"
 
+#include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "System/PTWScoreSubsystem.h"
+
+class UPTWScoreSubsystem;
+
 void APTWMiniGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -11,4 +16,20 @@ void APTWMiniGameMode::BeginPlay()
 	
 	StartTimer(MiniGameTime);
 	
+}
+
+void APTWMiniGameMode::EndTimer()
+{
+	if (PTWGameState)
+	{
+		PTWGameState->AdvanceRound(); // 라운드 증가
+
+		if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+		{
+			PTWScoreSubsystem->SaveCurrentGameRound(PTWGameState->GetCurrentRound());
+		}
+	}
+	UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
+
+	Super::EndTimer();
 }

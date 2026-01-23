@@ -46,8 +46,14 @@ protected:
 	 */
 	void StartTimer(float TimeDuration);
 	
-	/** 지정한 레벨로 이동 */
+	/** 타이머 종료 시 호출되는 함수
+	* - 남은 시간이 0에 도달했을 때 실행
+	* - 타이머 정리 및 종료 후 처리 트리거
+	*/
 	UFUNCTION()
+	virtual void EndTimer();
+	
+	/** 지정한 레벨로 이동 */
 	void TravelLevel();
 
 	/** 

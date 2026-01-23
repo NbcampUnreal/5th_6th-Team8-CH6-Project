@@ -23,6 +23,9 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 	PlayerCamera->SetupAttachment(RootComponent);
 	PlayerCamera->bUsePawnControlRotation = true;
 
+	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
+	Mesh1P->SetupAttachment(PlayerCamera);
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	CrouchedEyeHeight = 40.0f;
 }
@@ -40,6 +43,12 @@ void APTWPlayerCharacter::BeginPlay()
 				Subsystem->AddMappingContext(DefaultMappingContext, 0);
 			}
 		}
+	}
+	if (Mesh1P)
+	{
+		Mesh1P->SetOnlyOwnerSee(true);
+		Mesh1P->SetVisibility(true);
+		Mesh1P->HideBoneByName(FName("head"), EPhysBodyOp::PBO_None);
 	}
 }
 

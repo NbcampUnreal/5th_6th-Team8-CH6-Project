@@ -24,7 +24,9 @@ public:
 	APTWBaseCharacter();
 	
 	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
 
 protected:
 
@@ -34,17 +36,22 @@ protected:
 	void ApplyDefaultEffects();
 
 public:
+	UFUNCTION(BlueprintCallable)
+	void EquipWeaponByTag(FGameplayTag NewWeaponTag);
+
+protected:
+
+
+public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TMap<FGameplayTag, TSubclassOf<APTWWeaponActor>> WeaponClasses;
-	UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
+	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Weapon")
 	FGameplayTag CurrentWeaponTag;
 	UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
 	TMap<FGameplayTag, APTWWeaponActor*> SpawnedWeapons;
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	APTWWeaponActor* CurrentWeapon;
 
-	UFUNCTION(BlueprintCallable)
-	void EquipWeaponByTag(FGameplayTag NewWeaponTag);
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;

@@ -58,6 +58,13 @@ void APTWGameState::SetCurrentRound(int32 NewRound)
 	UE_LOG(LogTemp, Warning, TEXT("Current Round: %d"), CurrentRound);
 }
 
+void APTWGameState::SetCurrentPhase(EPTWGamePhase NewGamePhase)
+{
+	if (!HasAuthority()) return;
+
+	CurrentGamePhase = NewGamePhase;
+}
+
 void APTWGameState::OnRep_RemainTime()
 {
 	OnRemainTimeChanged.Broadcast(RemainTime);
@@ -66,4 +73,8 @@ void APTWGameState::OnRep_RemainTime()
 void APTWGameState::OnRep_CurrentRound()
 {
 	
+}
+
+void APTWGameState::OnRep_CurrentGamePhase()
+{
 }

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -16,15 +16,15 @@ struct FPTWPlayerData
 	GENERATED_BODY()
 
 	/** 플레이어 표시 이름 */
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString PlayerName = "";
 
 	/** 플레이어의 누적 승점 */
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 TotalWinPoints = 0;
 
 	/** 플레이어가 보유한 재화(골드) */
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Gold = 0;
 
 	// 향후 인벤토리 시스템 확장 시 사용 예정

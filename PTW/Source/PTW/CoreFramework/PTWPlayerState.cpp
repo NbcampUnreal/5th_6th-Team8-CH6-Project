@@ -4,6 +4,7 @@
 #include "PTWPlayerState.h"
 #include "PTW/GAS/PTWAbilitySystemComponent.h"
 #include "PTW/GAS/PTWAttributeSet.h"
+#include "Net/UnrealNetwork.h"
 
 APTWPlayerState::APTWPlayerState()
 {
@@ -14,9 +15,39 @@ APTWPlayerState::APTWPlayerState()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	AttributeSet = CreateDefaultSubobject<UPTWAttributeSet>(TEXT("AttributeSet"));
+
+	CurrentPlayerData.PlayerName = "";
+	CurrentPlayerData.TotalWinPoints = 0;
+	CurrentPlayerData.Gold = 0.0f;
+}
+
+void APTWPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APTWPlayerState, CurrentPlayerData);
 }
 
 UAbilitySystemComponent* APTWPlayerState::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void APTWPlayerState::SetPlayerData(const FPTWPlayerData& NewData)
+{
+	if (HasAuthority())
+	{
+		CurrentPlayerData = NewData;
+		OnPlayerDataUpdated.Broadcast(CurrentPlayerData);
+	}
+}
+
+FPTWPlayerData APTWPlayerState::GetPlayerData() const
+{
+	return CurrentPlayerData;
+}
+
+void APTWPlayerState::OnRep_CurrentPlayerData()
+{
+	OnPlayerDataUpdated.Broadcast(CurrentPlayerData);
 }

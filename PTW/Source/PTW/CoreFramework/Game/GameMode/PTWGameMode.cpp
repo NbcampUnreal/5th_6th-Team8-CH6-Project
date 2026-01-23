@@ -4,6 +4,7 @@
 #include "PTWGameMode.h"
 
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
+#include "System/PTWScoreSubsystem.h"
 
 
 APTWGameMode::APTWGameMode()
@@ -19,8 +20,14 @@ void APTWGameMode::BeginPlay()
 
 	if (PTWGameState)
 	{
-		PTWGameState->OnTimerFinished.AddDynamic(this, &APTWGameMode::TravelLevel);
+		PTWGameState->OnTimerFinished.AddDynamic(this, &APTWGameMode::EndTimer);
+
+		if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+		{
+			PTWGameState->SetCurrentRound(PTWScoreSubsystem->GetCurrentGameRound()); // 현재 라운드 값 받아서 GameState에 전달
+		}
 	}
+	
 }
 
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)
@@ -40,14 +47,22 @@ void APTWGameMode::StartTimer(float TimeDuration)
 {
 	if (PTWGameState)
 	{
-		PTWGameState->RemainTime = TimeDuration;
+		PTWGameState->SetRemainTime(TimeDuration);
 	}
 	
-	GetWorldTimerManager().SetTimer(TimerHandle, this, &APTWGameMode::UpdateTimer, 1.f, true);
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &APTWGameMode::UpdateTimer, 1.f, true, 1.f);
+}
+
+void APTWGameMode::EndTimer()
+{
+	GetWorldTimerManager().ClearTimer(TimerHandle);
+	
+	TravelLevel();
 }
 
 void APTWGameMode::TravelLevel()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Travel Level"));
 	GetWorld()->ServerTravel(TravelLevelName);
 }
 

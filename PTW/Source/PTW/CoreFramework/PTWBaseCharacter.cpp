@@ -30,28 +30,7 @@ APTWBaseCharacter::APTWBaseCharacter()
 void APTWBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (GetWorld())
-	{
-		for (const auto& Pair : WeaponClasses)
-		{
-			FGameplayTag Tag = Pair.Key;
-			TSubclassOf<APTWWeaponActor> ClassToSpawn = Pair.Value;
-
-			if (ClassToSpawn)
-			{
-				FActorSpawnParameters Params;
-				Params.Owner = this;
-
-				APTWWeaponActor* NewWeapon = GetWorld()->SpawnActor<APTWWeaponActor>(ClassToSpawn, Params);
-
-				if (NewWeapon)
-				{
-					SpawnedWeapons.Add(Tag, NewWeapon);
-				}
-			}
-		}
-	}
+	
 }
 
 UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const

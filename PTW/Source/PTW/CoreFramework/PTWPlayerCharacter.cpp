@@ -79,7 +79,7 @@ void APTWPlayerCharacter::BeginPlay()
 					Weapon3P->AttachToComponent(GetMesh3P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
 					
 					Weapon1P->SetupVisualPerspective(true);
-					Weapon1P->SetupVisualPerspective(false);
+					Weapon3P->SetupVisualPerspective(false);
 				}
 			}
 		}

@@ -12,6 +12,7 @@
 UPTWGA_Fire::UPTWGA_Fire()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+	ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Reload")));
 }
 
 void UPTWGA_Fire::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -58,6 +59,8 @@ void UPTWGA_Fire::AutoFire()
 	{
 		if (UPTWInventoryComponent* InvenComp = BaseCharacter->FindComponentByClass<UPTWInventoryComponent>())
 		{
+			if (InvenComp->GetCurrentWeaponActor() == nullptr) return;
+			
 			if (APTWWeaponActor* Weapon = InvenComp->GetCurrentWeaponActor()->SpawnedWeapon)
 			{
 				FGameplayCueParameters CueParams;

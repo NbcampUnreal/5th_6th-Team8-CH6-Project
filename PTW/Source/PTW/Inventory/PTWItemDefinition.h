@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Engine/DataAsset.h"
 #include "PTWItemDefinition.generated.h"
 
+struct FGameplayTag;
 class UPTWGameplayAbility;
 class APTWWeaponActor;
 /**
@@ -24,5 +26,8 @@ public:
 	TSubclassOf<APTWWeaponActor> WeaponClass;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
-	TSubclassOf<UPTWGameplayAbility> AbilityToGrant;	
+	TSubclassOf<UPTWGameplayAbility> AbilityToGrant;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
+	FGameplayTag WeaponTag;
 };

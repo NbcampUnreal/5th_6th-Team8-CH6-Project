@@ -17,4 +17,9 @@ void UPTWScoreSubsystem::SaveGameRound(int32 NewGameRound)
 	SavedGameRound = NewGameRound;
 }
 
+FPTWPlayerData* UPTWScoreSubsystem::FindPlayerData(int32 PlayerID)
+{
+	return SavedPlayersData.Find(PlayerID);
+}
+
 

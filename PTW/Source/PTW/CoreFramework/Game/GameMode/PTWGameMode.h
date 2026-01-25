@@ -6,75 +6,60 @@
 #include "GameFramework/GameMode.h"
 #include "PTWGameMode.generated.h"
 
-/**
- * 게임의 전체 흐름과 시작 조건을 관리하는 GameMode
- * - 플레이어 입장 관리
- * - 최소 인원 충족 여부 확인
- * - 대기 시간 이후 게임 시작 처리
- */
+
 class APTWGameState;
 
+/** 게임의 전체 흐름과 시작 조건을 관리하는 GameMode
+* - 플레이어 입장/퇴장 관리
+* - 최소 인원 및 대기 시간 기반 시작 처리
+* - 타이머 및 레벨 트래블 연계
+*/
 UCLASS()
 class PTW_API APTWGameMode : public AGameMode
 {
 	GENERATED_BODY()
-	
+
 public:
-	APTWGameMode();
-protected:
-	/**
-	 * 게임 월드가 시작될 때 호출
-	 * - 게임 시작을 위한 초기 설정 수행
-	 * - GameState 참조 캐싱
-	 */
-	virtual void BeginPlay() override;
 	
-	/**
-	 * 새로운 플레이어가 서버에 로그인했을 때 호출
-	 * - 현재 접속 인원 갱신
-	 * - 최소 시작 인원 충족 여부 체크
-	 */
+	APTWGameMode();
+
+protected:
+	/** 게임 월드 시작 시 초기 설정 및 GameState 참조 캐싱 */
+	virtual void BeginPlay() override;
+
+	/** 플레이어 로그인 시 호출(접속 인원/시작 조건 갱신) */
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
-	/** 플레이어가 서버에서 로그아웃할 때 호출
-	* - 플레이어 수 갱신 및 게임 진행 상태 체크
-	*/
+	/** 플레이어 로그아웃 시 호출(접속 인원/게임 진행 상태 갱신) */
 	virtual void Logout(AController* Exiting) override;
-	
-	/** 특정 시간 동안 타이머를 시작
-	 * @param TimeDuration 타이머 지속 시간(초)
-	 */
+
+	/** 지정한 시간(초) 기준으로 타이머를 시작 */
 	void StartTimer(float TimeDuration);
-	
-	/** 타이머 종료 시 호출되는 함수
-	* - 남은 시간이 0에 도달했을 때 실행
-	* - 타이머 정리 및 종료 후 처리 트리거
-	*/
+
+	/** 타이머 종료 시 호출(타이머 정리 및 종료 후 처리 트리거) */
 	UFUNCTION()
 	virtual void EndTimer();
-	
-	/** 지정한 레벨로 이동 */
+
+	/** 설정된 TravelLevelName으로 레벨 이동 처리 */
 	void TravelLevel();
 
-	/** 
-	* 이동할 레벨 이름
-	* - TravelLevel() 호출 시 어떤 레벨로 이동할지 지정
-	* - 런타임에 다른 레벨로 전환할 때 사용
-	*/
-	FString TravelLevelName;
-	
-	/**
-	 * 현재 게임의 상태를 관리하는 GameState 참조
-	 * - 플레이어 목록 및 게임 진행 정보 접근에 사용
-	 */
+private:
+	// 현재 GameState 참조(플레이어/게임 흐름 정보 접근)
 	UPROPERTY()
 	TObjectPtr<APTWGameState> PTWGameState;
-private:
-	/** 타이머 갱신 처리
-	 * - 타이머 종료 시 이벤트 호출
-	 */
+
+	// 현재 라운드/플레이어 데이터를 Subsystem으로 저장
+	void SaveGameDataToSubsystem();
+
+	// 로그인한 플레이어에게 Subsystem 저장 데이터를 적용
+	void ApplyPlayerDataFromSubsystem(APlayerController* NewPlayer);
+
+	// 타이머 틱 처리(종료 시 EndTimer 트리거)
 	void UpdateTimer();
 	
-	/** 내부 타이머 핸들 */
+	// 이동할 레벨 이름(TravelLevel에서 사용)
+	FString TravelLevelName;
+	
+	// 내부 타이머 핸들(StartTimer/UpdateTimer에서 사용)
 	FTimerHandle TimerHandle;
 };

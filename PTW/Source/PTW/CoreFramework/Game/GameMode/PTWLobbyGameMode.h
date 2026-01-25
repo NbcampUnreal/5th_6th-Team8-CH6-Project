@@ -18,10 +18,11 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	//virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 private:
 	void StartMiniGame();
+	void AddRandomGold();
 	
 	/**
 	* 게임을 시작하기 위한 최소 플레이어 수

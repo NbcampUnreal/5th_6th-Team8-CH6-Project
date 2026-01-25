@@ -34,16 +34,19 @@ public:
 	 */
 	void SaveGameRound(int32 NewGameRound);
 
+
+	bool bIsFirstLobby = true;
+	
 	/** 저장된 라운드 반환 */
 	FORCEINLINE int32 GetCurrentGameRound() const { return SavedGameRound; }
-
-	/** 지정한 플레이어의 저장된 데이터 반환 */
-	FORCEINLINE FPTWPlayerData GetPlayerData(int32 PlayerID) const { return SavedPlayersData[PlayerID]; }
+	
+	/** 지정한 플레이어의 저장된 데이터가 있으면 반환 */
+	FPTWPlayerData* FindPlayerData(int32 PlayerID);
 
 private:
 	// 현재 저장 게임 라운드 번호
 	int32 SavedGameRound = 1;
-
+	
 	// 플레이어 ID를 키로 하는 플레이어 데이터 저장소
 	TMap<int32, FPTWPlayerData> SavedPlayersData;
 };

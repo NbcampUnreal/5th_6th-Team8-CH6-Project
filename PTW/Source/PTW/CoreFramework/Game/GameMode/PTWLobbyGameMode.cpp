@@ -4,35 +4,56 @@
 #include "PTWLobbyGameMode.h"
 
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
+#include "System/PTWScoreSubsystem.h"
 
 void APTWLobbyGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
 	TravelLevelName = TEXT("/Game/_PTW/Maps/MiniGame_Bomb");
+
+	if (PTWGameState)
+	{
+		if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+		{
+			if (PTWScoreSubsystem->bIsFirstLobby == true)
+			{
+				PTWGameState->SetCurrentPhase(EPTWGamePhase::PreGameLobby);
+				PTWScoreSubsystem->bIsFirstLobby = false;
+			}
+			else
+			{
+				PTWGameState->SetCurrentPhase(EPTWGamePhase::PostGameLobby);
+				PTWGameState->AdvanceRound(); // 라운드 증가
+			}
+		}
+	}
 	
 	StartTimer(LobbyWaitingTime);
 }
 
-// void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
-// {
-// 	Super::PostLogin(NewPlayer);
-//
-// 	//접속하면 무적 상태로 변경
-// 	
-// 	if (PTWGameState->PlayerArray.Num() >= MinPlayersToStart)
-// 	{
-// 		// 대기 타이머 시작. 미니 게임 선택은 언제?
-// 		// 라운드 저장해서 처음 로비인지 게임 진행 중인지 체크
-// 		// 일단 첫 로비라고 가정하고 최소 인원 수 도달하면 타이머 작동
-//
-// 		FTimerHandle WaitingTimerHandle;
-// 		GetWorldTimerManager().SetTimer(WaitingTimerHandle, this, &APTWLobbyGameMode::StartMiniGame, WaitingTime, false);
-// 	}
-// 	
-// }
+void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	//접속하면 무적 상태로 변경
+
+	if (PTWGameState)
+	{
+		if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
+		{
+			AddRandomGold();
+		}
+		
+	}
+}
 
 void APTWLobbyGameMode::StartMiniGame()
 {
 	//TravelLevel();
+}
+
+void APTWLobbyGameMode::AddRandomGold()
+{
+	
 }

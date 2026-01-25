@@ -9,7 +9,6 @@
 #include "PTWWeaponActor.h"
 #include "PTWWeaponData.h"
 #include "CoreFramework/PTWBaseCharacter.h"
-#include "GeometryCollection/GeometryCollectionParticlesData.h"
 
 
 UPTWInventoryComponent::UPTWInventoryComponent()
@@ -17,6 +16,8 @@ UPTWInventoryComponent::UPTWInventoryComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
 }
+
+
 
 void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemDefinition> ItemClass, APTWWeaponActor* WeaponActor)
 {
@@ -46,7 +47,10 @@ void UPTWInventoryComponent::EqiupWeapon(int32 SlotIndex)
 	UPTWItemInstance* TargetInstance = WeaponArr[SlotIndex];
 	CurrentWeapon = TargetInstance;
 	
-	FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+	bool bHasEquip = ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
+	
+	FGameplayTag EquipTag = bHasEquip ? FGameplayTag::RequestGameplayTag(FName("Weapon.State.UnEquip")) : 
+	FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 	
 	
 	FGameplayEventData Payload;

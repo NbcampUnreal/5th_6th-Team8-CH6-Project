@@ -8,6 +8,7 @@
 #include "PTWInputConfig.h"
 #include "PTWPlayerCharacter.generated.h"
 
+class UPTWItemDefinition;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
@@ -59,6 +60,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
 
+	//FIXME : 테스트 용도
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Temp")
+	TObjectPtr<UPTWItemDefinition> ItemDef;
+	
 public:
 	FORCEINLINE UCameraComponent* GetPlayerCamera() const { return PlayerCamera; }
 	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }

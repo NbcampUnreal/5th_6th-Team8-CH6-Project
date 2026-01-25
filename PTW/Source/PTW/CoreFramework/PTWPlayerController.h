@@ -11,6 +11,9 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnKillLog, const FString&, const FString&)
 class APTWHUD;
 class APTWPlayerState;
 class UAbilitySystemComponent;
+class UInputMappingContext;
+class UInputAction;
+class UPTWRankingBoard;
 /**
  * 
  */
@@ -28,4 +31,31 @@ public:
 
 	// KillLog 델리게이트
 	FOnKillLog OnKillLog;
+
+protected:
+	virtual void SetupInputComponent() override;
+
+	/* 랭킹보드 펼치기 */
+	void OnRankingPressed();
+	void OnRankingReleased();
+
+	virtual void PostSeamlessTravel() override;
+
+	void CreateRankingBoard();
+
+	/* ---------- Input ---------- */
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputMappingContext* DefaultMappingContext;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* ShowRankingAction;
+
+	/* ---------- UI ---------- */
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UPTWRankingBoard> RankingBoardClass;
+
+	UPROPERTY()
+	TObjectPtr<UPTWRankingBoard> RankingBoard;
 };

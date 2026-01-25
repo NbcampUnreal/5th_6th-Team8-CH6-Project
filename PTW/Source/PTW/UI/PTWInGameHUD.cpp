@@ -6,6 +6,7 @@
 
 #include "InGameUI/PTWHealthBar.h"
 #include "InGameUI/PTWKillLogUI.h"
+#include "InGameUI/PTWTimer.h"
 
 void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 {

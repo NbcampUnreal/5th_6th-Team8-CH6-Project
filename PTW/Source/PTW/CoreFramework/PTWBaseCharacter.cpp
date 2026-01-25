@@ -7,6 +7,7 @@
 #include "AbilitySystemComponent.h"
 #include "GAS/PTWGameplayAbility.h"
 #include "Inventory/PTWWeaponActor.h"
+#include "Net/UnrealNetwork.h"
 
 APTWBaseCharacter::APTWBaseCharacter()
 {
@@ -30,28 +31,14 @@ APTWBaseCharacter::APTWBaseCharacter()
 void APTWBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+}
 
-	if (GetWorld())
-	{
-		for (const auto& Pair : WeaponClasses)
-		{
-			FGameplayTag Tag = Pair.Key;
-			TSubclassOf<APTWWeaponActor> ClassToSpawn = Pair.Value;
+void APTWBaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-			if (ClassToSpawn)
-			{
-				FActorSpawnParameters Params;
-				Params.Owner = this;
-
-				APTWWeaponActor* NewWeapon = GetWorld()->SpawnActor<APTWWeaponActor>(ClassToSpawn, Params);
-
-				if (NewWeapon)
-				{
-					SpawnedWeapons.Add(Tag, NewWeapon);
-				}
-			}
-		}
-	}
+	DOREPLIFETIME(APTWBaseCharacter, CurrentWeaponTag);
 }
 
 UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
@@ -150,3 +137,4 @@ void APTWBaseCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 		UE_LOG(LogTemp, Warning, TEXT("Cannot find weapon with tag: %s"), *NewWeaponTag.ToString());
 	}
 }
+

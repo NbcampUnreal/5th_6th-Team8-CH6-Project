@@ -43,11 +43,13 @@ protected:
 	/** 설정된 TravelLevelName으로 레벨 이동 처리 */
 	void TravelLevel();
 
-private:
+	// 이동할 레벨 이름(TravelLevel에서 사용)
+	FString TravelLevelName;
+	
 	// 현재 GameState 참조(플레이어/게임 흐름 정보 접근)
 	UPROPERTY()
 	TObjectPtr<APTWGameState> PTWGameState;
-
+private:
 	// 현재 라운드/플레이어 데이터를 Subsystem으로 저장
 	void SaveGameDataToSubsystem();
 
@@ -57,8 +59,7 @@ private:
 	// 타이머 틱 처리(종료 시 EndTimer 트리거)
 	void UpdateTimer();
 	
-	// 이동할 레벨 이름(TravelLevel에서 사용)
-	FString TravelLevelName;
+
 	
 	// 내부 타이머 핸들(StartTimer/UpdateTimer에서 사용)
 	FTimerHandle TimerHandle;

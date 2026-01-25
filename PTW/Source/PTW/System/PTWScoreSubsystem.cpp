@@ -9,7 +9,7 @@
 
 void UPTWScoreSubsystem::SavePlayerData(int32 PlayerIndex, const FPTWPlayerData& PlayerData)
 {
-	SavedPlayersData[PlayerIndex] = PlayerData;
+	SavedPlayersData.Add(PlayerIndex, PlayerData);
 }
 
 void UPTWScoreSubsystem::SaveGameRound(int32 NewGameRound)

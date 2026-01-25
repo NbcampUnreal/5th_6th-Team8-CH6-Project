@@ -31,10 +31,9 @@ void APTWMiniGameMode::BeginPlay()
 
 void APTWMiniGameMode::EndTimer()
 {
-	
-	UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
-
 	Super::EndTimer();
+	
+	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
 }
 
 void APTWMiniGameMode::AddWinPoint(APawn* PointPawn, int32 AddPoint)

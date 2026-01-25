@@ -6,21 +6,32 @@
 #include "GameFramework/Actor.h"
 #include "PTWGimmickActor.generated.h"
 
+// 기믹 액터 플레이어와 Overlap시 GameplayEvent 발생시키는 트리거 역할.
+
+class USphereComponent;
+class UStaticMeshComponent;
+
 UCLASS()
 class PTW_API APTWGimmickActor : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
+
+public:
 	APTWGimmickActor();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(VisibleAnywhere, Category="Gimmick")
+	TObjectPtr<UStaticMeshComponent> Mesh;
 
+	UPROPERTY(VisibleAnywhere, Category="Gimmick")
+	TObjectPtr<USphereComponent> Collision;
+
+	bool bConsumed = false;
+
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };
+

@@ -1,17 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "GAS/Abilities/PTWGA_GimmickCollect.h"
+
 #include "GameFramework/Actor.h"
-#include "GameplayTagsManager.h"
+#include "GameplayTagContainer.h"    
+#include "GameplayTagsManager.h"  
 
 UPTWGA_GimmickCollect::UPTWGA_GimmickCollect()
 {
-	// 서버에서만 실행
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-
-	// GameplayEvent로 발동되게 설정
+	
 	FAbilityTriggerData TriggerData;
 	TriggerData.TriggerTag = FGameplayTag::RequestGameplayTag(TEXT("Event.Gimmick.Collect"));
 	TriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
@@ -31,9 +30,11 @@ void UPTWGA_GimmickCollect::ActivateAbility(
 		return;
 	}
 
-	// 기믹 액터는 OptionalObject로 전달됨
-	AActor* GimmickActor =
+
+	const AActor* GimmickActorConst =
 		TriggerEventData ? Cast<AActor>(TriggerEventData->OptionalObject) : nullptr;
+
+	AActor* GimmickActor = const_cast<AActor*>(GimmickActorConst);
 
 	if (IsValid(GimmickActor))
 	{

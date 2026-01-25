@@ -6,9 +6,6 @@
 #include "GAS/PTWGameplayAbility.h"
 #include "PTWGA_GimmickCollect.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class PTW_API UPTWGA_GimmickCollect : public UPTWGameplayAbility
 {

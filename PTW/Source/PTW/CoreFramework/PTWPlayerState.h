@@ -36,6 +36,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Data")
 	FPTWPlayerData GetPlayerData() const;
 
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnPlayerDataChanged OnPlayerDataUpdated;
+
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
@@ -44,6 +47,4 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentPlayerData, VisibleAnywhere, BlueprintReadOnly, Category = "Data")
 	FPTWPlayerData CurrentPlayerData;
-	UPROPERTY(BlueprintAssignable, Category = "Events")
-	FOnPlayerDataChanged OnPlayerDataUpdated;
 };

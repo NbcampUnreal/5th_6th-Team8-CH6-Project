@@ -1,10 +1,25 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameState.h"
 #include "PTWGameState.generated.h"
+
+
+UENUM(BlueprintType)
+enum class EPTWGamePhase : uint8
+{
+	/** 게임 시작 전 로비 */
+	PreGameLobby UMETA(DisplayName="Pre Game Lobby"),
+
+	/** 미니게임 진행 */
+	MiniGame UMETA(DisplayName="Mini Game"),
+
+	/** 게임 진행 후 복귀 로비 */
+	PostGameLobby UMETA(DisplayName="Post Game Lobby")
+};
+
 
 /**
  * 남은 시간 변경 이벤트
@@ -43,7 +58,9 @@ public:
 	
 	void SetRemainTime(int32 NewTime);
 	void SetCurrentRound(int32 NewRound);
+	void SetCurrentPhase(EPTWGamePhase NewGamePhase);
 	
+
 	/** 남은 시간 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnRemainTimeChanged OnRemainTimeChanged;
@@ -52,7 +69,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnTimerFinished OnTimerFinished;
 
+	FORCEINLINE int32 GetRemainTime() const { return RemainTime; }
 	FORCEINLINE int32 GetCurrentRound() const {return CurrentRound;}
+	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
 protected:
 	/** 복제 설정 */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -71,4 +90,10 @@ private:
 
 	UFUNCTION()
 	void OnRep_CurrentRound();
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentGamePhase, Category="GameFlow|Phase")
+	EPTWGamePhase CurrentGamePhase;
+
+	UFUNCTION()
+	void OnRep_CurrentGamePhase();
 };

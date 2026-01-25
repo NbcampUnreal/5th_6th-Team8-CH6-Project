@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "PTWGameMode.h"
@@ -27,7 +27,6 @@ void APTWGameMode::BeginPlay()
 			PTWGameState->SetCurrentRound(PTWScoreSubsystem->GetCurrentGameRound()); // 현재 라운드 값 받아서 GameState에 전달
 		}
 	}
-	
 }
 
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)

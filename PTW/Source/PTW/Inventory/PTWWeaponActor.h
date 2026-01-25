@@ -22,10 +22,20 @@ public:
 	UFUNCTION(BlueprintPure)
 	FORCEINLINE UPTWWeaponData* GetWeaponData() const {return WeaponData;}
 	
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE UStaticMeshComponent* GetStaticMeshComponent() const {return WeaponMesh;}
 	
+	void ApplyVisualPerspective();
+	
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	
+public:
+	UPROPERTY(ReplicatedUsing = OnRep_IsFirstPersonWeapon)
+	bool bIsFirstPersonWeapon = false;
 protected:
 	virtual void BeginPlay() override;
 	
+protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<USceneComponent> RootScene;
 	
@@ -37,4 +47,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon|Data")
 	TObjectPtr<UPTWWeaponData> WeaponData;	
+	
+	UFUNCTION()
+	void OnRep_IsFirstPersonWeapon();
 };

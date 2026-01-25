@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "PTWGameState.h"
@@ -29,6 +29,10 @@ void APTWGameState::DecreaseTimer()
 	else
 	{
 		RemainTime--;
+		if (GetNetMode() != NM_DedicatedServer)
+		{
+			OnRemainTimeChanged.Broadcast(RemainTime);
+		}
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Timer: %d"), RemainTime);
 }
@@ -54,6 +58,13 @@ void APTWGameState::SetCurrentRound(int32 NewRound)
 	UE_LOG(LogTemp, Warning, TEXT("Current Round: %d"), CurrentRound);
 }
 
+void APTWGameState::SetCurrentPhase(EPTWGamePhase NewGamePhase)
+{
+	if (!HasAuthority()) return;
+
+	CurrentGamePhase = NewGamePhase;
+}
+
 void APTWGameState::OnRep_RemainTime()
 {
 	OnRemainTimeChanged.Broadcast(RemainTime);
@@ -62,4 +73,8 @@ void APTWGameState::OnRep_RemainTime()
 void APTWGameState::OnRep_CurrentRound()
 {
 	
+}
+
+void APTWGameState::OnRep_CurrentGamePhase()
+{
 }

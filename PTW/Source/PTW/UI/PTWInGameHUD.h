@@ -10,6 +10,7 @@ class UAbilitySystemComponent;
 
 class UPTWHealthBar;
 class UPTWKillLogUI;
+class UPTWTimer;
 
 /**
  * 
@@ -34,6 +35,9 @@ public:
 	/* 킬로그 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWKillLogUI> KillLogUI;
+	/* 타이머 */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWTimer> Timer;
 
 protected:
 	virtual bool Initialize() override;

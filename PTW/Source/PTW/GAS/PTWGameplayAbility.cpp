@@ -3,6 +3,7 @@
 
 #include "PTWGameplayAbility.h"
 #include "PTW/CoreFramework/PTWBaseCharacter.h"
+#include "PTW/CoreFramework/PTWPlayerCharacter.h"
 #include "PTW/CoreFramework/PTWPlayerController.h"
 
 UPTWGameplayAbility::UPTWGameplayAbility()
@@ -12,8 +13,12 @@ UPTWGameplayAbility::UPTWGameplayAbility()
 
 APTWBaseCharacter* UPTWGameplayAbility::GetPTWCharacterFromActorInfo() const
 {
-
 	return Cast<APTWBaseCharacter>(GetAvatarActorFromActorInfo());
+}
+
+APTWPlayerCharacter* UPTWGameplayAbility::GetPTWPlayerCharacterFromActorInfo() const
+{
+	return Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
 }
 
 APTWPlayerController* UPTWGameplayAbility::GetPTWPlayerControllerFromActorInfo() const

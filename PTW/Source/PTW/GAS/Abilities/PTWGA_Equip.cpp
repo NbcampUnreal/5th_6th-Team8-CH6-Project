@@ -4,7 +4,7 @@
 #include "PTWGA_Equip.h"
 
 #include "AbilitySystemComponent.h"
-#include "CoreFramework/PTWBaseCharacter.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "Inventory/PTWItemInstance.h"
@@ -25,7 +25,7 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	if (WeaponItemInstance)
 	{
 		FGameplayTag CurrentWeaponTag = WeaponItemInstance->ItemDef->WeaponTag;
-		APTWBaseCharacter* Character = GetPTWCharacterFromActorInfo();
+		APTWPlayerCharacter* Character = GetPTWPlayerCharacterFromActorInfo();
 		
 		if (HasAuthority(&CurrentActivationInfo))
 		{

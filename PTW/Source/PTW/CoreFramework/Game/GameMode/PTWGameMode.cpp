@@ -13,9 +13,9 @@ APTWGameMode::APTWGameMode()
 	bUseSeamlessTravel = true;
 }
 
-void APTWGameMode::BeginPlay()
+void APTWGameMode::InitGameState()
 {
-	Super::BeginPlay();
+	Super::InitGameState();
 
 	PTWGameState = GetGameState<APTWGameState>();
 
@@ -28,14 +28,20 @@ void APTWGameMode::BeginPlay()
 			PTWGameState->SetCurrentRound(PTWScoreSubsystem->GetCurrentGameRound()); // GameInstance 라운드 값 받아서 GameState에 전달
 		}
 	}
+}
+
+void APTWGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	
 	
 }
 
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
-
-	UE_LOG(LogTemp, Warning, TEXT("PostLogin"));
+	
 	ApplyPlayerDataFromSubsystem(NewPlayer);
 }
 
@@ -97,6 +103,8 @@ void APTWGameMode::ApplyPlayerDataFromSubsystem(APlayerController* NewPlayer)
 			if (FPTWPlayerData* FoundData = PTWScoreSubsystem->FindPlayerData(PTWPlayerState->GetPlayerName()))
 			{
 				PTWPlayerState->SetPlayerData(*FoundData);
+
+				UE_LOG(LogTemp, Warning, TEXT("Player Gold: %d"), FoundData->Gold);
 			}
 		}
 	}

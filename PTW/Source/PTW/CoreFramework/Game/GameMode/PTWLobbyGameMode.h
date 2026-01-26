@@ -17,12 +17,13 @@ class PTW_API APTWLobbyGameMode : public APTWGameMode
 public:
 
 protected:
+	virtual void InitGameState() override;
 	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 private:
 	void StartMiniGame();
-	void AddRandomGold();
+	void AddRandomGold(APlayerController* NewPlayer);
 	
 	/**
 	* 게임을 시작하기 위한 최소 플레이어 수

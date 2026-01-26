@@ -40,6 +40,8 @@ void APTWMiniGameMode::AddWinPoint(APawn* PointPawn, int32 AddPoint)
 {
 	if (APTWPlayerState* PTWPlayerState = PointPawn->GetPlayerState<APTWPlayerState>())
 	{
-		//PTWPlayerState->AddWinPoint(AddPoint);
+		FPTWPlayerData PlayerData;
+		PlayerData.TotalWinPoints += AddPoint;
+		PTWPlayerState->SetPlayerData(PlayerData);
 	}
 }

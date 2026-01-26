@@ -24,6 +24,8 @@ public:
 	APTWGameMode();
 
 protected:
+	virtual void InitGameState() override;
+	
 	/** 게임 월드 시작 시 초기 설정 및 GameState 참조 캐싱 */
 	virtual void BeginPlay() override;
 

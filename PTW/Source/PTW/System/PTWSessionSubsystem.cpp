@@ -3,11 +3,12 @@
 #include "PTWSessionSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 
-void UPTWSessionSubsystem::CreateLobbySession_Implementation(const FLobbySettings LobbySettings)
+void UPTWSessionSubsystem::CreateLobbySession_Implementation(const TArray<FSessionPropertyKeyPair>& LobbySettings,
+	int32 MaxPlayers, bool bisPrivate)
 {
 }
 
-void UPTWSessionSubsystem::JoinLobbySession_Implementation(const FBlueprintSessionResult SessionResult)
+void UPTWSessionSubsystem::JoinLobbySession_Implementation(const FBlueprintSessionResult& SessionResult)
 {
 }
 

@@ -66,50 +66,6 @@ void APTWPlayerCharacter::BeginPlay()
 		Mesh1P->SetVisibility(true);
 		Mesh1P->HideBoneByName(FName("head"), EPhysBodyOp::PBO_None);
 	}
-	
-	if (GetWorld() && HasAuthority())
-	{
-		UE_LOG(LogTemp, Log, TEXT("BeginPlay Weapon Setup for: %s"), *GetName());
-		
-		for (const auto& Pair : WeaponClasses)
-		{
-			FGameplayTag Tag = Pair.Key;
-			TSubclassOf<APTWWeaponActor> ClassToSpawn = Pair.Value;
-
-			if (ClassToSpawn)
-			{
-				FActorSpawnParameters Params;
-				Params.Owner = this;
-
-				APTWWeaponActor* Weapon1P = GetWorld()->SpawnActor<APTWWeaponActor>(ClassToSpawn, Params);
-				APTWWeaponActor* Weapon3P = GetWorld()->SpawnActor<APTWWeaponActor>(ClassToSpawn, Params);
-				
-				Weapon1P->bIsFirstPersonWeapon = true;
-				Weapon3P->bIsFirstPersonWeapon = false;
-				
-				if (Weapon1P && Weapon3P)
-				{
-					InventoryComponent->AddItem(ItemDef, Weapon1P, Weapon3P);
-					
-					FWeaponPair Weaponpair;
-					
-					Weaponpair.Weapon1P = Weapon1P;
-					Weaponpair.Weapon3P = Weapon3P;
-					
-					SpawnedWeapons.Add(Tag, Weaponpair);
-					Weapon1P->AttachToComponent(GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
-					Weapon3P->AttachToComponent(GetMesh3P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
-					
-					Weapon1P->ApplyVisualPerspective(); 
-					Weapon3P->ApplyVisualPerspective();
-					
-					Weapon1P->SetActorHiddenInGame(true);
-					Weapon3P->SetActorHiddenInGame(true);
-				}
-			}
-		}
-	}
-	
 }
 
 void APTWPlayerCharacter::PossessedBy(AController* NewController)
@@ -293,4 +249,26 @@ void APTWPlayerCharacter::OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon)
 		CurrentWeapon->SetActorHiddenInGame(false);
 		CurrentWeapon->ApplyVisualPerspective();
 	}
+}
+
+void APTWPlayerCharacter::AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag)
+{
+	if (!NewWeapon1P || !NewWeapon3P) return;
+
+	FWeaponPair Weaponpair;
+	Weaponpair.Weapon1P = NewWeapon1P;
+	Weaponpair.Weapon3P = NewWeapon3P;
+	SpawnedWeapons.Add(WeaponTag, Weaponpair);
+
+	NewWeapon1P->AttachToComponent(GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+	NewWeapon3P->AttachToComponent(GetMesh3P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+
+	NewWeapon1P->ApplyVisualPerspective();
+	NewWeapon3P->ApplyVisualPerspective();
+
+	NewWeapon1P->SetActorHiddenInGame(true);
+	NewWeapon3P->SetActorHiddenInGame(true);
+
+	NewWeapon1P->SetActorEnableCollision(false);
+	NewWeapon3P->SetActorEnableCollision(false);
 }

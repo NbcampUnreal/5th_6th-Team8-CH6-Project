@@ -46,14 +46,14 @@ void APTWMiniGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	//SpawnDefaultWeapon(NewPlayer); //
+	SpawnDefaultWeapon(NewPlayer);
 }
 
 void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
 	Super::RestartPlayer(NewPlayer);
 
-	//SpawnDefaultWeapon(NewPlayer);
+	SpawnDefaultWeapon(NewPlayer);
 }
 
 
@@ -63,7 +63,9 @@ void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 	{
 		if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
 		{
-			ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition);
+			FGameplayTag RifleTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Gun.Rifle"));
+
+			ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition, RifleTag);
 		}
 	}
 }

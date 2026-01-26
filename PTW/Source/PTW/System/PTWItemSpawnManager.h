@@ -1,9 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "GameplayTagContainer.h"
 #include "PTWItemSpawnManager.generated.h"
 
 class UPTWItemDefinition;
@@ -18,6 +19,6 @@ class PTW_API UPTWItemSpawnManager : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
-	void SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, UPTWItemDefinition* ItemDefinition);
+	void SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, UPTWItemDefinition* ItemDefinition, FGameplayTag WeaponTag);
 	
 };

@@ -14,12 +14,16 @@ APTWMiniGameMode::APTWMiniGameMode()
 	
 }
 
-
 void APTWMiniGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
 	TravelLevelName = TEXT("/Game/_PTW/Maps/Lobby");
+
+	if (PTWGameState)
+	{
+		PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
+	}
 	
 	StartTimer(MiniGameTime);
 	
@@ -27,24 +31,17 @@ void APTWMiniGameMode::BeginPlay()
 
 void APTWMiniGameMode::EndTimer()
 {
-	if (PTWGameState)
-	{
-		PTWGameState->AdvanceRound(); // 라운드 증가
-
-		if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
-		{
-			PTWScoreSubsystem->SaveCurrentGameRound(PTWGameState->GetCurrentRound());
-		}
-	}
-	UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
-
 	Super::EndTimer();
+	
+	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
 }
 
 void APTWMiniGameMode::AddWinPoint(APawn* PointPawn, int32 AddPoint)
 {
 	if (APTWPlayerState* PTWPlayerState = PointPawn->GetPlayerState<APTWPlayerState>())
 	{
-		//PTWPlayerState->AddWinPoint(AddPoint);
+		FPTWPlayerData PlayerData;
+		PlayerData.TotalWinPoints += AddPoint;
+		PTWPlayerState->SetPlayerData(PlayerData);
 	}
 }

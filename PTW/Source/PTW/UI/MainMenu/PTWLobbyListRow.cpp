@@ -14,7 +14,6 @@ void UPTWLobbyListRow::Setup(const FBlueprintSessionResult& SessionResult)
 	const FSessionSettings& SessionSettings = NativeResult.Session.SessionSettings.Settings;
 	
 	FString LobbyNameStr = SessionSettings.Find("LobbyName")->ToString();
-	// LobbyID->SetText();
 	LobbyName->SetText(FText::FromString(LobbyNameStr));
 }
 

@@ -2,6 +2,8 @@
 
 
 #include "PTWLobbyBrowser.h"
+
+#include "BlueprintDataDefinitions.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/VerticalBox.h"
@@ -47,6 +49,16 @@ void UPTWLobbyBrowser::NativeConstruct()
 			SessionSubsystem->OnFindLobbiesCompleteDelegate.AddDynamic(this, &ThisClass::OnFindLobbiesComplete);
 		}
 	}
+	
+	if (IsValid(LobbyNameEditableText))
+	{
+		APlayerState* PS = GetOwningPlayerState();
+		if (IsValid(PS))
+		{
+			FText NewLobbyName = FText::FromString(FString::Printf(TEXT("%s의 서버"), *PS->GetPlayerName()));
+			LobbyNameEditableText->SetText(NewLobbyName);
+		}
+	}
 }
 
 void UPTWLobbyBrowser::NativeDestruct()
@@ -88,10 +100,10 @@ void UPTWLobbyBrowser::OnClickedLobbyMenuButton()
 
 void UPTWLobbyBrowser::OnClickedCreateLobbyButton()
 {
-	FLobbySettings SessionData;
+	TArray<FSessionPropertyKeyPair> LobbySettings;
 	if (IsValid(LobbyNameEditableText))
 	{
-		SessionData.LobbyName = LobbyNameEditableText->GetText().ToString();
+		LobbySettings.Add({ TEXT("LobbyName"), LobbyNameEditableText->GetText().ToString() });
 	}
 	
 	UGameInstance* GameInstance = GetGameInstance();
@@ -105,7 +117,7 @@ void UPTWLobbyBrowser::OnClickedCreateLobbyButton()
 	{
 		return;
 	}
-	SessionSubsystem->CreateLobbySession(SessionData);
+	SessionSubsystem->CreateLobbySession(LobbySettings, 16, false);
 }
 
 void UPTWLobbyBrowser::OnClickedFindLobbyButton()
@@ -129,8 +141,6 @@ void UPTWLobbyBrowser::OnClickedFindLobbyButton()
 	}
 	
 	SessionSubsystem->FindLobbySession();
-	
-	
 }
 
 void UPTWLobbyBrowser::OnFindLobbiesComplete(const TArray<FBlueprintSessionResult>& SessionResults)

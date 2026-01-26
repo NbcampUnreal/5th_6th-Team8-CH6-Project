@@ -3,6 +3,7 @@
 
 #include "PTWGameMode.h"
 
+#include "CoreFramework/PTWPlayerState.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
 
@@ -12,9 +13,9 @@ APTWGameMode::APTWGameMode()
 	bUseSeamlessTravel = true;
 }
 
-void APTWGameMode::BeginPlay()
+void APTWGameMode::InitGameState()
 {
-	Super::BeginPlay();
+	Super::InitGameState();
 
 	PTWGameState = GetGameState<APTWGameState>();
 
@@ -24,15 +25,24 @@ void APTWGameMode::BeginPlay()
 
 		if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 		{
-			PTWGameState->SetCurrentRound(PTWScoreSubsystem->GetCurrentGameRound()); // 현재 라운드 값 받아서 GameState에 전달
+			PTWGameState->SetCurrentRound(PTWScoreSubsystem->GetCurrentGameRound()); // GameInstance 라운드 값 받아서 GameState에 전달
 		}
 	}
+}
+
+void APTWGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	
+	
 }
 
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 	
+	ApplyPlayerDataFromSubsystem(NewPlayer);
 }
 
 void APTWGameMode::Logout(AController* Exiting)
@@ -55,6 +65,8 @@ void APTWGameMode::StartTimer(float TimeDuration)
 void APTWGameMode::EndTimer()
 {
 	GetWorldTimerManager().ClearTimer(TimerHandle);
+
+	SaveGameDataToSubsystem();
 	
 	TravelLevel();
 }
@@ -63,6 +75,39 @@ void APTWGameMode::TravelLevel()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Travel Level"));
 	GetWorld()->ServerTravel(TravelLevelName);
+}
+
+void APTWGameMode::SaveGameDataToSubsystem()
+{
+	if (!PTWGameState) return;
+	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+	{
+		PTWScoreSubsystem->SaveGameRound(PTWGameState->GetCurrentRound());
+
+		for (APlayerState* PlayerState : PTWGameState->PlayerArray)
+		{
+			if (APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState))
+			{
+				PTWScoreSubsystem->SavePlayerData(PTWPlayerState->GetPlayerName(), PTWPlayerState->GetPlayerData());
+			}
+		}
+	}
+}
+
+void APTWGameMode::ApplyPlayerDataFromSubsystem(APlayerController* NewPlayer)
+{
+	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+	{
+		if (APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>())
+		{
+			if (FPTWPlayerData* FoundData = PTWScoreSubsystem->FindPlayerData(PTWPlayerState->GetPlayerName()))
+			{
+				PTWPlayerState->SetPlayerData(*FoundData);
+
+				UE_LOG(LogTemp, Warning, TEXT("Player Gold: %d"), FoundData->Gold);
+			}
+		}
+	}
 }
 
 void APTWGameMode::UpdateTimer()

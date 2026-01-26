@@ -41,7 +41,9 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
-
+	UFUNCTION(BlueprintPure)
+	bool IsDead() const;
+	
 protected:
 
 	virtual void InitAbilityActorInfo();
@@ -52,6 +54,8 @@ protected:
 public:
 	UFUNCTION(BlueprintCallable)
 	void EquipWeaponByTag(FGameplayTag NewWeaponTag);
+	
+	virtual void HandleDeath(AActor* Attacker);
 	
 	UFUNCTION(BlueprintCallable)
 	void OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon);
@@ -73,6 +77,8 @@ public:
 	//26.01.26 수정됨(현정석)
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon", ReplicatedUsing= OnRep_CurrentWeapon)
 	APTWWeaponActor* CurrentWeapon;
+	
+	FGameplayTag DeadTag;
 
 
 protected:
@@ -85,4 +91,5 @@ protected:
 	TArray<TSubclassOf<UGameplayAbility>> DefaultAbilities;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS|Default")
 	TArray<TSubclassOf<UGameplayEffect>> DefaultEffects;
+	
 };

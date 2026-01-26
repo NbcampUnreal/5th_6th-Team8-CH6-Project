@@ -1,10 +1,13 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PTW/GAS/PTWAttributeSet.h"
+
+#include "AssetTypeCategories.h"
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffectExtension.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "PTW/CoreFramework/PTWPlayerCharacter.h"
 
 
 UPTWAttributeSet::UPTWAttributeSet()
@@ -50,7 +53,7 @@ void UPTWAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	FGameplayEffectContextHandle Context = Data.EffectSpec.GetContext();
 	UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
-
+	AActor* SurceActor = Context.GetInstigator();
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
 		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
@@ -78,6 +81,21 @@ void UPTWAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 		else if (Data.EvaluatedData.Attribute == GetJumpZVelocityAttribute())
 		{
 			TargetCharacter->GetCharacterMovement()->JumpZVelocity = GetJumpZVelocity();
+		}
+	}
+	
+	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+	{
+		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
+
+		if (GetHealth() <= 0.0f)
+		{
+			APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(TargetActor);
+			// death event
+			if (!BaseCharacter->IsDead() && TargetActor->HasAuthority())
+			{
+				BaseCharacter->HandleDeath(SurceActor);
+			}
 		}
 	}
 }

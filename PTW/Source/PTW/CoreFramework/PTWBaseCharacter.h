@@ -27,7 +27,9 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
-
+	UFUNCTION(BlueprintPure)
+	bool IsDead() const;
+	
 protected:
 
 	virtual void InitAbilityActorInfo();
@@ -38,7 +40,8 @@ protected:
 public:
 	UFUNCTION(BlueprintCallable)
 	void EquipWeaponByTag(FGameplayTag NewWeaponTag);
-
+	
+	virtual void HandleDeath(AActor* Attacker);
 protected:
 
 
@@ -51,6 +54,8 @@ public:
 	TMap<FGameplayTag, APTWWeaponActor*> SpawnedWeapons;
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	APTWWeaponActor* CurrentWeapon;
+	
+	FGameplayTag DeadTag;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
@@ -62,4 +67,5 @@ protected:
 	TArray<TSubclassOf<UGameplayAbility>> DefaultAbilities;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS|Default")
 	TArray<TSubclassOf<UGameplayEffect>> DefaultEffects;
+	
 };

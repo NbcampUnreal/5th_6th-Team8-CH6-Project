@@ -2,12 +2,15 @@
 
 
 #include "PTWBaseCharacter.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemComponent.h"
 #include "GAS/PTWGameplayAbility.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Net/UnrealNetwork.h"
+#include "AbilitySystemBlueprintLibrary.h"
 
 APTWBaseCharacter::APTWBaseCharacter()
 {
@@ -26,6 +29,8 @@ APTWBaseCharacter::APTWBaseCharacter()
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+	
+	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Dead"));
 }
 
 void APTWBaseCharacter::BeginPlay()
@@ -44,6 +49,11 @@ void APTWBaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+bool APTWBaseCharacter::IsDead() const
+{
+	return AbilitySystemComponent->HasMatchingGameplayTag(DeadTag);
 }
 
 void APTWBaseCharacter::InitAbilityActorInfo()
@@ -117,18 +127,18 @@ void APTWBaseCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 		CurrentWeapon->SetActorEnableCollision(false);
 	}
 
-	if (APTWWeaponActor** FoundWeaponPtr = SpawnedWeapons.Find(NewWeaponTag))
+	if (APTWWeaponActor* FoundWeaponPtr = SpawnedWeapons.Find(NewWeaponTag)->Weapon1P)
 	{
-		APTWWeaponActor* NewWeaponActor = *FoundWeaponPtr;
+		APTWWeaponActor* NewWeaponActor = SpawnedWeapons.Find(NewWeaponTag)->Weapon3P;
 
-		if (NewWeaponActor)
+		if (FoundWeaponPtr)
 		{
+			FoundWeaponPtr->SetActorHiddenInGame(false);
 			NewWeaponActor->SetActorHiddenInGame(false);
 
-			CurrentWeapon = NewWeaponActor;
+			CurrentWeapon = FoundWeaponPtr;
 			CurrentWeaponTag = NewWeaponTag;
-
-
+			
 			UE_LOG(LogTemp, Log, TEXT("Weapon Equipped: %s"), *NewWeaponTag.ToString());
 		}
 	}
@@ -137,4 +147,34 @@ void APTWBaseCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 		UE_LOG(LogTemp, Warning, TEXT("Cannot find weapon with tag: %s"), *NewWeaponTag.ToString());
 	}
 }
+
+void APTWBaseCharacter::HandleDeath(AActor* Attacker)
+{
+	if (!HasAuthority() || !AbilitySystemComponent)
+	{
+		return;
+	}
+	FGameplayEventData Payload;
+	Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("죽음 이벤트 연결"));
+	Payload.Instigator = Attacker;
+	Payload.Target = this;
+	
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
+	AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
+}
+void APTWBaseCharacter::OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon)
+{
+	if (OldWeapon)
+	{
+		OldWeapon->SetActorHiddenInGame(true);
+	}
+	
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SetActorHiddenInGame(false);
+		CurrentWeapon->ApplyVisualPerspective();
+	}
+}
+
+
 

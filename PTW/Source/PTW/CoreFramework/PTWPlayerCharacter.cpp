@@ -58,6 +58,8 @@ void APTWPlayerCharacter::BeginPlay()
 	
 	if (GetWorld() && HasAuthority())
 	{
+		UE_LOG(LogTemp, Log, TEXT("BeginPlay Weapon Setup for: %s"), *GetName());
+		
 		for (const auto& Pair : WeaponClasses)
 		{
 			FGameplayTag Tag = Pair.Key;
@@ -76,13 +78,22 @@ void APTWPlayerCharacter::BeginPlay()
 				
 				if (Weapon1P && Weapon3P)
 				{
-					InventoryComponent->AddItem(ItemDef, Weapon1P);
-					SpawnedWeapons.Add(Tag, Weapon1P);
+					InventoryComponent->AddItem(ItemDef, Weapon1P, Weapon3P);
+					
+					FWeaponPair Weaponpair;
+					
+					Weaponpair.Weapon1P = Weapon1P;
+					Weaponpair.Weapon3P = Weapon3P;
+					
+					SpawnedWeapons.Add(Tag, Weaponpair);
 					Weapon1P->AttachToComponent(GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
 					Weapon3P->AttachToComponent(GetMesh3P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
 					
 					Weapon1P->ApplyVisualPerspective(); 
 					Weapon3P->ApplyVisualPerspective();
+					
+					Weapon1P->SetActorHiddenInGame(true);
+					Weapon3P->SetActorHiddenInGame(true);
 				}
 			}
 		}
@@ -95,7 +106,7 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	InitAbilityActorInfo();
-
+	
 	GiveDefaultAbilities();
 	ApplyDefaultEffects();
 }
@@ -104,7 +115,10 @@ void APTWPlayerCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	InitAbilityActorInfo();
+	if (IsLocallyControlled())
+	{
+		InitAbilityActorInfo();
+	}
 }
 
 void APTWPlayerCharacter::InitAbilityActorInfo()
@@ -115,9 +129,17 @@ void APTWPlayerCharacter::InitAbilityActorInfo()
 	if (PS)
 	{
 		PS->GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
-
 		AbilitySystemComponent = PS->GetAbilitySystemComponent();
 		AttributeSet = PS->GetAttributeSet();
+	
+		// [중요 디버깅 로그]
+		UE_LOG(LogTemp, Warning, TEXT("[%s] InitAbility - PS: %s, Avatar: %s"), 
+			HasAuthority() ? TEXT("SERVER") : TEXT("CLIENT"),
+			*PS->GetName(), 
+			*GetName());
+	}
+	else {
+		UE_LOG(LogTemp, Error, TEXT("InitAbility Failed: PlayerState is NULL for %s"), *GetName());
 	}
 }
 

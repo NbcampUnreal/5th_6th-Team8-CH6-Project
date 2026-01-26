@@ -9,6 +9,8 @@
 #include "PTWWeaponActor.h"
 #include "PTWWeaponData.h"
 #include "CoreFramework/PTWBaseCharacter.h"
+#include "Engine/ActorChannel.h"
+#include "Net/UnrealNetwork.h"
 
 
 UPTWInventoryComponent::UPTWInventoryComponent()
@@ -19,12 +21,13 @@ UPTWInventoryComponent::UPTWInventoryComponent()
 
 
 
-void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemDefinition> ItemClass, APTWWeaponActor* WeaponActor)
+void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemDefinition> ItemClass, APTWWeaponActor* WeaponActor, APTWWeaponActor* WeaponActor3P)
 {
 	//WeaponArr.AddUnique(AddItemDef)
 	UPTWItemInstance* WeaponItemInst = NewObject<UPTWItemInstance>(this);
 	WeaponItemInst->ItemDef = ItemClass;
-	WeaponItemInst->SpawnedWeapon = WeaponActor;
+	WeaponItemInst->SpawnedWeapon1P = WeaponActor;
+	WeaponItemInst->SpawnedWeapon3P = WeaponActor3P;
 	WeaponItemInst->CurrentAmmo = WeaponActor->GetWeaponData()->MaxAmmo;
 	WeaponArr.Add(WeaponItemInst);
 }
@@ -52,13 +55,39 @@ void UPTWInventoryComponent::EqiupWeapon(int32 SlotIndex)
 	FGameplayTag EquipTag = bHasEquip ? FGameplayTag::RequestGameplayTag(FName("Weapon.State.UnEquip")) : 
 	FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 	
-	
 	FGameplayEventData Payload;
 	Payload.OptionalObject = TargetInstance;
+	Payload.EventMagnitude = static_cast<float>(SlotIndex);
 	
 	ASC->HandleGameplayEvent(EquipTag, &Payload);
 }
 
+void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UPTWInventoryComponent, WeaponArr);
+}
+
+ bool UPTWInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch,
+ 	FReplicationFlags* RepFlags)
+ {
+ 	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+ 	
+ 	for (UPTWItemInstance* Item : WeaponArr)
+ 	{
+ 		if (Item)
+ 		{
+ 			WroteSomething |= Channel->ReplicateSubobject(Item, *Bunch, *RepFlags);
+ 		}
+ 	}
+	
+ 	return WroteSomething;
+ }
+
+void UPTWInventoryComponent::SetCurrentWeaponInst(const UPTWItemInstance* WeaponInst)
+{
+	CurrentWeapon = const_cast<UPTWItemInstance*>(WeaponInst);
+}
 
 // Called when the game starts
 void UPTWInventoryComponent::BeginPlay()

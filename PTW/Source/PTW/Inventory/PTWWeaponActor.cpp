@@ -34,15 +34,23 @@ void APTWWeaponActor::ApplyVisualPerspective()
 
 	if (bIsFirstPersonWeapon)
 	{
-		// 1P 무기: 로컬 플레이어에게만 보임
+		// 1인칭 무기 세팅
 		WeaponMesh->SetOnlyOwnerSee(true);
 		WeaponMesh->SetOwnerNoSee(false);
 	}
 	else
 	{
-		// 3P 무기: 로컬 플레이어에게는 숨기고 타인에게만 보임
-		WeaponMesh->SetOnlyOwnerSee(false);
-		WeaponMesh->SetOwnerNoSee(true);
+		// 3인칭 무기 세팅
+		if (bIsLocal)
+		{
+			WeaponMesh->SetOwnerNoSee(true);
+		}
+		else
+		{
+			WeaponMesh->SetOnlyOwnerSee(false);
+			WeaponMesh->SetOwnerNoSee(false);
+			WeaponMesh->SetVisibility(true);
+		}
 		WeaponMesh->SetCastHiddenShadow(true);
 	}
 }

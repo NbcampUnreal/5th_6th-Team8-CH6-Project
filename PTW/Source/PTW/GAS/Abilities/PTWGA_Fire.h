@@ -38,4 +38,7 @@ protected:
 	FTimerHandle AutoFireTimer;
 	float FireRate = 0.15f;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cue|Effect")
+	TSubclassOf<UGameplayEffect> FireEffectClass;
+	
 };

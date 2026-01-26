@@ -23,7 +23,11 @@ void UPTWGA_UnEquip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	{
 		FGameplayTag CurrentWeaponTag = WeaponItemInstance->ItemDef->WeaponTag;
 		APTWBaseCharacter* Character = GetPTWCharacterFromActorInfo();
-		Character->EquipWeaponByTag(CurrentWeaponTag);
+		
+		if (HasAuthority(&CurrentActivationInfo))
+		{
+			Character->EquipWeaponByTag(CurrentWeaponTag);
+		}
 	
 		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	

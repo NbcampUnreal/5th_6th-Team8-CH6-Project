@@ -2,11 +2,12 @@
 
 
 #include "CoreFramework/PTWAnimInstance.h"
-#include "CoreFramework/PTWBaseCharacter.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Inventory/PTWWeaponActor.h"
 
 void UPTWAnimInstance::NativeInitializeAnimation()
 {
@@ -63,6 +64,39 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		FGameplayTag SprintTag = FGameplayTag::RequestGameplayTag(TEXT("Input.Action.Sprint"));
 		bIsSprinting = ASC->HasMatchingGameplayTag(SprintTag);
+	}
+
+	USkeletalMeshComponent* MyOwningMesh = GetOwningComponent();
+	APTWWeaponActor* Weapon = Character->GetCurrentWeapon();
+
+	if (IsValid(Weapon) && MyOwningMesh)
+	{
+		UMeshComponent* TargetWeaponMesh = nullptr;
+
+		auto* PlayerChar = Cast<APTWPlayerCharacter>(Character);
+
+		//if (PlayerChar && MyOwningMesh == PlayerChar->GetMesh1P())
+		//{
+		//	TargetWeaponMesh = Weapon->GetWeaponMesh1P();
+		//}
+		//else
+		//{
+		//	TargetWeaponMesh = Weapon->GetWeaponMesh3P();
+		//}
+
+		if (TargetWeaponMesh)
+		{
+			FTransform SocketTransform = TargetWeaponMesh->GetSocketTransform(FName("LH_Grip"), RTS_World);
+
+			FTransform MeshTransform = MyOwningMesh->GetComponentTransform();
+
+			LeftHandIKTransform = SocketTransform.GetRelativeTransform(MeshTransform);
+			LeftHandIKAlpha = 1.0f;
+		}
+	}
+	else
+	{
+		LeftHandIKAlpha = 0.0f;
 	}
 }
 

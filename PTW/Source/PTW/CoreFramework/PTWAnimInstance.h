@@ -52,4 +52,8 @@ protected:
 	float AimPitch;
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float LocomotionDirection;
+	UPROPERTY(BlueprintReadOnly, Category = "IK")
+	FTransform LeftHandIKTransform;
+	UPROPERTY(BlueprintReadOnly, Category = "IK")
+	float LeftHandIKAlpha;
 };

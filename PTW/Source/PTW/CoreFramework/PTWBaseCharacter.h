@@ -52,13 +52,14 @@ protected:
 	void ApplyDefaultEffects();
 
 public:
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void EquipWeaponByTag(FGameplayTag NewWeaponTag);
-	
-	virtual void HandleDeath(AActor* Attacker);
-	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon);
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	APTWWeaponActor* GetCurrentWeapon() const { return CurrentWeapon; }
+
+	virtual void HandleDeath(AActor* Attacker);
 
 protected:
 

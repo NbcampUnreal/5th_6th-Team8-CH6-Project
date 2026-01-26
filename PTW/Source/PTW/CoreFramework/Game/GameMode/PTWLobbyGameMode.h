@@ -18,6 +18,7 @@ public:
 
 protected:
 	virtual void InitGameState() override;
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
@@ -43,4 +44,6 @@ private:
 	/** 로비에서 다음 게임 시작 전 대기 시간 (초) */
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
 	float LobbyWaitingTime = 60;
+
+	bool bIsFirstLobby;
 };

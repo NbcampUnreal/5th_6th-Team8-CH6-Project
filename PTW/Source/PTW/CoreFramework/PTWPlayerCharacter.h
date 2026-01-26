@@ -14,6 +14,20 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 class UPTWInventoryComponent;
+class APTWWeaponActor;
+
+USTRUCT(BlueprintType)
+struct FWeaponPair
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<APTWWeaponActor> Weapon1P;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<APTWWeaponActor> Weapon3P;
+};
 
 UCLASS()
 class PTW_API APTWPlayerCharacter : public APTWBaseCharacter
@@ -23,11 +37,7 @@ class PTW_API APTWPlayerCharacter : public APTWBaseCharacter
 public:
 	APTWPlayerCharacter();
 
-	UFUNCTION(BlueprintPure, Category = "Mesh")
-	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-
-	UFUNCTION(BlueprintPure, Category = "Mesh")
-	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	//생성자
@@ -42,6 +52,31 @@ protected:
 	void Look(const FInputActionValue& Value);
 	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
 	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void EquipWeaponByTag(FGameplayTag NewWeaponTag);
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon);
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	APTWWeaponActor* GetCurrentWeapon() const { return CurrentWeapon; }
+
+	UFUNCTION(BlueprintPure, Category = "Mesh")
+	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+	UFUNCTION(BlueprintPure, Category = "Mesh")
+	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
+
+	void AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag);
+
+public:
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TMap<FGameplayTag, TSubclassOf<APTWWeaponActor>> WeaponClasses;
+	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Weapon")
+	FGameplayTag CurrentWeaponTag;
+	UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
+	TMap<FGameplayTag, FWeaponPair> SpawnedWeapons;
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon", ReplicatedUsing = OnRep_CurrentWeapon)
+	APTWWeaponActor* CurrentWeapon;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")

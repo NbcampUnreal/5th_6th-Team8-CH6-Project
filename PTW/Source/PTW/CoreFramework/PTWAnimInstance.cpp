@@ -13,7 +13,7 @@ void UPTWAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 
-	Character = Cast<APTWBaseCharacter>(TryGetPawnOwner());
+	Character = Cast<APTWPlayerCharacter>(TryGetPawnOwner());
 	if (Character)
 	{
 		CharacterMovement = Character->GetCharacterMovement();
@@ -28,7 +28,7 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	if (!Character)
 	{
-		Character = Cast<APTWBaseCharacter>(TryGetPawnOwner());
+		Character = Cast<APTWPlayerCharacter>(TryGetPawnOwner());
 		if (Character)
 		{
 			CharacterMovement = Character->GetCharacterMovement();
@@ -75,18 +75,18 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 		auto* PlayerChar = Cast<APTWPlayerCharacter>(Character);
 
-		//if (PlayerChar && MyOwningMesh == PlayerChar->GetMesh1P())
-		//{
-		//	TargetWeaponMesh = Weapon->GetWeaponMesh1P();
-		//}
-		//else
-		//{
-		//	TargetWeaponMesh = Weapon->GetWeaponMesh3P();
-		//}
+		if (PlayerChar && MyOwningMesh == PlayerChar->GetMesh1P())
+		{
+			TargetWeaponMesh = Weapon->GetStaticMeshComponent();
+		}
+		else
+		{
+			TargetWeaponMesh = Weapon->GetStaticMeshComponent();
+		}
 
 		if (TargetWeaponMesh)
 		{
-			FTransform SocketTransform = TargetWeaponMesh->GetSocketTransform(FName("LH_Grip"), RTS_World);
+			FTransform SocketTransform = TargetWeaponMesh->GetSocketTransform(FName("LHIK"), RTS_World);
 
 			FTransform MeshTransform = MyOwningMesh->GetComponentTransform();
 

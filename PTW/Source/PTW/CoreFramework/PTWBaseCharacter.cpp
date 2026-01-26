@@ -39,13 +39,6 @@ void APTWBaseCharacter::BeginPlay()
 	
 }
 
-void APTWBaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(APTWBaseCharacter, CurrentWeaponTag);
-}
-
 UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
@@ -104,50 +97,6 @@ void APTWBaseCharacter::ApplyDefaultEffects()
 	}
 }
 
-void APTWBaseCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
-{
-	if (CurrentWeaponTag == NewWeaponTag)
-	{
-		if (CurrentWeapon)
-		{
-			CurrentWeapon->SetActorHiddenInGame(true);
-			CurrentWeapon->SetActorEnableCollision(false);
-		}
-
-		CurrentWeapon = nullptr;
-		CurrentWeaponTag = FGameplayTag::EmptyTag;
-
-		UE_LOG(LogTemp, Log, TEXT("Weapon Unequipped (Toggle Off)"));
-		return;
-	}
-
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->SetActorHiddenInGame(true);
-		CurrentWeapon->SetActorEnableCollision(false);
-	}
-
-	if (APTWWeaponActor* FoundWeaponPtr = SpawnedWeapons.Find(NewWeaponTag)->Weapon1P)
-	{
-		APTWWeaponActor* NewWeaponActor = SpawnedWeapons.Find(NewWeaponTag)->Weapon3P;
-
-		if (FoundWeaponPtr)
-		{
-			FoundWeaponPtr->SetActorHiddenInGame(false);
-			NewWeaponActor->SetActorHiddenInGame(false);
-
-			CurrentWeapon = FoundWeaponPtr;
-			CurrentWeaponTag = NewWeaponTag;
-			
-			UE_LOG(LogTemp, Log, TEXT("Weapon Equipped: %s"), *NewWeaponTag.ToString());
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot find weapon with tag: %s"), *NewWeaponTag.ToString());
-	}
-}
-
 void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 {
 	if (!HasAuthority() || !AbilitySystemComponent)
@@ -162,19 +111,7 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
 	AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
 }
-void APTWBaseCharacter::OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon)
-{
-	if (OldWeapon)
-	{
-		OldWeapon->SetActorHiddenInGame(true);
-	}
-	
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->SetActorHiddenInGame(false);
-		CurrentWeapon->ApplyVisualPerspective();
-	}
-}
+
 
 
 

@@ -7,7 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "PTWAnimInstance.generated.h"
 
-class APTWBaseCharacter;
+class APTWPlayerCharacter;
 class UAbilitySystemComponent;
 class UCharacterMovementComponent;
 
@@ -23,7 +23,7 @@ public:
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Character")
-	TObjectPtr<APTWBaseCharacter> Character;
+	TObjectPtr<APTWPlayerCharacter> Character;
 	UPROPERTY(BlueprintReadOnly, Category = "Character")
 	TObjectPtr<UCharacterMovementComponent> CharacterMovement;
 	UPROPERTY(BlueprintReadOnly, Category = "Character")

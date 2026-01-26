@@ -7,6 +7,7 @@
 #include "PTWGameplayAbility.generated.h"
 
 class APTWBaseCharacter;
+class APTWPlayerCharacter;
 class APTWPlayerController;
 
 UCLASS()
@@ -22,7 +23,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Ability")
 	APTWBaseCharacter* GetPTWCharacterFromActorInfo() const;
-
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Ability")
+	APTWPlayerCharacter* GetPTWPlayerCharacterFromActorInfo() const;
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Ability")
 	APTWPlayerController* GetPTWPlayerControllerFromActorInfo() const;
 };

@@ -14,6 +14,9 @@
 #include "GAS/PTWGameplayAbility.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWWeaponActor.h"
+#include "Inventory/PTWItemDefinition.h"
+#include "System/PTWItemSpawnManager.h"
+#include "Net/UnrealNetwork.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -33,6 +36,14 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 
 	InventoryComponent = CreateDefaultSubobject<UPTWInventoryComponent>(TEXT("InventoryComponent"));
 	InventoryComponent->SetIsReplicated(true);
+}
+
+void APTWPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APTWPlayerCharacter, CurrentWeaponTag);
+	DOREPLIFETIME(APTWPlayerCharacter, CurrentWeapon);
 }
 
 void APTWPlayerCharacter::BeginPlay()
@@ -213,5 +224,73 @@ void APTWPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 	if (UPTWAbilitySystemComponent* PTWASC = Cast<UPTWAbilitySystemComponent>(GetAbilitySystemComponent()))
 	{
 		PTWASC->AbilityInputTagReleased(InputTag);
+	}
+}
+
+void APTWPlayerCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
+{
+	if (!HasAuthority()) return;
+
+	// 같은 무기면 해제 로직
+	if (CurrentWeaponTag == NewWeaponTag)
+	{
+		if (CurrentWeapon)
+		{
+			if (FWeaponPair* CurrentPair = SpawnedWeapons.Find(CurrentWeaponTag))
+			{
+				if (CurrentPair->Weapon1P) CurrentPair->Weapon1P->SetActorHiddenInGame(true);
+				if (CurrentPair->Weapon3P) CurrentPair->Weapon3P->SetActorHiddenInGame(true);
+			}
+
+			CurrentWeapon = nullptr;
+		}
+
+		CurrentWeaponTag = FGameplayTag::EmptyTag;
+		UE_LOG(LogTemp, Log, TEXT("Weapon Unequipped (Toggle Off)"));
+		return;
+	}
+
+	if (CurrentWeaponTag.IsValid())
+	{
+		if (FWeaponPair* OldPair = SpawnedWeapons.Find(CurrentWeaponTag))
+		{
+			if (OldPair->Weapon1P) OldPair->Weapon1P->SetActorHiddenInGame(true);
+			if (OldPair->Weapon3P) OldPair->Weapon3P->SetActorHiddenInGame(true);
+		}
+	}
+
+	if (FWeaponPair* FoundPair = SpawnedWeapons.Find(NewWeaponTag))
+	{
+		APTWWeaponActor* NewWeapon1P = FoundPair->Weapon1P;
+		APTWWeaponActor* NewWeapon3P = FoundPair->Weapon3P;
+
+		if (NewWeapon1P && NewWeapon3P)
+		{
+			NewWeapon1P->SetActorHiddenInGame(false);
+			NewWeapon3P->SetActorHiddenInGame(false);
+
+			CurrentWeapon = NewWeapon1P;
+			CurrentWeaponTag = NewWeaponTag;
+
+			UE_LOG(LogTemp, Log, TEXT("Weapon Equipped: %s"), *NewWeaponTag.ToString());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot find weapon with tag: %s"), *NewWeaponTag.ToString());
+	}
+}
+
+void APTWPlayerCharacter::OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon)
+{
+	if (OldWeapon)
+	{
+		OldWeapon->SetActorHiddenInGame(true);
+	}
+
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SetActorHiddenInGame(false);
+		CurrentWeapon->ApplyVisualPerspective();
 	}
 }

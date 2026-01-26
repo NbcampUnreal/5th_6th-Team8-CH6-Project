@@ -12,20 +12,6 @@ class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayAbility;
 class UGameplayEffect;
-class APTWWeaponActor;
-
-USTRUCT(BlueprintType)
-struct FWeaponPair
-{
-	GENERATED_BODY()
-	
-public:
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<APTWWeaponActor> Weapon1P;
-
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<APTWWeaponActor> Weapon3P;
-};
 
 
 UCLASS()
@@ -36,51 +22,24 @@ class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterf
 public:
 	//생성자
 	APTWBaseCharacter();
-	
+
 	virtual void BeginPlay() override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintPure)
 	bool IsDead() const;
-	
-protected:
 
+protected:
 	virtual void InitAbilityActorInfo();
 
 	void GiveDefaultAbilities();
 	void ApplyDefaultEffects();
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void EquipWeaponByTag(FGameplayTag NewWeaponTag);
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon);
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	APTWWeaponActor* GetCurrentWeapon() const { return CurrentWeapon; }
-
 	virtual void HandleDeath(AActor* Attacker);
 
-protected:
-
-
 public:
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	TMap<FGameplayTag, TSubclassOf<APTWWeaponActor>> WeaponClasses;
-	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Weapon")
-	FGameplayTag CurrentWeaponTag;
-	// UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
-	// TMap<FGameplayTag, APTWWeaponActor*> SpawnedWeapons;
-	
-	UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
-	TMap<FGameplayTag, FWeaponPair> SpawnedWeapons;
-	
-	//26.01.26 수정됨(현정석)
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon", ReplicatedUsing= OnRep_CurrentWeapon)
-	APTWWeaponActor* CurrentWeapon;
-	
 	FGameplayTag DeadTag;
-
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
@@ -92,5 +51,5 @@ protected:
 	TArray<TSubclassOf<UGameplayAbility>> DefaultAbilities;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS|Default")
 	TArray<TSubclassOf<UGameplayEffect>> DefaultEffects;
-	
+
 };

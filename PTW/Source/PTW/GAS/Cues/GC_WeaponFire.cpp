@@ -13,8 +13,9 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 	{
 		return false;
 	}
+	UObject* SourceObj = Parameters.EffectContext.Get()->GetSourceObject();
 	
-	if (APTWWeaponActor* Weapon = Cast<APTWWeaponActor>(Parameters.Instigator))
+	if (APTWWeaponActor* Weapon = Cast<APTWWeaponActor>(SourceObj))
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAttached(
 		   FireVFX,

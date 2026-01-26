@@ -38,6 +38,35 @@ void UPTWGA_Fire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	AutoFire();
 	//FIXME: 테스트 임시 코드
+	
+	FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(FireEffectClass);
+    
+	 if (SpecHandle.IsValid())
+	 {
+	 	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
+	 	if (!PC) return;
+	
+	 	UPTWInventoryComponent* Inven = PC->FindComponentByClass<UPTWInventoryComponent>();
+	 	if (!Inven) return;
+	 	
+	 	UPTWItemInstance* CurrentInst = Inven->GetCurrentWeaponInst();
+	 	
+	 	FGameplayEffectContextHandle Context = SpecHandle.Data->GetContext();
+        if (PC)
+        {
+            if (PC->IsLocallyControlled())
+            {
+                Context.AddSourceObject(CurrentInst->SpawnedWeapon1P);
+            }
+            else
+            {
+                Context.AddSourceObject(CurrentInst->SpawnedWeapon3P);
+            }
+        }
+	 	ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
+	 }
+	
+	
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
@@ -63,13 +92,7 @@ void UPTWGA_Fire::AutoFire()
 	UPTWInventoryComponent* Inven = PC->FindComponentByClass<UPTWInventoryComponent>();
 	if (!Inven) return;
 	
-	if (!Inven->GetCurrentWeaponActor())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("!!!"));
-		return;
-	}
-
-	UPTWItemInstance* CurrentInst = Inven->GetCurrentWeaponActor();
+	UPTWItemInstance* CurrentInst = Inven->GetCurrentWeaponInst();
 	
 	if (CurrentInst->CurrentAmmo <= 0)
 	{
@@ -82,12 +105,14 @@ void UPTWGA_Fire::AutoFire()
 		CurrentInst->CurrentAmmo--;
 	}
 	
-	if (CurrentInst->SpawnedWeapon)
-	{
-		FGameplayCueParameters CueParams;
-		CueParams.Instigator = CurrentInst->SpawnedWeapon;
-        
-		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-		ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Fire")), CueParams);
-	}
+	
+	
+	// if (CurrentInst->SpawnedWeapon)
+	// {
+	// 	FGameplayCueParameters CueParams;
+	// 	CueParams.Instigator = CurrentInst->SpawnedWeapon;
+ //        
+	// 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	// 	ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Fire")), CueParams);
+	// }
 }

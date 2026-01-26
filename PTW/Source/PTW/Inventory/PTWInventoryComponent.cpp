@@ -21,12 +21,13 @@ UPTWInventoryComponent::UPTWInventoryComponent()
 
 
 
-void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemDefinition> ItemClass, APTWWeaponActor* WeaponActor)
+void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemDefinition> ItemClass, APTWWeaponActor* WeaponActor, APTWWeaponActor* WeaponActor3P)
 {
 	//WeaponArr.AddUnique(AddItemDef)
 	UPTWItemInstance* WeaponItemInst = NewObject<UPTWItemInstance>(this);
 	WeaponItemInst->ItemDef = ItemClass;
-	WeaponItemInst->SpawnedWeapon = WeaponActor;
+	WeaponItemInst->SpawnedWeapon1P = WeaponActor;
+	WeaponItemInst->SpawnedWeapon3P = WeaponActor3P;
 	WeaponItemInst->CurrentAmmo = WeaponActor->GetWeaponData()->MaxAmmo;
 	WeaponArr.Add(WeaponItemInst);
 }
@@ -54,20 +55,17 @@ void UPTWInventoryComponent::EqiupWeapon(int32 SlotIndex)
 	FGameplayTag EquipTag = bHasEquip ? FGameplayTag::RequestGameplayTag(FName("Weapon.State.UnEquip")) : 
 	FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 	
-	
 	FGameplayEventData Payload;
 	Payload.OptionalObject = TargetInstance;
+	Payload.EventMagnitude = static_cast<float>(SlotIndex);
 	
 	ASC->HandleGameplayEvent(EquipTag, &Payload);
-	
-	ServerRPCSetCurrentWeapon(SlotIndex);
 }
 
 void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UPTWInventoryComponent, WeaponArr);
-	DOREPLIFETIME(UPTWInventoryComponent, CurrentWeapon);
 }
 
  bool UPTWInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch,
@@ -86,62 +84,15 @@ void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimePr
  	return WroteSomething;
  }
 
+void UPTWInventoryComponent::SetCurrentWeaponInst(const UPTWItemInstance* WeaponInst)
+{
+	CurrentWeapon = const_cast<UPTWItemInstance*>(WeaponInst);
+}
 
 // Called when the game starts
 void UPTWInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-}
-
-void UPTWInventoryComponent::ServerRPCSetCurrentWeapon_Implementation(int32 SlotIndex)
-{
-	CurrentWeapon = WeaponArr[SlotIndex];
-}
-
-bool UPTWInventoryComponent::ServerRPCSetCurrentWeapon_Validate(int32 SlotIndex)
-{
-	if (WeaponArr.IsValidIndex(SlotIndex))
-	{
-		return true;
-	}
-	return false;
-}
-
-
-void UPTWInventoryComponent::Server_EquipWeapon_Implementation(int32 SlotIndex)
-{
-	APawn* Pawn = Cast<APawn>(GetOwner());
-	if (!Pawn) return;
-	
-	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn);
-	if (!ASC) return;
-	
-	if (!WeaponArr.IsValidIndex(SlotIndex) || !WeaponArr[SlotIndex]) return;
-	UPTWItemInstance* TargetInstance = WeaponArr[SlotIndex];
-	CurrentWeapon = TargetInstance;
-	
-	//ServerRPCSetCurrentWeapon(SlotIndex);
-	
-	bool bHasEquip = ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
-	
-	FGameplayTag EquipTag = bHasEquip ? FGameplayTag::RequestGameplayTag(FName("Weapon.State.UnEquip")) : 
-	FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
-	
-	
-	FGameplayEventData Payload;
-	Payload.OptionalObject = TargetInstance;
-	
-	ASC->HandleGameplayEvent(EquipTag, &Payload);
-}
-
-bool UPTWInventoryComponent::Server_EquipWeapon_Validate(int32 SlotIndex)
-{
-	if (WeaponArr.IsValidIndex(SlotIndex))
-	{
-		return true;
-	}
-	
-	return false;
 }
 
 

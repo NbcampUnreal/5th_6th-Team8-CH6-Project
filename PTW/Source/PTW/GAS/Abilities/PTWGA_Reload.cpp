@@ -35,7 +35,7 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	
  	if (UPTWItemInstance* ItemInst = InvenComp->CurrentWeapon)       
 	{
-		if (APTWWeaponActor* WeaponActor = ItemInst->SpawnedWeapon)
+		if (APTWWeaponActor* WeaponActor = ItemInst->SpawnedWeapon1P)
 		{
 			if (UPTWWeaponData* Data =WeaponActor->GetWeaponData())
 			{

@@ -78,7 +78,7 @@ void APTWPlayerCharacter::BeginPlay()
 				
 				if (Weapon1P && Weapon3P)
 				{
-					InventoryComponent->AddItem(ItemDef, Weapon1P);
+					InventoryComponent->AddItem(ItemDef, Weapon1P, Weapon3P);
 					
 					FWeaponPair Weaponpair;
 					

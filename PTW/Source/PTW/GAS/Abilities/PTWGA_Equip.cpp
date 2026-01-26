@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWBaseCharacter.h"
+#include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
@@ -25,7 +26,15 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	{
 		FGameplayTag CurrentWeaponTag = WeaponItemInstance->ItemDef->WeaponTag;
 		APTWBaseCharacter* Character = GetPTWCharacterFromActorInfo();
-		Character->EquipWeaponByTag(CurrentWeaponTag);
+		
+		if (HasAuthority(&CurrentActivationInfo))
+		{
+			Character->EquipWeaponByTag(CurrentWeaponTag);
+			if (UPTWInventoryComponent* InvenComp = Character->FindComponentByClass<UPTWInventoryComponent>())
+			{
+				InvenComp->SetCurrentWeaponInst(WeaponItemInstance);
+			}
+		}
 		
 		FGameplayTag StatTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 		

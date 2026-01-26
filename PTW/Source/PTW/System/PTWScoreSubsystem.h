@@ -22,10 +22,10 @@ public:
 	/** 특정 플레이어의 데이터를 저장
 	 * - PlayerIndex를 키로 플레이어 진행 데이터 갱신
 	 *
-	 * @param PlayerIndex 플레이어를 식별하는 인덱스
+	 * @param PlayerName 플레이어를 식별하는 인덱스
 	 * @param PlayerData 저장할 플레이어 데이터
 	 */
-	void SavePlayerData(int32 PlayerIndex, const FPTWPlayerData& PlayerData);
+	void SavePlayerData(const FString& PlayerName, const FPTWPlayerData& PlayerData);
 
 	/** 현재 게임 라운드 값을 저장
 	 * - 라운드 진행 시 호출되어 상태 갱신
@@ -41,12 +41,12 @@ public:
 	FORCEINLINE int32 GetCurrentGameRound() const { return SavedGameRound; }
 	
 	/** 지정한 플레이어의 저장된 데이터가 있으면 반환 */
-	FPTWPlayerData* FindPlayerData(int32 PlayerID);
+	FPTWPlayerData* FindPlayerData(const FString& PlayerName);
 
 private:
 	// 현재 저장 게임 라운드 번호
 	int32 SavedGameRound = 1;
 	
 	// 플레이어 ID를 키로 하는 플레이어 데이터 저장소
-	TMap<int32, FPTWPlayerData> SavedPlayersData;
+	TMap<FString, FPTWPlayerData> SavedPlayersData;
 };

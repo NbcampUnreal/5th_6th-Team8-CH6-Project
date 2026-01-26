@@ -6,10 +6,9 @@
 #include "CoreFramework/PTWPlayerState.h"
 
 
-
-void UPTWScoreSubsystem::SavePlayerData(int32 PlayerIndex, const FPTWPlayerData& PlayerData)
+void UPTWScoreSubsystem::SavePlayerData(const FString& PlayerName, const FPTWPlayerData& PlayerData)
 {
-	SavedPlayersData.Add(PlayerIndex, PlayerData);
+	SavedPlayersData.Add(PlayerName, PlayerData);
 }
 
 void UPTWScoreSubsystem::SaveGameRound(int32 NewGameRound)
@@ -17,9 +16,11 @@ void UPTWScoreSubsystem::SaveGameRound(int32 NewGameRound)
 	SavedGameRound = NewGameRound;
 }
 
-FPTWPlayerData* UPTWScoreSubsystem::FindPlayerData(int32 PlayerID)
+FPTWPlayerData* UPTWScoreSubsystem::FindPlayerData(const FString& PlayerName)
 {
-	return SavedPlayersData.Find(PlayerID);
+	return SavedPlayersData.Find(PlayerName);
 }
+
+
 
 

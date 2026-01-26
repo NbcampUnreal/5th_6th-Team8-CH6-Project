@@ -35,6 +35,7 @@ void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
+	UE_LOG(LogTemp, Warning, TEXT("PostLogin"));
 	ApplyPlayerDataFromSubsystem(NewPlayer);
 }
 
@@ -73,7 +74,6 @@ void APTWGameMode::TravelLevel()
 void APTWGameMode::SaveGameDataToSubsystem()
 {
 	if (!PTWGameState) return;
-	
 	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
 		PTWScoreSubsystem->SaveGameRound(PTWGameState->GetCurrentRound());
@@ -82,7 +82,7 @@ void APTWGameMode::SaveGameDataToSubsystem()
 		{
 			if (APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState))
 			{
-				PTWScoreSubsystem->SavePlayerData(PTWPlayerState->GetPlayerId(), PTWPlayerState->GetPlayerData());
+				PTWScoreSubsystem->SavePlayerData(PTWPlayerState->GetPlayerName(), PTWPlayerState->GetPlayerData());
 			}
 		}
 	}
@@ -90,13 +90,11 @@ void APTWGameMode::SaveGameDataToSubsystem()
 
 void APTWGameMode::ApplyPlayerDataFromSubsystem(APlayerController* NewPlayer)
 {
-	if (!PTWGameState) return;
-	
 	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
 		if (APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>())
 		{
-			if (FPTWPlayerData* FoundData = PTWScoreSubsystem->FindPlayerData(PTWPlayerState->GetPlayerId()))
+			if (FPTWPlayerData* FoundData = PTWScoreSubsystem->FindPlayerData(PTWPlayerState->GetPlayerName()))
 			{
 				PTWPlayerState->SetPlayerData(*FoundData);
 			}

@@ -10,6 +10,8 @@
 UENUM(BlueprintType)
 enum class EPTWGamePhase : uint8
 {
+
+	
 	/** 게임 시작 전 로비 */
 	PreGameLobby UMETA(DisplayName="Pre Game Lobby"),
 

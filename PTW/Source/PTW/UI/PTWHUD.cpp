@@ -59,3 +59,11 @@ void APTWHUD::InitializeHUD(UAbilitySystemComponent* ASC)
 		InGameHUDInstance->InitializeUI(ASC);
 	}
 }
+
+void APTWHUD::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
+{
+	if (InGameHUDInstance)
+	{
+		InGameHUDInstance->UpdateAmmo(CurrentAmmo, MaxAmmo);
+	}
+}

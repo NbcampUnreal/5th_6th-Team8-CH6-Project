@@ -6,6 +6,8 @@
 #include "UObject/Object.h"
 #include "PTWItemInstance.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAmmoChangedSignature, int32 /*CurrentAmmo*/, int32 /*MaxAmmo*/);
+
 class APTWWeaponActor;
 class UPTWItemDefinition;
 /**
@@ -43,4 +45,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_SpawnedWeapon3P)
 	TObjectPtr<APTWWeaponActor> SpawnedWeapon3P;
 	
+	// UI 연동, PlayerController 에서 바인딩할 델리게이트
+	FOnAmmoChangedSignature OnAmmoChanged;
+	
+	/* UI 연동 */
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SetCurrentAmmo(int32 NewAmmo);
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	int32 GetMaxAmmo();
 };

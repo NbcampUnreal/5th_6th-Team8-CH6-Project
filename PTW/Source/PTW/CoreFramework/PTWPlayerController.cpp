@@ -8,6 +8,11 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "UI/RankBoard/PTWRankingBoard.h"
+#include "CoreFramework/PTWBaseCharacter.h"
+#include "Inventory/PTWItemInstance.h"
+#include "Inventory/PTWWeaponActor.h"
+#include "GameplayTagContainer.h"
+
 
 void APTWPlayerController::BeginPlay()
 {
@@ -45,6 +50,25 @@ void APTWPlayerController::OnRep_PlayerState()
 	}
 
 	TryInitializeHUD();
+}
+
+void APTWPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	//if (APTWBaseCharacter* PTWCharacter = Cast<APTWBaseCharacter>(InPawn))
+	//{
+	//	//캐릭터의 무기 변경 이벤트 구독 
+	//	 ex) PTWCharacter->OnWeaponChanged.AddUObject(this, &ThisClass::HandleWeaponChanged);
+	//}
+}
+
+void APTWPlayerController::OnUnPossess()
+{
+	UnbindAmmoDelegate();
+	CurrentWeaponItem = nullptr;
+
+	Super::OnUnPossess();
 }
 
 void APTWPlayerController::TryInitializeHUD()
@@ -101,6 +125,7 @@ void APTWPlayerController::OnRankingPressed()
 {
 	if (!RankingBoard) return;
 
+	RankingBoard->UpdateRanking();
 	RankingBoard->SetVisibility(ESlateVisibility::Visible);
 }
 
@@ -109,18 +134,6 @@ void APTWPlayerController::OnRankingReleased()
 	if (!RankingBoard) return;
 
 	RankingBoard->SetVisibility(ESlateVisibility::Hidden);
-}
-
-void APTWPlayerController::PostSeamlessTravel()
-{
-	Super::PostSeamlessTravel();
-
-	if (!IsLocalController())
-	{
-		return;
-	}
-
-	CreateRankingBoard();
 }
 
 void APTWPlayerController::CreateRankingBoard()
@@ -143,4 +156,75 @@ void APTWPlayerController::CreateRankingBoard()
 		RankingBoard->AddToViewport();
 		RankingBoard->SetVisibility(ESlateVisibility::Hidden);
 	}
+}
+
+void APTWPlayerController::PostSeamlessTravel()
+{
+	Super::PostSeamlessTravel();
+
+	if (!IsLocalController())
+	{
+		return;
+	}
+
+	CreateRankingBoard();
+}
+
+void APTWPlayerController::BindAmmoDelegate()
+{
+	if (!CurrentWeaponItem)
+	{
+		return;
+	}
+
+	CurrentWeaponItem->OnAmmoChanged.AddUObject(this, &ThisClass::HandleAmmoChanged);
+}
+
+void APTWPlayerController::UnbindAmmoDelegate()
+{
+	if (CurrentWeaponItem)
+	{
+		CurrentWeaponItem->OnAmmoChanged.RemoveAll(this);
+	}
+}
+
+void APTWPlayerController::HandleAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo)
+{
+	if (!IsLocalController())
+	{
+		return;
+	}
+
+	if (APTWHUD* PTWHUD = Cast<APTWHUD>(GetHUD()))
+	{
+		PTWHUD->UpdateAmmo(CurrentAmmo, MaxAmmo);
+	}
+}
+
+void APTWPlayerController::SyncAmmoUIOnce()
+{
+	if (!CurrentWeaponItem)
+		return;
+
+	HandleAmmoChanged(CurrentWeaponItem->CurrentAmmo, CurrentWeaponItem->GetMaxAmmo());
+}
+
+void APTWPlayerController::HandleWeaponChanged(FGameplayTag NewWeaponTag, UPTWItemInstance* NewItemInstance)
+{
+	if (!IsLocalController() || !NewItemInstance)
+	{
+		return;
+	}
+
+	// 1. 이전 무기 델리게이트 해제
+	UnbindAmmoDelegate();
+
+	// 2. 교체
+	CurrentWeaponItem = NewItemInstance;
+
+	// 3. 새 무기 델리게이트 바인딩
+	BindAmmoDelegate();
+
+	// 4. 초기 UI 동기화
+	SyncAmmoUIOnce();
 }

@@ -9,34 +9,49 @@
 
 
 
+void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
+
+	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("InitGame Subsystem"));
+	}
+
+	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+	{
+		if (PTWScoreSubsystem->bIsFirstLobby == true)
+		{
+			bIsFirstLobby = true;	
+			PTWScoreSubsystem->bIsFirstLobby = false;
+		}
+		else
+		{
+			bIsFirstLobby = false;	
+		}
+	}
+	
+}
+
 void APTWLobbyGameMode::InitGameState()
 {
 	Super::InitGameState();
 
 	TravelLevelName = TEXT("/Game/_PTW/Maps/MiniGame_Bomb");
-	
-	PTWGameState = GetGameState<APTWGameState>();
-	
+
 	if (PTWGameState)
 	{
-		if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+		if (bIsFirstLobby == true)
 		{
-			if (PTWScoreSubsystem->bIsFirstLobby == true)
-			{
-				PTWGameState->SetCurrentPhase(EPTWGamePhase::PreGameLobby);
-				
-				PTWScoreSubsystem->bIsFirstLobby = false;
-			}
-			else
-			{
-				PTWGameState->SetCurrentPhase(EPTWGamePhase::PostGameLobby);
-				
-				PTWGameState->AdvanceRound(); // 라운드 증가
-			}
+			PTWGameState->SetCurrentPhase(EPTWGamePhase::PreGameLobby);
+		}
+		else
+		{
+			PTWGameState->SetCurrentPhase(EPTWGamePhase::PostGameLobby);
+			PTWGameState->AdvanceRound(); // 라운드 증가
 		}
 	}
 	
-	StartTimer(LobbyWaitingTime);
 }
 
 void APTWLobbyGameMode::BeginPlay()
@@ -65,6 +80,7 @@ void APTWLobbyGameMode::BeginPlay()
 	// }
 	//UE_LOG(LogTemp, Warning, TEXT("Beginplay "));
 	
+	StartTimer(LobbyWaitingTime);
 }
 
 void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
@@ -74,7 +90,6 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	//접속하면 무적 상태로 변경
 	
 	if (!IsValid(PTWGameState)) return;
-	UE_LOG(LogTemp, Warning, TEXT("PostLogin "));
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
 	{
 		AddRandomGold(NewPlayer);

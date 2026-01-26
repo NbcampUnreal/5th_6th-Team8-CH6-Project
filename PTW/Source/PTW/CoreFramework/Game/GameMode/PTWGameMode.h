@@ -24,9 +24,9 @@ public:
 	APTWGameMode();
 
 protected:
-	virtual void InitGameState() override;
-	
 	/** 게임 월드 시작 시 초기 설정 및 GameState 참조 캐싱 */
+	virtual void InitGameState() override;
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void BeginPlay() override;
 
 	/** 플레이어 로그인 시 호출(접속 인원/시작 조건 갱신) */
@@ -61,7 +61,7 @@ private:
 	// 타이머 틱 처리(종료 시 EndTimer 트리거)
 	void UpdateTimer();
 	
-
+	int32 CurrentRound;
 	
 	// 내부 타이머 핸들(StartTimer/UpdateTimer에서 사용)
 	FTimerHandle TimerHandle;

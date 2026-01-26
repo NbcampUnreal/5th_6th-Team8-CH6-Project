@@ -13,6 +13,16 @@ APTWGameMode::APTWGameMode()
 	bUseSeamlessTravel = true;
 }
 
+void APTWGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
+	
+	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+	{
+		CurrentRound = PTWScoreSubsystem->GetCurrentGameRound(); // GameInstance 라운드 값 받아서 GameMode에 저장
+	}
+}
+
 void APTWGameMode::InitGameState()
 {
 	Super::InitGameState();
@@ -21,12 +31,7 @@ void APTWGameMode::InitGameState()
 
 	if (PTWGameState)
 	{
-		PTWGameState->OnTimerFinished.AddDynamic(this, &APTWGameMode::EndTimer);
-
-		if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
-		{
-			PTWGameState->SetCurrentRound(PTWScoreSubsystem->GetCurrentGameRound()); // GameInstance 라운드 값 받아서 GameState에 전달
-		}
+		PTWGameState->SetCurrentRound(CurrentRound); // GameMode 라운드 값 받아서 GameState에 전달
 	}
 }
 
@@ -34,8 +39,10 @@ void APTWGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
-	
+	if (PTWGameState)
+	{
+		PTWGameState->OnTimerFinished.AddDynamic(this, &APTWGameMode::EndTimer);
+	}
 }
 
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)

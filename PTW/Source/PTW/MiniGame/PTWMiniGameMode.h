@@ -3,9 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Inventory/PTWItemDefinition.h"
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWMiniGameMode.generated.h"
 
+class UPTWItemDefinition;
+class APTWWeaponActor;
 /**
  * 
  */
@@ -27,10 +30,19 @@ public:
 	void AddWinPoint(APawn* PointPawn, int32 AddPoint);
 	
 protected:
+	virtual void InitGameState() override;
 	virtual void BeginPlay() override;
 	virtual void EndTimer() override;
 
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void RestartPlayer(AController* NewPlayer) override;
+	
 	/** 미니게임 진행 시간 (초) */
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
 	float MiniGameTime = 90;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")
+	TObjectPtr<UPTWItemDefinition> ItemDefinition;
+
+	void SpawnDefaultWeapon(AController* NewPlayer);
 };

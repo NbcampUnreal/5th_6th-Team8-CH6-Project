@@ -3,9 +3,12 @@
 
 #include "PTWMiniGameMode.h"
 
+#include "PTW/System/PTWItemSpawnManager.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
+#include "PTW/Inventory/PTWItemDefinition.h"
 
 class UPTWScoreSubsystem;
 
@@ -13,10 +16,9 @@ APTWMiniGameMode::APTWMiniGameMode()
 {
 	
 }
-
-void APTWMiniGameMode::BeginPlay()
+void APTWMiniGameMode::InitGameState()
 {
-	Super::BeginPlay();
+	Super::InitGameState();
 
 	TravelLevelName = TEXT("/Game/_PTW/Maps/Lobby");
 
@@ -25,8 +27,12 @@ void APTWMiniGameMode::BeginPlay()
 		PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
 	}
 	
-	StartTimer(MiniGameTime);
+}
+void APTWMiniGameMode::BeginPlay()
+{
+	Super::BeginPlay();
 	
+	StartTimer(MiniGameTime);
 }
 
 void APTWMiniGameMode::EndTimer()
@@ -34,6 +40,32 @@ void APTWMiniGameMode::EndTimer()
 	Super::EndTimer();
 	
 	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
+}
+
+void APTWMiniGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	//SpawnDefaultWeapon(NewPlayer); //
+}
+
+void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
+{
+	Super::RestartPlayer(NewPlayer);
+
+	//SpawnDefaultWeapon(NewPlayer);
+}
+
+
+void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
+{
+	if (UPTWItemSpawnManager* ItemSpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+	{
+		if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
+		{
+			ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition);
+		}
+	}
 }
 
 void APTWMiniGameMode::AddWinPoint(APawn* PointPawn, int32 AddPoint)
@@ -45,3 +77,5 @@ void APTWMiniGameMode::AddWinPoint(APawn* PointPawn, int32 AddPoint)
 		PTWPlayerState->SetPlayerData(PlayerData);
 	}
 }
+
+

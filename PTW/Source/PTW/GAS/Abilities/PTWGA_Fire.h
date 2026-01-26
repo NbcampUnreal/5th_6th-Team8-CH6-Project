@@ -30,9 +30,11 @@ public:
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
 	
-	void StartFire();
+	void StartFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+							   const FGameplayAbilityActivationInfo ActivationInfo);
+	void AutoFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+							   const FGameplayAbilityActivationInfo ActivationInfo);
 	void StopFire();
-	void AutoFire();
 	
 protected:
 	FTimerHandle AutoFireTimer;

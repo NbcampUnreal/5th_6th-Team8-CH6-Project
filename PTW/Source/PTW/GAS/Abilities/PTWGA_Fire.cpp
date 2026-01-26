@@ -21,7 +21,7 @@ void UPTWGA_Fire::InputPressed(const FGameplayAbilitySpecHandle Handle, const FG
                                const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
-	StartFire();
+	StartFire(Handle, ActorInfo, ActivationInfo);
 }
 
 void UPTWGA_Fire::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -36,45 +36,19 @@ void UPTWGA_Fire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	AutoFire();
+	AutoFire(Handle, ActorInfo, ActivationInfo);
 	//FIXME: 테스트 임시 코드
-	
-	FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(FireEffectClass);
-    
-	 if (SpecHandle.IsValid())
-	 {
-	 	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
-	 	if (!PC) return;
-	
-	 	UPTWInventoryComponent* Inven = PC->FindComponentByClass<UPTWInventoryComponent>();
-	 	if (!Inven) return;
-	 	
-	 	UPTWItemInstance* CurrentInst = Inven->GetCurrentWeaponInst();
-	 	
-	 	FGameplayEffectContextHandle Context = SpecHandle.Data->GetContext();
-        if (PC)
-        {
-            if (PC->IsLocallyControlled())
-            {
-                Context.AddSourceObject(CurrentInst->SpawnedWeapon1P);
-            }
-            else
-            {
-                Context.AddSourceObject(CurrentInst->SpawnedWeapon3P);
-            }
-        }
-	 	ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
-	 }
-	
-	
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
-void UPTWGA_Fire::StartFire()
+void UPTWGA_Fire::StartFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+							   const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	if (!GetWorld()->GetTimerManager().IsTimerActive(AutoFireTimer))
 	{
-		GetWorld()->GetTimerManager().SetTimer(AutoFireTimer, this, &UPTWGA_Fire::AutoFire, FireRate, true);
+		GetWorld()->GetTimerManager().SetTimer(AutoFireTimer, FTimerDelegate::CreateLambda([Handle,ActorInfo,ActivationInfo, this]()
+		{
+			AutoFire(Handle, ActorInfo, ActivationInfo);
+		}),FireRate, true);
 	}
 }
 
@@ -83,7 +57,8 @@ void UPTWGA_Fire::StopFire()
 	GetWorld()->GetTimerManager().ClearTimer(AutoFireTimer);
 }
 
-void UPTWGA_Fire::AutoFire()
+void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+							   const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	
 	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
@@ -105,14 +80,25 @@ void UPTWGA_Fire::AutoFire()
 		CurrentInst->CurrentAmmo--;
 	}
 	
+	FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(FireEffectClass);
+    
+	if (SpecHandle.IsValid())
+	{
+		
+		FGameplayEffectContextHandle Context = SpecHandle.Data->GetContext();
+		if (PC)
+		{
+			if (PC->IsLocallyControlled())
+			{
+				Context.AddSourceObject(CurrentInst->SpawnedWeapon1P);
+			}
+			else
+			{
+				Context.AddSourceObject(CurrentInst->SpawnedWeapon3P);
+			}
+		}
+		ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
+	}
 	
-	
-	// if (CurrentInst->SpawnedWeapon)
-	// {
-	// 	FGameplayCueParameters CueParams;
-	// 	CueParams.Instigator = CurrentInst->SpawnedWeapon;
- //        
-	// 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	// 	ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Fire")), CueParams);
-	// }
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

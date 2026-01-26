@@ -30,10 +30,10 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		if (HasAuthority(&CurrentActivationInfo))
 		{
 			Character->EquipWeaponByTag(CurrentWeaponTag);
-			if (UPTWInventoryComponent* InvenComp = Character->FindComponentByClass<UPTWInventoryComponent>())
-			{
-				InvenComp->SetCurrentWeaponInst(WeaponItemInstance);
-			}
+			 if (UPTWInventoryComponent* InvenComp = Character->FindComponentByClass<UPTWInventoryComponent>())
+			 {
+			 	InvenComp->SetCurrentWeaponInst(WeaponItemInstance);
+			 }
 		}
 		
 		FGameplayTag StatTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));

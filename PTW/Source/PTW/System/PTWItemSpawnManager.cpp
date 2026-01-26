@@ -32,12 +32,14 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	APTWWeaponActor* SpawnedWeapon = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
-	if (!SpawnedWeapon) return;
+	APTWWeaponActor* SpawnedWeapon3P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+	if (!SpawnedWeapon && !SpawnedWeapon3P) return;
 	
 	
 	WeaponItemInst->ItemDef = ItemDefinition;
-	WeaponItemInst->SpawnedWeapon = SpawnedWeapon;
+	WeaponItemInst->SpawnedWeapon1P = SpawnedWeapon;
+	WeaponItemInst->SpawnedWeapon3P = SpawnedWeapon3P;
 	WeaponItemInst->CurrentAmmo = SpawnedWeapon->GetWeaponData()->MaxAmmo;
-	Inventory->AddItem(ItemDefinition, SpawnedWeapon);
+	Inventory->AddItem(ItemDefinition, SpawnedWeapon, SpawnedWeapon3P);
 	//SpawnedWeapon->AttachToComponent(TargetPlayer->GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
 }

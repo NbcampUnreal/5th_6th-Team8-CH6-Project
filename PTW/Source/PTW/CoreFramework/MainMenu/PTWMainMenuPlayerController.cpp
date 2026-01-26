@@ -26,10 +26,20 @@ void APTWMainMenuPlayerController::BeginPlay()
 		{
 			MainMenuInstance->AddToViewport();
 		}
+		
+		bShowMouseCursor = true;
+		FInputModeUIOnly InputMode;
+		SetInputMode(InputMode);
+	}
+}
+
+void APTWMainMenuPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (IsLocalPlayerController())
+	{
+		bShowMouseCursor = false;
+		SetInputMode(FInputModeGameOnly());
 	}
 	
-	bShowMouseCursor = true;
-	FInputModeUIOnly InputMode;
-	InputMode.SetWidgetToFocus(MainMenuInstance->TakeWidget());
-	SetInputMode(InputMode);
+	Super::EndPlay(EndPlayReason);
 }

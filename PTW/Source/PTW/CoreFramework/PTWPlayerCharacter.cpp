@@ -56,7 +56,7 @@ void APTWPlayerCharacter::BeginPlay()
 		Mesh1P->HideBoneByName(FName("head"), EPhysBodyOp::PBO_None);
 	}
 	
-	if (GetWorld())
+	if (GetWorld() && HasAuthority())
 	{
 		for (const auto& Pair : WeaponClasses)
 		{
@@ -70,7 +70,10 @@ void APTWPlayerCharacter::BeginPlay()
 
 				APTWWeaponActor* Weapon1P = GetWorld()->SpawnActor<APTWWeaponActor>(ClassToSpawn, Params);
 				APTWWeaponActor* Weapon3P = GetWorld()->SpawnActor<APTWWeaponActor>(ClassToSpawn, Params);
-
+				
+				Weapon1P->bIsFirstPersonWeapon = true;
+				Weapon3P->bIsFirstPersonWeapon = false;
+				
 				if (Weapon1P && Weapon3P)
 				{
 					InventoryComponent->AddItem(ItemDef, Weapon1P);
@@ -78,8 +81,8 @@ void APTWPlayerCharacter::BeginPlay()
 					Weapon1P->AttachToComponent(GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
 					Weapon3P->AttachToComponent(GetMesh3P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
 					
-					Weapon1P->SetupVisualPerspective(true);
-					Weapon3P->SetupVisualPerspective(false);
+					Weapon1P->ApplyVisualPerspective(); 
+					Weapon3P->ApplyVisualPerspective();
 				}
 			}
 		}

@@ -39,6 +39,10 @@ protected:
 	void OnRankingPressed();
 	void OnRankingReleased();
 
+	virtual void PostSeamlessTravel() override;
+
+	void CreateRankingBoard();
+
 	/* ---------- Input ---------- */
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")

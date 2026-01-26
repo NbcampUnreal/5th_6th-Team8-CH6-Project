@@ -8,6 +8,7 @@
 #include "PTWInputConfig.h"
 #include "PTWPlayerCharacter.generated.h"
 
+class APTWPlayerState;
 class UPTWItemDefinition;
 class UCameraComponent;
 class UInputMappingContext;

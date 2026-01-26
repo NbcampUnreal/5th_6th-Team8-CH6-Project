@@ -31,11 +31,20 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	UPTWInventoryComponent* InvenComp = AvatarActor->FindComponentByClass<UPTWInventoryComponent>();
 	if (!InvenComp) return;
 	
-	int32 MaxAmmo = InvenComp->GetCurrentWeaponActor()->SpawnedWeapon->GetWeaponData()->MaxAmmo;
+	int32 MaxAmmo = 0;
 	
-	InvenComp->GetCurrentWeaponActor()->CurrentAmmo = MaxAmmo;
-	
-	
+ 	if (UPTWItemInstance* ItemInst = InvenComp->CurrentWeapon)       
+	{
+		if (APTWWeaponActor* WeaponActor = ItemInst->SpawnedWeapon)
+		{
+			if (UPTWWeaponData* Data =WeaponActor->GetWeaponData())
+			{
+				MaxAmmo = Data->MaxAmmo;
+				InvenComp->CurrentWeapon->CurrentAmmo = MaxAmmo;
+			}
+		}
+	}
+
 	//TODO: UAbilityTask_PlayMontageAndWait 실행
 	
 	UE_LOG(LogTemp, Warning, TEXT("Reload Ability Activate CurrentWeapon Ammo : %d"), MaxAmmo);

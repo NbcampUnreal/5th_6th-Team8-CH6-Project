@@ -30,18 +30,25 @@ public:
 	UFUNCTION(BlueprintPure)
 	FORCEINLINE UPTWItemInstance* GetCurrentWeaponActor() {return CurrentWeapon;}
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
 	TObjectPtr<UPTWItemInstance> CurrentWeapon;
 	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<UPTWItemInstance*> WeaponArr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Replicated)
+	TArray<TObjectPtr<UPTWItemInstance>> WeaponArr;
 	
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void Server_EquipWeapon(int32 SlotIndex);
+	
+	UFUNCTION(Client, Reliable, WithValidation)
+	void ServerRPCSetCurrentWeapon(int32 SlotIndex);
 
-	
 private:
 	//FIXME : 일단 임시로 현재 무기 Actor로 저장
 	//TObjectPtr<UPTWItemInstance> CurrentWeapon;

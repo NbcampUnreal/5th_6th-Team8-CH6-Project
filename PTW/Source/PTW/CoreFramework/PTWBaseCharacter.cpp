@@ -96,6 +96,8 @@ void APTWBaseCharacter::ApplyDefaultEffects()
 
 void APTWBaseCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 {
+	if (!HasAuthority()) return;
+	
 	if (CurrentWeaponTag == NewWeaponTag)
 	{
 		if (CurrentWeapon)
@@ -117,18 +119,18 @@ void APTWBaseCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 		CurrentWeapon->SetActorEnableCollision(false);
 	}
 
-	if (APTWWeaponActor** FoundWeaponPtr = SpawnedWeapons.Find(NewWeaponTag))
+	if (APTWWeaponActor* FoundWeaponPtr = SpawnedWeapons.Find(NewWeaponTag)->Weapon1P)
 	{
-		APTWWeaponActor* NewWeaponActor = *FoundWeaponPtr;
+		APTWWeaponActor* NewWeaponActor = SpawnedWeapons.Find(NewWeaponTag)->Weapon3P;
 
-		if (NewWeaponActor)
+		if (FoundWeaponPtr)
 		{
+			FoundWeaponPtr->SetActorHiddenInGame(false);
 			NewWeaponActor->SetActorHiddenInGame(false);
 
-			CurrentWeapon = NewWeaponActor;
+			CurrentWeapon = FoundWeaponPtr;
 			CurrentWeaponTag = NewWeaponTag;
-
-
+			
 			UE_LOG(LogTemp, Log, TEXT("Weapon Equipped: %s"), *NewWeaponTag.ToString());
 		}
 	}
@@ -137,4 +139,20 @@ void APTWBaseCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 		UE_LOG(LogTemp, Warning, TEXT("Cannot find weapon with tag: %s"), *NewWeaponTag.ToString());
 	}
 }
+
+void APTWBaseCharacter::OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon)
+{
+	if (OldWeapon)
+	{
+		OldWeapon->SetActorHiddenInGame(true);
+	}
+	
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SetActorHiddenInGame(false);
+		CurrentWeapon->ApplyVisualPerspective();
+	}
+}
+
+
 

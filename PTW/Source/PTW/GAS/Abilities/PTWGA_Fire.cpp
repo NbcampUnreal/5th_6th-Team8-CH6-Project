@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWBaseCharacter.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
@@ -55,23 +56,38 @@ void UPTWGA_Fire::StopFire()
 
 void UPTWGA_Fire::AutoFire()
 {
-	AActor* OwnerActor = GetAvatarActorFromActorInfo();
-	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(OwnerActor))
+	
+	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
+	if (!PC) return;
+	
+	UPTWInventoryComponent* Inven = PC->FindComponentByClass<UPTWInventoryComponent>();
+	if (!Inven) return;
+	
+	if (!Inven->GetCurrentWeaponActor())
 	{
-		if (UPTWInventoryComponent* InvenComp = BaseCharacter->FindComponentByClass<UPTWInventoryComponent>())
-		{
-			if (InvenComp->GetCurrentWeaponActor() == nullptr) return;
-			
-			if (APTWWeaponActor* Weapon = InvenComp->GetCurrentWeaponActor()->SpawnedWeapon)
-			{
-				FGameplayCueParameters CueParams;
-				CueParams.Instigator = Weapon;
-				
-				UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-				ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Fire")), CueParams);
-				InvenComp->GetCurrentWeaponActor()->CurrentAmmo--;
-				UE_LOG(LogTemp, Warning, TEXT("Fire Ability Activate Current Ammo : %d"), InvenComp->GetCurrentWeaponActor()->CurrentAmmo);
-			}
-		}
+		UE_LOG(LogTemp, Warning, TEXT("!!!"));
+		return;
+	}
+
+	UPTWItemInstance* CurrentInst = Inven->GetCurrentWeaponActor();
+	
+	if (CurrentInst->CurrentAmmo <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Ammo!"));
+		return;
+	}
+	
+	if (HasAuthority(&CurrentActivationInfo))
+	{
+		CurrentInst->CurrentAmmo--;
+	}
+	
+	if (CurrentInst->SpawnedWeapon)
+	{
+		FGameplayCueParameters CueParams;
+		CueParams.Instigator = CurrentInst->SpawnedWeapon;
+        
+		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+		ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Fire")), CueParams);
 	}
 }

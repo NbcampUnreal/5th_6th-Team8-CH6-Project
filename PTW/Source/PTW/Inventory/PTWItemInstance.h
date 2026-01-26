@@ -17,12 +17,24 @@ class PTW_API UPTWItemInstance : public UObject
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	virtual bool IsSupportedForNetworking() const override {return true;}
+	
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	UFUNCTION()
+	void OnRep_CurrentAmmo();
+	
+	UFUNCTION()
+	void OnRep_SpawnedWeapon();
+	
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated)
 	TObjectPtr<UPTWItemDefinition> ItemDef;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentAmmo)
 	int32 CurrentAmmo;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_SpawnedWeapon)
 	TObjectPtr<APTWWeaponActor> SpawnedWeapon;
+	
 };

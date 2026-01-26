@@ -24,6 +24,8 @@ public:
 	BeginPlay 대신 이 함수가 Character::PossessedBy 등 안전한 시점에 호출 */
 	void InitializeHUD(UAbilitySystemComponent* ASC);
 
+	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
+
 protected:
 	/* HUD에 표시할 메인 위젯 클래스 (에디터/블루프린트에서 설정) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")

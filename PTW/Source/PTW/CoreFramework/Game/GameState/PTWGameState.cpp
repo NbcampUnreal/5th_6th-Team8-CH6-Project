@@ -34,12 +34,12 @@ void APTWGameState::DecreaseTimer()
 			OnRemainTimeChanged.Broadcast(RemainTime);
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Timer: %d"), RemainTime);
 }
 
 void APTWGameState::AdvanceRound()
 {
-	CurrentRound++;	
+	CurrentRound++;
+	UE_LOG(LogTemp, Warning, TEXT("Current Round: %d"), CurrentRound);
 }
 
 void APTWGameState::SetRemainTime(int32 NewTime)
@@ -54,8 +54,6 @@ void APTWGameState::SetCurrentRound(int32 NewRound)
 	if (!HasAuthority()) return;
 	
 	CurrentRound = NewRound;
-
-	UE_LOG(LogTemp, Warning, TEXT("Current Round: %d"), CurrentRound);
 }
 
 void APTWGameState::SetCurrentPhase(EPTWGamePhase NewGamePhase)

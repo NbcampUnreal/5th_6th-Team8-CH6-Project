@@ -7,6 +7,7 @@
 #include "AbilitySystemComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/GameState.h"
 #include "GameplayTagContainer.h"
 #include "EngineUtils.h"
 #include "Components/WidgetComponent.h"
@@ -60,6 +61,26 @@ void APTWPlayerController::OnRep_PlayerState()
 	TryInitializeHUD();
 }
 
+void APTWPlayerController::BeginSpectatingState()
+{
+	Super::BeginSpectatingState();
+	
+	if (IsLocalController() && !IsValid(GetPawn()))
+	{
+		SpectateNextPlayer();
+	}
+}
+
+void APTWPlayerController::OnRep_Pawn()
+{
+	Super::OnRep_Pawn();
+	
+	if (IsLocalController() && !IsValid(GetPawn()))
+	{
+		SpectateNextPlayer();
+	}
+}
+
 void APTWPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -107,6 +128,90 @@ void APTWPlayerController::TryInitializeHUD()
 	PTWHUD->InitializeHUD(ASC);
 }
 
+void APTWPlayerController::StartSpectating()
+{
+	if (HasAuthority())
+	{
+		ChangeState(NAME_Spectating);
+		ClientGotoState(NAME_Spectating);
+	}
+}
+
+void APTWPlayerController::SpectateNextPlayer()
+{
+	UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		return;
+	}
+	
+	AGameStateBase* GS = World->GetGameState();
+	if (!IsValid(GS))
+	{
+		return;
+	}
+	
+	const TArray<APlayerState*>& PlayArray = GS->PlayerArray;
+	if (PlayArray.IsEmpty())
+	{
+		return;
+	}
+	
+	AActor* CurrentViewTarget = GetViewTarget();
+	if (!IsValid(CurrentViewTarget))
+	{
+		return;
+	}
+
+	APlayerState* CurrentPlayerState = nullptr;
+	if (APawn* CastPawn = Cast<APawn>(CurrentViewTarget))
+	{
+		CurrentPlayerState = CastPawn->GetPlayerState();
+	}
+	
+	APawn* NewViewTarget = nullptr;
+	if (IsValid(CurrentPlayerState))
+	{
+		int32 FoundIndex = PlayArray.Find(CurrentPlayerState);
+		if (FoundIndex != INDEX_NONE)
+		{
+			for (int32 i = FoundIndex + 1; i < PlayArray.Num(); i++)
+			{
+				if (PlayArray[i]->GetPawn()->GetPlayerState() && !PlayArray[i]->IsSpectator())
+				{
+					NewViewTarget = PlayArray[i]->GetPawn();
+					break;
+				}
+			}
+		}
+	}
+	
+	if (!IsValid(NewViewTarget))
+	{
+		for (const APlayerState* PS : PlayArray)
+		{
+			if (PS != PlayerState && !PS->IsSpectator() && PS->GetPawn()->GetPlayerState())
+			{
+				NewViewTarget = PS->GetPawn();
+				break;
+			}
+		}
+	}
+	
+	if (IsValid(NewViewTarget))
+	{
+		SetViewTargetWithBlend(NewViewTarget, 0.5f, VTBlend_Cubic);
+	}
+}
+
+void APTWPlayerController::OnInputSpectateNext()
+{
+	if (GetStateName() == NAME_Spectating)
+	{
+		SpectateNextPlayer();
+	}
+}
+
 void APTWPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -126,6 +231,11 @@ void APTWPlayerController::SetupInputComponent()
 			this,
 			&APTWPlayerController::OnRankingReleased
 		);
+		EIC->BindAction(
+			SpectateNextAction, 
+			ETriggerEvent::Started, 
+			this, 
+			&ThisClass::OnInputSpectateNext);
 	}
 }
 

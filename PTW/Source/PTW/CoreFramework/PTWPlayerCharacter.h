@@ -40,6 +40,7 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void HandleDeath(AActor* Attacker) override;
 protected:
 	//생성자
 	virtual void BeginPlay() override;

@@ -34,9 +34,21 @@ public:
 	virtual void OnUnPossess() override;
 
 	/* HUD 초기화 */
+	virtual void BeginSpectatingState() override;
+	
+	virtual void OnRep_Pawn() override;
+	
 	void TryInitializeHUD();
 
 	/* KillLog 델리게이트 */
+	
+	void StartSpectating();
+	UFUNCTION()
+	void SpectateNextPlayer();
+	UFUNCTION()
+	void OnInputSpectateNext();
+	
+	// KillLog 델리게이트
 	FOnKillLog OnKillLog;
 
 protected:
@@ -56,6 +68,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* ShowRankingAction;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* SpectateNextAction;
+	
 	/* ---------- UI ---------- */
 	// 랭킹보드
 	UPROPERTY(EditDefaultsOnly, Category = "UI")

@@ -2,7 +2,6 @@
 
 #include "PTW/GAS/PTWAttributeSet.h"
 
-#include "AssetTypeCategories.h"
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffectExtension.h"
 #include "GameFramework/Character.h"

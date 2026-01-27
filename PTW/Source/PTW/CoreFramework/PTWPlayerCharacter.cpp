@@ -21,6 +21,8 @@
 #include "Components/WidgetComponent.h" // PlayerNameTag
 #include "UI/CharacterUI/PTWPlayerName.h" // PlayerNameTag
 #include "CoreFramework/PTWPlayerState.h"
+#include "PTW/Inventory/PTWWeaponData.h"
+#include "GameplayTagContainer.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -349,4 +351,25 @@ void APTWPlayerCharacter::UpdateNameTagText()
 	
 	// UI 반영
 	NameWidget->SetPlayerName(Name);
+}
+
+void APTWPlayerCharacter::ApplyRecoil()
+{
+	if (!CurrentWeapon) return;
+	const UPTWWeaponData* Data = CurrentWeapon->GetWeaponData();
+	if (!Data) return;
+
+	FGameplayTag FireTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Anim.Fire"));
+	if (Data->AnimMap.Contains(FireTag))
+	{
+		UAnimMontage* Montage = *Data->AnimMap.Find(FireTag);
+		if (Montage)
+		{
+			UAnimInstance* AnimInstance = (IsLocallyControlled() && Mesh1P) ? Mesh1P->GetAnimInstance() : GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				AnimInstance->Montage_Play(Montage, 1.0f);
+			}
+		}
+	}
 }

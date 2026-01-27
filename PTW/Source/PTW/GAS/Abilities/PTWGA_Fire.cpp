@@ -135,6 +135,8 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 		}
 	}
 	
+	//캐릭터 반동 함수 호출(박태웅)
+	PC->ApplyRecoil();
 	
 	//EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

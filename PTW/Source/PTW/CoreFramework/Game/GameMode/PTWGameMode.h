@@ -28,16 +28,23 @@ protected:
 	virtual void InitGameState() override;
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void BeginPlay() override;
-
+	
 	/** 플레이어 로그인 시 호출(접속 인원/시작 조건 갱신) */
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
+	
 	/** 플레이어 로그아웃 시 호출(접속 인원/게임 진행 상태 갱신) */
 	virtual void Logout(AController* Exiting) override;
 
+public:
+
+protected:
 	/** 지정한 시간(초) 기준으로 타이머를 시작 */
 	void StartTimer(float TimeDuration);
 
+	void ClearTimer();
+	
 	/** 타이머 종료 시 호출(타이머 정리 및 종료 후 처리 트리거) */
 	UFUNCTION()
 	virtual void EndTimer();

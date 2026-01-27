@@ -2,6 +2,8 @@
 
 
 #include "PTWPlayerState.h"
+
+#include "GAS/PTWWeaponAttributeSet.h"
 #include "PTW/GAS/PTWAbilitySystemComponent.h"
 #include "PTW/GAS/PTWAttributeSet.h"
 #include "Net/UnrealNetwork.h"
@@ -15,6 +17,7 @@ APTWPlayerState::APTWPlayerState()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	AttributeSet = CreateDefaultSubobject<UPTWAttributeSet>(TEXT("AttributeSet"));
+	WeaponAttributeSet = CreateDefaultSubobject<UPTWWeaponAttributeSet>(TEXT("WeaponAttributeSet"));
 
 	CurrentPlayerData.PlayerName = "";
 	CurrentPlayerData.TotalWinPoints = 0;

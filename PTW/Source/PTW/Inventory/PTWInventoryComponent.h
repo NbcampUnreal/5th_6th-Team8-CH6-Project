@@ -21,7 +21,7 @@ public:
 	UPTWInventoryComponent();
 	
 	//FIXME : 파리미터 임시 추가(WeaponActor)
-	void AddItem(TObjectPtr<UPTWItemDefinition> ItemClass, APTWWeaponActor* WeaponActor, APTWWeaponActor* WeaponActor3P);
+	void AddItem(TObjectPtr<UPTWItemInstance>);
 	void SwapWeapon(int32 SlotIndex);
 	
 	UFUNCTION(BlueprintCallable)

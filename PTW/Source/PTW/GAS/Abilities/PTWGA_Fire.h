@@ -6,9 +6,25 @@
 #include "GAS/PTWGameplayAbility.h"
 #include "PTWGA_Fire.generated.h"
 
+class UPTWItemInstance;
 /**
  * 
  */
+
+USTRUCT(BlueprintType)
+struct FPTWGameplayCueMakingInfo
+{
+	GENERATED_BODY();
+	
+public:
+	UPROPERTY()
+	UPTWItemInstance* ItemInstance;
+	
+	UPROPERTY()
+	APTWPlayerCharacter* PlayerCharacter;	
+};
+
+
 UCLASS()
 class PTW_API UPTWGA_Fire : public UPTWGameplayAbility
 {
@@ -30,17 +46,37 @@ public:
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
 	
-	void StartFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-							   const FGameplayAbilityActivationInfo ActivationInfo);
-	void AutoFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-							   const FGameplayAbilityActivationInfo ActivationInfo);
+	void StartFire(const FGameplayAbilitySpecHandle Handle, 
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo);
+	
+	void AutoFire(const FGameplayAbilitySpecHandle Handle, 
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo);
+	
+	void MakeGameplayCue(const FGameplayAbilitySpecHandle Handle, 
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		FPTWGameplayCueMakingInfo Infos);
+	
 	void StopFire();
 	
 protected:
 	FTimerHandle AutoFireTimer;
 	float FireRate = 0.15f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cue|Effect")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Cue")
 	TSubclassOf<UGameplayEffect> FireEffectClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Damage")
+	TSubclassOf<UGameplayEffect> DamageGEClass;
+	
+protected:
+	void PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* PlayerCharacter);
+	bool ValidateHitResult(FHitResult& HitResult);
+	void ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle, 
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayAbilityTargetDataHandle& TargetData);
 	
 };

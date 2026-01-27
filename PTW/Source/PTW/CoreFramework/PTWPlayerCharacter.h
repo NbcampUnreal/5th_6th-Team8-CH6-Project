@@ -15,6 +15,7 @@ class UInputMappingContext;
 class UInputAction;
 class UPTWInventoryComponent;
 class APTWWeaponActor;
+class UWidgetComponent;
 
 USTRUCT(BlueprintType)
 struct FWeaponPair
@@ -46,6 +47,7 @@ protected:
 	virtual void OnRep_PlayerState() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void InitAbilityActorInfo() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 protected:
 	void Move(const FInputActionValue& Value);
@@ -103,4 +105,17 @@ protected:
 public:
 	FORCEINLINE UCameraComponent* GetPlayerCamera() const { return PlayerCamera; }
 	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
+	/* PlayerNameTag */
+public:
+	UWidgetComponent* GetNameTagWidget() const;
+protected:
+	/* 위젯에 닉네임 전달 */
+	void UpdateNameTagText();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UWidgetComponent> NameTagWidget;
+	// 이름표 갱신 재시도를 위한 타이머 핸들
+	FTimerHandle NameTagRetryTimer;
+
 };

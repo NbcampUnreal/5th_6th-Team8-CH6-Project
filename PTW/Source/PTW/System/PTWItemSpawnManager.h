@@ -19,6 +19,7 @@ class PTW_API UPTWItemSpawnManager : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable)
 	void SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, UPTWItemDefinition* ItemDefinition, FGameplayTag WeaponTag);
 	
 };

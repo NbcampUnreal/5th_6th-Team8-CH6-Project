@@ -8,6 +8,8 @@
 #include "AbilitySystemGlobals.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Inventory/PTWWeaponActor.h"
+#include "Inventory/PTWInventoryComponent.h"
+#include "Inventory/PTWItemInstance.h"
 
 void UPTWAnimInstance::NativeInitializeAnimation()
 {
@@ -66,37 +68,53 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsSprinting = ASC->HasMatchingGameplayTag(SprintTag);
 	}
 
+	//1인칭 및 3인칭 메시 IK 부착
 	USkeletalMeshComponent* MyOwningMesh = GetOwningComponent();
-	APTWWeaponActor* Weapon = Character->GetCurrentWeapon();
 
-	if (IsValid(Weapon) && MyOwningMesh)
+	if (Character && MyOwningMesh)
 	{
-		UMeshComponent* TargetWeaponMesh = nullptr;
+		UPTWInventoryComponent* Inventory = Character->GetInventoryComponent();
 
-		auto* PlayerChar = Cast<APTWPlayerCharacter>(Character);
-
-		if (PlayerChar && MyOwningMesh == PlayerChar->GetMesh1P())
+		if (Inventory)
 		{
-			TargetWeaponMesh = Weapon->GetStaticMeshComponent();
-		}
-		else
-		{
-			TargetWeaponMesh = Weapon->GetStaticMeshComponent();
-		}
+			UPTWItemInstance* CurrentItem = Inventory->GetCurrentWeaponInst();
+			if (CurrentItem)
+			{
+				UMeshComponent* TargetWeaponMesh = nullptr;
 
-		if (TargetWeaponMesh)
-		{
-			FTransform SocketTransform = TargetWeaponMesh->GetSocketTransform(FName("LHIK"), RTS_World);
+				if (MyOwningMesh == Character->GetMesh1P())
+				{
+					if (CurrentItem->SpawnedWeapon1P)
+					{
+						TargetWeaponMesh = CurrentItem->SpawnedWeapon1P->GetStaticMeshComponent();
+					}
+				}
+				else
+				{
+					if (CurrentItem->SpawnedWeapon3P)
+					{
+						TargetWeaponMesh = CurrentItem->SpawnedWeapon3P->GetStaticMeshComponent();
+					}
+				}
 
-			FTransform MeshTransform = MyOwningMesh->GetComponentTransform();
+				if (TargetWeaponMesh)
+				{
+					FTransform SocketTransform = TargetWeaponMesh->GetSocketTransform(FName("LHIK"), RTS_World);
+					FTransform MeshTransform = MyOwningMesh->GetComponentTransform();
 
-			LeftHandIKTransform = SocketTransform.GetRelativeTransform(MeshTransform);
-			LeftHandIKAlpha = 1.0f;
+					LeftHandIKTransform = SocketTransform.GetRelativeTransform(MeshTransform);
+					LeftHandIKAlpha = 1.0f;
+				}
+				else
+				{
+					LeftHandIKAlpha = 0.0f;
+				}
+			}
+			else
+			{
+				LeftHandIKAlpha = 0.0f;
+			}
 		}
-	}
-	else
-	{
-		LeftHandIKAlpha = 0.0f;
 	}
 }
 

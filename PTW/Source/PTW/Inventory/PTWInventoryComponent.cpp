@@ -21,15 +21,10 @@ UPTWInventoryComponent::UPTWInventoryComponent()
 
 
 
-void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemDefinition> ItemClass, APTWWeaponActor* WeaponActor, APTWWeaponActor* WeaponActor3P)
+void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemInstance> ItemClass)
 {
 	//WeaponArr.AddUnique(AddItemDef)
-	UPTWItemInstance* WeaponItemInst = NewObject<UPTWItemInstance>(this);
-	WeaponItemInst->ItemDef = ItemClass;
-	WeaponItemInst->SpawnedWeapon1P = WeaponActor;
-	WeaponItemInst->SpawnedWeapon3P = WeaponActor3P;
-	WeaponItemInst->CurrentAmmo = WeaponActor->GetWeaponData()->MaxAmmo;
-	WeaponArr.Add(WeaponItemInst);
+	WeaponArr.Add(ItemClass);
 }
 
 void UPTWInventoryComponent::SwapWeapon(int32 SlotIndex)

@@ -2,6 +2,7 @@
 
 
 #include "PTWItemSpawnManager.h"
+
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "Inventory/PTWItemInstance.h"
@@ -42,6 +43,6 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	WeaponItemInst->SpawnedWeapon1P = SpawnedWeapon1P;
 	WeaponItemInst->SpawnedWeapon3P = SpawnedWeapon3P;
 	WeaponItemInst->CurrentAmmo = SpawnedWeapon1P->GetWeaponData()->MaxAmmo;
-	Inventory->AddItem(ItemDefinition, SpawnedWeapon1P, SpawnedWeapon3P);
+	Inventory->AddItem(WeaponItemInst);
 	TargetPlayer->AttachWeaponToSocket(SpawnedWeapon1P, SpawnedWeapon3P, WeaponTag);
 }

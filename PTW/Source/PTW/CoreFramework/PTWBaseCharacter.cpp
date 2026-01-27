@@ -11,6 +11,7 @@
 #include "Inventory/PTWWeaponActor.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "PTWPlayerController.h"
 
 APTWBaseCharacter::APTWBaseCharacter()
 {
@@ -104,14 +105,15 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 		return;
 	}
 	FGameplayEventData Payload;
-	Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("죽음 이벤트 연결"));
+	// Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("죽음 이벤트 연결"));
 	Payload.Instigator = Attacker;
 	Payload.Target = this;
-	
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
-	AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
-}
+	// UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
 
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, 
+		FString::Printf(TEXT("%s가 %s를 죽임"), *Attacker->GetName(), *GetName())
+		);
+}
 
 
 

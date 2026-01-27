@@ -32,11 +32,16 @@ void APTWWeaponActor::ApplyVisualPerspective()
 
 	bool bIsLocal = OwningPawn->IsLocallyControlled();
 
+	
 	if (bIsFirstPersonWeapon)
 	{
 		// 1인칭 무기 세팅
 		WeaponMesh->SetOnlyOwnerSee(true);
 		WeaponMesh->SetOwnerNoSee(false);
+		if (!bIsLocal)
+		{
+			WeaponMesh->SetCastShadow(false);
+		}
 	}
 	else
 	{
@@ -44,14 +49,14 @@ void APTWWeaponActor::ApplyVisualPerspective()
 		if (bIsLocal)
 		{
 			WeaponMesh->SetOwnerNoSee(true);
-		}
+			WeaponMesh->SetCastShadow(false);
+		} 
 		else
 		{
 			WeaponMesh->SetOnlyOwnerSee(false);
 			WeaponMesh->SetOwnerNoSee(false);
 			WeaponMesh->SetVisibility(true);
 		}
-		WeaponMesh->SetCastHiddenShadow(true);
 	}
 }
 

@@ -2,17 +2,22 @@
 
 
 #include "PTWPlayerController.h"
-#include "UI/PTWHUD.h"
 #include "PTWPlayerState.h"
+
 #include "AbilitySystemComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "UI/RankBoard/PTWRankingBoard.h"
+#include "GameFramework/GameState.h"
+#include "GameplayTagContainer.h"
+#include "EngineUtils.h"
+#include "Components/WidgetComponent.h"
+
 #include "CoreFramework/PTWBaseCharacter.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
+#include "UI/PTWHUD.h"
+#include "UI/RankBoard/PTWRankingBoard.h"
 #include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
-#include "GameplayTagContainer.h"
-
 
 void APTWPlayerController::BeginPlay()
 {
@@ -23,8 +28,12 @@ void APTWPlayerController::BeginPlay()
 		return;
 	}
 
+	/* HUD 초기화 */
 	UE_LOG(LogTemp, Error, TEXT("Controller BeginPlay"));
 	TryInitializeHUD();
+
+	/* 플레이어 이름 가시성 체크 타이머 */
+	GetWorldTimerManager().SetTimer(NameTagTimerHandle, this, &APTWPlayerController::UpdateNameTagsVisibility, NameTagUpdateInterval, true);
 
 	/* Input Mapping Context 추가 */
 	if (ULocalPlayer* LP = GetLocalPlayer())
@@ -50,6 +59,26 @@ void APTWPlayerController::OnRep_PlayerState()
 	}
 
 	TryInitializeHUD();
+}
+
+void APTWPlayerController::BeginSpectatingState()
+{
+	Super::BeginSpectatingState();
+	
+	if (IsLocalController() && !IsValid(GetPawn()))
+	{
+		SpectateNextPlayer();
+	}
+}
+
+void APTWPlayerController::OnRep_Pawn()
+{
+	Super::OnRep_Pawn();
+	
+	if (IsLocalController() && !IsValid(GetPawn()))
+	{
+		SpectateNextPlayer();
+	}
 }
 
 void APTWPlayerController::OnPossess(APawn* InPawn)
@@ -99,6 +128,90 @@ void APTWPlayerController::TryInitializeHUD()
 	PTWHUD->InitializeHUD(ASC);
 }
 
+void APTWPlayerController::StartSpectating()
+{
+	if (HasAuthority())
+	{
+		ChangeState(NAME_Spectating);
+		ClientGotoState(NAME_Spectating);
+	}
+}
+
+void APTWPlayerController::SpectateNextPlayer()
+{
+	UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		return;
+	}
+	
+	AGameStateBase* GS = World->GetGameState();
+	if (!IsValid(GS))
+	{
+		return;
+	}
+	
+	const TArray<APlayerState*>& PlayArray = GS->PlayerArray;
+	if (PlayArray.IsEmpty())
+	{
+		return;
+	}
+	
+	AActor* CurrentViewTarget = GetViewTarget();
+	if (!IsValid(CurrentViewTarget))
+	{
+		return;
+	}
+
+	APlayerState* CurrentPlayerState = nullptr;
+	if (APawn* CastPawn = Cast<APawn>(CurrentViewTarget))
+	{
+		CurrentPlayerState = CastPawn->GetPlayerState();
+	}
+	
+	APawn* NewViewTarget = nullptr;
+	if (IsValid(CurrentPlayerState))
+	{
+		int32 FoundIndex = PlayArray.Find(CurrentPlayerState);
+		if (FoundIndex != INDEX_NONE)
+		{
+			for (int32 i = FoundIndex + 1; i < PlayArray.Num(); i++)
+			{
+				if (PlayArray[i]->GetPawn()->GetPlayerState() && !PlayArray[i]->IsSpectator())
+				{
+					NewViewTarget = PlayArray[i]->GetPawn();
+					break;
+				}
+			}
+		}
+	}
+	
+	if (!IsValid(NewViewTarget))
+	{
+		for (const APlayerState* PS : PlayArray)
+		{
+			if (PS != PlayerState && !PS->IsSpectator() && PS->GetPawn()->GetPlayerState())
+			{
+				NewViewTarget = PS->GetPawn();
+				break;
+			}
+		}
+	}
+	
+	if (IsValid(NewViewTarget))
+	{
+		SetViewTargetWithBlend(NewViewTarget, 0.5f, VTBlend_Cubic);
+	}
+}
+
+void APTWPlayerController::OnInputSpectateNext()
+{
+	if (GetStateName() == NAME_Spectating)
+	{
+		SpectateNextPlayer();
+	}
+}
+
 void APTWPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -118,6 +231,11 @@ void APTWPlayerController::SetupInputComponent()
 			this,
 			&APTWPlayerController::OnRankingReleased
 		);
+		EIC->BindAction(
+			SpectateNextAction, 
+			ETriggerEvent::Started, 
+			this, 
+			&ThisClass::OnInputSpectateNext);
 	}
 }
 
@@ -227,4 +345,95 @@ void APTWPlayerController::HandleWeaponChanged(FGameplayTag NewWeaponTag, UPTWIt
 
 	// 4. 초기 UI 동기화
 	SyncAmmoUIOnce();
+}
+
+void APTWPlayerController::UpdateNameTagsVisibility()
+{
+	APawn* MyPawn = GetPawn();
+	if (!MyPawn || !PlayerCameraManager) return;
+
+	const FVector CameraLocation = PlayerCameraManager->GetCameraLocation();
+	const FVector CameraForward = PlayerCameraManager->GetActorForwardVector();
+	const float   MaxDistSq = FMath::Square(NameTagMaxDistance);
+
+	for (TActorIterator<APTWPlayerCharacter> It(GetWorld()); It; ++It)
+	{
+		APTWPlayerCharacter* TargetChar = *It;
+		if (!TargetChar) continue;
+
+		// 자기 자신 / 사망 체크
+		if (TargetChar == MyPawn || TargetChar->IsDead())
+		{
+			if (UWidgetComponent* WidgetComp = TargetChar->GetNameTagWidget())
+			{
+				WidgetComp->SetVisibility(false);
+			}
+			continue;
+		}
+
+		UWidgetComponent* WidgetComp = TargetChar->GetNameTagWidget();
+		if (!WidgetComp) continue;
+
+		// 거리 체크 (DistSquared)
+		const FVector TargetLocation = TargetChar->GetActorLocation();
+		const float DistSq = FVector::DistSquared(CameraLocation, TargetLocation);
+
+		if (DistSq > MaxDistSq)
+		{
+			WidgetComp->SetVisibility(false);
+			continue;
+		}
+
+		// 시야각(FOV) 체크
+		const FVector ToTarget = (TargetLocation - CameraLocation).GetSafeNormal();
+		const float Dot = FVector::DotProduct(CameraForward, ToTarget);
+
+		if (Dot < 0.3f) // 약 72도
+		{
+			WidgetComp->SetVisibility(false);
+			continue;
+		}
+
+		// 벽 가림 체크 (Line Trace)
+		const FVector TraceEnd = WidgetComp->GetComponentLocation();
+
+		FHitResult HitResult;
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(NameTagTrace), false);
+		Params.AddIgnoredActor(MyPawn);
+		Params.AddIgnoredActor(TargetChar);
+
+		const bool bHit = GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			CameraLocation,
+			TraceEnd,
+			ECC_Visibility,
+			Params
+		);
+
+		// 가시성 설정 및 스케일 조절 추가
+		if (!bHit)
+		{
+			WidgetComp->SetVisibility(true);
+
+			// 거리에 따른 스케일 계산 
+			const float CurrentDist = FMath::Sqrt(DistSq);
+
+			// 거리 0(스케일 1.0) ~ MaxDist(스케일 MinScale) 사이를 매핑
+			float TargetScale = FMath::GetMappedRangeValueClamped(
+				FVector2D(0.f, NameTagMaxDistance),
+				FVector2D(1.0f, NameTagMinScale),
+				CurrentDist
+			);
+
+			// 위젯의 RenderScale을 조절 (해상도 저하 없이 크기만 조절)
+			if (UUserWidget* UserW = WidgetComp->GetUserWidgetObject())
+			{
+				UserW->SetRenderScale(FVector2D(TargetScale, TargetScale));
+			}
+		}
+		else
+		{
+			WidgetComp->SetVisibility(false);
+		}
+	}
 }

@@ -33,10 +33,6 @@ class PTW_API UPTWGA_Fire : public UPTWGameplayAbility
 public:
 	UPTWGA_Fire();
 	
-	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, 
-		const FGameplayAbilityActorInfo* ActorInfo, 
-		const FGameplayAbilityActivationInfo ActivationInfo) override;
-	
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, 
 		const FGameplayAbilityActorInfo* ActorInfo, 
 		const FGameplayAbilityActivationInfo ActivationInfo) override;
@@ -77,6 +73,7 @@ protected:
 	void ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle, 
 		const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo,
-		const FGameplayAbilityTargetDataHandle& TargetData);
+		const FGameplayAbilityTargetDataHandle& TargetData,
+		float BaseDamage);
 	
 };

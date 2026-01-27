@@ -5,6 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "PTW.h"
 #include "Abilities/Tasks/AbilityTask_WaitTargetData.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
@@ -158,7 +159,7 @@ void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* P
 	
 	FVector End = StartLoc + (Rot.Vector() * 5000.0f);
 	
-	GetWorld()->LineTraceSingleByChannel(HitResult, StartLoc,End, ECollisionChannel::ECC_Pawn);
+	GetWorld()->LineTraceSingleByChannel(HitResult, StartLoc,End, ECC_WeaponAttack);
 	
 	DrawDebugLine(GetWorld(), StartLoc, End, FColor::Green, false, 10.0f);
 }

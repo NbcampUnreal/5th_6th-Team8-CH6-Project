@@ -9,9 +9,7 @@
 
 class UPTWItemDefinition;
 class APTWWeaponActor;
-/**
- * 
- */
+
 UCLASS()
 class PTW_API APTWMiniGameMode : public APTWGameMode
 {
@@ -45,4 +43,7 @@ protected:
 	TObjectPtr<UPTWItemDefinition> ItemDefinition;
 
 	void SpawnDefaultWeapon(AController* NewPlayer);
+
+private:
+	
 };

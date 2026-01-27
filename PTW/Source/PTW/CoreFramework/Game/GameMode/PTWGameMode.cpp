@@ -48,15 +48,22 @@ void APTWGameMode::BeginPlay()
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+}
+
+void APTWGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	
 	ApplyPlayerDataFromSubsystem(NewPlayer);
+	
 }
 
 void APTWGameMode::Logout(AController* Exiting)
 {
 	Super::Logout(Exiting);
 
-	// 접속 해제 시 게임 참여 인원 감소
+	if (!IsValid(PTWGameState)) return;
+	
 }
 
 void APTWGameMode::StartTimer(float TimeDuration)
@@ -69,10 +76,15 @@ void APTWGameMode::StartTimer(float TimeDuration)
 	GetWorldTimerManager().SetTimer(TimerHandle, this, &APTWGameMode::UpdateTimer, 1.f, true, 1.f);
 }
 
-void APTWGameMode::EndTimer()
+void APTWGameMode::ClearTimer()
 {
 	GetWorldTimerManager().ClearTimer(TimerHandle);
+}
 
+void APTWGameMode::EndTimer()
+{
+	ClearTimer();
+	
 	SaveGameDataToSubsystem();
 	
 	TravelLevel();

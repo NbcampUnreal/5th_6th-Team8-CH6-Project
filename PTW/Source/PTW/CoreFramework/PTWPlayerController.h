@@ -27,8 +27,18 @@ public:
 
 	virtual void OnRep_PlayerState() override;
 
+	virtual void BeginSpectatingState() override;
+	
+	virtual void OnRep_Pawn() override;
+	
 	void TryInitializeHUD();
-
+	
+	void StartSpectating();
+	UFUNCTION()
+	void SpectateNextPlayer();
+	UFUNCTION()
+	void OnInputSpectateNext();
+	
 	// KillLog 델리게이트
 	FOnKillLog OnKillLog;
 
@@ -51,6 +61,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* ShowRankingAction;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* SpectateNextAction;
+	
 	/* ---------- UI ---------- */
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")

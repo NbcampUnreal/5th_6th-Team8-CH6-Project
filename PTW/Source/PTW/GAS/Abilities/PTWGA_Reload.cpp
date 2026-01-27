@@ -3,6 +3,7 @@
 
 #include "PTWGA_Reload.h"
 
+#include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemInstance.h"
@@ -31,23 +32,19 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	UPTWInventoryComponent* InvenComp = AvatarActor->FindComponentByClass<UPTWInventoryComponent>();
 	if (!InvenComp) return;
 	
-	int32 MaxAmmo = 0;
-	
- 	if (UPTWItemInstance* ItemInst = InvenComp->CurrentWeapon)       
+	if (ReloadEffectClass)
 	{
-		if (APTWWeaponActor* WeaponActor = ItemInst->SpawnedWeapon1P)
+		FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+		
+		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(ReloadEffectClass, GetAbilityLevel(), EffectContext);
+		
+		if (SpecHandle.IsValid())
 		{
-			if (UPTWWeaponData* Data =WeaponActor->GetWeaponData())
-			{
-				MaxAmmo = Data->MaxAmmo;
-				InvenComp->CurrentWeapon->CurrentAmmo = MaxAmmo;
-			}
+			ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
 	}
-
+	
 	//TODO: UAbilityTask_PlayMontageAndWait 실행
-	
-	UE_LOG(LogTemp, Warning, TEXT("Reload Ability Activate CurrentWeapon Ammo : %d"), MaxAmmo);
-	
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

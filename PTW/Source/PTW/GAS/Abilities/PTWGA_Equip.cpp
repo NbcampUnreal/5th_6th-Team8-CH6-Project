@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "GAS/PTWWeaponAttributeSet.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "Inventory/PTWItemInstance.h"
@@ -24,8 +25,11 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	const UPTWItemInstance* WeaponItemInstance = Cast<UPTWItemInstance>(TriggerEventData->OptionalObject);
 	if (WeaponItemInstance)
 	{
+		
 		FGameplayTag CurrentWeaponTag = WeaponItemInstance->ItemDef->WeaponTag;
 		APTWPlayerCharacter* Character = GetPTWPlayerCharacterFromActorInfo();
+		
+		SetCharacterWeaponAttribute(WeaponItemInstance, Character);
 		
 		if (HasAuthority(&CurrentActivationInfo))
 		{
@@ -45,4 +49,29 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	}
 	
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+}
+
+void UPTWGA_Equip::SetCharacterWeaponAttribute(const UPTWItemInstance* WeaponItemInstance,
+	APTWPlayerCharacter* Character)
+{
+	if (WeaponItemInstance)
+	{
+		if (HasAuthority(&CurrentActivationInfo))
+		{
+			UAbilitySystemComponent* ASC = Character->GetAbilitySystemComponent();
+			if (!ASC) return;
+			
+			APTWWeaponActor* SpawnedWeapon = WeaponItemInstance->SpawnedWeapon1P;
+			if (!SpawnedWeapon) return;
+			
+			UPTWWeaponData* WeaponmData = SpawnedWeapon->GetWeaponData();
+			if (!WeaponmData) return;
+			
+			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetMaxAmmoAttribute(), WeaponmData->MaxAmmo);
+			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetCurrentAmmoAttribute(), WeaponmData->MaxAmmo);
+			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetDamageAttribute(), WeaponmData->BaseDamage);
+			
+			//ASC->ForceReplication();
+		}
+	}
 }

@@ -115,20 +115,5 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 		);
 }
 
-void APTWBaseCharacter::OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon)
-{
-	if (OldWeapon)
-	{
-		OldWeapon->SetActorHiddenInGame(true);
-	}
-	
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->SetActorHiddenInGame(false);
-		CurrentWeapon->ApplyVisualPerspective();
-	}
-}
-
-
 
 

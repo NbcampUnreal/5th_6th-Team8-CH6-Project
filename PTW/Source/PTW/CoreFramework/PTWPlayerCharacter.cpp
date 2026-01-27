@@ -11,12 +11,18 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "PTWInputComponent.h"
+#include "PTWPlayerController.h"
 #include "GAS/PTWGameplayAbility.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "System/PTWItemSpawnManager.h"
 #include "Net/UnrealNetwork.h"
+#include "Components/WidgetComponent.h" // PlayerNameTag
+#include "UI/CharacterUI/PTWPlayerName.h" // PlayerNameTag
+#include "CoreFramework/PTWPlayerState.h"
+#include "PTW/Inventory/PTWWeaponData.h"
+#include "GameplayTagContainer.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -36,6 +42,13 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 
 	InventoryComponent = CreateDefaultSubobject<UPTWInventoryComponent>(TEXT("InventoryComponent"));
 	InventoryComponent->SetIsReplicated(true);
+
+	/* PlayerNameTag */
+	NameTagWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("NameTagWidget"));
+	NameTagWidget->SetupAttachment(GetMesh()); // 메시에 부착
+	NameTagWidget->SetRelativeLocation(FVector(0.f, 0.f, 200.f)); // 머리 위 적절한 높이
+	NameTagWidget->SetWidgetSpace(EWidgetSpace::Screen); // 항상 화면을 향하도록 설정
+	NameTagWidget->SetDrawAtDesiredSize(true);
 }
 
 void APTWPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -44,6 +57,24 @@ void APTWPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 	DOREPLIFETIME(APTWPlayerCharacter, CurrentWeaponTag);
 	DOREPLIFETIME(APTWPlayerCharacter, CurrentWeapon);
+}
+
+void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
+{
+	Super::HandleDeath(Attacker);
+	
+	APTWPlayerController* PC = GetController<APTWPlayerController>();
+	if (!PC)
+	{
+		return;
+	}
+	
+	if (HasAuthority())
+	{
+		// TODO: 임시 관전 전환 로직
+		PC->UnPossess();
+		PC->StartSpectating();
+	}
 }
 
 void APTWPlayerCharacter::BeginPlay()
@@ -76,11 +107,14 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 	
 	GiveDefaultAbilities();
 	ApplyDefaultEffects();
+	UpdateNameTagText(); // PlayerNameTag
 }
 
 void APTWPlayerCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
+
+	UpdateNameTagText(); // PlayerNameTag
 
 	if (IsLocallyControlled())
 	{
@@ -108,6 +142,16 @@ void APTWPlayerCharacter::InitAbilityActorInfo()
 	else {
 		UE_LOG(LogTemp, Error, TEXT("InitAbility Failed: PlayerState is NULL for %s"), *GetName());
 	}
+}
+
+void APTWPlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (GetWorldTimerManager().IsTimerActive(NameTagRetryTimer))
+	{
+		GetWorldTimerManager().ClearTimer(NameTagRetryTimer);
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -271,4 +315,61 @@ void APTWPlayerCharacter::AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APT
 
 	NewWeapon1P->SetActorEnableCollision(false);
 	NewWeapon3P->SetActorEnableCollision(false);
+}
+
+UWidgetComponent* APTWPlayerCharacter::GetNameTagWidget() const
+{
+	return NameTagWidget;
+}
+
+void APTWPlayerCharacter::UpdateNameTagText()
+{
+	if (!NameTagWidget) return;
+
+	// PlayerState에서 이름 가져오기
+	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
+	UPTWPlayerName* NameWidget = Cast<UPTWPlayerName>(NameTagWidget->GetUserWidgetObject());
+
+	if (!PS || !NameWidget)
+	{
+		GetWorldTimerManager().SetTimer(NameTagRetryTimer, this, &APTWPlayerCharacter::UpdateNameTagText, 0.2f, false);
+		return;
+	}
+	GetWorldTimerManager().ClearTimer(NameTagRetryTimer);
+
+	// 이름 설정 (1순위 : 플레이어데이터의 닉네임, 2순위 : 스팀아이디닉네임)
+	FString Name;
+	const FPTWPlayerData& PD = PS->GetPlayerData();
+	if (!PD.PlayerName.IsEmpty())
+	{
+		Name = PD.PlayerName;
+	}
+	else
+	{
+		Name = PS->GetPlayerName();
+	}
+	
+	// UI 반영
+	NameWidget->SetPlayerName(Name);
+}
+
+void APTWPlayerCharacter::ApplyRecoil()
+{
+	if (!CurrentWeapon) return;
+	const UPTWWeaponData* Data = CurrentWeapon->GetWeaponData();
+	if (!Data) return;
+
+	FGameplayTag FireTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Anim.Fire"));
+	if (Data->AnimMap.Contains(FireTag))
+	{
+		UAnimMontage* Montage = *Data->AnimMap.Find(FireTag);
+		if (Montage)
+		{
+			UAnimInstance* AnimInstance = (IsLocallyControlled() && Mesh1P) ? Mesh1P->GetAnimInstance() : GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				AnimInstance->Montage_Play(Montage, 1.0f);
+			}
+		}
+	}
 }

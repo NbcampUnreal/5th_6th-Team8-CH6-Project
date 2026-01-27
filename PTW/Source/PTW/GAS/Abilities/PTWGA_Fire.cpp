@@ -10,9 +10,12 @@
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerController.h"
+#include "EntitySystem/MovieSceneEntitySystemRunner.h"
+#include "GAS/PTWWeaponAttributeSet.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
+#include "Inventory/PTWWeaponData.h"
 
 UPTWGA_Fire::UPTWGA_Fire()
 {
@@ -21,17 +24,9 @@ UPTWGA_Fire::UPTWGA_Fire()
 	ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("State.Movement.Sprinting")));
 }
 
-void UPTWGA_Fire::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-                               const FGameplayAbilityActivationInfo ActivationInfo)
-{
-	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
-	StartFire(Handle, ActorInfo, ActivationInfo);
-}
-
 void UPTWGA_Fire::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo)
 {
-	Super::InputReleased(Handle, ActorInfo, ActivationInfo);
 	StopFire();
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
@@ -40,17 +35,21 @@ void UPTWGA_Fire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+	
+	if (!CommitCheck(Handle,ActorInfo, ActivationInfo))
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-	AutoFire(Handle, ActorInfo, ActivationInfo);
+	
+	StartFire(Handle, ActorInfo, ActivationInfo);
 }
 
 void UPTWGA_Fire::StartFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 							   const FGameplayAbilityActivationInfo ActivationInfo)
 {
+	AutoFire(Handle, ActorInfo, ActivationInfo);
+	
 	if (!GetWorld()->GetTimerManager().IsTimerActive(AutoFireTimer))
 	{
 		GetWorld()->GetTimerManager().SetTimer(AutoFireTimer, FTimerDelegate::CreateLambda([Handle,ActorInfo,ActivationInfo, this]()
@@ -102,15 +101,14 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 	
 	UPTWItemInstance* CurrentInst = Inven->GetCurrentWeaponInst();
 	
-	if (!CurrentInst || CurrentInst->CurrentAmmo <= 0)
+	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
+		StopFire();
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
 	
-	if (HasAuthority(&CurrentActivationInfo))
-	{
-		ApplyCost(Handle, ActorInfo, ActivationInfo);
-	}
+	//ApplyCost(Handle, ActorInfo, ActivationInfo);
 	
 	FPTWGameplayCueMakingInfo Infos;
 	Infos.PlayerCharacter = PC;
@@ -118,25 +116,18 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 	
 	MakeGameplayCue(Handle, ActorInfo, ActivationInfo, Infos);
 	
-	// Server-side Validation 피격 처리
 	FHitResult HitResult;
 	PerformLineTrace(HitResult, PC);
 	
-	FGameplayAbilityTargetDataHandle TargetData; 
-	FGameplayAbilityTargetData_SingleTargetHit* NewData = new FGameplayAbilityTargetData_SingleTargetHit();
-	NewData->HitResult = HitResult;
-	TargetData.Add(NewData);
+	FGameplayAbilityTargetDataHandle TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(HitResult);
 	
+	// Server-side Validation 피격 처리
 	if (HasAuthority(&ActivationInfo))
 	{
-		// [Server-side Validation]
-		if (ValidateHitResult(HitResult)) // 검증 함수 호출
+		if (ValidateHitResult(HitResult)) 
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Take Damage Actor Name : %s"), *HitResult.GetActor()->GetName());
-			UE_LOG(LogTemp, Warning, TEXT("Hit Bone : %s"), *HitResult.BoneName.ToString());
-			
-			// 검증 성공 시 데미지 GE 적용
-			ApplyDamageToTarget(Handle, ActorInfo, ActivationInfo, TargetData);
+			float Damage = CurrentInst->SpawnedWeapon1P->GetWeaponData()->BaseDamage;
+			ApplyDamageToTarget(Handle, ActorInfo, ActivationInfo, TargetData, Damage);
 		}
 		else
 		{
@@ -144,8 +135,10 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 		}
 	}
 	
+	//캐릭터 반동 함수 호출(박태웅)
+	PC->ApplyRecoil();
 	
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	//EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
 void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* PlayerCharacter)
@@ -159,33 +152,36 @@ void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* P
 	
 	FVector End = StartLoc + (Rot.Vector() * 5000.0f);
 	
-	GetWorld()->LineTraceSingleByChannel(HitResult, StartLoc,End, ECC_WeaponAttack);
+	AActor* Avatar = GetAvatarActorFromActorInfo();
+	
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Avatar); 
+	
+	GetWorld()->LineTraceSingleByChannel(HitResult, StartLoc,End, ECC_WeaponAttack, Params);
 	
 	DrawDebugLine(GetWorld(), StartLoc, End, FColor::Green, false, 10.0f);
 }
 
 bool UPTWGA_Fire::ValidateHitResult(FHitResult& HitResult)
 {
-	if (!HitResult.bBlockingHit) return true; // 아무것도 안 맞은 건 검증 필요 없음
+	if (!HitResult.bBlockingHit) return true; 
 
 	AActor* Avatar = GetAvatarActorFromActorInfo();
-	float MaxRange = 5000.f; // 무기 데이터에서 가져온 사거리
-
-	// 검증 1: 거리 체크 (너무 먼 곳을 맞췄는가?)
+	float MaxRange = 5000.f; 
+	
 	float Distance = FVector::Dist(Avatar->GetActorLocation(), HitResult.ImpactPoint);
 	if (Distance > MaxRange + 100.f) return false; 
 
-	// 검증 2: 시야 체크 (벽 뒤에 있는 적을 맞췄는가?)
+	
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Avatar);
 	FHitResult ValidationHit;
     
-	// 서버에서 다시 한번 짧게 쏴서 중간에 벽이 없는지 확인
+
 	GetWorld()->LineTraceSingleByChannel(ValidationHit, Avatar->GetActorLocation(), HitResult.ImpactPoint, ECC_Visibility, Params);
     
 	if (ValidationHit.bBlockingHit && ValidationHit.GetActor() != HitResult.GetActor())
 	{
-		// 실제 맞은 적보다 앞에 다른 장애물이 있다면 무효
 		return false;
 	}
 
@@ -195,7 +191,7 @@ bool UPTWGA_Fire::ValidateHitResult(FHitResult& HitResult)
 void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle, 
 		const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo,
-		const FGameplayAbilityTargetDataHandle& TargetData)
+		const FGameplayAbilityTargetDataHandle& TargetData, float BaseDamage)
 {
 	if (!HasAuthority(&CurrentActivationInfo)) return;
 	
@@ -206,13 +202,16 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle,
 		FHitResult* HitResult = const_cast<FHitResult*>(Data->GetHitResult());
 		if (HitResult && HitResult->GetActor())
 		{
-			// 4. EffectSpec 생성 (서버에서 생성해야 안전함)
 			FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageGEClass, GetAbilityLevel());
-
-			// 5. 필요시 데이터 주입 (예: 데미지 수치, 히트 위치 등)
-			// SpecHandle.Data.Get()->SetSetByCallerMagnitude(Tag_Damage, 50.f);
-
-			// 6. 대상의 ASC를 찾아 GE 적용
+			FGameplayTag Tag_Damage = FGameplayTag::RequestGameplayTag(FName("Data.Damage"));
+			
+			if (HitResult->BoneName == FName("head"))
+			{
+				BaseDamage *= 2.0f;
+			}
+			
+			SpecHandle.Data.Get()->SetSetByCallerMagnitude(Tag_Damage, -BaseDamage);
+			
 			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult->GetActor());
 			if (TargetASC)
 			{

@@ -15,6 +15,7 @@ class UInputMappingContext;
 class UInputAction;
 class UPTWInventoryComponent;
 class APTWWeaponActor;
+class UWidgetComponent;
 
 USTRUCT(BlueprintType)
 struct FWeaponPair
@@ -39,6 +40,7 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void HandleDeath(AActor* Attacker) override;
 protected:
 	//생성자
 	virtual void BeginPlay() override;
@@ -46,6 +48,7 @@ protected:
 	virtual void OnRep_PlayerState() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void InitAbilityActorInfo() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 protected:
 	void Move(const FInputActionValue& Value);
@@ -67,6 +70,9 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
 
 	void AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void ApplyRecoil();
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
@@ -103,4 +109,17 @@ protected:
 public:
 	FORCEINLINE UCameraComponent* GetPlayerCamera() const { return PlayerCamera; }
 	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
+	/* PlayerNameTag */
+public:
+	UWidgetComponent* GetNameTagWidget() const;
+protected:
+	/* 위젯에 닉네임 전달 */
+	void UpdateNameTagText();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	TObjectPtr<UWidgetComponent> NameTagWidget;
+	// 이름표 갱신 재시도를 위한 타이머 핸들
+	FTimerHandle NameTagRetryTimer;
+
 };

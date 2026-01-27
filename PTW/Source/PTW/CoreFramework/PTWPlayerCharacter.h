@@ -71,6 +71,9 @@ public:
 
 	void AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag);
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void ApplyRecoil();
+
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TMap<FGameplayTag, TSubclassOf<APTWWeaponActor>> WeaponClasses;

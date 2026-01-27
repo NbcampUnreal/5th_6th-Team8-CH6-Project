@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PTWMiniGameRule.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWMiniGameMode.generated.h"
@@ -26,7 +27,9 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable)
 	void AddWinPoint(APawn* PointPawn, int32 AddPoint);
-	
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule")
+	FPTWMiniGameRule MiniGameRule;
 protected:
 	virtual void InitGameState() override;
 	virtual void BeginPlay() override;

@@ -29,6 +29,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Mesh")
 	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
 
+	virtual void HandleDeath(AActor* Attacker) override;
 protected:
 	//생성자
 	virtual void BeginPlay() override;

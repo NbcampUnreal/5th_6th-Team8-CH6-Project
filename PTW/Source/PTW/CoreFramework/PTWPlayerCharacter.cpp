@@ -11,6 +11,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "PTWInputComponent.h"
+#include "PTWPlayerController.h"
 #include "GAS/PTWGameplayAbility.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWWeaponActor.h"
@@ -33,6 +34,24 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 
 	InventoryComponent = CreateDefaultSubobject<UPTWInventoryComponent>(TEXT("InventoryComponent"));
 	InventoryComponent->SetIsReplicated(true);
+}
+
+void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
+{
+	Super::HandleDeath(Attacker);
+	
+	APTWPlayerController* PC = GetController<APTWPlayerController>();
+	if (!PC)
+	{
+		return;
+	}
+	
+	if (HasAuthority())
+	{
+		// TODO: 임시 관전 전환 로직
+		PC->UnPossess();
+		PC->StartSpectating();
+	}
 }
 
 void APTWPlayerCharacter::BeginPlay()

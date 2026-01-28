@@ -45,12 +45,30 @@ void APTWPlayerState::SetPlayerData(const FPTWPlayerData& NewData)
 	}
 }
 
+void APTWPlayerState::SetPlayerRoundData(const FPTWPlayerRoundData& NewData)
+{
+	if (HasAuthority())
+	{
+		PlayerRoundData = NewData;
+	}
+}
+
 FPTWPlayerData APTWPlayerState::GetPlayerData() const
 {
 	return CurrentPlayerData;
 }
 
+FPTWPlayerRoundData APTWPlayerState::GetPlayerRoundData() const
+{
+	return PlayerRoundData;
+}
+
 void APTWPlayerState::OnRep_CurrentPlayerData()
 {
 	OnPlayerDataUpdated.Broadcast(CurrentPlayerData);
+}
+
+void APTWPlayerState::OnRep_PlayerRoundData()
+{
+	OnPlayerRoundDataUpdated.Broadcast(PlayerRoundData);
 }

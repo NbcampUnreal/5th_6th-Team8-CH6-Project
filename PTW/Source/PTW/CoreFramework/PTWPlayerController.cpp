@@ -117,6 +117,17 @@ void APTWPlayerController::TryInitializeHUD()
 
 	// HUD 초기화
 	PTWHUD->InitializeHUD(ASC);
+
+	if (ASC)
+	{
+		// 무기 장착 상태 변경 감지
+		ASC->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")), EGameplayTagEventType::NewOrRemoved)
+			.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
+
+		// 달리기 상태 변경 감지
+		ASC->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("State.Movement.Sprinting")), EGameplayTagEventType::NewOrRemoved)
+			.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
+	}
 }
 
 void APTWPlayerController::StartSpectating()
@@ -318,6 +329,32 @@ void APTWPlayerController::HandleMenuInput()
 			UISubsystem->PushWidget(PauseMenuClass, EUIInputPolicy::GameAndUI);
 		}
 	}
+}
+
+void APTWPlayerController::OnCrosshairStateTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	UE_LOG(LogTemp, Error, TEXT("Controller Crosshair TagChanged"));
+
+	UpdateCrosshairVisibility();
+}
+
+void APTWPlayerController::UpdateCrosshairVisibility()
+{
+	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
+	if (!PS || !PS->GetAbilitySystemComponent()) return;
+
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+	APTWHUD* PTWHUD = Cast<APTWHUD>(GetHUD());
+	if (!PTWHUD) return;
+
+	// 조건 판별
+	bool bHasWeapon = ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
+	bool bIsSprinting = ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("State.Movement.Sprinting")));
+
+	// 최종 결과: 무기를 들고 있고(AND) 달리는 중이 아닐 때(NOT)만 표시
+	bool bShouldShow = bHasWeapon && !bIsSprinting;
+
+	PTWHUD->SetCrosshairVisibility(bShouldShow);
 }
 
 void APTWPlayerController::PostSeamlessTravel()

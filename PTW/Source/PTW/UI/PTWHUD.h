@@ -26,6 +26,10 @@ public:
 
 	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
 
+	// 컨트롤러에서 호출할 가시성 제어 함수
+	UFUNCTION()
+	void SetCrosshairVisibility(bool bVisible);
+
 protected:
 	/* HUD에 표시할 메인 위젯 클래스 (에디터/블루프린트에서 설정) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")

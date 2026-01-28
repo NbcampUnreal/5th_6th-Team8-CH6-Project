@@ -36,6 +36,8 @@ public:
 
 	/* HUD 초기화 */
 	void TryInitializeHUD();
+	// ASC 를 받아와서 HUD 에게 넘겨주는 함수이지만
+	// 여기서 컨트롤러가 ASC 태그 변경에 델리게이트 바인드 하기도함
 	
 	/* 관전 시스템 함수 */
 	void StartSpectating();
@@ -60,7 +62,11 @@ protected:
 
 	/* PauseMenu */
 	void HandleMenuInput();
-	
+
+	/* 크로스헤어 */
+	void OnCrosshairStateTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+	void UpdateCrosshairVisibility();
+
 	/* ---------- Input ---------- */
 	// 랭킹보드 (Tab)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -100,7 +106,6 @@ protected:
 	/* 플레이어 이름 */
 	/* 닉네임 가시성 업데이트 로직 */
 	void UpdateNameTagsVisibility();
-
 	/* 가시성 설정 */
 	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag")
 	float NameTagMaxDistance = 1500.f;

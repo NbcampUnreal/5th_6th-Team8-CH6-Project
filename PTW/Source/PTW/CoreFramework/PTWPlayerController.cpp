@@ -14,6 +14,7 @@
 
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "UI/PTWUISubsystem.h"
 #include "UI/PTWHUD.h"
 #include "UI/RankBoard/PTWRankingBoard.h"
 #include "Inventory/PTWItemInstance.h"
@@ -64,21 +65,11 @@ void APTWPlayerController::OnRep_PlayerState()
 void APTWPlayerController::BeginSpectatingState()
 {
 	Super::BeginSpectatingState();
-	
-	if (IsLocalController() && !IsValid(GetPawn()))
-	{
-		SpectateNextPlayer();
-	}
 }
 
 void APTWPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
-	
-	if (IsLocalController() && !IsValid(GetPawn()))
-	{
-		SpectateNextPlayer();
-	}
 }
 
 void APTWPlayerController::OnPossess(APawn* InPawn)
@@ -132,55 +123,71 @@ void APTWPlayerController::StartSpectating()
 {
 	if (HasAuthority())
 	{
-		ChangeState(NAME_Spectating);
+		MulticastRPC_StartSpectating();
+	}
+}
+
+void APTWPlayerController::MulticastRPC_StartSpectating_Implementation()
+{
+	if (IsLocalController())
+	{
+		if (!OnPossessedPawnChanged.IsAlreadyBound(this, &ThisClass::SpectateNextPlayer))
+		{
+			OnPossessedPawnChanged.AddDynamic(this, &ThisClass::SpectateNextPlayer);
+		}
+	}
+	
+	UnPossess();
+	ChangeState(NAME_Spectating);
+	if (HasAuthority())
+	{
 		ClientGotoState(NAME_Spectating);
 	}
 }
 
-void APTWPlayerController::SpectateNextPlayer()
+void APTWPlayerController::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn)
 {
+	if (IsValid(InNewPawn)) return;
+	OnPossessedPawnChanged.RemoveDynamic(this, &ThisClass::SpectateNextPlayer);
+	
+	if (!IsValid(PlayerState)) return;
+	if (PlayerState->GetPawn() || GetPawn()) return;
+
 	UWorld* World = GetWorld();
-	if (!IsValid(World))
-	{
-		return;
-	}
+	if (!IsValid(World)) return;
 	
 	AGameStateBase* GS = World->GetGameState();
-	if (!IsValid(GS))
-	{
-		return;
-	}
+	if (!IsValid(GS)) return;
 	
 	const TArray<APlayerState*>& PlayArray = GS->PlayerArray;
-	if (PlayArray.IsEmpty())
-	{
-		return;
-	}
+	if (PlayArray.IsEmpty()) return;
 	
-	AActor* CurrentViewTarget = GetViewTarget();
-	if (!IsValid(CurrentViewTarget))
-	{
-		return;
-	}
-
-	APlayerState* CurrentPlayerState = nullptr;
-	if (APawn* CastPawn = Cast<APawn>(CurrentViewTarget))
-	{
-		CurrentPlayerState = CastPawn->GetPlayerState();
-	}
-	
+	APawn* CurrentViewTarget = nullptr;
 	APawn* NewViewTarget = nullptr;
-	if (IsValid(CurrentPlayerState))
+	
+	if (AActor* CurrentViewTargetActor = GetViewTarget())
 	{
-		int32 FoundIndex = PlayArray.Find(CurrentPlayerState);
-		if (FoundIndex != INDEX_NONE)
+		CurrentViewTarget = Cast<APawn>(CurrentViewTargetActor);
+		if (IsValid(CurrentViewTarget))
 		{
-			for (int32 i = FoundIndex + 1; i < PlayArray.Num(); i++)
+			if (APlayerState* CurrentViewTargetPS = CurrentViewTarget->GetPlayerState())
 			{
-				if (PlayArray[i]->GetPawn()->GetPlayerState() && !PlayArray[i]->IsSpectator())
+				if (!IsValid(CurrentViewTargetPS))
 				{
-					NewViewTarget = PlayArray[i]->GetPawn();
-					break;
+					CurrentViewTargetPS= PlayerState;
+				}
+				
+				int32 FoundIndex = PlayArray.Find(CurrentViewTargetPS);
+				if (FoundIndex != INDEX_NONE)
+				{
+					for (int32 i = FoundIndex + 1; i < PlayArray.Num(); i++)
+					{
+						if (PlayArray[i] && PlayArray[i]->GetPawn() && !PlayArray[i]->IsSpectator())
+						{
+							NewViewTarget = PlayArray[i]->GetPawn();
+							break;
+						}
+					}
 				}
 			}
 		}
@@ -188,9 +195,9 @@ void APTWPlayerController::SpectateNextPlayer()
 	
 	if (!IsValid(NewViewTarget))
 	{
-		for (const APlayerState* PS : PlayArray)
+		for (APlayerState* PS : PlayArray)
 		{
-			if (PS != PlayerState && !PS->IsSpectator() && PS->GetPawn()->GetPlayerState())
+			if (PS && PS != PlayerState && !PS->IsSpectator() && PS->GetPawn())
 			{
 				NewViewTarget = PS->GetPawn();
 				break;
@@ -200,7 +207,10 @@ void APTWPlayerController::SpectateNextPlayer()
 	
 	if (IsValid(NewViewTarget))
 	{
-		SetViewTargetWithBlend(NewViewTarget, 0.5f, VTBlend_Cubic);
+		if (!IsValid(CurrentViewTarget) || (CurrentViewTarget != NewViewTarget))
+		{
+			SetViewTargetWithBlend(NewViewTarget, 0.5f, VTBlend_Cubic);
+		}
 	}
 }
 
@@ -208,7 +218,7 @@ void APTWPlayerController::OnInputSpectateNext()
 {
 	if (GetStateName() == NAME_Spectating)
 	{
-		SpectateNextPlayer();
+		SpectateNextPlayer(GetPawn(), GetPawn());
 	}
 }
 
@@ -236,6 +246,14 @@ void APTWPlayerController::SetupInputComponent()
 			ETriggerEvent::Started, 
 			this, 
 			&ThisClass::OnInputSpectateNext);
+
+		// ESC / Pause Menu
+		EIC->BindAction(
+			PauseMenuAction,
+			ETriggerEvent::Started,
+			this,
+			&APTWPlayerController::HandleMenuInput
+		);
 	}
 }
 
@@ -273,6 +291,32 @@ void APTWPlayerController::CreateRankingBoard()
 	{
 		RankingBoard->AddToViewport();
 		RankingBoard->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void APTWPlayerController::HandleMenuInput()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[ESC] HandleMenuInput Called"));
+	if (!IsLocalController()) return;
+
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP) return;
+
+	UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>();
+	if (!UISubsystem) return;
+
+	if (!UISubsystem->IsStackEmpty())
+	{
+		// UI 스택의 최상단 위젯을 닫음 
+		UISubsystem->PopWidget();
+	}
+	else
+	{
+		// 아무런 위젯이 없을 때는 PauseMenu 띄우기
+		if (PauseMenuClass)
+		{
+			UISubsystem->PushWidget(PauseMenuClass, EUIInputPolicy::GameAndUI);
+		}
 	}
 }
 

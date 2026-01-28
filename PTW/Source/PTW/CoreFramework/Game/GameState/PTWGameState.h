@@ -6,6 +6,19 @@
 #include "GameFramework/GameState.h"
 #include "PTWGameState.generated.h"
 
+UENUM(BlueprintType)
+enum class EPTWGamePhase : uint8
+{
+	/** 미니 게임 시작 전 로비 */
+	PreGameLobby UMETA(DisplayName="Pre Game Lobby"),
+
+	/** 미니 게임 진행 */
+	MiniGame UMETA(DisplayName="Mini Game"),
+
+	/** 미니 게임 진행 후 로비 */
+	PostGameLobby UMETA(DisplayName="Post Game Lobby")
+};
+
 /**
  * 남은 시간 변경 이벤트
  * - RemainTime이 변경될 때 브로드캐스트
@@ -33,19 +46,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePhaseChanged, EPTWGamePhase, 
  * - 라운드 UI 갱신, 라운드 시작/종료 연출 트리거 등에 사용
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundChanged, int32, CurrentRound);
-
-UENUM(BlueprintType)
-enum class EPTWGamePhase : uint8
-{
-	/** 미니 게임 시작 전 로비 */
-	PreGameLobby UMETA(DisplayName="Pre Game Lobby"),
-
-	/** 미니 게임 진행 */
-	MiniGame UMETA(DisplayName="Mini Game"),
-
-	/** 미니 게임 진행 후 로비 */
-	PostGameLobby UMETA(DisplayName="Post Game Lobby")
-};
 
 /**
  * 게임 진행 상태(타이머 등)를 네트워크로 동기화하는 GameState

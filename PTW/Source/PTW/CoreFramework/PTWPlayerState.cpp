@@ -29,6 +29,7 @@ void APTWPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(APTWPlayerState, CurrentPlayerData);
+	DOREPLIFETIME(APTWPlayerState, PlayerRoundData);
 }
 
 UAbilitySystemComponent* APTWPlayerState::GetAbilitySystemComponent() const
@@ -45,12 +46,59 @@ void APTWPlayerState::SetPlayerData(const FPTWPlayerData& NewData)
 	}
 }
 
+void APTWPlayerState::SetPlayerRoundData(const FPTWPlayerRoundData& NewData)
+{
+	if (HasAuthority())
+	{
+		PlayerRoundData = NewData;
+	}
+}
+
 FPTWPlayerData APTWPlayerState::GetPlayerData() const
 {
 	return CurrentPlayerData;
 }
 
+FPTWPlayerRoundData APTWPlayerState::GetPlayerRoundData() const
+{
+	return PlayerRoundData;
+}
+
+void APTWPlayerState::AddKillCount(int32 KillCount)
+{
+	if (HasAuthority())
+	{
+		PlayerRoundData.KillCount += KillCount;
+	}
+}
+
+void APTWPlayerState::AddDeathCount(int32 DeathCount)
+{
+	if (HasAuthority())
+	{
+		PlayerRoundData.DeathCount += DeathCount;
+	}
+}
+
+void APTWPlayerState::AddScore(int32 AddScore)
+{
+	if (HasAuthority())
+	{
+		PlayerRoundData.Score += AddScore;
+	}
+}
+
+void APTWPlayerState::ResetPlayerRoundData()
+{
+	PlayerRoundData = FPTWPlayerRoundData();
+}
+
 void APTWPlayerState::OnRep_CurrentPlayerData()
 {
 	OnPlayerDataUpdated.Broadcast(CurrentPlayerData);
+}
+
+void APTWPlayerState::OnRep_PlayerRoundData()
+{
+	OnPlayerRoundDataUpdated.Broadcast(PlayerRoundData);
 }

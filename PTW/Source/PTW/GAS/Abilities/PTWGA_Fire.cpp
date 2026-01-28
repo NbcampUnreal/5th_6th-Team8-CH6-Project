@@ -6,6 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "PTW.h"
+#include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "Abilities/Tasks/AbilityTask_WaitTargetData.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
@@ -42,6 +43,10 @@ void UPTWGA_Fire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 		return;
 	}
 	
+	UAbilityTask_WaitInputRelease* WaitInputRelease = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
+	WaitInputRelease->OnRelease.AddDynamic(this, &UPTWGA_Fire::OnInputReleasedCallback);
+	WaitInputRelease->ReadyForActivation();
+	
 	StartFire(Handle, ActorInfo, ActivationInfo);
 }
 
@@ -69,25 +74,16 @@ void UPTWGA_Fire::MakeGameplayCue(const FGameplayAbilitySpecHandle Handle,
                                   const FGameplayAbilityActivationInfo ActivationInfo,
                                   FPTWGameplayCueMakingInfo Infos)
 {
-	FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(FireEffectClass);
-    
-	if (SpecHandle.IsValid())
-	{
-		
-		FGameplayEffectContextHandle Context = SpecHandle.Data->GetContext();
-		if (Infos.PlayerCharacter)
-		{
-			if (Infos.PlayerCharacter->IsLocallyControlled())
-			{
-				Context.AddSourceObject(Infos.ItemInstance->SpawnedWeapon1P);
-			}
-			else
-			{
-				Context.AddSourceObject(Infos.ItemInstance->SpawnedWeapon3P);
-			}
-		}
-		ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
-	}
+	FGameplayCueParameters Params;
+	Params.Instigator = ActorInfo->OwnerActor.Get();
+	Params.SourceObject = Infos.ItemInstance; // 여기서 넘겨준 인스턴스가 큐의 SourceObject가 됨
+
+	// 이 함수는 'Local Predicted' 어빌리티 내에서 호출될 때 
+	// 클라이언트에서 즉시 실행되고, 서버로 전달되어 중복 없이 복제됩니다.
+	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(
+		FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Fire")), 
+		Params
+	);
 }
 
 void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -107,14 +103,13 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-	
-	//ApplyCost(Handle, ActorInfo, ActivationInfo);
-	
+
 	FPTWGameplayCueMakingInfo Infos;
 	Infos.PlayerCharacter = PC;
 	Infos.ItemInstance = CurrentInst;
 	
 	MakeGameplayCue(Handle, ActorInfo, ActivationInfo, Infos);
+	
 	
 	FHitResult HitResult;
 	PerformLineTrace(HitResult, PC);
@@ -137,8 +132,6 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 	
 	//캐릭터 반동 함수 호출(박태웅)
 	PC->ApplyRecoil();
-	
-	//EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
 void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* PlayerCharacter)
@@ -219,4 +212,17 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle,
 			}
 		}
 	}
+}
+
+void UPTWGA_Fire::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	StopFire();
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+void UPTWGA_Fire::OnInputReleasedCallback(float TimeHold)
+{
+	StopFire();
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

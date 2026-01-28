@@ -84,6 +84,18 @@ void UPTWInventoryComponent::SetCurrentWeaponInst(const UPTWItemInstance* Weapon
 	CurrentWeapon = const_cast<UPTWItemInstance*>(WeaponInst);
 }
 
+void UPTWInventoryComponent::WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool SetHidden)
+{
+	for (auto Weapon : WeaponArr)
+	{
+		if (Weapon->ItemDef->WeaponTag == WeaponTag)
+		{
+			Weapon->SpawnedWeapon1P->SetActorHiddenInGame(SetHidden);
+			Weapon->SpawnedWeapon3P->SetActorHiddenInGame(SetHidden);
+		}
+	}
+}
+
 // Called when the game starts
 void UPTWInventoryComponent::BeginPlay()
 {

@@ -28,17 +28,17 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		
 		FGameplayTag CurrentWeaponTag = WeaponItemInstance->ItemDef->WeaponTag;
 		APTWPlayerCharacter* Character = GetPTWPlayerCharacterFromActorInfo();
-		
-		SetCharacterWeaponAttribute(WeaponItemInstance, Character);
-		
+
 		if (HasAuthority(&CurrentActivationInfo))
 		{
 			Character->EquipWeaponByTag(CurrentWeaponTag);
-			 if (UPTWInventoryComponent* InvenComp = Character->FindComponentByClass<UPTWInventoryComponent>())
+			 if (UPTWInventoryComponent* InvenComp = Character->GetInventoryComponent())
 			 {
 			 	InvenComp->SetCurrentWeaponInst(WeaponItemInstance);
 			 }
 		}
+		
+		SetCharacterWeaponAttribute(WeaponItemInstance, Character);
 		
 		FGameplayTag StatTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 		
@@ -71,7 +71,7 @@ void UPTWGA_Equip::SetCharacterWeaponAttribute(const UPTWItemInstance* WeaponIte
 			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetCurrentAmmoAttribute(), WeaponmData->MaxAmmo);
 			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetDamageAttribute(), WeaponmData->BaseDamage);
 			
-			//ASC->ForceReplication();
+			ASC->ForceReplication();
 		}
 	}
 }

@@ -3,7 +3,10 @@
 
 #include "GC_WeaponFire.h"
 
+#include "IDetailTreeNode.h"
 #include "NiagaraFunctionLibrary.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
+#include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 
 
@@ -13,20 +16,43 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 	{
 		return false;
 	}
-	UObject* SourceObj = Parameters.EffectContext.Get()->GetSourceObject();
+	UObject* SourceObj = const_cast<UObject*>(Parameters.GetSourceObject());
+	UPTWItemInstance* ItemInst = Cast<UPTWItemInstance>(SourceObj);
 	
-	if (APTWWeaponActor* Weapon = Cast<APTWWeaponActor>(SourceObj))
+	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(MyTarget);
+	
+	if (!PC) return false;
+	
+	APTWWeaponActor* TargetWeapon = nullptr;
+	
+	// PC가 나라면 1인칭용 Muzzle
+	// PC가 상대라면 3인칭용 Muzzle
+	
+	if (PC->IsLocallyControlled())
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAttached(
-		   FireVFX,
-		   Weapon->GetMuzzleComponent(),
-		   NAME_None,
-		   FVector::ZeroVector,
-		   FRotator::ZeroRotator, 
-		   EAttachLocation::SnapToTargetIncludingScale,
-		   true
-		);
+		TargetWeapon = ItemInst->SpawnedWeapon1P;
+	}
+	else
+	{
+		TargetWeapon = ItemInst->SpawnedWeapon3P;
 	}
 	
+	bool bIsHidden = TargetWeapon->IsHidden();
+	bool bIsFirstPerson = TargetWeapon->bIsFirstPersonWeapon;
+	
+	UE_LOG(LogTemp, Log, TEXT("Hidden: %s"), bIsHidden ? TEXT("true") : TEXT("false"));
+	UE_LOG(LogTemp, Log, TEXT("bIsFirstPerson: %s"), bIsFirstPerson ? TEXT("true") : TEXT("false"));
+	
+	UNiagaraFunctionLibrary::SpawnSystemAttached(
+		FireVFX,
+		TargetWeapon->GetMuzzleComponent(),
+		NAME_None,
+		FVector::ZeroVector,
+		FRotator::ZeroRotator, 
+		EAttachLocation::SnapToTargetIncludingScale,
+		true
+		);
+	
 	return true;
+	
 }

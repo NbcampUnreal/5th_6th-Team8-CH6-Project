@@ -52,10 +52,10 @@ void UPTWWeaponAttributeSet::OnRep_MaxAmmo(const FGameplayAttributeData& OldMaxA
 
 void UPTWWeaponAttributeSet::OnRep_Damage(const FGameplayAttributeData& OldDamage)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWWeaponAttributeSet, CurrentAmmo, OldDamage);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWWeaponAttributeSet, Damage, OldDamage);
 }
 
 void UPTWWeaponAttributeSet::OnRep_CurrentAmmo(const FGameplayAttributeData& OldCurrentAmmo)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWWeaponAttributeSet, Damage, OldCurrentAmmo);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWWeaponAttributeSet, CurrentAmmo, OldCurrentAmmo);
 }

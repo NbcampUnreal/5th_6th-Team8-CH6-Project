@@ -7,9 +7,12 @@
 #include "PTWInventoryComponent.generated.h"
 
 
+struct FGameplayTag;
 class UPTWItemInstance;
 class APTWWeaponActor;
 class UPTWItemDefinition;
+
+
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class PTW_API UPTWInventoryComponent : public UActorComponent
@@ -32,17 +35,19 @@ public:
 	FORCEINLINE UPTWItemInstance* GetCurrentWeaponInst() const {return CurrentWeapon;}
 	void SetCurrentWeaponInst(const UPTWItemInstance* WeaponInst);
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
-	TObjectPtr<UPTWItemInstance> CurrentWeapon;
-
+	void WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool SetHidden);
+	
+	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Replicated)
 	TArray<TObjectPtr<UPTWItemInstance>> WeaponArr;
-
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
+	TObjectPtr<UPTWItemInstance> CurrentWeapon;
+
 private:
 	//FIXME : 일단 임시로 현재 무기 Actor로 저장
 	//TObjectPtr<UPTWItemInstance> CurrentWeapon;

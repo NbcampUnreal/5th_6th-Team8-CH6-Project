@@ -77,7 +77,7 @@ public:
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TMap<FGameplayTag, TSubclassOf<APTWWeaponActor>> WeaponClasses;
-	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Weapon")
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentWeaponTag, VisibleInstanceOnly, Category = "Weapon")
 	FGameplayTag CurrentWeaponTag;
 	UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
 	TMap<FGameplayTag, FWeaponPair> SpawnedWeapons;
@@ -105,7 +105,7 @@ protected:
 	//FIXME : 테스트 용도
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Temp")
 	TObjectPtr<UPTWItemDefinition> ItemDef;
-	
+
 public:
 	FORCEINLINE UCameraComponent* GetPlayerCamera() const { return PlayerCamera; }
 	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
@@ -121,5 +121,9 @@ protected:
 	TObjectPtr<UWidgetComponent> NameTagWidget;
 	// 이름표 갱신 재시도를 위한 타이머 핸들
 	FTimerHandle NameTagRetryTimer;
+	
+	UFUNCTION()
+	void OnRep_CurrentWeaponTag(const FGameplayTag& OldTag);
+	
 
 };

@@ -76,4 +76,9 @@ protected:
 		const FGameplayAbilityTargetDataHandle& TargetData,
 		float BaseDamage);
 	
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
+	
+	UFUNCTION()
+	void OnInputReleasedCallback(float TimeHold);
+	
 };

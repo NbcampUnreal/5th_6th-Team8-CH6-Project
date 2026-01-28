@@ -16,6 +16,7 @@ void UPTWWeaponAttributeSet::GetLifetimeReplicatedProps(TArray<class FLifetimePr
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWWeaponAttributeSet, MaxAmmo, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWWeaponAttributeSet, CurrentAmmo, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWWeaponAttributeSet, Damage, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPTWWeaponAttributeSet, FireRate, COND_None, REPNOTIFY_Always);
 }
 
 void UPTWWeaponAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -58,4 +59,9 @@ void UPTWWeaponAttributeSet::OnRep_Damage(const FGameplayAttributeData& OldDamag
 void UPTWWeaponAttributeSet::OnRep_CurrentAmmo(const FGameplayAttributeData& OldCurrentAmmo)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWWeaponAttributeSet, CurrentAmmo, OldCurrentAmmo);
+}
+
+void UPTWWeaponAttributeSet::OnRep_FireRate(const FGameplayAttributeData& OldFireRate)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWWeaponAttributeSet, FireRate, OldFireRate);
 }

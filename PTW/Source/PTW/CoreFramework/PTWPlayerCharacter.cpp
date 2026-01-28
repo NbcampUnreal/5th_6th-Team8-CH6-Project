@@ -72,7 +72,6 @@ void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
 	if (HasAuthority())
 	{
 		// TODO: 임시 관전 전환 로직
-		PC->UnPossess();
 		PC->StartSpectating();
 	}
 }

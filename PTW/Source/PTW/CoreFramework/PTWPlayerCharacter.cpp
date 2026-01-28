@@ -230,6 +230,8 @@ void APTWPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 void APTWPlayerCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 {
 	if (!HasAuthority()) return;
+	
+	OnRep_CurrentWeaponTag(CurrentWeaponTag);
 
 	// 같은 무기면 해제 로직
 	if (CurrentWeaponTag == NewWeaponTag)
@@ -271,7 +273,7 @@ void APTWPlayerCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 
 			CurrentWeapon = NewWeapon1P;
 			CurrentWeaponTag = NewWeaponTag;
-
+			
 			UE_LOG(LogTemp, Log, TEXT("Weapon Equipped: %s"), *NewWeaponTag.ToString());
 		}
 	}
@@ -283,16 +285,7 @@ void APTWPlayerCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 
 void APTWPlayerCharacter::OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon)
 {
-	if (OldWeapon)
-	{
-		OldWeapon->SetActorHiddenInGame(true);
-	}
-
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->SetActorHiddenInGame(false);
-		CurrentWeapon->ApplyVisualPerspective();
-	}
+	
 }
 
 void APTWPlayerCharacter::AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag)
@@ -351,6 +344,17 @@ void APTWPlayerCharacter::UpdateNameTagText()
 	
 	// UI 반영
 	NameWidget->SetPlayerName(Name);
+}
+
+void APTWPlayerCharacter::OnRep_CurrentWeaponTag(const FGameplayTag& OldTag)
+{
+	if (OldTag != FGameplayTag::EmptyTag)
+	{
+		InventoryComponent->WeaponVisibleSetting(OldTag, true);
+	}
+	
+	InventoryComponent->WeaponVisibleSetting(CurrentWeaponTag, false);
+	
 }
 
 void APTWPlayerCharacter::ApplyRecoil()

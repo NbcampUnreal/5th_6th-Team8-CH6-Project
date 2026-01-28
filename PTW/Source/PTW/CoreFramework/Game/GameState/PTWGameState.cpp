@@ -3,6 +3,7 @@
 
 #include "PTWGameState.h"
 
+#include "CoreFramework/PTWPlayerState.h"
 #include "Net/UnrealNetwork.h"
 
 APTWGameState::APTWGameState()
@@ -18,6 +19,19 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(APTWGameState, RemainTime);
 	DOREPLIFETIME(APTWGameState, CurrentRound);
 	DOREPLIFETIME(APTWGameState, CurrentGamePhase);
+	DOREPLIFETIME(APTWGameState, RankedPlayers);
+}
+
+void APTWGameState::UpdateRanking()
+{
+	RankedPlayers.Sort([](const APTWPlayerState* A, const APTWPlayerState* B) {
+	return A->GetPlayerRoundData().Score > B->GetPlayerRoundData().Score;
+});
+}
+
+void APTWGameState::AddRankedPlayer(APTWPlayerState* NewPlayerState)
+{
+	RankedPlayers.AddUnique(NewPlayerState);
 }
 
 void APTWGameState::DecreaseTimer()
@@ -78,4 +92,9 @@ void APTWGameState::OnRep_CurrentRound()
 void APTWGameState::OnRep_CurrentGamePhase()
 {
 	OnGamePhaseChanged.Broadcast(CurrentGamePhase);
+}
+
+void APTWGameState::OnRep_RankedPlayers()
+{
+	OnUpdateRankedPlayers.Broadcast(RankedPlayers);
 }

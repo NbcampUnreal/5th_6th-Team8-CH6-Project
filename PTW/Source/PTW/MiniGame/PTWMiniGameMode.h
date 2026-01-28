@@ -37,6 +37,8 @@ protected:
 	virtual void EndTimer() override;
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
+	
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	
 	/** 미니게임 진행 시간 (초) */

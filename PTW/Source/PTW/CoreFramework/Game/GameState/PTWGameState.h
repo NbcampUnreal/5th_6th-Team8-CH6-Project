@@ -6,6 +6,8 @@
 #include "GameFramework/GameState.h"
 #include "PTWGameState.generated.h"
 
+class APTWPlayerState;
+
 UENUM(BlueprintType)
 enum class EPTWGamePhase : uint8
 {
@@ -47,6 +49,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePhaseChanged, EPTWGamePhase, 
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundChanged, int32, CurrentRound);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpdateRankedPlayers, TArray<APTWPlayerState*>, RankedPlayers);
+
 /**
  * 게임 진행 상태(타이머 등)를 네트워크로 동기화하는 GameState
  * - 서버에서 RemainTime을 갱신하고 클라이언트로 복제
@@ -65,6 +69,8 @@ public:
 	void DecreaseTimer();
 
 	void AdvanceRound();
+	void UpdateRanking();
+	void AddRankedPlayer(APTWPlayerState* NewPlayerState);
 	
 	void SetRemainTime(int32 NewTime);
 	void SetCurrentRound(int32 NewRound);
@@ -84,6 +90,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnGamePhaseChanged OnGamePhaseChanged;
 	
+	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
+	FOnUpdateRankedPlayers OnUpdateRankedPlayers;
+	
 	FORCEINLINE int32 GetRemainTime() const { return RemainTime; }
 	FORCEINLINE int32 GetCurrentRound() const {return CurrentRound;}
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
@@ -93,22 +102,28 @@ protected:
 
 private:
 	/** 남은 시간(초) - 서버에서 갱신, 클라이언트로 복제 */
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_RemainTime, Category="GameFlow|Timer")
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_RemainTime, Category = "GameFlow|Timer")
 	int32 RemainTime = 0;
 
 	/** RemainTime 복제 갱신 시 호출 */
 	UFUNCTION()
 	void OnRep_RemainTime();
 
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentRound, Category="GameFlow|Round")
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentRound, Category = "GameFlow|Round")
 	int32 CurrentRound;
 
 	UFUNCTION()
 	void OnRep_CurrentRound();
 
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentGamePhase, Category="GameFlow|Phase")
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentGamePhase, Category = "GameFlow|Phase")
 	EPTWGamePhase CurrentGamePhase;
 
 	UFUNCTION()
 	void OnRep_CurrentGamePhase();
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_RankedPlayers, Category = "GameFlow|Rank")
+	TArray<TObjectPtr<APTWPlayerState>> RankedPlayers;
+
+	UFUNCTION()
+	void OnRep_RankedPlayers();
 };

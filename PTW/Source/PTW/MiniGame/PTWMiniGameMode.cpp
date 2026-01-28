@@ -51,6 +51,18 @@ void APTWMiniGameMode::PostLogin(APlayerController* NewPlayer)
 	//SpawnDefaultWeapon(NewPlayer);
 }
 
+void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+
+	if (!PTWGameState) return;
+
+	if (APTWPlayerState* PlayerState = NewPlayer->GetPlayerState<APTWPlayerState>())
+	{
+		PTWGameState->AddRankedPlayer(PlayerState);
+	}
+}
+
 void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
 	Super::RestartPlayer(NewPlayer);
@@ -95,6 +107,10 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 			KillPlayerState->AddScore(1);
 		}
 	}
+
+	if (!PTWGameState) return;
+
+	PTWGameState->UpdateRanking();
 }
 
 void APTWMiniGameMode::ResetPlayerRoundData()

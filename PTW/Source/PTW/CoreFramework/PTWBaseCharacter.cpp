@@ -12,6 +12,7 @@
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "PTWPlayerController.h"
+#include "Kismet/KismetMathLibrary.h"
 
 APTWBaseCharacter::APTWBaseCharacter()
 {
@@ -47,6 +48,11 @@ UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
 
 bool APTWBaseCharacter::IsDead() const
 {
+	if (AbilitySystemComponent == nullptr)
+	{
+		return false;
+	}
+
 	return AbilitySystemComponent->HasMatchingGameplayTag(DeadTag);
 }
 
@@ -105,19 +111,87 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 		return;
 	}
 	FGameplayEventData Payload;
-	// Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("죽음 이벤트 연결"));
+	Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Dead"));
 	Payload.Instigator = Attacker;
 	Payload.Target = this;
-	// UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, 
 		FString::Printf(TEXT("%s가 %s를 죽임"), *Attacker->GetName(), *GetName())
 		);
 	
+	Multicast_Death();
+
 	if (OnCharacterDied.IsBound())
 	{
 		OnCharacterDied.Broadcast(this, Attacker);
 	}
+}
+
+void APTWBaseCharacter::Multicast_PlayHitReact_Implementation(const FVector& ImpactPoint)
+{
+	if (this && IsDead()) return;
+
+	FVector HitVector = (ImpactPoint - GetActorLocation()).GetSafeNormal();
+
+	FRotator HitLocalRot = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(), HitVector).Rotation();
+	float HitYaw = HitLocalRot.Yaw;
+
+	UAnimMontage* MontageToPlay = nullptr;
+
+	if (HitYaw >= -45.f && HitYaw <= 45.f)
+	{
+		MontageToPlay = HitReact_Front;
+	}
+	else if (HitYaw >= -135.f && HitYaw < -45.f)
+	{
+		MontageToPlay = HitReact_Left;
+	}
+	else if (HitYaw > 45.f && HitYaw <= 135.f)
+	{
+		MontageToPlay = HitReact_Right;
+	}
+	else
+	{
+		MontageToPlay = HitReact_Back;
+	}
+
+	if (MontageToPlay)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(MontageToPlay, 1.0f);
+		}
+	}
+}
+
+void APTWBaseCharacter::Multicast_Death_Implementation()
+{
+	if (GetCapsuleComponent())
+	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->StopMovementImmediately();
+		GetCharacterMovement()->DisableMovement();
+		GetCharacterMovement()->SetComponentTickEnabled(false);
+	}
+
+	if (GetMesh())
+	{
+		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+		GetMesh()->SetAllBodiesSimulatePhysics(true);
+		GetMesh()->SetSimulatePhysics(true);
+		GetMesh()->WakeAllRigidBodies();
+		GetMesh()->bPauseAnims = true;
+	}
+
+	SetLifeSpan(3.0f); 
 }
 
 

@@ -8,6 +8,7 @@
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWMiniGameMode.generated.h"
 
+class APTWPlayerState;
 class UPTWItemDefinition;
 class APTWWeaponActor;
 
@@ -48,5 +49,9 @@ protected:
 	void SpawnDefaultWeapon(AController* NewPlayer);
 
 private:
+	UFUNCTION()
+	void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor);
+
+	void ResetPlayerRoundData();
 	
 };

@@ -52,15 +52,33 @@ void UPTWAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	FGameplayEffectContextHandle Context = Data.EffectSpec.GetContext();
 	UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
-	AActor* SurceActor = Context.GetInstigator();
+	AActor* SourceActor = Context.GetInstigator();
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
 		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
 
 		if (GetHealth() <= 0.0f)
 		{
+			AActor* TargetActor = Data.Target.GetAvatarActor();
+			APTWBaseCharacter* TargetCharacter = Cast<APTWBaseCharacter>(TargetActor);
 
+			if (TargetCharacter && !TargetCharacter->IsDead())
+			{
+				TargetCharacter->HandleDeath(SourceActor);
+			}
 		}
+		if (GetHealth() > 0.0f)
+		{
+			APTWBaseCharacter* TargetChar = Cast<APTWBaseCharacter>(Data.Target.GetAvatarActor());
+			if (TargetChar && !TargetChar->IsDead())
+			{
+				const FHitResult* Hit = Data.EffectSpec.GetContext().GetHitResult();
+				FVector ImpactPoint = Hit ? (FVector)Hit->ImpactPoint : TargetChar->GetActorLocation();
+
+				TargetChar->Multicast_PlayHitReact(ImpactPoint);
+			}
+		}
+
 	}
 
 	AActor* TargetActor = nullptr;
@@ -82,21 +100,7 @@ void UPTWAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 			TargetCharacter->GetCharacterMovement()->JumpZVelocity = GetJumpZVelocity();
 		}
 	}
-	
-	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
-	{
-		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
 
-		if (GetHealth() <= 0.0f)
-		{
-			APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(TargetActor);
-			// death event
-			if (!BaseCharacter->IsDead() && TargetActor->HasAuthority())
-			{
-				BaseCharacter->HandleDeath(SurceActor);
-			}
-		}
-	}
 }
 
 void UPTWAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
@@ -112,8 +116,6 @@ void UPTWAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, 
 			if (Character && Character->GetCharacterMovement())
 			{
 				Character->GetCharacterMovement()->MaxWalkSpeed = NewValue;
-
-				UE_LOG(LogTemp, Warning, TEXT("Speed Updated: %f"), NewValue);
 			}
 		}
 	}

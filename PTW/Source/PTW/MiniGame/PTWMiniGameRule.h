@@ -162,14 +162,11 @@ enum class EPTWWinType : uint8
 	/** 기본 값 */
 	None UMETA(DisplayName = "None"),
 	
-	/** 일정 킬 수를 먼저 달성하면 승리 */
-	KillCount UMETA(DisplayName = "Kill Count"),
+	/** 제한 시간 종료 시 판정 */
+	TimeLimit UMETA(DisplayName="Time Limit"),
 
-	/** 점수가 가장 높은 플레이어(또는 팀)가 승리 */
-	Score UMETA(DisplayName = "Score"),
-
-	/** 제한 시간 종료 시 조건을 만족한 플레이어(또는 팀)가 승리 */
-	TimeLimit UMETA(DisplayName = "Time Limit"),
+	 /** 목표 달성 시 즉시 종료 */
+	Target UMETA(DisplayName="Target"),
 
 	/** 마지막까지 생존한 플레이어가 승리 */
 	Survival UMETA(DisplayName = "Survival"),
@@ -180,6 +177,16 @@ enum class EPTWWinType : uint8
 	/** 미션 목표를 먼저 달성하면 승리 */
 	Mission UMETA(DisplayName = "Mission")
 };
+
+
+UENUM(BlueprintType)
+enum class EPTWWinMetric : uint8
+{
+	None UMETA(DisplayName="None"),
+	KillCount UMETA(DisplayName="Kill Count"),
+    Score UMETA(DisplayName="Score")
+};
+
 
 /**
  * 연장전(Overtime) 진행 규칙
@@ -202,7 +209,7 @@ enum class EPTWOvertimeRule : uint8
 	FirstScore      UMETA(DisplayName="First Score Wins"),
 	
 	/** 추가 시간을 부여 */
-	ExtraTime       UMETA(DisplayName="Extra Time"),
+	ExtraTime       UMETA(DisplayName="Extra Time")
 };
 
 /**
@@ -219,14 +226,15 @@ struct FPTWWinConditionRule
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WinCondition")
 	EPTWWinType WinType = EPTWWinType::None;
 
-	/** 목표 킬 수 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "WinCondition", meta = (EditCondition = "WinType == EPTWWinType::KillCount"))
-	int32 TargetKill = 30;
-	
-	/** 목표 점수 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "WinCondition", meta = (EditCondition = "WinType == EPTWWinType::Score"))
-	int32 TargetScore = 100;
+	/** 승리 판정 기준 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WinCondition",
+		meta = (EditCondition = "WinType == EPTWWinType::Target || WinType == EPTWWinType::TimeLimit"))
+	EPTWWinMetric WinMetric = EPTWWinMetric::None;
 
+	/** 승리 판정 기준 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "WinCondition", meta = (EditCondition = "WinType == EPTWWinType::TimeLimit"))
+	float TimeLimitDuration = 90.f;
+	
 	/** 연장전 규칙 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WinCondition")
 	EPTWOvertimeRule OvertimeRule = EPTWOvertimeRule::None;

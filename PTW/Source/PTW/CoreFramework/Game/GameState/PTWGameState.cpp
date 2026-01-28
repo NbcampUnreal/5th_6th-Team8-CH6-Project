@@ -16,6 +16,8 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(APTWGameState, RemainTime);
+	DOREPLIFETIME(APTWGameState, CurrentRound);
+	DOREPLIFETIME(APTWGameState, CurrentGamePhase);
 }
 
 void APTWGameState::DecreaseTimer()
@@ -70,9 +72,10 @@ void APTWGameState::OnRep_RemainTime()
 
 void APTWGameState::OnRep_CurrentRound()
 {
-	
+	OnRoundChanged.Broadcast(CurrentRound);
 }
 
 void APTWGameState::OnRep_CurrentGamePhase()
 {
+	OnGamePhaseChanged.Broadcast(CurrentGamePhase);
 }

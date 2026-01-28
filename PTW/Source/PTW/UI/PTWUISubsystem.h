@@ -45,9 +45,10 @@ public:
 	virtual void Deinitialize() override;
 
 	/** Window Stack */
-	void PushWidget(TSubclassOf<UUserWidget> WidgetClass);
+	void PushWidget(TSubclassOf<UUserWidget> WidgetClass, EUIInputPolicy InputPolicy);
 	void PopWidget();
 	bool IsWidgetInStack(TSubclassOf<UUserWidget> WidgetClass) const;
+	bool IsStackEmpty() const;
 
 	/** HUD */
 	void ShowHUD(TSubclassOf<UUserWidget> HUDClass);

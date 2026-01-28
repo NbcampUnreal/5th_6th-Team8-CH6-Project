@@ -105,7 +105,7 @@ void UPTWUISubsystem::ApplyInputPolicy(EUIInputPolicy Policy)
 
 /********** Stack-based UI **********/
 
-void UPTWUISubsystem::PushWidget(TSubclassOf<UUserWidget> WidgetClass)
+void UPTWUISubsystem::PushWidget(TSubclassOf<UUserWidget> WidgetClass, EUIInputPolicy InputPolicy)
 {
 	UUserWidget* Widget = GetOrCreateWidget(WidgetClass);
 	if (!Widget)
@@ -118,8 +118,8 @@ void UPTWUISubsystem::PushWidget(TSubclassOf<UUserWidget> WidgetClass)
 	// 기본 정책 (필요하면 나중에 위젯별로 커스터마이즈 가능)
 	FUIStackEntry Entry;
 	Entry.Widget = Widget;
-	Entry.ZOrder = 10; // Window Layer
-	Entry.InputPolicy = EUIInputPolicy::UIOnly;
+	Entry.ZOrder = 99; // Window Layer
+	Entry.InputPolicy = InputPolicy;
 
 	Widget->AddToViewport(Entry.ZOrder);
 	WidgetStack.Add(Entry);
@@ -161,6 +161,11 @@ bool UPTWUISubsystem::IsWidgetInStack(TSubclassOf<UUserWidget> WidgetClass) cons
 		}
 	}
 	return false;
+}
+
+bool UPTWUISubsystem::IsStackEmpty() const
+{
+	return WidgetStack.Num() == 0;
 }
 
 

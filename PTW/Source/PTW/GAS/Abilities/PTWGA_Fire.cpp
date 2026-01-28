@@ -89,10 +89,8 @@ void UPTWGA_Fire::MakeGameplayCue(const FGameplayAbilitySpecHandle Handle,
 {
 	FGameplayCueParameters Params;
 	Params.Instigator = ActorInfo->OwnerActor.Get();
-	Params.SourceObject = Infos.ItemInstance; // 여기서 넘겨준 인스턴스가 큐의 SourceObject가 됨
-
-	// 이 함수는 'Local Predicted' 어빌리티 내에서 호출될 때 
-	// 클라이언트에서 즉시 실행되고, 서버로 전달되어 중복 없이 복제됩니다.
+	Params.SourceObject = Infos.ItemInstance; 
+	
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(
 		FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Fire")), 
 		Params
@@ -279,7 +277,7 @@ void UPTWGA_Fire::ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* 
 	FVector MuzzleLocation = ItemInstance->SpawnedWeapon3P->GetMuzzleComponent()->GetComponentLocation();
 	FVector MuzzleForward = ItemInstance->SpawnedWeapon3P->GetMuzzleComponent()->GetRightVector();
 	
-	FVector SpawnLocation = MuzzleLocation + (MuzzleForward * 100.0f);
+	FVector SpawnLocation = MuzzleLocation + (MuzzleForward * 50.0f);
 	
 	FRotator AdjustedRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, TargetLocation);
 	

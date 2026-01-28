@@ -6,23 +6,6 @@
 #include "GameFramework/GameState.h"
 #include "PTWGameState.generated.h"
 
-
-UENUM(BlueprintType)
-enum class EPTWGamePhase : uint8
-{
-
-	
-	/** 게임 시작 전 로비 */
-	PreGameLobby UMETA(DisplayName="Pre Game Lobby"),
-
-	/** 미니게임 진행 */
-	MiniGame UMETA(DisplayName="Mini Game"),
-
-	/** 게임 진행 후 복귀 로비 */
-	PostGameLobby UMETA(DisplayName="Post Game Lobby")
-};
-
-
 /**
  * 남은 시간 변경 이벤트
  * - RemainTime이 변경될 때 브로드캐스트
@@ -37,7 +20,32 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRemainTimeChanged, int32, RemainT
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimerFinished);
 
+/**
+ * 게임 페이즈 변경 이벤트
+ * - 현재 게임 페이즈가 변경될 때 브로드캐스트
+ * - UI 상태 전환, 입력 제한, 룰 적용 타이밍 등에 사용
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePhaseChanged, EPTWGamePhase, CurrentGamePhase);
 
+/**
+ * 라운드 변경 이벤트
+ * - 현재 라운드 값이 변경될 때 브로드캐스트
+ * - 라운드 UI 갱신, 라운드 시작/종료 연출 트리거 등에 사용
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundChanged, int32, CurrentRound);
+
+UENUM(BlueprintType)
+enum class EPTWGamePhase : uint8
+{
+	/** 미니 게임 시작 전 로비 */
+	PreGameLobby UMETA(DisplayName="Pre Game Lobby"),
+
+	/** 미니 게임 진행 */
+	MiniGame UMETA(DisplayName="Mini Game"),
+
+	/** 미니 게임 진행 후 로비 */
+	PostGameLobby UMETA(DisplayName="Post Game Lobby")
+};
 
 /**
  * 게임 진행 상태(타이머 등)를 네트워크로 동기화하는 GameState
@@ -62,7 +70,6 @@ public:
 	void SetCurrentRound(int32 NewRound);
 	void SetCurrentPhase(EPTWGamePhase NewGamePhase);
 	
-
 	/** 남은 시간 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnRemainTimeChanged OnRemainTimeChanged;
@@ -70,7 +77,13 @@ public:
 	/** 타이머 종료 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnTimerFinished OnTimerFinished;
+	
+	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
+	FOnRoundChanged OnRoundChanged;
 
+	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
+	FOnGamePhaseChanged OnGamePhaseChanged;
+	
 	FORCEINLINE int32 GetRemainTime() const { return RemainTime; }
 	FORCEINLINE int32 GetCurrentRound() const {return CurrentRound;}
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}

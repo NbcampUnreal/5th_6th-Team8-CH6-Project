@@ -64,4 +64,11 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerRoundData, VisibleAnywhere, BlueprintReadOnly, Category = "Data")
 	FPTWPlayerRoundData PlayerRoundData;
+
+public:
+	void AddKillCount(int32 AddKillCount = 1);
+	void AddDeathCount(int32 AddDeathCount = 1);
+	void AddScore(int32 AddScore);
+
+	void ResetPlayerRoundData();
 };

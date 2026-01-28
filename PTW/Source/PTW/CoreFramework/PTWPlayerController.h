@@ -29,26 +29,24 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void OnRep_PlayerState() override;
-
+	virtual void BeginSpectatingState() override;
+	virtual void OnRep_Pawn() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 
 	/* HUD 초기화 */
-	virtual void BeginSpectatingState() override;
-	
-	virtual void OnRep_Pawn() override;
-	
 	void TryInitializeHUD();
-
-	/* KillLog 델리게이트 */
 	
+	/* 관전 시스템 함수 */
 	void StartSpectating();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_StartSpectating();
 	UFUNCTION()
-	void SpectateNextPlayer();
+	void SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn);
 	UFUNCTION()
 	void OnInputSpectateNext();
 	
-	// KillLog 델리게이트
+	/* KillLog 델리게이트 */
 	FOnKillLog OnKillLog;
 
 protected:

@@ -15,8 +15,10 @@
 #include "GAS/PTWWeaponAttributeSet.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemInstance.h"
+#include "Inventory/PTWProjectile.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWWeaponData.h"
+#include "Kismet/KismetMathLibrary.h"
 
 UPTWGA_Fire::UPTWGA_Fire()
 {
@@ -54,6 +56,17 @@ void UPTWGA_Fire::StartFire(const FGameplayAbilitySpecHandle Handle, const FGame
 							   const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	AutoFire(Handle, ActorInfo, ActivationInfo);
+	
+	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
+	if (!PC) return;
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PC);
+	if (!ASC) return;
+	
+	const UPTWWeaponAttributeSet* AS = Cast<UPTWWeaponAttributeSet>(ASC->GetAttributeSet(WeaponAttributeClass));
+	if (AS)
+	{
+		FireRate = AS->GetFireRate();
+	}
 	
 	if (!GetWorld()->GetTimerManager().IsTimerActive(AutoFireTimer))
 	{
@@ -97,12 +110,16 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 	
 	UPTWItemInstance* CurrentInst = Inven->GetCurrentWeaponInst();
 	
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PC);
+	if (!ASC) return;
+	
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
 		StopFire();
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
+	
 
 	FPTWGameplayCueMakingInfo Infos;
 	Infos.PlayerCharacter = PC;
@@ -110,24 +127,30 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 	
 	MakeGameplayCue(Handle, ActorInfo, ActivationInfo, Infos);
 	
-	
-	FHitResult HitResult;
-	PerformLineTrace(HitResult, PC);
-	
-	FGameplayAbilityTargetDataHandle TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(HitResult);
-	
-	// Server-side Validation 피격 처리
-	if (HasAuthority(&ActivationInfo))
+	if (CurrentInst->GetWeaponHitType() == EHitType::HitScan)
 	{
-		if (ValidateHitResult(HitResult)) 
+		FHitResult HitResult;
+		PerformLineTrace(HitResult, PC);
+	
+		FGameplayAbilityTargetDataHandle TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(HitResult);
+	
+		// Server-side Validation 피격 처리
+		if (HasAuthority(&ActivationInfo))
 		{
-			float Damage = CurrentInst->SpawnedWeapon1P->GetWeaponData()->BaseDamage;
-			ApplyDamageToTarget(Handle, ActorInfo, ActivationInfo, TargetData, Damage);
+			if (ValidateHitResult(HitResult)) 
+			{
+				float Damage = CurrentInst->SpawnedWeapon1P->GetWeaponData()->BaseDamage;
+				ApplyDamageToTarget(Handle, ActorInfo, ActivationInfo, TargetData, Damage);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Invalid Hit Detected! (Cheat or Lag)"));
+			}
 		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Invalid Hit Detected! (Cheat or Lag)"));
-		}
+	}
+	else if (CurrentInst->GetWeaponHitType() == EHitType::Projectile)
+	{
+		ProjectileTypeFire(PC, CurrentInst);
 	}
 	
 	//캐릭터 반동 함수 호출(박태웅)
@@ -225,4 +248,49 @@ void UPTWGA_Fire::OnInputReleasedCallback(float TimeHold)
 {
 	StopFire();
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UPTWGA_Fire::HitScanTypeFire(APTWPlayerCharacter* PC)
+{
+	
+}
+
+void UPTWGA_Fire::ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* ItemInstance)
+{
+	if (!HasAuthority(&CurrentActivationInfo)) return;
+	FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageGEClass, GetAbilityLevel());
+	
+	FVector CameraLocation;
+	FRotator CameraRotation;
+	PC->GetController()->GetPlayerViewPoint(CameraLocation, CameraRotation);
+	
+	FVector TraceEnd = CameraLocation + (CameraRotation.Vector() * 10000.0f);
+	FHitResult ScreenHit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(PC);
+
+	FVector TargetLocation = TraceEnd;
+	if (GetWorld()->LineTraceSingleByChannel(ScreenHit, CameraLocation, TraceEnd, ECC_Visibility, Params))
+	{
+		TargetLocation = ScreenHit.ImpactPoint;
+	}
+
+
+	FVector MuzzleLocation = ItemInstance->SpawnedWeapon3P->GetMuzzleComponent()->GetComponentLocation();
+	FVector MuzzleForward = ItemInstance->SpawnedWeapon3P->GetMuzzleComponent()->GetRightVector();
+	
+	FVector SpawnLocation = MuzzleLocation + (MuzzleForward * 100.0f);
+	
+	FRotator AdjustedRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, TargetLocation);
+	
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Instigator = PC;
+	SpawnParams.Owner = PC;
+
+	APTWProjectile* Bullet = GetWorld()->SpawnActor<APTWProjectile>(ProjectileClass, SpawnLocation, AdjustedRotation, SpawnParams);
+	
+	if (Bullet)
+	{
+		Bullet->DamageSpecHandle = SpecHandle;
+	}
 }

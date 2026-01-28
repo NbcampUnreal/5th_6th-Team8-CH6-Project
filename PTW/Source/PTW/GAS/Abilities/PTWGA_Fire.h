@@ -6,6 +6,7 @@
 #include "GAS/PTWGameplayAbility.h"
 #include "PTWGA_Fire.generated.h"
 
+class APTWProjectile;
 class UPTWItemInstance;
 /**
  * 
@@ -59,13 +60,19 @@ public:
 	
 protected:
 	FTimerHandle AutoFireTimer;
-	float FireRate = 0.15f;
+	float FireRate;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Cue")
 	TSubclassOf<UGameplayEffect> FireEffectClass;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Damage")
 	TSubclassOf<UGameplayEffect> DamageGEClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Damage")
+	TSubclassOf<UAttributeSet> WeaponAttributeClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TSubclassOf<APTWProjectile> ProjectileClass;
 	
 protected:
 	void PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* PlayerCharacter);
@@ -80,5 +87,9 @@ protected:
 	
 	UFUNCTION()
 	void OnInputReleasedCallback(float TimeHold);
+	
+	void HitScanTypeFire(APTWPlayerCharacter* PC);
+	
+	void ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* ItemInstance);
 	
 };

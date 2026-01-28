@@ -25,7 +25,6 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	const UPTWItemInstance* WeaponItemInstance = Cast<UPTWItemInstance>(TriggerEventData->OptionalObject);
 	if (WeaponItemInstance)
 	{
-		
 		FGameplayTag CurrentWeaponTag = WeaponItemInstance->ItemDef->WeaponTag;
 		APTWPlayerCharacter* Character = GetPTWPlayerCharacterFromActorInfo();
 
@@ -70,6 +69,7 @@ void UPTWGA_Equip::SetCharacterWeaponAttribute(const UPTWItemInstance* WeaponIte
 			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetMaxAmmoAttribute(), WeaponmData->MaxAmmo);
 			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetCurrentAmmoAttribute(), WeaponmData->MaxAmmo);
 			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetDamageAttribute(), WeaponmData->BaseDamage);
+			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetFireRateAttribute(), WeaponmData->FireRate);
 			
 			ASC->ForceReplication();
 		}

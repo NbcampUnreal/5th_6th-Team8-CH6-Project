@@ -33,12 +33,18 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxAmmo, Category = "Weapon|Attributes")
 	FGameplayAttributeData MaxAmmo;
 	ATTRIBUTE_ACCESSORS(UPTWWeaponAttributeSet, MaxAmmo);
+	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentAmmo, Category = "Weapon|Attributes")
 	FGameplayAttributeData CurrentAmmo;
 	ATTRIBUTE_ACCESSORS(UPTWWeaponAttributeSet, CurrentAmmo);
+	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Damage, Category = "Weapon|Attributes")
 	FGameplayAttributeData Damage;
 	ATTRIBUTE_ACCESSORS(UPTWWeaponAttributeSet, Damage);
+	
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_FireRate, Category = "Weapon|Attributes")
+	FGameplayAttributeData FireRate;
+	ATTRIBUTE_ACCESSORS(UPTWWeaponAttributeSet, FireRate);
 	
 protected:
 	UFUNCTION()
@@ -49,4 +55,7 @@ protected:
 	
 	UFUNCTION()
 	void OnRep_CurrentAmmo(const FGameplayAttributeData& OldCurrentAmmo);
+	
+	UFUNCTION()
+	void OnRep_FireRate(const FGameplayAttributeData& OldFireRate);
 };

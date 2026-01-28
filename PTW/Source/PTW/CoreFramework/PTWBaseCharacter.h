@@ -38,7 +38,14 @@ protected:
 	void ApplyDefaultEffects();
 
 public:
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayHitReact(const FVector& ImpactPoint);
+
 	virtual void HandleDeath(AActor* Attacker);
+
+protected:
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_Death();
 
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
@@ -56,5 +63,14 @@ protected:
 	TArray<TSubclassOf<UGameplayAbility>> DefaultAbilities;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS|Default")
 	TArray<TSubclassOf<UGameplayEffect>> DefaultEffects;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Animation")
+	TObjectPtr<UAnimMontage> HitReact_Front;
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Animation")
+	TObjectPtr<UAnimMontage> HitReact_Back;
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Animation")
+	TObjectPtr<UAnimMontage> HitReact_Left;
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Animation")
+	TObjectPtr<UAnimMontage> HitReact_Right;
 
 };

@@ -29,6 +29,7 @@ void APTWPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(APTWPlayerState, CurrentPlayerData);
+	DOREPLIFETIME(APTWPlayerState, PlayerRoundData);
 }
 
 UAbilitySystemComponent* APTWPlayerState::GetAbilitySystemComponent() const

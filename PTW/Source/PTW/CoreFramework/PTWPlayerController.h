@@ -51,16 +51,18 @@ public:
 
 protected:
 	virtual void SetupInputComponent() override;
+	virtual void PostSeamlessTravel() override;
 
 	/* 랭킹보드 */
 	void OnRankingPressed();
 	void OnRankingReleased();
 	void CreateRankingBoard();
 
-	virtual void PostSeamlessTravel() override;
-
+	/* PauseMenu */
+	void HandleMenuInput();
+	
 	/* ---------- Input ---------- */
-	// 랭킹보드
+	// 랭킹보드 (Tab)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputMappingContext* DefaultMappingContext;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -68,6 +70,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* SpectateNextAction;
+
+	// PauseMenu (ESC)
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> PauseMenuAction;
 	
 	/* ---------- UI ---------- */
 	// 랭킹보드
@@ -75,6 +81,10 @@ protected:
 	TSubclassOf<UPTWRankingBoard> RankingBoardClass;
 	UPROPERTY()
 	TObjectPtr<UPTWRankingBoard> RankingBoard;
+
+	// PauseMenu
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> PauseMenuClass; 
 
 	/* 탄약 */
 	void BindAmmoDelegate();

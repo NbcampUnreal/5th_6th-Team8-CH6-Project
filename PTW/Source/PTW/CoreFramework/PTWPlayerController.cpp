@@ -14,6 +14,7 @@
 
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "UI/PTWUISubsystem.h"
 #include "UI/PTWHUD.h"
 #include "UI/RankBoard/PTWRankingBoard.h"
 #include "Inventory/PTWItemInstance.h"
@@ -245,6 +246,14 @@ void APTWPlayerController::SetupInputComponent()
 			ETriggerEvent::Started, 
 			this, 
 			&ThisClass::OnInputSpectateNext);
+
+		// ESC / Pause Menu
+		EIC->BindAction(
+			PauseMenuAction,
+			ETriggerEvent::Started,
+			this,
+			&APTWPlayerController::HandleMenuInput
+		);
 	}
 }
 
@@ -282,6 +291,32 @@ void APTWPlayerController::CreateRankingBoard()
 	{
 		RankingBoard->AddToViewport();
 		RankingBoard->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void APTWPlayerController::HandleMenuInput()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[ESC] HandleMenuInput Called"));
+	if (!IsLocalController()) return;
+
+	ULocalPlayer* LP = GetLocalPlayer();
+	if (!LP) return;
+
+	UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>();
+	if (!UISubsystem) return;
+
+	if (!UISubsystem->IsStackEmpty())
+	{
+		// UI 스택의 최상단 위젯을 닫음 
+		UISubsystem->PopWidget();
+	}
+	else
+	{
+		// 아무런 위젯이 없을 때는 PauseMenu 띄우기
+		if (PauseMenuClass)
+		{
+			UISubsystem->PushWidget(PauseMenuClass, EUIInputPolicy::GameAndUI);
+		}
 	}
 }
 

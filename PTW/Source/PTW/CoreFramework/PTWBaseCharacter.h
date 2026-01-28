@@ -8,6 +8,8 @@
 #include "GameplayTagContainer.h"
 #include "PTWBaseCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterDeathSignature, AActor*, DeadActor, AActor*, KillerActor);
+
 class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayAbility;
@@ -39,6 +41,9 @@ public:
 	virtual void HandleDeath(AActor* Attacker);
 
 public:
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnCharacterDeathSignature OnCharacterDied;
+
 	FGameplayTag DeadTag;
 
 protected:

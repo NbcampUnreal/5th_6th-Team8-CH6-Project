@@ -113,6 +113,11 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, 
 		FString::Printf(TEXT("%s가 %s를 죽임"), *Attacker->GetName(), *GetName())
 		);
+	
+	if (OnCharacterDied.IsBound())
+	{
+		OnCharacterDied.Broadcast(this, Attacker);
+	}
 }
 
 

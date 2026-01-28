@@ -219,14 +219,19 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle,
 			FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageGEClass, GetAbilityLevel());
 			FGameplayTag Tag_Damage = FGameplayTag::RequestGameplayTag(FName("Data.Damage"));
 			
+			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult->GetActor());
 			if (HitResult->BoneName == FName("head"))
 			{
 				BaseDamage *= 2.0f;
+				
+				//FIXME : 테스트 용도// 후에 GE로 변경하거나, 해당 코드를 그대로 사용 하되, 애니메이션 몽타주가 끝날 때 해당 태그 제거 하는 방식으로 변경 예정
+				FGameplayTag HeadShotTag = FGameplayTag::RequestGameplayTag(FName("State.HitReaction.HeadShot"));
+				TargetASC->AddLooseGameplayTag(HeadShotTag);
 			}
 			
 			SpecHandle.Data.Get()->SetSetByCallerMagnitude(Tag_Damage, -BaseDamage);
 			
-			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult->GetActor());
+			
 			if (TargetASC)
 			{
 				ApplyGameplayEffectSpecToTarget(Handle,ActorInfo, ActivationInfo, SpecHandle, TargetData);

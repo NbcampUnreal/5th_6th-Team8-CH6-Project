@@ -37,6 +37,8 @@ void APTWMiniGameMode::BeginPlay()
 
 void APTWMiniGameMode::EndTimer()
 {
+	ResetPlayerRoundData();
+	
 	Super::EndTimer();
 	
 	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
@@ -46,7 +48,7 @@ void APTWMiniGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	SpawnDefaultWeapon(NewPlayer);
+	//SpawnDefaultWeapon(NewPlayer);
 }
 
 void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
@@ -54,8 +56,13 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	Super::RestartPlayer(NewPlayer);
 
 	SpawnDefaultWeapon(NewPlayer);
+	
+	if (APTWBaseCharacter* BaseCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
+	{
+		BaseCharacter->OnCharacterDied.AddDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
+		UE_LOG(LogTemp, Warning, TEXT("RestartPlayer"));
+	}
 }
-
 
 void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 {
@@ -66,6 +73,38 @@ void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 			FGameplayTag RifleTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Gun.Rifle"));
 
 			ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition, RifleTag);
+		}
+	}
+}
+
+void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
+{
+	if (APTWBaseCharacter* DeadCharacter = Cast<APTWBaseCharacter>(DeadActor))
+	{
+		if (APTWPlayerState* DeadPlayerState = Cast<APTWPlayerState>(DeadCharacter))
+		{
+			DeadPlayerState->AddDeathCount();
+		}
+	}
+
+	if (APTWBaseCharacter* KillCharacter = Cast<APTWBaseCharacter>(KillActor))
+	{
+		if (APTWPlayerState* KillPlayerState = Cast<APTWPlayerState>(KillCharacter))
+		{
+			KillPlayerState->AddKillCount();
+			KillPlayerState->AddScore(1);
+		}
+	}
+}
+
+void APTWMiniGameMode::ResetPlayerRoundData()
+{
+	if (!PTWGameState) return;
+	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
+	{
+		if (APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState))
+		{
+			PTWPlayerState->ResetPlayerRoundData();
 		}
 	}
 }

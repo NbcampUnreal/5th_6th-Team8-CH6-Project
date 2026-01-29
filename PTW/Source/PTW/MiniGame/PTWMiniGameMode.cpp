@@ -93,21 +93,18 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {
 	if (APTWBaseCharacter* DeadCharacter = Cast<APTWBaseCharacter>(DeadActor))
 	{
-		if (APTWPlayerState* DeadPlayerState = Cast<APTWPlayerState>(DeadCharacter))
+		if (APTWPlayerState* DeadPlayerState = Cast<APTWPlayerState>(DeadCharacter->GetPlayerState()))
 		{
 			DeadPlayerState->AddDeathCount();
 		}
 	}
 
-	if (APTWBaseCharacter* KillCharacter = Cast<APTWBaseCharacter>(KillActor))
+	if (APTWPlayerState* KillPlayerState = Cast<APTWPlayerState>(KillActor))
 	{
-		if (APTWPlayerState* KillPlayerState = Cast<APTWPlayerState>(KillCharacter))
-		{
-			KillPlayerState->AddKillCount();
-			KillPlayerState->AddScore(1);
-		}
+		KillPlayerState->AddKillCount();
+		KillPlayerState->AddScore(1);
 	}
-
+	
 	if (!PTWGameState) return;
 
 	PTWGameState->UpdateRanking();

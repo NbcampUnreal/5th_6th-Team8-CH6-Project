@@ -100,9 +100,10 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 				if (TargetWeaponMesh)
 				{
 					FTransform SocketTransform = TargetWeaponMesh->GetSocketTransform(FName("LHIK"), RTS_World);
-					FTransform MeshTransform = MyOwningMesh->GetComponentTransform();
+					FTransform RightHandTransform = MyOwningMesh->GetSocketTransform(FName("hand_r"), RTS_World);
 
-					LeftHandIKTransform = SocketTransform.GetRelativeTransform(MeshTransform);
+					LeftHandIKTransform = SocketTransform.GetRelativeTransform(RightHandTransform);
+
 					LeftHandIKAlpha = 1.0f;
 				}
 				else

@@ -33,6 +33,8 @@ protected:
 	
 	void ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults, float FinalDamage);
 	
+	bool CheckingBlock(FHitResult& ObstarcleHit, const FVector ExplosionLocation, const AActor* HitActor);
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComponent;

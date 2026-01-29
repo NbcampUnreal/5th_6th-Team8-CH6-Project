@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Engine/OverlapResult.h"
 #include "GAS/PTWWeaponAttributeSet.h"
+#include "Kismet/GameplayStatics.h"
 
 
 APTWProjectile::APTWProjectile()
@@ -88,27 +89,56 @@ bool APTWProjectile::ExplosionOverlapSetter(TArray<FOverlapResult>& OverlapResul
 void APTWProjectile::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults, float FinalDamage)
 {
 	TSet<AActor*> ProcessedActors; // 중복 제거를 위해 사용
-				
+	FVector ExplosionLocation = GetActorLocation();
+	
 	for (const FOverlapResult& Result : OverlapResults)
 	{
 		AActor* HitActor = Result.GetActor();
-		if (!HitActor) continue;
-		if (ProcessedActors.Contains(HitActor)) continue;
-					
+		
+		if (!HitActor || ProcessedActors.Contains(HitActor)) continue;
 		ProcessedActors.Add(HitActor);
-						
-		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
-		if (TargetASC && DamageSpecHandle.IsValid())
+		
+		
+		FHitResult ObstarcleHit;
+		bool bBlocked = CheckingBlock(ObstarcleHit, ExplosionLocation, HitActor);
+		
+		if (!bBlocked || ObstarcleHit.GetActor() == HitActor)
 		{
-			FGameplayEffectSpec* NewSpec = new FGameplayEffectSpec(*DamageSpecHandle.Data.Get());
-			FGameplayEffectSpecHandle NewHandle(NewSpec);
+			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
+			
+			if (TargetASC && DamageSpecHandle.IsValid())
+			{
+				FGameplayEffectSpec* NewSpec = new FGameplayEffectSpec(*DamageSpecHandle.Data.Get());
+				FGameplayEffectSpecHandle NewHandle(NewSpec);
 						
-			NewHandle.Data.Get()->SetSetByCallerMagnitude(
-			FGameplayTag::RequestGameplayTag(FName("Data.Damage")), 
-			-FinalDamage); 
+				NewHandle.Data.Get()->SetSetByCallerMagnitude(
+				FGameplayTag::RequestGameplayTag(FName("Data.Damage")), 
+				-FinalDamage); 
 						
-			TargetASC->ApplyGameplayEffectSpecToSelf(*NewHandle.Data.Get());
+				TargetASC->ApplyGameplayEffectSpecToSelf(*NewHandle.Data.Get());
+			}
 		}
 	}
+}
+
+bool APTWProjectile::CheckingBlock(FHitResult& ObstarcleHit, const FVector ExplosionLocation, const AActor* HitActor)
+{
+	FVector EyeLocation = ExplosionLocation;
+	FVector TargetLocation = HitActor->GetActorLocation() + FVector(0, 0, 50.0f);
+		
+	FCollisionQueryParams CollisionParams;
+				
+	CollisionParams.AddIgnoredActor(this);
+	CollisionParams.AddIgnoredActor(GetInstigator());
+		
+	bool bBlocked = GetWorld()->LineTraceSingleByChannel(
+		ObstarcleHit,
+		EyeLocation,
+		TargetLocation,
+		ECC_Visibility,
+		CollisionParams
+		);
+	
+	return bBlocked;
 }
 

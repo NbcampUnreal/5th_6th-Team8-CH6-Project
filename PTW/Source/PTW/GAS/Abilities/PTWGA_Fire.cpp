@@ -139,10 +139,19 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 			{
 				float Damage = CurrentInst->SpawnedWeapon1P->GetWeaponData()->BaseDamage;
 				ApplyDamageToTarget(Handle, ActorInfo, ActivationInfo, TargetData, Damage);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Invalid Hit Detected! (Cheat or Lag)"));
+				
+				if (HitResult.bBlockingHit && HitResult.GetActor())
+				{
+					FName ProfileName = HitResult.Component->GetCollisionProfileName();
+					
+					if (ProfileName.IsEqual(FName("Hit")))
+					{
+						FGameplayCueParameters CueParams;
+						CueParams.Location = HitResult.ImpactPoint;
+						CueParams.Normal = HitResult.ImpactNormal;
+						ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.HitImpact")), CueParams);
+					}
+				}
 			}
 		}
 	}

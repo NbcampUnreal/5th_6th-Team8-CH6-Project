@@ -5,6 +5,7 @@
 
 #include "PTW/System/PTWItemSpawnManager.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
@@ -91,8 +92,10 @@ void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 
 void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {
+	APTWPlayerController* DeadPlayerController = nullptr;
 	if (APTWBaseCharacter* DeadCharacter = Cast<APTWBaseCharacter>(DeadActor))
 	{
+		DeadPlayerController = DeadCharacter->GetController<APTWPlayerController>();
 		if (APTWPlayerState* DeadPlayerState = Cast<APTWPlayerState>(DeadCharacter->GetPlayerState()))
 		{
 			DeadPlayerState->AddDeathCount();
@@ -108,6 +111,20 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	if (!PTWGameState) return;
 
 	PTWGameState->UpdateRanking();
+	
+	if (IsValid(DeadPlayerController))
+	{
+		GetWorldTimerManager().ClearTimer(DeadPlayerController->RespawnTimerHandle);		// 방어 코드
+		TWeakObjectPtr<ThisClass> WeakThis = this;
+		TWeakObjectPtr<APTWPlayerController> WeakDeadController = DeadPlayerController;
+		GetWorldTimerManager().SetTimer(WeakDeadController->RespawnTimerHandle, [WeakThis, WeakDeadController]()
+		{
+			if (WeakThis.IsValid() && WeakDeadController.IsValid())		// 파괴 방어
+			{
+				WeakThis->RestartPlayer(WeakDeadController.Get());
+			}
+		}, 5.0f, false);
+	}
 }
 
 void APTWMiniGameMode::ResetPlayerRoundData()

@@ -41,6 +41,13 @@ void APTWBaseCharacter::BeginPlay()
 	
 }
 
+void APTWBaseCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	OnCharacterDied.RemoveAll(this);
+	
+	Super::EndPlay(EndPlayReason);
+}
+
 UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;

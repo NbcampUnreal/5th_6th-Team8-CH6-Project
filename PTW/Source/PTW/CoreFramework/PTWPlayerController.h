@@ -27,7 +27,7 @@ class PTW_API APTWPlayerController : public APlayerController
 	
 public:
 	virtual void BeginPlay() override;
-
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void OnRep_PlayerState() override;
 	virtual void BeginSpectatingState() override;
 	virtual void OnRep_Pawn() override;
@@ -50,7 +50,9 @@ public:
 	
 	/* KillLog 델리게이트 */
 	FOnKillLog OnKillLog;
-
+	
+	/* 리스폰 타이머 핸들*/
+	FTimerHandle RespawnTimerHandle;
 protected:
 	virtual void SetupInputComponent() override;
 	virtual void PostSeamlessTravel() override;

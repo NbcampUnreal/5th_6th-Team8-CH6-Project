@@ -63,16 +63,13 @@ void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
 {
 	Super::HandleDeath(Attacker);
 	
-	APTWPlayerController* PC = GetController<APTWPlayerController>();
-	if (!PC)
+	if (APTWPlayerController* PC = GetController<APTWPlayerController>())
 	{
-		return;
-	}
-	
-	if (HasAuthority())
-	{
-		// TODO: 임시 관전 전환 로직
-		PC->StartSpectating();
+		if (HasAuthority())
+		{
+			// TODO: 임시 관전 전환 로직
+			PC->StartSpectating();
+		}
 	}
 }
 

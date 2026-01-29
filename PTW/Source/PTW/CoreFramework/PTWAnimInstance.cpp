@@ -39,6 +39,7 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
+	//이동속도 변수 업데이트
 	Velocity = CharacterMovement->Velocity;
 	GroundSpeed = Velocity.Size2D();
 
@@ -55,6 +56,14 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	else
 	{
 		LocomotionDirection = 0.0f;
+	}
+	if (GroundSpeed < 10.0f && CharacterMovement->GetCurrentAcceleration().Size2D() > 0.0f)
+	{
+		LocomotionStartDirection = CalculateDirection(CharacterMovement->GetCurrentAcceleration(), Character->GetActorRotation());
+	}
+	if (GroundSpeed > 10.0f && CharacterMovement->GetCurrentAcceleration().Size2D() == 0.0f)
+	{
+		LocomotionStartDirection = CalculateDirection(Velocity, Character->GetActorRotation());
 	}
 
 	FRotator AimRotation = Character->GetBaseAimRotation();

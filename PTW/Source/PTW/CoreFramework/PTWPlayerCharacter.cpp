@@ -49,6 +49,10 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 	NameTagWidget->SetRelativeLocation(FVector(0.f, 0.f, 200.f)); // 머리 위 적절한 높이
 	NameTagWidget->SetWidgetSpace(EWidgetSpace::Screen); // 항상 화면을 향하도록 설정
 	NameTagWidget->SetDrawAtDesiredSize(true);
+
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
 }
 
 void APTWPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

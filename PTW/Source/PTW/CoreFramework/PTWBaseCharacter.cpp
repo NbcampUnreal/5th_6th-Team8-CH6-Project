@@ -124,10 +124,6 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 	Payload.Instigator = Attacker;
 	Payload.Target = this;
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, 
-		FString::Printf(TEXT("%s가 %s를 죽임"), *Attacker->GetName(), *GetName())
-		);
 	
 	Multicast_Death();
 

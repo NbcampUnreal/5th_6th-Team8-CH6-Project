@@ -56,4 +56,6 @@ protected:
 	FTransform LeftHandIKTransform;
 	UPROPERTY(BlueprintReadOnly, Category = "IK")
 	float LeftHandIKAlpha;
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float LocomotionStartDirection;
 };

@@ -119,6 +119,11 @@ void APTWProjectile::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults
 				-FinalDamage); 
 						
 				TargetASC->ApplyGameplayEffectSpecToSelf(*NewHandle.Data.Get());
+				
+				FGameplayCueParameters CueParams;
+				CueParams.Location = HitActor->GetActorLocation();
+				
+				TargetASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.HitImpact")), CueParams);
 			}
 		}
 	}

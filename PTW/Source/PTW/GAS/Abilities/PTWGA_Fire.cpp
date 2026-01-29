@@ -140,18 +140,20 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 				float Damage = CurrentInst->SpawnedWeapon1P->GetWeaponData()->BaseDamage;
 				ApplyDamageToTarget(Handle, ActorInfo, ActivationInfo, TargetData, Damage);
 				
-				if (HitResult.bBlockingHit && HitResult.GetActor())
-				{
-					FName ProfileName = HitResult.Component->GetCollisionProfileName();
-					
-					if (ProfileName.IsEqual(FName("Hit")))
-					{
-						FGameplayCueParameters CueParams;
-						CueParams.Location = HitResult.ImpactPoint;
-						CueParams.Normal = HitResult.ImpactNormal;
-						ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.HitImpact")), CueParams);
-					}
-				}
+				 if (HitResult.bBlockingHit && HitResult.GetActor())
+				 {
+				 	FName ProfileName = HitResult.Component->GetCollisionProfileName();
+				 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor());
+				 	
+				 	if (ProfileName.IsEqual(FName("Hit")))
+				 	{
+				 		FGameplayCueParameters CueParams;
+				 		CueParams.Location = HitResult.ImpactPoint;
+				 		CueParams.Normal = HitResult.ImpactNormal;
+				 		
+				 		TargetASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.HitImpact")), CueParams);
+				 	}
+				 }
 			}
 		}
 	}
@@ -222,7 +224,7 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle,
 	
 	for (auto Data : TargetData.Data)
 	{
-		FHitResult* HitResult = const_cast<FHitResult*>(Data->GetHitResult());
+		const FHitResult* HitResult = Data->GetHitResult();
 		if (HitResult && HitResult->GetActor())
 		{
 			FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageGEClass, GetAbilityLevel());
@@ -239,7 +241,6 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle,
 			}
 			
 			SpecHandle.Data.Get()->SetSetByCallerMagnitude(Tag_Damage, -BaseDamage);
-			
 			
 			if (TargetASC)
 			{

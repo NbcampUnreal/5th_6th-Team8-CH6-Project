@@ -6,8 +6,9 @@
 #include "GAS/PTWGameplayAbility.h"
 #include "PTWGA_Fire.generated.h"
 
-class APTWProjectile;
 class UPTWItemInstance;
+class APTWWeaponActor;
+class APTWProjectile;
 /**
  * 
  */
@@ -19,7 +20,7 @@ struct FPTWGameplayCueMakingInfo
 	
 public:
 	UPROPERTY()
-	UPTWItemInstance* ItemInstance;
+	APTWWeaponActor* Weapon1P;
 	
 	UPROPERTY()
 	APTWPlayerCharacter* PlayerCharacter;	

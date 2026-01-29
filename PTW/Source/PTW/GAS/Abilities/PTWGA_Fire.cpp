@@ -89,7 +89,7 @@ void UPTWGA_Fire::MakeGameplayCue(const FGameplayAbilitySpecHandle Handle,
 {
 	FGameplayCueParameters Params;
 	Params.Instigator = ActorInfo->OwnerActor.Get();
-	Params.SourceObject = Infos.ItemInstance; 
+	Params.SourceObject = Infos.Weapon1P; 
 	
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(
 		FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Fire")), 
@@ -121,7 +121,7 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 
 	FPTWGameplayCueMakingInfo Infos;
 	Infos.PlayerCharacter = PC;
-	Infos.ItemInstance = CurrentInst;
+	Infos.Weapon1P = CurrentInst->SpawnedWeapon1P;
 	
 	MakeGameplayCue(Handle, ActorInfo, ActivationInfo, Infos);
 	

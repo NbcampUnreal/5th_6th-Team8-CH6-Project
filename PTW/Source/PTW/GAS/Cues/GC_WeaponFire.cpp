@@ -6,6 +6,7 @@
 #include "IDetailTreeNode.h"
 #include "NiagaraFunctionLibrary.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Kismet/GameplayStatics.h"
@@ -17,32 +18,30 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 	{
 		return false;
 	}
-	UObject* SourceObj = const_cast<UObject*>(Parameters.GetSourceObject());
-	UPTWItemInstance* ItemInst = Cast<UPTWItemInstance>(SourceObj);
+	
+	const APTWWeaponActor* SourceWeapon = Cast<APTWWeaponActor>(Parameters.SourceObject);
+	const APTWWeaponActor* TargetWeapon = nullptr;
 	
 	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(MyTarget);
 	
 	if (!PC) return false;
 	
-	APTWWeaponActor* TargetWeapon = nullptr;
-	
-	// PC가 나라면 1인칭용 Muzzle
-	// PC가 상대라면 3인칭용 Muzzle
 	
 	if (PC->IsLocallyControlled())
 	{
-		TargetWeapon = ItemInst->SpawnedWeapon1P;
+		TargetWeapon = SourceWeapon;
 	}
 	else
 	{
-		TargetWeapon = ItemInst->SpawnedWeapon3P;
+		// 서버기준으로 서버에 해당하는 PC의 인벤토리 참조해서 가져오기
+		if (UPTWInventoryComponent* InvenComp = PC->GetInventoryComponent())
+		{
+			if (UPTWItemInstance* ItemInstServer = InvenComp->GetCurrentWeaponInst())
+			{
+				TargetWeapon = ItemInstServer->SpawnedWeapon3P;
+			}
+		}
 	}
-	
-	bool bIsHidden = TargetWeapon->IsHidden();
-	bool bIsFirstPerson = TargetWeapon->bIsFirstPersonWeapon;
-	
-	UE_LOG(LogTemp, Log, TEXT("Hidden: %s"), bIsHidden ? TEXT("true") : TEXT("false"));
-	UE_LOG(LogTemp, Log, TEXT("bIsFirstPerson: %s"), bIsFirstPerson ? TEXT("true") : TEXT("false"));
 	
 	UNiagaraFunctionLibrary::SpawnSystemAttached(
 		FireVFX,

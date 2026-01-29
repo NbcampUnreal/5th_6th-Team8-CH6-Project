@@ -27,6 +27,11 @@ void APTWGameState::UpdateRanking()
 	RankedPlayers.Sort([](const TObjectPtr<APTWPlayerState> A, const TObjectPtr<APTWPlayerState> B) {
 	return A->GetPlayerRoundData().Score > B->GetPlayerRoundData().Score;
 });
+
+	// for (APTWPlayerState* PlayerState : RankedPlayers)
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("Score: %d"), PlayerState->GetPlayerRoundData().Score);
+	// }
 }
 
 void APTWGameState::AddRankedPlayer(APTWPlayerState* NewPlayerState)

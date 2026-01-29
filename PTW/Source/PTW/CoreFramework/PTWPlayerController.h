@@ -48,6 +48,10 @@ public:
 	UFUNCTION()
 	void OnInputSpectateNext();
 	
+	/* 데미지 인디케이터 */
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_ShowDamageIndicator(FVector DamageCauserLocation);
+
 	/* KillLog 델리게이트 */
 	FOnKillLog OnKillLog;
 	

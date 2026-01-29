@@ -5,10 +5,6 @@
 
 void UPTWCrosshair::SetCrosshairVisibility(bool bVisible)
 {
-	if (bVisible) UE_LOG(LogTemp, Error, TEXT("SetCrosshairVisibility.true"))
-	else UE_LOG(LogTemp, Error, TEXT("SetCrosshairVisibility.false"));
-
-
 	SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 }
 

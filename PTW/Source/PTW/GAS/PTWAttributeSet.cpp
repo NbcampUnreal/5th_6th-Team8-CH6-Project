@@ -7,7 +7,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PTW/CoreFramework/PTWPlayerCharacter.h"
-
+#include "CoreFramework/PTWPlayerController.h"
 
 UPTWAttributeSet::UPTWAttributeSet()
 {
@@ -55,6 +55,11 @@ void UPTWAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 	AActor* SourceActor = Context.GetInstigator();
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
+		if (Data.EvaluatedData.Magnitude < 0.f)
+		{
+			HandleDamage(Data);
+		}
+
 		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
 
 		if (GetHealth() <= 0.0f)
@@ -125,3 +130,34 @@ void UPTWAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) { G
 void UPTWAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, MaxHealth, OldMaxHealth); }
 void UPTWAttributeSet::OnRep_MoveSpeed(const FGameplayAttributeData& OldMoveSpeed) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, MoveSpeed, OldMoveSpeed); }
 void UPTWAttributeSet::OnRep_JumpZVelocity(const FGameplayAttributeData& OldJumpZVelocity) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, JumpZVelocity, OldJumpZVelocity); }
+
+void UPTWAttributeSet::HandleDamage(const FGameplayEffectModCallbackData& Data)
+{
+	AActor* TargetActor = Data.Target.GetAvatarActor();
+	if (!TargetActor) return;
+
+	APawn* TargetPawn = Cast<APawn>(TargetActor);
+	if (!TargetPawn) return;
+
+	FVector DamageCauserLocation = FVector::ZeroVector;
+
+	const FGameplayEffectContextHandle& Context =
+		Data.EffectSpec.GetContext();
+
+	if (Context.GetHitResult())
+	{
+		DamageCauserLocation =
+			Context.GetHitResult()->TraceStart;
+	}
+	else if (AActor* Instigator = Context.GetInstigator())
+	{
+		DamageCauserLocation =
+			Instigator->GetActorLocation();
+	}
+
+	// PlayerController로 전달
+	if (APTWPlayerController* PC = Cast<APTWPlayerController>(TargetPawn->GetController()))
+	{
+		PC->ClientRPC_ShowDamageIndicator(DamageCauserLocation);
+	}
+}

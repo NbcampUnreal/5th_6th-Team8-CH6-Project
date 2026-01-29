@@ -2,6 +2,7 @@
 
 
 #include "UI/PTWUISubsystem.h"
+#include "UI/InGameUI/PTWDamageIndicator.h"
 
 #include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
@@ -181,4 +182,19 @@ void UPTWUISubsystem::ShowHUD(TSubclassOf<UUserWidget> HUDClass)
 		return;
 
 	HUDWidget->AddToViewport(0); // HUD Layer (가장 뒤)
+}
+
+void UPTWUISubsystem::ShowDamageIndicator(const FVector& DamageCauserLocation)
+{
+	if (!DamageIndicatorClass) return;
+
+	APlayerController* PC = GetPlayerController();
+	if (!PC) return;
+
+	UPTWDamageIndicator* Indicator = CreateWidget<UPTWDamageIndicator>(PC, DamageIndicatorClass);
+
+	if (!Indicator) return;
+
+	Indicator->AddToViewport(50); 
+	Indicator->Init(DamageCauserLocation);
 }

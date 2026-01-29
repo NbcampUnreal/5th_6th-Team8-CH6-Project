@@ -48,4 +48,6 @@ protected:
 	virtual void OnRep_MoveSpeed(const FGameplayAttributeData& OldMoveSpeed);
 	UFUNCTION()
 	virtual void OnRep_JumpZVelocity(const FGameplayAttributeData& OldJumpZVelocity);
+
+	void HandleDamage(const FGameplayEffectModCallbackData& Data);
 };

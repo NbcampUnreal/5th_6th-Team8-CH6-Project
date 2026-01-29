@@ -247,6 +247,19 @@ void APTWPlayerController::OnInputSpectateNext()
 	}
 }
 
+void APTWPlayerController::ClientRPC_ShowDamageIndicator_Implementation(FVector DamageCauserLocation)
+{
+	if (IsLocalController())
+	{
+		ULocalPlayer* LP = GetLocalPlayer();
+		
+		if (UPTWUISubsystem* UISubsystem = GetLocalPlayer()->GetSubsystem<UPTWUISubsystem>())
+		{
+			UISubsystem->ShowDamageIndicator(DamageCauserLocation);
+		}
+	}
+}
+
 void APTWPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();

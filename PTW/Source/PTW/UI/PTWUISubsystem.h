@@ -7,6 +7,7 @@
 #include "PTWUISubsystem.generated.h"
 
 class UUserWidget;
+class UPTWDamageIndicator;
 
 UENUM(BlueprintType)
 enum class EUIInputPolicy : uint8
@@ -53,6 +54,11 @@ public:
 	/** HUD */
 	void ShowHUD(TSubclassOf<UUserWidget> HUDClass);
 
+	/* 데미지 인디케이터 */
+	UFUNCTION()
+	void ShowDamageIndicator(const FVector& DamageCauserLocation);
+	void SetDamageIndicatorClass(TSubclassOf<UPTWDamageIndicator> InClass) { DamageIndicatorClass = InClass; }
+
 private:
 	/** Stack-based UI */
 	UPROPERTY()
@@ -65,6 +71,10 @@ private:
 	/** HUD */
 	UPROPERTY()
 	TObjectPtr<UUserWidget> HUDWidget = nullptr;
+
+	/* 데미지 인디케이터 */
+	UPROPERTY(EditDefaultsOnly, Category = "DamageIndicator")
+	TSubclassOf<UPTWDamageIndicator> DamageIndicatorClass;
 
 	/** Helpers */
 	UUserWidget* GetOrCreateWidget(TSubclassOf<UUserWidget> WidgetClass);

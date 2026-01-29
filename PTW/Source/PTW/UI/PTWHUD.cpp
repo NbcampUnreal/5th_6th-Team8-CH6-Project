@@ -7,6 +7,8 @@
 #include "AbilitySystemComponent.h" // ASC
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "UI/PTWUISubsystem.h"
+#include "UI/InGameUI/PTWDamageIndicator.h"
 
 void APTWHUD::BeginPlay()
 {
@@ -57,6 +59,17 @@ void APTWHUD::InitializeHUD(UAbilitySystemComponent* ASC)
 		UE_LOG(LogTemp, Error, TEXT("HUD InitializeHUD"));
 		bASCInitialized = true;
 		InGameHUDInstance->InitializeUI(ASC);
+	}
+
+	if (DamageIndicatorClass)
+	{
+		if (ULocalPlayer* LP = GetOwningPlayerController()->GetLocalPlayer())
+		{
+			if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
+			{
+				UISubsystem->SetDamageIndicatorClass(DamageIndicatorClass);
+			}
+		}
 	}
 }
 

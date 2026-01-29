@@ -32,6 +32,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UPTWInGameHUD> InGameHUDClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI|DamageIndicator")
+	TSubclassOf<class UPTWDamageIndicator> DamageIndicatorClass;
+
 private:
 	/* 실제 뷰포트에 표시될 위젯 인스턴스*/
 	UPROPERTY()

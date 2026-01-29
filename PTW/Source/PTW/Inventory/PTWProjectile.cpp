@@ -55,6 +55,12 @@ void APTWProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPr
 			{
 				ApplyExplosionDamage(OverlapResults, FinalDamage);
 			}
+			
+			
+			FGameplayCueParameters CueParams;
+			CueParams.Location = GetActorLocation();
+			ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Explosion")), CueParams);
+			
 			Destroy();
 		}
 	}

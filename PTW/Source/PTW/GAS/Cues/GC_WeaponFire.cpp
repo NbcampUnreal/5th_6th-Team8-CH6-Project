@@ -8,6 +8,7 @@
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
+#include "Kismet/GameplayStatics.h"
 
 
 bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
@@ -52,6 +53,11 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 		EAttachLocation::SnapToTargetIncludingScale,
 		true
 		);
+	
+	if (FireSFX)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireSFX, MyTarget->GetActorLocation());
+	}
 	
 	return true;
 	

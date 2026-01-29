@@ -1,15 +1,12 @@
 ﻿#include "PTWProjectile.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
-#include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "AbilitySystemComponent.h"
 #include "PTW.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/OverlapResult.h"
 #include "GAS/PTWWeaponAttributeSet.h"
-#include "Kismet/GameplayStatics.h"
-
 
 APTWProjectile::APTWProjectile()
 {

@@ -164,7 +164,7 @@ void APTWPlayerController::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn
 	
 	APawn* CurrentViewTarget = nullptr;
 	APawn* NewViewTarget = nullptr;
-	
+
 	if (AActor* CurrentViewTargetActor = GetViewTarget())
 	{
 		CurrentViewTarget = Cast<APawn>(CurrentViewTargetActor);
@@ -197,7 +197,7 @@ void APTWPlayerController::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn
 	{
 		for (APlayerState* PS : PlayArray)
 		{
-			if (PS && PS != PlayerState && !PS->IsSpectator() && PS->GetPawn())
+			if (PS && (PS != PlayerState) && (!PS->IsSpectator()) && PS->GetPawn())
 			{
 				NewViewTarget = PS->GetPawn();
 				break;
@@ -209,7 +209,13 @@ void APTWPlayerController::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn
 	{
 		if (!IsValid(CurrentViewTarget) || (CurrentViewTarget != NewViewTarget))
 		{
-			SetViewTargetWithBlend(NewViewTarget, 0.5f, VTBlend_Cubic);
+			TWeakObjectPtr<ThisClass> WeakThis = this;
+			TWeakObjectPtr<APawn> WeakViewTarget = NewViewTarget;
+			GetWorldTimerManager().SetTimerForNextTick([WeakThis, WeakViewTarget]()
+			{
+				if (WeakThis.IsValid() && WeakViewTarget.IsValid())
+				WeakThis->SetViewTargetWithBlend(WeakViewTarget.Get(), 0.5f, VTBlend_Cubic);
+			});
 		}
 	}
 }

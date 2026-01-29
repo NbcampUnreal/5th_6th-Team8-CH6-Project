@@ -50,6 +50,16 @@ void APTWPlayerController::BeginPlay()
 	CreateRankingBoard();
 }
 
+void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (HasAuthority())
+	{
+		GetWorldTimerManager().ClearTimer(RespawnTimerHandle);
+	}
+	
+	Super::EndPlay(EndPlayReason);
+}
+
 void APTWPlayerController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();

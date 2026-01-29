@@ -125,7 +125,7 @@ void APTWLobbyGameMode::AddRandomGold(APlayerController* NewPlayer)
 
 	if (APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>())
 	{
-		FPTWPlayerData PlayerData;
+		FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
 		PlayerData.Gold = RandomGold;
 		PTWPlayerState->SetPlayerData(PlayerData);
 

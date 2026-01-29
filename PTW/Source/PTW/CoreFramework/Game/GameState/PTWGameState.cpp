@@ -84,6 +84,14 @@ void APTWGameState::SetCurrentPhase(EPTWGamePhase NewGamePhase)
 	CurrentGamePhase = NewGamePhase;
 }
 
+void APTWGameState::Multicast_BroadcastKilllog_Implementation(AActor* DeadActor, AActor* KillerActor)
+{
+	if (OnKilllogBroadcast.IsBound())
+	{
+		OnKilllogBroadcast.Broadcast(DeadActor, KillerActor);
+	}
+}
+
 void APTWGameState::OnRep_RemainTime()
 {
 	OnRemainTimeChanged.Broadcast(RemainTime);

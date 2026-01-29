@@ -56,6 +56,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpdateRankedPlayers, TArray<APTWP
  * - 서버에서 RemainTime을 갱신하고 클라이언트로 복제
  * - RepNotify(OnRep_RemainTime)를 통해 변경 사항을 이벤트로 전달
  */
+
+/**
+* 킬로그 방송을 위한 델리게이트
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilllogBroadcastSignature, AActor*, DeadActor, AActor*, KillerActor);
+
 UCLASS()
 class PTW_API APTWGameState : public AGameState
 {
@@ -75,6 +81,10 @@ public:
 	void SetRemainTime(int32 NewTime);
 	void SetCurrentRound(int32 NewRound);
 	void SetCurrentPhase(EPTWGamePhase NewGamePhase);
+
+	/** 서버에서 호출하여 모든 클라이언트의 델리게이트를 실행시키는 RPC */
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_BroadcastKilllog(AActor* DeadActor, AActor* KillerActor);
 	
 	/** 남은 시간 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
@@ -92,10 +102,15 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnUpdateRankedPlayers OnUpdateRankedPlayers;
+
+	/** 킬로그 이벤트: UI가 이 이벤트를 구독합니다. */
+	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
+	FOnKilllogBroadcastSignature OnKilllogBroadcast;
 	
 	FORCEINLINE int32 GetRemainTime() const { return RemainTime; }
 	FORCEINLINE int32 GetCurrentRound() const {return CurrentRound;}
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
+	FORCEINLINE TArray<APTWPlayerState*> GetRankedPlayers() const {return RankedPlayers;}
 protected:
 	/** 복제 설정 */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

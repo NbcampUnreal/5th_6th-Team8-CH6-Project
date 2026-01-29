@@ -4,6 +4,8 @@
 #include "UI/InGameUI/PTWKillLogUI.h"
 #include "Components/VerticalBox.h"
 #include "PTWKillLogEntry.h"
+#include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "CoreFramework/PTWPlayerState.h"
 
 void UPTWKillLogUI::AddKillLog(const FString& Killer,const FString& Victim)
 {
@@ -29,6 +31,44 @@ void UPTWKillLogUI::AddKillLog(const FString& Killer,const FString& Victim)
 	{
 		RemoveOldest();
 	}
+}
+
+void UPTWKillLogUI::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	// 1. GameState 가져오기
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		// 2. 델리게이트 바인드 (AddDynamic 사용)
+		GS->OnKilllogBroadcast.AddDynamic(this, &UPTWKillLogUI::OnKilllogReceived);
+	}
+}
+
+void UPTWKillLogUI::OnKilllogReceived(AActor* DeadActor, AActor* KillerActor)
+{
+	UE_LOG(LogTemp, Warning, TEXT("KillLog Received - Killer: %s, Victim: %s"),
+		KillerActor ? *KillerActor->GetName() : TEXT("NULL"),
+		DeadActor ? *DeadActor->GetName() : TEXT("NULL"));
+
+	// Actor가 유효한지 확인 후 이름 추출
+	FString KillerName = TEXT("Unknown");
+	if (APTWPlayerState* KPS = Cast<APTWPlayerState>(KillerActor))
+	{
+		FPTWPlayerData KillerData = KPS->GetPlayerData();
+		if (!KillerData.PlayerName.IsEmpty()) KillerName = KillerData.PlayerName;
+		else KillerName = KPS->GetPlayerName();
+	}
+
+	FString VictimName = TEXT("Unknown");
+	if (APTWPlayerState* VPS = Cast<APTWPlayerState>(DeadActor))
+	{
+		FPTWPlayerData VictimData = VPS->GetPlayerData();
+		if (!VictimData.PlayerName.IsEmpty()) VictimName = VictimData.PlayerName;
+		else VictimName = VPS->GetPlayerName();
+	}
+
+	AddKillLog(KillerName, VictimName);
 }
 
 void UPTWKillLogUI::RemoveOldest()

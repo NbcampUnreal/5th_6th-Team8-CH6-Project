@@ -40,6 +40,7 @@ void APTWMiniGameMode::BeginPlay()
 void APTWMiniGameMode::EndTimer()
 {
 	ResetPlayerRoundData();
+	MiniGameEnd();
 	
 	Super::EndTimer();
 	
@@ -155,11 +156,28 @@ void APTWMiniGameMode::InitPlayerHealth(AController* Controller)
 	AttributeSet->SetHealth(AttributeSet->GetMaxHealth());
 }
 
+void APTWMiniGameMode::MiniGameEnd()
+{
+	// 현재 랭킹을 기준으로 승리 포인트 추가
+
+	if (!IsValid(PTWGameState)) return;
+
+	// 승리 포인트는 임시로 플레이어 인원 수만큼 지급
+	// 동점 계산 X
+	for (int i = 0; i < PTWGameState->GetRankedPlayers().Num(); i++)
+	{
+		FPTWPlayerData PlayerData = PTWGameState->GetRankedPlayers()[i]->GetPlayerData();
+		PlayerData.TotalWinPoints += PTWGameState->GetRankedPlayers().Num() - i;
+		PTWGameState->GetRankedPlayers()[i]->SetPlayerData(PlayerData);
+	}
+	
+}
+
 void APTWMiniGameMode::AddWinPoint(APawn* PointPawn, int32 AddPoint)
 {
 	if (APTWPlayerState* PTWPlayerState = PointPawn->GetPlayerState<APTWPlayerState>())
 	{
-		FPTWPlayerData PlayerData;
+		FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
 		PlayerData.TotalWinPoints += AddPoint;
 		PTWPlayerState->SetPlayerData(PlayerData);
 	}

@@ -51,9 +51,13 @@ protected:
 	void SpawnDefaultWeapon(AController* NewPlayer);
 
 private:
+	// 플레이어 사망 처리
 	UFUNCTION()
 	void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor);
-
+	
+	// 라운드 시작 시 플레이어의 라운드 전용 데이터 초기화
 	void ResetPlayerRoundData();
+	
+	void InitPlayerHealth(AController* Controller);
 	
 };

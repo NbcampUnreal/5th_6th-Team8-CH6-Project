@@ -8,6 +8,7 @@
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "GAS/PTWAttributeSet.h"
 #include "System/PTWScoreSubsystem.h"
 #include "PTW/Inventory/PTWItemDefinition.h"
 
@@ -67,7 +68,8 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
 	Super::RestartPlayer(NewPlayer);
-
+	
+	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);
 	
 	if (APTWBaseCharacter* BaseCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
@@ -137,6 +139,20 @@ void APTWMiniGameMode::ResetPlayerRoundData()
 			PTWPlayerState->ResetPlayerRoundData();
 		}
 	}
+}
+
+void APTWMiniGameMode::InitPlayerHealth(AController* Controller)
+{
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Controller);
+	if (!PlayerController) return;
+
+	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
+	if (!PlayerState) return;
+
+	UPTWAttributeSet* AttributeSet = Cast<UPTWAttributeSet>(PlayerState->GetAttributeSet());
+	if (!AttributeSet) return;
+
+	AttributeSet->SetHealth(AttributeSet->GetMaxHealth());
 }
 
 void APTWMiniGameMode::AddWinPoint(APawn* PointPawn, int32 AddPoint)

@@ -59,5 +59,7 @@ private:
 	void ResetPlayerRoundData();
 	
 	void InitPlayerHealth(AController* Controller);
+
+	void MiniGameEnd();
 	
 };

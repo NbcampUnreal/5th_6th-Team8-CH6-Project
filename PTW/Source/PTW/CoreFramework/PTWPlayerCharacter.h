@@ -73,6 +73,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void ApplyRecoil();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	float PlayMontage1P(UAnimMontage* MontageToPlay);
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")

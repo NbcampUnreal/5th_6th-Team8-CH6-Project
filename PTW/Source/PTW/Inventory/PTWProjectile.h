@@ -29,6 +29,10 @@ protected:
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	
+	bool ExplosionOverlapSetter(TArray<FOverlapResult>& OverlapResults);
+	
+	void ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults, float FinalDamage);
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComponent;
@@ -38,6 +42,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UStaticMeshComponent> MeshComponent;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion")
+	float ExplosionRad;
 	
 	
 };

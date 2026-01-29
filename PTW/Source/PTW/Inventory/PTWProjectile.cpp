@@ -4,7 +4,10 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "AbilitySystemComponent.h"
+#include "PTW.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/OverlapResult.h"
+#include "GAS/PTWWeaponAttributeSet.h"
 
 
 APTWProjectile::APTWProjectile()
@@ -22,6 +25,8 @@ APTWProjectile::APTWProjectile()
 	
 	CapsuleComponent->OnComponentHit.AddDynamic(this, &APTWProjectile::OnHit);
 	ProjectileMovementComponent->UpdatedComponent = CapsuleComponent;
+	
+	InitialLifeSpan = 3.0f; 
 }
 
 void APTWProjectile::BeginPlay()
@@ -33,15 +38,76 @@ void APTWProjectile::BeginPlay()
 void APTWProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	UE_LOG(LogTemp, Warning, TEXT("APTWProjectile::OnHit"));
-	UE_LOG(LogTemp, Warning, TEXT("OtherActor : %s"), *OtherActor->GetName());
-	
 	if (OtherActor && OtherActor != GetInstigator())
 	{
-		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
+		if (HasAuthority())
+		{
+			AActor* Shooter = GetInstigator();
+			UAbilitySystemComponent* ASC  = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Shooter);
+	
+			float FinalDamage = 0.0f;
+			if (ASC)
+			{
+				FinalDamage = ASC->GetNumericAttributeChecked(UPTWWeaponAttributeSet::GetDamageAttribute());
+			}
+			
+			TArray<FOverlapResult> OverlapResults;
+			
+			if (ExplosionOverlapSetter(OverlapResults))
+			{
+				ApplyExplosionDamage(OverlapResults, FinalDamage);
+			}
+			Destroy();
+		}
+	}
+}
+
+bool APTWProjectile::ExplosionOverlapSetter(TArray<FOverlapResult>& OverlapResults)
+{
+	FVector ExplosionLocation = GetActorLocation();
+	FCollisionShape SphereShape = FCollisionShape::MakeSphere(ExplosionRad);
+	FCollisionQueryParams CollisionParams;
+				
+	CollisionParams.AddIgnoredActor(this);
+	CollisionParams.AddIgnoredActor(GetInstigator());
+				
+	bool bHasOverlap = GetWorld()->OverlapMultiByChannel(
+		OverlapResults,
+		ExplosionLocation,
+		FQuat::Identity,
+		ECC_WeaponAttack,
+		SphereShape,
+		CollisionParams
+		);
+				
+	DrawDebugSphere(GetWorld(), ExplosionLocation, ExplosionRad, 32, FColor::Red, false, 2.0f);
+	
+	return bHasOverlap;
+}
+
+void APTWProjectile::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults, float FinalDamage)
+{
+	TSet<AActor*> ProcessedActors; // 중복 제거를 위해 사용
+				
+	for (const FOverlapResult& Result : OverlapResults)
+	{
+		AActor* HitActor = Result.GetActor();
+		if (!HitActor) continue;
+		if (ProcessedActors.Contains(HitActor)) continue;
+					
+		ProcessedActors.Add(HitActor);
+						
+		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
 		if (TargetASC && DamageSpecHandle.IsValid())
 		{
-			TargetASC->ApplyGameplayEffectSpecToSelf(*DamageSpecHandle.Data.Get());
+			FGameplayEffectSpec* NewSpec = new FGameplayEffectSpec(*DamageSpecHandle.Data.Get());
+			FGameplayEffectSpecHandle NewHandle(NewSpec);
+						
+			NewHandle.Data.Get()->SetSetByCallerMagnitude(
+			FGameplayTag::RequestGameplayTag(FName("Data.Damage")), 
+			-FinalDamage); 
+						
+			TargetASC->ApplyGameplayEffectSpecToSelf(*NewHandle.Data.Get());
 		}
 	}
 }

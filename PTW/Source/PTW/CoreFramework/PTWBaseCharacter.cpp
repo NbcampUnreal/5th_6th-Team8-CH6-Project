@@ -78,6 +78,10 @@ void APTWBaseCharacter::GiveDefaultAbilities()
 	{
 		if (AbilityClass)
 		{
+			if (AbilitySystemComponent->FindAbilitySpecFromClass(AbilityClass))
+			{
+				continue;
+			}
 			FGameplayAbilitySpec Spec(AbilityClass, 1, INDEX_NONE, this);
 
 			if (const UPTWGameplayAbility* PTWAbility = Cast<UPTWGameplayAbility>(AbilityClass->GetDefaultObject()))

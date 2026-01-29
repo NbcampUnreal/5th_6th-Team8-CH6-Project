@@ -103,3 +103,26 @@ void UPTWInventoryComponent::BeginPlay()
 }
 
 
+void UPTWInventoryComponent::ClearAndDestroyInventory()
+{
+	CurrentWeapon = nullptr;
+
+	for (UPTWItemInstance* Item : WeaponArr)
+	{
+		if (Item)
+		{
+			if (Item->SpawnedWeapon1P)
+			{
+				Item->SpawnedWeapon1P->Destroy();
+				Item->SpawnedWeapon1P = nullptr;
+			}
+			if (Item->SpawnedWeapon3P)
+			{
+				Item->SpawnedWeapon3P->Destroy();
+				Item->SpawnedWeapon3P = nullptr;
+			}
+		}
+	}
+
+	WeaponArr.Empty();
+}

@@ -75,6 +75,28 @@ void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
 			PC->StartSpectating();
 		}
 	}
+	if (HasAuthority())
+	{
+		if (AbilitySystemComponent)
+		{
+			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+
+			AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
+			AbilitySystemComponent->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
+		}
+
+		if (InventoryComponent)
+		{
+			InventoryComponent->ClearAndDestroyInventory();
+		}
+
+		CurrentWeapon = nullptr;
+		CurrentWeaponTag = FGameplayTag::EmptyTag;
+
+		OnRep_CurrentWeaponTag(FGameplayTag::EmptyTag);
+
+		SpawnedWeapons.Empty();
+	}
 }
 
 void APTWPlayerCharacter::BeginPlay()
@@ -91,9 +113,23 @@ void APTWPlayerCharacter::BeginPlay()
 			}
 		}
 	}
+
+	if (IsLocallyControlled())
+	{
+		CurrentWeaponTag = FGameplayTag::EmptyTag;
+		CurrentWeapon = nullptr;
+
+		if (InventoryComponent)
+		{
+			InventoryComponent->WeaponVisibleSetting(FGameplayTag::EmptyTag, true);
+			InventoryComponent->SetCurrentWeaponInst(nullptr);
+		}
+		UE_LOG(LogTemp, Warning, TEXT("[Client] BeginPlay: Force Unequip Visuals"));
+	}
+
 	if (Mesh1P)
 	{
-		Mesh1P->SetOnlyOwnerSee(true);
+		Mesh1P->SetHiddenInGame(false);
 		Mesh1P->SetVisibility(true);
 		Mesh1P->HideBoneByName(FName("head"), EPhysBodyOp::PBO_None);
 	}
@@ -104,10 +140,29 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	InitAbilityActorInfo();
-	
+
+	if (AbilitySystemComponent)
+	{
+		FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+
+		if (AbilitySystemComponent->HasMatchingGameplayTag(EquipTag))
+		{
+			AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
+
+			AbilitySystemComponent->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
+
+			UE_LOG(LogTemp, Warning, TEXT("PossessedBy: Force Removed Equip Tag"));
+		}
+	}
+
+	CurrentWeapon = nullptr;
+	CurrentWeaponTag = FGameplayTag::EmptyTag;
+
+	OnRep_CurrentWeaponTag(FGameplayTag::EmptyTag);
+
 	GiveDefaultAbilities();
 	ApplyDefaultEffects();
-	UpdateNameTagText(); // PlayerNameTag
+	UpdateNameTagText();
 }
 
 void APTWPlayerCharacter::OnRep_PlayerState()
@@ -119,6 +174,20 @@ void APTWPlayerCharacter::OnRep_PlayerState()
 	if (IsLocallyControlled())
 	{
 		InitAbilityActorInfo();
+
+		CurrentWeaponTag = FGameplayTag::EmptyTag;
+		CurrentWeapon = nullptr;
+
+		if (InventoryComponent)
+		{
+			InventoryComponent->WeaponVisibleSetting(FGameplayTag::EmptyTag, true);
+			InventoryComponent->SetCurrentWeaponInst(nullptr);
+		}
+		if (AbilitySystemComponent)
+		{
+			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+			AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
+		}
 	}
 }
 

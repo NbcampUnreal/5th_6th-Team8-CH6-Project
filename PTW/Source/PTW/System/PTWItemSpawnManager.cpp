@@ -33,16 +33,36 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 
 	APTWWeaponActor* SpawnedWeapon1P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
 	APTWWeaponActor* SpawnedWeapon3P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
-	if (!SpawnedWeapon1P && !SpawnedWeapon3P) return;
-	
+	//Fix 박태웅(01.29) - (크래시방지)
+	if (!SpawnedWeapon1P || !SpawnedWeapon3P)
+	{
+		if (SpawnedWeapon1P) SpawnedWeapon1P->Destroy();
+		if (SpawnedWeapon3P) SpawnedWeapon3P->Destroy();
+		return;
+	}
 	
 	SpawnedWeapon1P->bIsFirstPersonWeapon = true;
 	SpawnedWeapon3P->bIsFirstPersonWeapon = false;
 
+	//Fix 박태웅(01.29) - (업데이트 시도)
+	SpawnedWeapon1P->ForceNetUpdate();
+	SpawnedWeapon3P->ForceNetUpdate();
+
 	WeaponItemInst->ItemDef = ItemDefinition;
 	WeaponItemInst->SpawnedWeapon1P = SpawnedWeapon1P;
 	WeaponItemInst->SpawnedWeapon3P = SpawnedWeapon3P;
-	WeaponItemInst->CurrentAmmo = SpawnedWeapon1P->GetWeaponData()->MaxAmmo;
+
+	//Fix 박태웅(01.29) - (데이터 가져오기)
+	if (const UPTWWeaponData* WData = SpawnedWeapon1P->GetWeaponData())
+	{
+		WeaponItemInst->CurrentAmmo = WData->MaxAmmo;
+	}
+	else
+	{
+		WeaponItemInst->CurrentAmmo = 0;
+		UE_LOG(LogTemp, Warning, TEXT("SpawnWeaponActor: WeaponData is null for %s"), *GetNameSafe(ItemDefinition));
+	}
+
 	Inventory->AddItem(WeaponItemInst);
 	TargetPlayer->AttachWeaponToSocket(SpawnedWeapon1P, SpawnedWeapon3P, WeaponTag);
 }

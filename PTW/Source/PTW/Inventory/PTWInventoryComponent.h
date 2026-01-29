@@ -37,7 +37,7 @@ public:
 	
 	void WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool SetHidden);
 	
-	
+	void ClearAndDestroyInventory();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

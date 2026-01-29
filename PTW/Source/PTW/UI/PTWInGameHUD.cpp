@@ -7,6 +7,8 @@
 #include "InGameUI/PTWHealthBar.h"
 #include "InGameUI/PTWKillLogUI.h"
 #include "InGameUI/PTWTimer.h"
+#include "InGameUI/PTWAmmoWidget.h"
+#include "InGameUI/PTWCrosshair.h"
 
 void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 {
@@ -19,6 +21,8 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 
 	/* HealthBar 초기화 */
 	if (HealthBar) HealthBar->InitWithASC(ASC);
+	/* AmmoWidget 초기화*/
+	if (AmmoWidget) AmmoWidget->InitWithASC(ASC);
 }
 
 void UPTWInGameHUD::AddKillLog(const FString& Killer, const FString& Victim)
@@ -26,6 +30,14 @@ void UPTWInGameHUD::AddKillLog(const FString& Killer, const FString& Victim)
 	if (KillLogUI)
 	{
 		KillLogUI->AddKillLog(Killer, Victim);
+	}
+}
+
+void UPTWInGameHUD::SetCrosshairVisibility(bool bVisible)
+{
+	if (CrosshairWidget)
+	{
+		CrosshairWidget->SetCrosshairVisibility(bVisible);
 	}
 }
 

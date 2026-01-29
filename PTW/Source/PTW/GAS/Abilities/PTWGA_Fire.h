@@ -6,9 +6,27 @@
 #include "GAS/PTWGameplayAbility.h"
 #include "PTWGA_Fire.generated.h"
 
+class UPTWItemInstance;
+class APTWWeaponActor;
+class APTWProjectile;
 /**
  * 
  */
+
+USTRUCT(BlueprintType)
+struct FPTWGameplayCueMakingInfo
+{
+	GENERATED_BODY();
+	
+public:
+	UPROPERTY()
+	APTWWeaponActor* Weapon1P;
+	
+	UPROPERTY()
+	APTWPlayerCharacter* PlayerCharacter;	
+};
+
+
 UCLASS()
 class PTW_API UPTWGA_Fire : public UPTWGameplayAbility
 {
@@ -16,10 +34,6 @@ class PTW_API UPTWGA_Fire : public UPTWGameplayAbility
 	
 public:
 	UPTWGA_Fire();
-	
-	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, 
-		const FGameplayAbilityActorInfo* ActorInfo, 
-		const FGameplayAbilityActivationInfo ActivationInfo) override;
 	
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, 
 		const FGameplayAbilityActorInfo* ActorInfo, 
@@ -30,15 +44,53 @@ public:
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
 	
-	void StartFire();
+	void StartFire(const FGameplayAbilitySpecHandle Handle, 
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo);
+	
+	void AutoFire(const FGameplayAbilitySpecHandle Handle, 
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo);
+	
+	void MakeGameplayCue(const FGameplayAbilitySpecHandle Handle, 
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		FPTWGameplayCueMakingInfo Infos);
+	
 	void StopFire();
-	void AutoFire();
 	
 protected:
 	FTimerHandle AutoFireTimer;
-	float FireRate = 0.15f;
+	float FireRate;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cue|Effect")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Cue")
 	TSubclassOf<UGameplayEffect> FireEffectClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Damage")
+	TSubclassOf<UGameplayEffect> DamageGEClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Damage")
+	TSubclassOf<UAttributeSet> WeaponAttributeClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TSubclassOf<APTWProjectile> ProjectileClass;
+	
+protected:
+	void PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* PlayerCharacter);
+	bool ValidateHitResult(FHitResult& HitResult);
+	void ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle, 
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayAbilityTargetDataHandle& TargetData,
+		float BaseDamage);
+	
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
+	
+	UFUNCTION()
+	void OnInputReleasedCallback(float TimeHold);
+	
+	void HitScanTypeFire(APTWPlayerCharacter* PC);
+	
+	void ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* ItemInstance);
 	
 };

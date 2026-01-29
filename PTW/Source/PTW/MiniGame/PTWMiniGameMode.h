@@ -3,12 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PTWMiniGameRule.h"
+#include "Inventory/PTWItemDefinition.h"
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWMiniGameMode.generated.h"
 
-/**
- * 
- */
+class APTWPlayerState;
+class UPTWItemDefinition;
+class APTWWeaponActor;
+
 UCLASS()
 class PTW_API APTWMiniGameMode : public APTWGameMode
 {
@@ -25,12 +28,38 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable)
 	void AddWinPoint(APawn* PointPawn, int32 AddPoint);
-	
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule")
+	FPTWMiniGameRule MiniGameRule;
 protected:
+	virtual void InitGameState() override;
 	virtual void BeginPlay() override;
 	virtual void EndTimer() override;
 
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
+	
+	virtual void RestartPlayer(AController* NewPlayer) override;
+	
 	/** 미니게임 진행 시간 (초) */
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
 	float MiniGameTime = 90;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")
+	TObjectPtr<UPTWItemDefinition> ItemDefinition;
+
+	void SpawnDefaultWeapon(AController* NewPlayer);
+
+private:
+	// 플레이어 사망 처리
+	UFUNCTION()
+	void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor);
+	
+	// 라운드 시작 시 플레이어의 라운드 전용 데이터 초기화
+	void ResetPlayerRoundData();
+	
+	void InitPlayerHealth(AController* Controller);
+
+	void MiniGameEnd();
+	
 };

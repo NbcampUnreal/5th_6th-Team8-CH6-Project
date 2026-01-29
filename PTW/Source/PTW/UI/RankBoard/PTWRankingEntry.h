@@ -18,7 +18,7 @@ class PTW_API UPTWRankingEntry : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	void SetEntry(int32 InRank, const FPTWPlayerData& InData, bool bIsMe);
+	void SetEntry(int32 InRank, const FPTWPlayerData& InData, FString SteamName, bool bIsMe);
 
 protected:
 	virtual void NativeConstruct() override;

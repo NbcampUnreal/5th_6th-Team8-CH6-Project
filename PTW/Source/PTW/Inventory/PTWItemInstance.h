@@ -3,8 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PTWWeaponActor.h"
+#include "PTWWeaponData.h"
 #include "UObject/Object.h"
 #include "PTWItemInstance.generated.h"
+
+enum class EHitType : uint8;
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAmmoChangedSignature, int32 /*CurrentAmmo*/, int32 /*MaxAmmo*/);
 
 class APTWWeaponActor;
 class UPTWItemDefinition;
@@ -30,6 +35,9 @@ public:
 	UFUNCTION()
 	void OnRep_SpawnedWeapon3P();
 	
+	FORCEINLINE EHitType GetWeaponHitType() const {return SpawnedWeapon1P->GetWeaponData()->HitType;}
+	FORCEINLINE UPTWWeaponData* GetWeaponData() const {return SpawnedWeapon1P->GetWeaponData();}
+	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated)
 	TObjectPtr<UPTWItemDefinition> ItemDef;
@@ -43,4 +51,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_SpawnedWeapon3P)
 	TObjectPtr<APTWWeaponActor> SpawnedWeapon3P;
 	
+	// UI 연동, PlayerController 에서 바인딩할 델리게이트
+	FOnAmmoChangedSignature OnAmmoChanged;
+	
+	/* UI 연동 */
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SetCurrentAmmo(int32 NewAmmo);
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	int32 GetMaxAmmo();
 };

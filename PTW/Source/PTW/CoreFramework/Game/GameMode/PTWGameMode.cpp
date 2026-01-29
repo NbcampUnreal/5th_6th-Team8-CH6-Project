@@ -13,6 +13,16 @@ APTWGameMode::APTWGameMode()
 	bUseSeamlessTravel = true;
 }
 
+void APTWGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
+	
+	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+	{
+		CurrentRound = PTWScoreSubsystem->GetCurrentGameRound(); // GameInstance 라운드 값 받아서 GameMode에 저장
+	}
+}
+
 void APTWGameMode::InitGameState()
 {
 	Super::InitGameState();
@@ -21,12 +31,7 @@ void APTWGameMode::InitGameState()
 
 	if (PTWGameState)
 	{
-		PTWGameState->OnTimerFinished.AddDynamic(this, &APTWGameMode::EndTimer);
-
-		if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
-		{
-			PTWGameState->SetCurrentRound(PTWScoreSubsystem->GetCurrentGameRound()); // GameInstance 라운드 값 받아서 GameState에 전달
-		}
+		PTWGameState->SetCurrentRound(CurrentRound); // GameMode 라운드 값 받아서 GameState에 전달
 	}
 }
 
@@ -34,22 +39,31 @@ void APTWGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
-	
+	if (PTWGameState)
+	{
+		PTWGameState->OnTimerFinished.AddDynamic(this, &APTWGameMode::EndTimer);
+	}
 }
 
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+}
+
+void APTWGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	
 	ApplyPlayerDataFromSubsystem(NewPlayer);
+	
 }
 
 void APTWGameMode::Logout(AController* Exiting)
 {
 	Super::Logout(Exiting);
 
-	// 접속 해제 시 게임 참여 인원 감소
+	if (!IsValid(PTWGameState)) return;
+	
 }
 
 void APTWGameMode::StartTimer(float TimeDuration)
@@ -62,10 +76,15 @@ void APTWGameMode::StartTimer(float TimeDuration)
 	GetWorldTimerManager().SetTimer(TimerHandle, this, &APTWGameMode::UpdateTimer, 1.f, true, 1.f);
 }
 
-void APTWGameMode::EndTimer()
+void APTWGameMode::ClearTimer()
 {
 	GetWorldTimerManager().ClearTimer(TimerHandle);
+}
 
+void APTWGameMode::EndTimer()
+{
+	ClearTimer();
+	
 	SaveGameDataToSubsystem();
 	
 	TravelLevel();

@@ -10,6 +10,15 @@
 /**
  * 
  */
+
+UENUM(BlueprintType)
+enum class EHitType : uint8
+{
+	HitScan,
+	Projectile
+};
+
+
 UCLASS()
 class PTW_API UPTWWeaponData : public UDataAsset
 {
@@ -22,6 +31,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	int32 MaxAmmo;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	EHitType HitType;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	float FireRate;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TMap<FGameplayTag, UAnimMontage*> AnimMap;

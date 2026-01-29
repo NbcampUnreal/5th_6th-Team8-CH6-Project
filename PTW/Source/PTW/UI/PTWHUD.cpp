@@ -59,3 +59,11 @@ void APTWHUD::InitializeHUD(UAbilitySystemComponent* ASC)
 		InGameHUDInstance->InitializeUI(ASC);
 	}
 }
+
+void APTWHUD::SetCrosshairVisibility(bool bVisible)
+{
+	if (InGameHUDInstance)
+	{
+		InGameHUDInstance->SetCrosshairVisibility(bVisible);
+	}
+}

@@ -4,7 +4,8 @@
 #include "PTWGA_Equip.h"
 
 #include "AbilitySystemComponent.h"
-#include "CoreFramework/PTWBaseCharacter.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
+#include "GAS/PTWWeaponAttributeSet.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "Inventory/PTWItemInstance.h"
@@ -25,16 +26,18 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	if (WeaponItemInstance)
 	{
 		FGameplayTag CurrentWeaponTag = WeaponItemInstance->ItemDef->WeaponTag;
-		APTWBaseCharacter* Character = GetPTWCharacterFromActorInfo();
-		
+		APTWPlayerCharacter* Character = GetPTWPlayerCharacterFromActorInfo();
+
 		if (HasAuthority(&CurrentActivationInfo))
 		{
 			Character->EquipWeaponByTag(CurrentWeaponTag);
-			if (UPTWInventoryComponent* InvenComp = Character->FindComponentByClass<UPTWInventoryComponent>())
-			{
-				InvenComp->SetCurrentWeaponInst(WeaponItemInstance);
-			}
+			 if (UPTWInventoryComponent* InvenComp = Character->GetInventoryComponent())
+			 {
+			 	InvenComp->SetCurrentWeaponInst(WeaponItemInstance);
+			 }
 		}
+		
+		SetCharacterWeaponAttribute(WeaponItemInstance, Character);
 		
 		FGameplayTag StatTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 		
@@ -45,4 +48,30 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	}
 	
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+}
+
+void UPTWGA_Equip::SetCharacterWeaponAttribute(const UPTWItemInstance* WeaponItemInstance,
+	APTWPlayerCharacter* Character)
+{
+	if (WeaponItemInstance)
+	{
+		if (HasAuthority(&CurrentActivationInfo))
+		{
+			UAbilitySystemComponent* ASC = Character->GetAbilitySystemComponent();
+			if (!ASC) return;
+			
+			APTWWeaponActor* SpawnedWeapon = WeaponItemInstance->SpawnedWeapon1P;
+			if (!SpawnedWeapon) return;
+			
+			UPTWWeaponData* WeaponmData = SpawnedWeapon->GetWeaponData();
+			if (!WeaponmData) return;
+			
+			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetMaxAmmoAttribute(), WeaponmData->MaxAmmo);
+			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetCurrentAmmoAttribute(), WeaponmData->MaxAmmo);
+			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetDamageAttribute(), WeaponmData->BaseDamage);
+			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetFireRateAttribute(), WeaponmData->FireRate);
+			
+			ASC->ForceReplication();
+		}
+	}
 }

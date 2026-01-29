@@ -32,6 +32,10 @@ protected:
 
 	/* 킬 텍스트 */
 	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> KillerText;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> VictimText;
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> KillText;
 
 	FTimerHandle LifeTimerHandle;

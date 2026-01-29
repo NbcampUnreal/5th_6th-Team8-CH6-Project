@@ -2,17 +2,20 @@
 
 
 #include "CoreFramework/PTWAnimInstance.h"
-#include "CoreFramework/PTWBaseCharacter.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Inventory/PTWWeaponActor.h"
+#include "Inventory/PTWInventoryComponent.h"
+#include "Inventory/PTWItemInstance.h"
 
 void UPTWAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 
-	Character = Cast<APTWBaseCharacter>(TryGetPawnOwner());
+	Character = Cast<APTWPlayerCharacter>(TryGetPawnOwner());
 	if (Character)
 	{
 		CharacterMovement = Character->GetCharacterMovement();
@@ -27,7 +30,7 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	if (!Character)
 	{
-		Character = Cast<APTWBaseCharacter>(TryGetPawnOwner());
+		Character = Cast<APTWPlayerCharacter>(TryGetPawnOwner());
 		if (Character)
 		{
 			CharacterMovement = Character->GetCharacterMovement();
@@ -36,6 +39,7 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
+	//이동속도 변수 업데이트
 	Velocity = CharacterMovement->Velocity;
 	GroundSpeed = Velocity.Size2D();
 
@@ -53,6 +57,14 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		LocomotionDirection = 0.0f;
 	}
+	if (GroundSpeed < 10.0f && CharacterMovement->GetCurrentAcceleration().Size2D() > 0.0f)
+	{
+		LocomotionStartDirection = CalculateDirection(CharacterMovement->GetCurrentAcceleration(), Character->GetActorRotation());
+	}
+	if (GroundSpeed > 10.0f && CharacterMovement->GetCurrentAcceleration().Size2D() == 0.0f)
+	{
+		LocomotionStartDirection = CalculateDirection(Velocity, Character->GetActorRotation());
+	}
 
 	FRotator AimRotation = Character->GetBaseAimRotation();
 
@@ -63,6 +75,56 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		FGameplayTag SprintTag = FGameplayTag::RequestGameplayTag(TEXT("Input.Action.Sprint"));
 		bIsSprinting = ASC->HasMatchingGameplayTag(SprintTag);
+	}
+
+	//1인칭 및 3인칭 메시 IK 부착
+	USkeletalMeshComponent* MyOwningMesh = GetOwningComponent();
+
+	if (Character && MyOwningMesh)
+	{
+		UPTWInventoryComponent* Inventory = Character->GetInventoryComponent();
+
+		if (Inventory)
+		{
+			UPTWItemInstance* CurrentItem = Inventory->GetCurrentWeaponInst();
+			if (CurrentItem)
+			{
+				UMeshComponent* TargetWeaponMesh = nullptr;
+
+				if (MyOwningMesh == Character->GetMesh1P())
+				{
+					if (CurrentItem->SpawnedWeapon1P)
+					{
+						TargetWeaponMesh = CurrentItem->SpawnedWeapon1P->GetStaticMeshComponent();
+					}
+				}
+				else
+				{
+					if (CurrentItem->SpawnedWeapon3P)
+					{
+						TargetWeaponMesh = CurrentItem->SpawnedWeapon3P->GetStaticMeshComponent();
+					}
+				}
+
+				if (TargetWeaponMesh)
+				{
+					FTransform SocketTransform = TargetWeaponMesh->GetSocketTransform(FName("LHIK"), RTS_World);
+					FTransform RightHandTransform = MyOwningMesh->GetSocketTransform(FName("hand_r"), RTS_World);
+
+					LeftHandIKTransform = SocketTransform.GetRelativeTransform(RightHandTransform);
+
+					LeftHandIKAlpha = 1.0f;
+				}
+				else
+				{
+					LeftHandIKAlpha = 0.0f;
+				}
+			}
+			else
+			{
+				LeftHandIKAlpha = 0.0f;
+			}
+		}
 	}
 }
 

@@ -18,6 +18,11 @@ class PTW_API UPTWRankingBoard : public UUserWidget
 {
 	GENERATED_BODY()
 	
+public:
+	/* 랭킹 갱신 */
+	UFUNCTION()
+	void UpdateRanking();
+
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
@@ -25,10 +30,6 @@ protected:
 	/* PlayerState 델리게이트 바인딩 */
 	void BindPlayerStates();
 	void UnbindPlayerStates();
-
-	/* 랭킹 갱신 */
-	UFUNCTION()
-	void UpdateRanking();
 
 	UFUNCTION()
 	void OnPlayerDataChanged(const FPTWPlayerData& NewData);

@@ -30,3 +30,26 @@ struct FPTWPlayerData
 	// 향후 인벤토리 시스템 확장 시 사용 예정
 	// TArray<AActor> InventoryItem;
 };
+
+/**
+ * 한 라운드 동안 플레이어의 전투 통계를 저장하는 구조체
+ * - 라운드 종료 시 집계 및 승리 조건 판정에 사용
+ */
+USTRUCT(BlueprintType)
+struct FPTWPlayerRoundData
+{
+	GENERATED_BODY()
+
+	/** 라운드 중 처치한 적 수 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 KillCount = 0;
+	
+	/** 라운드 중 사망한 횟수 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 DeathCount = 0;
+	
+	/** 라운드에서 획득한 점수 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 Score = 0;
+
+};

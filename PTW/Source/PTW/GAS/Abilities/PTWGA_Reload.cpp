@@ -3,7 +3,12 @@
 
 #include "PTWGA_Reload.h"
 
-#include "CoreFramework/PTWBaseCharacter.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
@@ -19,35 +24,101 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
                                     const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	
-	//FIXME : 해당 코드 전부 수정 필요 (임시 테스트 코드)
-	
-	APTWBaseCharacter* AvatarActor = Cast<APTWBaseCharacter>(ActorInfo->AvatarActor.Get());
-	if (!AvatarActor) return;
-	
-	UAbilitySystemComponent* ASC = AvatarActor->GetAbilitySystemComponent();
-	if (!ASC) return;
-	
-	UPTWInventoryComponent* InvenComp = AvatarActor->FindComponentByClass<UPTWInventoryComponent>();
-	if (!InvenComp) return;
-	
-	int32 MaxAmmo = 0;
-	
- 	if (UPTWItemInstance* ItemInst = InvenComp->CurrentWeapon)       
+
+	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
+	if (!PC)
 	{
-		if (APTWWeaponActor* WeaponActor = ItemInst->SpawnedWeapon1P)
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	UAnimMontage* MontageToPlay = nullptr;
+	UPTWInventoryComponent* Inven = PC->GetInventoryComponent();
+
+	if (Inven)
+	{
+		if (UPTWItemInstance* CurrentItem = Inven->GetCurrentWeaponInst())
 		{
-			if (UPTWWeaponData* Data =WeaponActor->GetWeaponData())
+			if (UPTWWeaponData* WData = CurrentItem->GetWeaponData())
 			{
-				MaxAmmo = Data->MaxAmmo;
-				InvenComp->CurrentWeapon->CurrentAmmo = MaxAmmo;
+				if (WData->AnimMap.Contains(ReloadAnimTag))
+				{
+					MontageToPlay = *WData->AnimMap.Find(ReloadAnimTag);
+				}
 			}
 		}
 	}
 
-	//TODO: UAbilityTask_PlayMontageAndWait 실행
-	
-	UE_LOG(LogTemp, Warning, TEXT("Reload Ability Activate CurrentWeapon Ammo : %d"), MaxAmmo);
-	
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	if (!MontageToPlay)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		this,
+		NAME_None,
+		MontageToPlay,
+		1.0f,
+		NAME_None,
+		false
+	);
+
+	if (MontageTask)
+	{
+		MontageTask->OnBlendOut.AddDynamic(this, &ThisClass::OnMontageCompleted);
+		MontageTask->OnCompleted.AddDynamic(this, &ThisClass::OnMontageCompleted);
+		MontageTask->OnInterrupted.AddDynamic(this, &ThisClass::OnMontageCancelled);
+		MontageTask->OnCancelled.AddDynamic(this, &ThisClass::OnMontageCancelled);
+
+		MontageTask->ReadyForActivation();
+	}
+
+	PC->PlayMontage1P(MontageToPlay);
+
+	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag(FName("Event.Weapon.ReloadRefill"));
+
+	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+		this,
+		EventTag,
+		nullptr,
+		false,
+		false
+	);
+
+	if (WaitEventTask)
+	{
+		WaitEventTask->EventReceived.AddDynamic(this, &ThisClass::OnGameplayEventReceived);
+		WaitEventTask->ReadyForActivation();
+	}
+}
+
+void UPTWGA_Reload::OnGameplayEventReceived(FGameplayEventData Payload)
+{
+	if (ReloadEffectClass)
+	{
+		ApplyGameplayEffectToOwner(
+			GetCurrentAbilitySpecHandle(),
+			GetCurrentActorInfo(),
+			GetCurrentActivationInfo(),
+			ReloadEffectClass.GetDefaultObject(),
+			1.0f
+		);
+	}
+}
+
+void UPTWGA_Reload::OnMontageCompleted()
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UPTWGA_Reload::OnMontageCancelled()
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }

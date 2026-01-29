@@ -11,6 +11,10 @@
 #include "Inventory/PTWWeaponActor.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "PTWPlayerController.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Game/GameState/PTWGameState.h"
+#include "GameFramework/PlayerState.h" 
 
 APTWBaseCharacter::APTWBaseCharacter()
 {
@@ -39,11 +43,11 @@ void APTWBaseCharacter::BeginPlay()
 	
 }
 
-void APTWBaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void APTWBaseCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(APTWBaseCharacter, CurrentWeaponTag);
+	OnCharacterDied.RemoveAll(this);
+	
+	Super::EndPlay(EndPlayReason);
 }
 
 UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
@@ -53,6 +57,11 @@ UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
 
 bool APTWBaseCharacter::IsDead() const
 {
+	if (AbilitySystemComponent == nullptr)
+	{
+		return false;
+	}
+
 	return AbilitySystemComponent->HasMatchingGameplayTag(DeadTag);
 }
 
@@ -104,50 +113,6 @@ void APTWBaseCharacter::ApplyDefaultEffects()
 	}
 }
 
-void APTWBaseCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
-{
-	if (CurrentWeaponTag == NewWeaponTag)
-	{
-		if (CurrentWeapon)
-		{
-			CurrentWeapon->SetActorHiddenInGame(true);
-			CurrentWeapon->SetActorEnableCollision(false);
-		}
-
-		CurrentWeapon = nullptr;
-		CurrentWeaponTag = FGameplayTag::EmptyTag;
-
-		UE_LOG(LogTemp, Log, TEXT("Weapon Unequipped (Toggle Off)"));
-		return;
-	}
-
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->SetActorHiddenInGame(true);
-		CurrentWeapon->SetActorEnableCollision(false);
-	}
-
-	if (APTWWeaponActor* FoundWeaponPtr = SpawnedWeapons.Find(NewWeaponTag)->Weapon1P)
-	{
-		APTWWeaponActor* NewWeaponActor = SpawnedWeapons.Find(NewWeaponTag)->Weapon3P;
-
-		if (FoundWeaponPtr)
-		{
-			FoundWeaponPtr->SetActorHiddenInGame(false);
-			NewWeaponActor->SetActorHiddenInGame(false);
-
-			CurrentWeapon = FoundWeaponPtr;
-			CurrentWeaponTag = NewWeaponTag;
-			
-			UE_LOG(LogTemp, Log, TEXT("Weapon Equipped: %s"), *NewWeaponTag.ToString());
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot find weapon with tag: %s"), *NewWeaponTag.ToString());
-	}
-}
-
 void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 {
 	if (!HasAuthority() || !AbilitySystemComponent)
@@ -155,25 +120,89 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 		return;
 	}
 	FGameplayEventData Payload;
-	Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("죽음 이벤트 연결"));
+	Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Dead"));
 	Payload.Instigator = Attacker;
 	Payload.Target = this;
-	
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
-	AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
-}
-void APTWBaseCharacter::OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon)
-{
-	if (OldWeapon)
-	{
-		OldWeapon->SetActorHiddenInGame(true);
-	}
 	
-	if (CurrentWeapon)
+	Multicast_Death();
+
+	if (OnCharacterDied.IsBound())
 	{
-		CurrentWeapon->SetActorHiddenInGame(false);
-		CurrentWeapon->ApplyVisualPerspective();
+		OnCharacterDied.Broadcast(this, Attacker);
 	}
+
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		AActor* MyPS = GetPlayerState();
+		GS->Multicast_BroadcastKilllog(MyPS, Attacker);
+	}
+}
+
+void APTWBaseCharacter::Multicast_PlayHitReact_Implementation(const FVector& ImpactPoint)
+{
+	if (this && IsDead()) return;
+
+	FVector HitVector = (ImpactPoint - GetActorLocation()).GetSafeNormal();
+
+	FRotator HitLocalRot = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(), HitVector).Rotation();
+	float HitYaw = HitLocalRot.Yaw;
+
+	UAnimMontage* MontageToPlay = nullptr;
+
+	if (HitYaw >= -45.f && HitYaw <= 45.f)
+	{
+		MontageToPlay = HitReact_Front;
+	}
+	else if (HitYaw >= -135.f && HitYaw < -45.f)
+	{
+		MontageToPlay = HitReact_Left;
+	}
+	else if (HitYaw > 45.f && HitYaw <= 135.f)
+	{
+		MontageToPlay = HitReact_Right;
+	}
+	else
+	{
+		MontageToPlay = HitReact_Back;
+	}
+
+	if (MontageToPlay)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(MontageToPlay, 1.0f);
+		}
+	}
+}
+
+void APTWBaseCharacter::Multicast_Death_Implementation()
+{
+	if (GetCapsuleComponent())
+	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->StopMovementImmediately();
+		GetCharacterMovement()->DisableMovement();
+		GetCharacterMovement()->SetComponentTickEnabled(false);
+	}
+
+	if (GetMesh())
+	{
+		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+		GetMesh()->SetAllBodiesSimulatePhysics(true);
+		GetMesh()->SetSimulatePhysics(true);
+		GetMesh()->WakeAllRigidBodies();
+		GetMesh()->bPauseAnims = true;
+	}
+
+	SetLifeSpan(3.0f); 
 }
 
 

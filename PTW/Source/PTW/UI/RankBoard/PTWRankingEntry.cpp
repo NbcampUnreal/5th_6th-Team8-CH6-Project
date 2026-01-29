@@ -5,13 +5,15 @@
 #include "Components/TextBlock.h"
 #include "CoreFramework/PTWPlayerData.h"
 
-void UPTWRankingEntry::SetEntry(int32 InRank, const FPTWPlayerData& InData, bool bIsMe)
+void UPTWRankingEntry::SetEntry(int32 InRank, const FPTWPlayerData& InData, FString SteamName, bool bIsMe)
 {
 	if (Text_Rank)
 		Text_Rank->SetText(FText::AsNumber(InRank));
 
-	if (Text_Name)
-		Text_Name->SetText(FText::FromString(InData.PlayerName));
+	if (Text_Name) {
+		if (InData.PlayerName.IsEmpty()) Text_Name->SetText(FText::FromString(SteamName));
+		else Text_Name->SetText(FText::FromString(InData.PlayerName));
+	}
 
 	if (Text_WinPoints)
 		Text_WinPoints->SetText(FText::AsNumber(InData.TotalWinPoints));

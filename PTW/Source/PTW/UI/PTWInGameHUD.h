@@ -11,7 +11,8 @@ class UAbilitySystemComponent;
 class UPTWHealthBar;
 class UPTWKillLogUI;
 class UPTWTimer;
-
+class UPTWAmmoWidget;
+class UPTWCrosshair;
 /**
  * 
  */
@@ -27,6 +28,9 @@ public:
 	// 킬로그
 	UFUNCTION()
 	void AddKillLog(const FString& Killer, const FString& Victim); // 인자에 무기 종류 추가해야함
+	// 크로스헤어
+	UFUNCTION()
+	void SetCrosshairVisibility(bool bVisible);
 
 	/* 위젯 바인딩 */
 	/* 체력바 */
@@ -38,6 +42,12 @@ public:
 	/* 타이머 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWTimer> Timer;
+	/* 탄약 */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWAmmoWidget> AmmoWidget;
+	/* 크로스헤어 */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWCrosshair> CrosshairWidget;
 
 protected:
 	virtual bool Initialize() override;

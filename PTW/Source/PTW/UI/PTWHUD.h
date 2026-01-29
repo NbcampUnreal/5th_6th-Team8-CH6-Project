@@ -20,9 +20,12 @@ class PTW_API APTWHUD : public AHUD
 public:
 	virtual void BeginPlay() override;
 
-	/* 외부 (캐릭터/컨트롤러)에서 ASC를 받아와 UI를 초기화하는 함수 
-	BeginPlay 대신 이 함수가 Character::PossessedBy 등 안전한 시점에 호출 */
+	/* 컨트롤러에서 ASC를 받아와 UI를 초기화하는 함수 */
 	void InitializeHUD(UAbilitySystemComponent* ASC);
+
+	// 컨트롤러에서 호출할 가시성 제어 함수
+	UFUNCTION()
+	void SetCrosshairVisibility(bool bVisible);
 
 protected:
 	/* HUD에 표시할 메인 위젯 클래스 (에디터/블루프린트에서 설정) */

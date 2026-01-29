@@ -3,6 +3,7 @@
 
 #include "PTWGameState.h"
 
+#include "CoreFramework/PTWPlayerState.h"
 #include "Net/UnrealNetwork.h"
 
 APTWGameState::APTWGameState()
@@ -16,6 +17,26 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(APTWGameState, RemainTime);
+	DOREPLIFETIME(APTWGameState, CurrentRound);
+	DOREPLIFETIME(APTWGameState, CurrentGamePhase);
+	DOREPLIFETIME(APTWGameState, RankedPlayers);
+}
+
+void APTWGameState::UpdateRanking()
+{
+	RankedPlayers.Sort([](const TObjectPtr<APTWPlayerState> A, const TObjectPtr<APTWPlayerState> B) {
+	return A->GetPlayerRoundData().Score > B->GetPlayerRoundData().Score;
+});
+
+	// for (APTWPlayerState* PlayerState : RankedPlayers)
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("Score: %d"), PlayerState->GetPlayerRoundData().Score);
+	// }
+}
+
+void APTWGameState::AddRankedPlayer(APTWPlayerState* NewPlayerState)
+{
+	RankedPlayers.AddUnique(NewPlayerState);
 }
 
 void APTWGameState::DecreaseTimer()
@@ -63,6 +84,14 @@ void APTWGameState::SetCurrentPhase(EPTWGamePhase NewGamePhase)
 	CurrentGamePhase = NewGamePhase;
 }
 
+void APTWGameState::Multicast_BroadcastKilllog_Implementation(AActor* DeadActor, AActor* KillerActor)
+{
+	if (OnKilllogBroadcast.IsBound())
+	{
+		OnKilllogBroadcast.Broadcast(DeadActor, KillerActor);
+	}
+}
+
 void APTWGameState::OnRep_RemainTime()
 {
 	OnRemainTimeChanged.Broadcast(RemainTime);
@@ -70,9 +99,15 @@ void APTWGameState::OnRep_RemainTime()
 
 void APTWGameState::OnRep_CurrentRound()
 {
-	
+	OnRoundChanged.Broadcast(CurrentRound);
 }
 
 void APTWGameState::OnRep_CurrentGamePhase()
 {
+	OnGamePhaseChanged.Broadcast(CurrentGamePhase);
+}
+
+void APTWGameState::OnRep_RankedPlayers()
+{
+	OnUpdateRankedPlayers.Broadcast(RankedPlayers);
 }

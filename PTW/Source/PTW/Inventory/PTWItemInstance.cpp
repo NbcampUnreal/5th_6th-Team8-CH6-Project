@@ -31,4 +31,25 @@ void UPTWItemInstance::OnRep_SpawnedWeapon3P()
 	
 }
 
+void UPTWItemInstance::SetCurrentAmmo(int32 NewAmmo)
+{
+	int32 MaxAmmo = GetMaxAmmo();
+	// 값의 범위를 제한하고 변경된 경우에만 방송
+	int32 ClampedAmmo = FMath::Clamp(NewAmmo, 0, MaxAmmo);
+
+	if (CurrentAmmo != ClampedAmmo)
+	{
+		CurrentAmmo = ClampedAmmo;
+		OnAmmoChanged.Broadcast(CurrentAmmo, MaxAmmo);
+	}
+}
+
+int32 UPTWItemInstance::GetMaxAmmo()
+{
+	if (SpawnedWeapon1P && SpawnedWeapon1P->GetWeaponData())
+	{
+		return SpawnedWeapon1P->GetWeaponData()->MaxAmmo;
+	}
+	return 0;
+}
 

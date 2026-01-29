@@ -4,15 +4,37 @@
 #include "UI/InGameUI/PTWKillLogEntry.h"
 #include "Components/TextBlock.h"
 #include "TimerManager.h"
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 
 void UPTWKillLogEntry::Init(const FString& Killer, const FString& Victim, float LifeTime)
 {
-	if (KillText)
+	APlayerController* PC = GetOwningPlayer();
+
+	if (PC && PC->PlayerState)
 	{
-		KillText->SetText(
-			FText::FromString(
-				FString::Printf(TEXT("%s killed %s"), *Killer, *Victim)));
-	} // 킬로그의 killed 는 나중에 무기종류로 바꿀예정
+		FString MyName = PC->PlayerState->GetPlayerName();
+
+		if (KillerText)
+		{
+			KillerText->SetText(FText::FromString(FString::Printf(TEXT("%s "), *Killer)));
+			if (Killer == MyName)
+			{
+				KillerText->SetColorAndOpacity(FLinearColor(0.1f, 0.1f, 0.8f, 1.0f));
+			}
+		}
+
+		if (VictimText)
+		{
+			VictimText->SetText(FText::FromString(FString::Printf(TEXT(" %s"), *Victim)));
+			if (Victim == MyName)
+			{
+				VictimText->SetColorAndOpacity(FLinearColor(0.8f, 0.1f, 0.1f, 1.0f));
+			}
+		}
+		
+		// KillText 는 나중에 무기종류로 바꿀예정
+	}
 
 	/* 수명 타이머 시작 */
 	GetWorld()->GetTimerManager().SetTimer(

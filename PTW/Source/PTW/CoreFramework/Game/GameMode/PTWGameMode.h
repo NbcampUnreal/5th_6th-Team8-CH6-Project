@@ -24,20 +24,27 @@ public:
 	APTWGameMode();
 
 protected:
-	virtual void InitGameState() override;
-	
 	/** 게임 월드 시작 시 초기 설정 및 GameState 참조 캐싱 */
+	virtual void InitGameState() override;
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void BeginPlay() override;
-
+	
 	/** 플레이어 로그인 시 호출(접속 인원/시작 조건 갱신) */
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
+	
 	/** 플레이어 로그아웃 시 호출(접속 인원/게임 진행 상태 갱신) */
 	virtual void Logout(AController* Exiting) override;
 
+public:
+
+protected:
 	/** 지정한 시간(초) 기준으로 타이머를 시작 */
 	void StartTimer(float TimeDuration);
 
+	void ClearTimer();
+	
 	/** 타이머 종료 시 호출(타이머 정리 및 종료 후 처리 트리거) */
 	UFUNCTION()
 	virtual void EndTimer();
@@ -51,6 +58,9 @@ protected:
 	// 현재 GameState 참조(플레이어/게임 흐름 정보 접근)
 	UPROPERTY()
 	TObjectPtr<APTWGameState> PTWGameState;
+
+	// 내부 타이머 핸들(StartTimer/UpdateTimer에서 사용)
+	FTimerHandle TimerHandle;
 private:
 	// 현재 라운드/플레이어 데이터를 Subsystem으로 저장
 	void SaveGameDataToSubsystem();
@@ -61,8 +71,7 @@ private:
 	// 타이머 틱 처리(종료 시 EndTimer 트리거)
 	void UpdateTimer();
 	
-
+	int32 CurrentRound;
 	
-	// 내부 타이머 핸들(StartTimer/UpdateTimer에서 사용)
-	FTimerHandle TimerHandle;
+	
 };

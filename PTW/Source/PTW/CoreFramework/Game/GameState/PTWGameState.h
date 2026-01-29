@@ -6,22 +6,20 @@
 #include "GameFramework/GameState.h"
 #include "PTWGameState.generated.h"
 
+class APTWPlayerState;
 
 UENUM(BlueprintType)
 enum class EPTWGamePhase : uint8
 {
-
-	
-	/** 게임 시작 전 로비 */
+	/** 미니 게임 시작 전 로비 */
 	PreGameLobby UMETA(DisplayName="Pre Game Lobby"),
 
-	/** 미니게임 진행 */
+	/** 미니 게임 진행 */
 	MiniGame UMETA(DisplayName="Mini Game"),
 
-	/** 게임 진행 후 복귀 로비 */
+	/** 미니 게임 진행 후 로비 */
 	PostGameLobby UMETA(DisplayName="Post Game Lobby")
 };
-
 
 /**
  * 남은 시간 변경 이벤트
@@ -37,13 +35,33 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRemainTimeChanged, int32, RemainT
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimerFinished);
 
+/**
+ * 게임 페이즈 변경 이벤트
+ * - 현재 게임 페이즈가 변경될 때 브로드캐스트
+ * - UI 상태 전환, 입력 제한, 룰 적용 타이밍 등에 사용
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePhaseChanged, EPTWGamePhase, CurrentGamePhase);
 
+/**
+ * 라운드 변경 이벤트
+ * - 현재 라운드 값이 변경될 때 브로드캐스트
+ * - 라운드 UI 갱신, 라운드 시작/종료 연출 트리거 등에 사용
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundChanged, int32, CurrentRound);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpdateRankedPlayers, TArray<APTWPlayerState*>, RankedPlayers);
 
 /**
  * 게임 진행 상태(타이머 등)를 네트워크로 동기화하는 GameState
  * - 서버에서 RemainTime을 갱신하고 클라이언트로 복제
  * - RepNotify(OnRep_RemainTime)를 통해 변경 사항을 이벤트로 전달
  */
+
+/**
+* 킬로그 방송을 위한 델리게이트
+*/
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilllogBroadcastSignature, AActor*, DeadActor, AActor*, KillerActor);
+
 UCLASS()
 class PTW_API APTWGameState : public AGameState
 {
@@ -57,12 +75,17 @@ public:
 	void DecreaseTimer();
 
 	void AdvanceRound();
+	void UpdateRanking();
+	void AddRankedPlayer(APTWPlayerState* NewPlayerState);
 	
 	void SetRemainTime(int32 NewTime);
 	void SetCurrentRound(int32 NewRound);
 	void SetCurrentPhase(EPTWGamePhase NewGamePhase);
-	
 
+	/** 서버에서 호출하여 모든 클라이언트의 델리게이트를 실행시키는 RPC */
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_BroadcastKilllog(AActor* DeadActor, AActor* KillerActor);
+	
 	/** 남은 시간 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnRemainTimeChanged OnRemainTimeChanged;
@@ -70,32 +93,52 @@ public:
 	/** 타이머 종료 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnTimerFinished OnTimerFinished;
+	
+	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
+	FOnRoundChanged OnRoundChanged;
 
+	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
+	FOnGamePhaseChanged OnGamePhaseChanged;
+	
+	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
+	FOnUpdateRankedPlayers OnUpdateRankedPlayers;
+
+	/** 킬로그 이벤트: UI가 이 이벤트를 구독합니다. */
+	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
+	FOnKilllogBroadcastSignature OnKilllogBroadcast;
+	
 	FORCEINLINE int32 GetRemainTime() const { return RemainTime; }
 	FORCEINLINE int32 GetCurrentRound() const {return CurrentRound;}
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
+	FORCEINLINE TArray<APTWPlayerState*> GetRankedPlayers() const {return RankedPlayers;}
 protected:
 	/** 복제 설정 */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
 	/** 남은 시간(초) - 서버에서 갱신, 클라이언트로 복제 */
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_RemainTime, Category="GameFlow|Timer")
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_RemainTime, Category = "GameFlow|Timer")
 	int32 RemainTime = 0;
 
 	/** RemainTime 복제 갱신 시 호출 */
 	UFUNCTION()
 	void OnRep_RemainTime();
 
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentRound, Category="GameFlow|Round")
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentRound, Category = "GameFlow|Round")
 	int32 CurrentRound;
 
 	UFUNCTION()
 	void OnRep_CurrentRound();
 
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentGamePhase, Category="GameFlow|Phase")
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentGamePhase, Category = "GameFlow|Phase")
 	EPTWGamePhase CurrentGamePhase;
 
 	UFUNCTION()
 	void OnRep_CurrentGamePhase();
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_RankedPlayers, Category = "GameFlow|Rank")
+	TArray<TObjectPtr<APTWPlayerState>> RankedPlayers;
+
+	UFUNCTION()
+	void OnRep_RankedPlayers();
 };

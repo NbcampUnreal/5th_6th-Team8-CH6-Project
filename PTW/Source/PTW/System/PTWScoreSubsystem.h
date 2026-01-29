@@ -37,11 +37,11 @@ public:
 
 	bool bIsFirstLobby = true;
 	
-	/** 저장된 라운드 반환 */
-	FORCEINLINE int32 GetCurrentGameRound() const { return SavedGameRound; }
-	
 	/** 지정한 플레이어의 저장된 데이터가 있으면 반환 */
 	FPTWPlayerData* FindPlayerData(const FString& PlayerName);
+
+	/** 저장된 라운드 반환 */
+	FORCEINLINE int32 GetCurrentGameRound() const { return SavedGameRound; }
 
 private:
 	// 현재 저장 게임 라운드 번호

@@ -9,6 +9,9 @@
 /**
  * 
  */
+
+class UPTWItemInstance;
+class APTWPlayerCharacter;
 UCLASS()
 class PTW_API UPTWGA_Equip : public UPTWGameplayAbility
 {
@@ -22,4 +25,8 @@ public:
 		const FGameplayAbilityActorInfo* ActorInfo, 
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
+	
+protected:
+	
+	void SetCharacterWeaponAttribute(const UPTWItemInstance* WeaponItemInstance, APTWPlayerCharacter* Character);
 };

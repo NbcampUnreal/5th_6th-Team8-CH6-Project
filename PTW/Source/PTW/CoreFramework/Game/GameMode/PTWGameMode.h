@@ -58,6 +58,9 @@ protected:
 	// 현재 GameState 참조(플레이어/게임 흐름 정보 접근)
 	UPROPERTY()
 	TObjectPtr<APTWGameState> PTWGameState;
+
+	// 내부 타이머 핸들(StartTimer/UpdateTimer에서 사용)
+	FTimerHandle TimerHandle;
 private:
 	// 현재 라운드/플레이어 데이터를 Subsystem으로 저장
 	void SaveGameDataToSubsystem();
@@ -70,6 +73,5 @@ private:
 	
 	int32 CurrentRound;
 	
-	// 내부 타이머 핸들(StartTimer/UpdateTimer에서 사용)
-	FTimerHandle TimerHandle;
+	
 };

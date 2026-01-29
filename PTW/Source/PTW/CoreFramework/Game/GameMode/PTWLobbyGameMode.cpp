@@ -91,9 +91,12 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 		if (PTWGameState->PlayerArray.Num() == 1) // 임시 설정
 		{
 			// 플레이 중인 모든 플레이어 접속 중이면 로딩 UI 해제
-			
 		}
-		StartTimer(GameFlowRule.NextMiniGameWaitTime);
+
+		if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
+		{
+			StartTimer(GameFlowRule.NextMiniGameWaitTime);
+		}
 	}
 }
 

@@ -60,14 +60,6 @@ void APTWHUD::InitializeHUD(UAbilitySystemComponent* ASC)
 	}
 }
 
-void APTWHUD::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
-{
-	if (InGameHUDInstance)
-	{
-		InGameHUDInstance->UpdateAmmo(CurrentAmmo, MaxAmmo);
-	}
-}
-
 void APTWHUD::SetCrosshairVisibility(bool bVisible)
 {
 	if (InGameHUDInstance)

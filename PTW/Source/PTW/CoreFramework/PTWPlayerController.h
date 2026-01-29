@@ -94,17 +94,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> PauseMenuClass; 
 
-	/* 탄약 */
-	void BindAmmoDelegate();
-	void UnbindAmmoDelegate();
-	void SyncAmmoUIOnce();
-	void HandleAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
-	// 캐릭터에서 호출되는 콜백
-	void HandleWeaponChanged(FGameplayTag NewWeaponTag, UPTWItemInstance* NewItemInstance);
-
-	UPROPERTY()
-	TObjectPtr<UPTWItemInstance> CurrentWeaponItem;
-
 	/* 플레이어 이름 */
 	/* 닉네임 가시성 업데이트 로직 */
 	void UpdateNameTagsVisibility();

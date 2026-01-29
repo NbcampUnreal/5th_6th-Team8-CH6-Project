@@ -13,6 +13,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "PTWPlayerController.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Game/GameState/PTWGameState.h"
+#include "GameFramework/PlayerState.h" 
 
 APTWBaseCharacter::APTWBaseCharacter()
 {
@@ -132,6 +134,12 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 	if (OnCharacterDied.IsBound())
 	{
 		OnCharacterDied.Broadcast(this, Attacker);
+	}
+
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		AActor* MyPS = GetPlayerState();
+		GS->Multicast_BroadcastKilllog(MyPS, Attacker);
 	}
 }
 

@@ -373,3 +373,19 @@ void APTWPlayerCharacter::ApplyRecoil()
 		}
 	}
 }
+
+float APTWPlayerCharacter::PlayMontage1P(UAnimMontage* MontageToPlay)
+{
+	if (!IsLocallyControlled() || !Mesh1P || !MontageToPlay)
+	{
+		return 0.0f;
+	}
+
+	UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
+	if (AnimInstance)
+	{
+		return AnimInstance->Montage_Play(MontageToPlay, 1.0f);
+	}
+
+	return 0.0f;
+}

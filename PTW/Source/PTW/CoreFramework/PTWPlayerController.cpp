@@ -95,9 +95,6 @@ void APTWPlayerController::OnPossess(APawn* InPawn)
 
 void APTWPlayerController::OnUnPossess()
 {
-	UnbindAmmoDelegate();
-	CurrentWeaponItem = nullptr;
-
 	Super::OnUnPossess();
 }
 
@@ -128,6 +125,7 @@ void APTWPlayerController::TryInitializeHUD()
 	// HUD 초기화
 	PTWHUD->InitializeHUD(ASC);
 
+	// 태그 변화 감지 (크로스헤어)
 	if (ASC)
 	{
 		// 무기 장착 상태 변경 감지
@@ -383,65 +381,6 @@ void APTWPlayerController::PostSeamlessTravel()
 	}
 
 	CreateRankingBoard();
-}
-
-void APTWPlayerController::BindAmmoDelegate()
-{
-	if (!CurrentWeaponItem)
-	{
-		return;
-	}
-
-	CurrentWeaponItem->OnAmmoChanged.AddUObject(this, &ThisClass::HandleAmmoChanged);
-}
-
-void APTWPlayerController::UnbindAmmoDelegate()
-{
-	if (CurrentWeaponItem)
-	{
-		CurrentWeaponItem->OnAmmoChanged.RemoveAll(this);
-	}
-}
-
-void APTWPlayerController::HandleAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo)
-{
-	if (!IsLocalController())
-	{
-		return;
-	}
-
-	if (APTWHUD* PTWHUD = Cast<APTWHUD>(GetHUD()))
-	{
-		PTWHUD->UpdateAmmo(CurrentAmmo, MaxAmmo);
-	}
-}
-
-void APTWPlayerController::SyncAmmoUIOnce()
-{
-	if (!CurrentWeaponItem)
-		return;
-
-	HandleAmmoChanged(CurrentWeaponItem->CurrentAmmo, CurrentWeaponItem->GetMaxAmmo());
-}
-
-void APTWPlayerController::HandleWeaponChanged(FGameplayTag NewWeaponTag, UPTWItemInstance* NewItemInstance)
-{
-	if (!IsLocalController() || !NewItemInstance)
-	{
-		return;
-	}
-
-	// 1. 이전 무기 델리게이트 해제
-	UnbindAmmoDelegate();
-
-	// 2. 교체
-	CurrentWeaponItem = NewItemInstance;
-
-	// 3. 새 무기 델리게이트 바인딩
-	BindAmmoDelegate();
-
-	// 4. 초기 UI 동기화
-	SyncAmmoUIOnce();
 }
 
 void APTWPlayerController::UpdateNameTagsVisibility()

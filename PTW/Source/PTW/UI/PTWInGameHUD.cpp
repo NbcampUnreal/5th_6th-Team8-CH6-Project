@@ -21,6 +21,8 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 
 	/* HealthBar 초기화 */
 	if (HealthBar) HealthBar->InitWithASC(ASC);
+	/* AmmoWidget 초기화*/
+	if (AmmoWidget) AmmoWidget->InitWithASC(ASC);
 }
 
 void UPTWInGameHUD::AddKillLog(const FString& Killer, const FString& Victim)
@@ -28,14 +30,6 @@ void UPTWInGameHUD::AddKillLog(const FString& Killer, const FString& Victim)
 	if (KillLogUI)
 	{
 		KillLogUI->AddKillLog(Killer, Victim);
-	}
-}
-
-void UPTWInGameHUD::UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo)
-{
-	if (AmmoWidget)
-	{
-		AmmoWidget->UpdateAmmoWidget(CurrentAmmo, MaxAmmo);
 	}
 }
 

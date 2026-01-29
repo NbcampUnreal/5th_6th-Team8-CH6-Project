@@ -22,6 +22,12 @@ public:
 	void AddKillLog(const FString& Killer, const FString& Victim); // 인자에 무기 종류 추가해야함
 
 protected:
+	virtual void NativeConstruct() override;
+
+	// 델리게이트와 연결될 함수
+	UFUNCTION()
+	void OnKilllogReceived(AActor* DeadActor, AActor* KillerActor);
+
 	/* 로그가 쌓일 컨테이너 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UVerticalBox> LogList;

@@ -28,9 +28,6 @@ public:
 	// 킬로그
 	UFUNCTION()
 	void AddKillLog(const FString& Killer, const FString& Victim); // 인자에 무기 종류 추가해야함
-	// 탄약
-	UFUNCTION()
-	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
 	// 크로스헤어
 	UFUNCTION()
 	void SetCrosshairVisibility(bool bVisible);

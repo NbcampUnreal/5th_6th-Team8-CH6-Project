@@ -37,16 +37,16 @@ void APTWGameState::UpdateRanking()
 		}
 	}
 	
-	RankingPlayers.Sort([](const APTWPlayerState* A, const APTWPlayerState* B) {
-		
-		if (!IsValid(A)) return false;     
-		if (!IsValid(B)) return true;
+	RankingPlayers.Sort([](const APTWPlayerState& A, const APTWPlayerState& B) {
+       
+		   if (!IsValid(&A)) return false;     
+		   if (!IsValid(&B)) return true;
 
-		const auto& APD = A->GetPlayerRoundData();
-		const auto& BPD = B->GetPlayerRoundData();
-		
-		return APD.Score > BPD.Score;
-});
+		   const auto& APD = A.GetPlayerRoundData();
+		   const auto& BPD = B.GetPlayerRoundData();
+       
+		   return APD.Score > BPD.Score;
+	});
 	
 }
 

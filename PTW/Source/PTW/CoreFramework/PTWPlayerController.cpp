@@ -29,6 +29,9 @@ void APTWPlayerController::BeginPlay()
 		return;
 	}
 
+	EquipTag = FGameplayTag::RequestGameplayTag(TEXT("Weapon.State.Equip"));
+	SprintTag = FGameplayTag::RequestGameplayTag(TEXT("State.Movement.Sprinting"));
+
 	/* HUD 초기화 */
 	UE_LOG(LogTemp, Error, TEXT("Controller BeginPlay"));
 	TryInitializeHUD();
@@ -80,12 +83,15 @@ void APTWPlayerController::BeginSpectatingState()
 void APTWPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
+
+	TryInitializeHUD();
 }
 
 void APTWPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
+	TryInitializeHUD();
 	//if (APTWBaseCharacter* PTWCharacter = Cast<APTWBaseCharacter>(InPawn))
 	//{
 	//	//캐릭터의 무기 변경 이벤트 구독 
@@ -95,6 +101,17 @@ void APTWPlayerController::OnPossess(APawn* InPawn)
 
 void APTWPlayerController::OnUnPossess()
 {
+	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
+	if (PS)
+	{
+		if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+		{
+			UnbindASCDelegates(ASC);
+		}
+	}
+
+	StopRetryTimer();
+
 	Super::OnUnPossess();
 }
 
@@ -102,38 +119,94 @@ void APTWPlayerController::TryInitializeHUD()
 {
 	if (!IsLocalController()) return;
 
-	TObjectPtr<APTWHUD> PTWHUD = Cast<APTWHUD>(GetHUD());
-	TObjectPtr<APTWPlayerState> PTWPS = GetPlayerState<APTWPlayerState>();
-
-	if (PTWHUD && PTWPS)
+	APTWHUD* HUD = Cast<APTWHUD>(GetHUD());
+	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
+	if (!HUD || !PS)
 	{
-		TObjectPtr<UAbilitySystemComponent> ASC = PTWPS->GetAbilitySystemComponent();
-		if (!ASC || !ASC->AbilityActorInfo.IsValid())
-		{
-			GetWorldTimerManager().SetTimerForNextTick(this, &APTWPlayerController::TryInitializeHUD);
-			return;
-		}
-		else
-		{
-			// HUD 초기화
-			PTWHUD->InitializeHUD(ASC);
-
-			// 태그 변화 감지 (크로스헤어)
-			if (ASC)
-			{
-				// 무기 장착 상태 변경 감지
-				ASC->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")), EGameplayTagEventType::NewOrRemoved)
-					.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
-
-				// 달리기 상태 변경 감지
-				ASC->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("State.Movement.Sprinting")), EGameplayTagEventType::NewOrRemoved)
-					.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
-			}
-		}
+		StartRetryTimer();
+		return;
 	}
-	else
+
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+	if (!ASC || !ASC->AbilityActorInfo.IsValid() || !PS->GetAttributeSet())
 	{
-		GetWorldTimerManager().SetTimerForNextTick(this, &APTWPlayerController::TryInitializeHUD);
+		StartRetryTimer();
+		return;
+	}
+
+	// HUD 초기화
+	HUD->InitializeHUD(ASC);
+
+	// 태그 이벤트 바인딩
+	BindASCDelegates(ASC);
+
+	StopRetryTimer();
+}
+
+void APTWPlayerController::StartRetryTimer()
+{
+	if (GetWorldTimerManager().IsTimerActive(HUDInitTimerHandle) ||
+		GetWorldTimerManager().IsTimerPending(HUDInitTimerHandle))
+	{
+		return;
+	}
+
+	GetWorldTimerManager().SetTimer(
+		HUDInitTimerHandle,
+		this,
+		&APTWPlayerController::TryInitializeHUD,
+		0.1f,
+		true
+	);
+}
+
+void APTWPlayerController::StopRetryTimer()
+{
+	if (GetWorldTimerManager().IsTimerActive(HUDInitTimerHandle) ||
+		GetWorldTimerManager().IsTimerPending(HUDInitTimerHandle))
+	{
+		GetWorldTimerManager().ClearTimer(HUDInitTimerHandle);
+	}
+}
+
+void APTWPlayerController::BindASCDelegates(UAbilitySystemComponent* ASC)
+{
+	if (!ASC) return;
+
+	UnbindASCDelegates(ASC); // 중복 방어
+
+	EquipTagHandle =
+		ASC->RegisterGameplayTagEvent(EquipTag, EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
+
+	SprintTagHandle =
+		ASC->RegisterGameplayTagEvent(SprintTag, EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
+}
+
+void APTWPlayerController::UnbindASCDelegates(UAbilitySystemComponent* ASC)
+{
+	if (!ASC) return;
+
+
+	if (EquipTagHandle.IsValid())
+	{
+		ASC->UnregisterGameplayTagEvent(
+			EquipTagHandle,
+			EquipTag,
+			EGameplayTagEventType::NewOrRemoved
+		);
+		EquipTagHandle.Reset();
+	}
+
+	if (SprintTagHandle.IsValid())
+	{
+		ASC->UnregisterGameplayTagEvent(
+			SprintTagHandle,
+			SprintTag,
+			EGameplayTagEventType::NewOrRemoved
+		);
+		SprintTagHandle.Reset();
 	}
 }
 
@@ -357,10 +430,8 @@ void APTWPlayerController::HandleMenuInput()
 	}
 }
 
-void APTWPlayerController::OnCrosshairStateTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+void APTWPlayerController::OnCrosshairStateTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
-	UE_LOG(LogTemp, Error, TEXT("Controller Crosshair TagChanged"));
-
 	UpdateCrosshairVisibility();
 }
 
@@ -374,8 +445,8 @@ void APTWPlayerController::UpdateCrosshairVisibility()
 	if (!PTWHUD) return;
 
 	// 조건 판별
-	bool bHasWeapon = ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
-	bool bIsSprinting = ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("State.Movement.Sprinting")));
+	bool bHasWeapon = ASC->HasMatchingGameplayTag(EquipTag);
+	bool bIsSprinting = ASC->HasMatchingGameplayTag(SprintTag);
 
 	// 최종 결과: 무기를 들고 있고(AND) 달리는 중이 아닐 때(NOT)만 표시
 	bool bShouldShow = bHasWeapon && !bIsSprinting;

@@ -6,6 +6,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameFramework/PlayerState.h"
 #include "PTWPlayerData.h"
+#include "PTWPlayerRoundDataInterface.h"
 #include "PTWPlayerState.generated.h"
 
 class UPTWWeaponAttributeSet;
@@ -16,7 +17,7 @@ class UAbilitySystemComponent;
 class UAttributeSet;
 
 UCLASS()
-class PTW_API APTWPlayerState : public APlayerState, public IAbilitySystemInterface
+class PTW_API APTWPlayerState : public APlayerState, public IAbilitySystemInterface, public IPTWPlayerRoundDataInterface
 {
 	GENERATED_BODY()
 	
@@ -66,9 +67,8 @@ protected:
 	FPTWPlayerRoundData PlayerRoundData;
 
 public:
-	void AddKillCount(int32 AddKillCount = 1);
-	void AddDeathCount(int32 AddDeathCount = 1);
-	void AddScore(int32 AddScore);
-
-	void ResetPlayerRoundData();
+	virtual void AddKillCount(int32 AddKillCount = 1) override;
+	virtual void AddDeathCount(int32 AddDeathCount = 1) override;
+	virtual void AddScore(int32 AddScore) override;
+	virtual void ResetRoundData() override;
 };

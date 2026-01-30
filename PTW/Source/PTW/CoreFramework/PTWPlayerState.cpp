@@ -88,9 +88,12 @@ void APTWPlayerState::AddScore(int32 AddScore)
 	}
 }
 
-void APTWPlayerState::ResetPlayerRoundData()
+void APTWPlayerState::ResetRoundData()
 {
-	PlayerRoundData = FPTWPlayerRoundData();
+	if (HasAuthority())
+	{
+		PlayerRoundData = FPTWPlayerRoundData();
+	}
 }
 
 void APTWPlayerState::OnRep_CurrentPlayerData()

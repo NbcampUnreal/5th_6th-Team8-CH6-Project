@@ -38,6 +38,7 @@ public:
 	
 	void SetOwnerNoSeeRecursive(USceneComponent* InParentComponent, bool bNewOwnerNoSee);
 	void SetSetOnlyOwnerSeeRecursive(USceneComponent* InParentComponent, bool bNewOnlyOwnerSee);
+	
 	/* HUD 초기화 */
 	void TryInitializeHUD();
 	void StartRetryTimer();
@@ -53,6 +54,8 @@ public:
 	void MulticastRPC_StartSpectating();
 	UFUNCTION()
 	void SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn);
+	APawn* FindNextSpectatorTarget(APawn* InNewPawn);
+	void SetSpectatorTarget(APawn* NewViewTarget);
 	UFUNCTION()
 	void OnInputSpectateNext();
 	
@@ -60,11 +63,6 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientRPC_ShowDamageIndicator(FVector DamageCauserLocation);
 
-	/* KillLog 델리게이트 */
-	FOnKillLog OnKillLog;
-	
-	/* 리스폰 타이머 핸들*/
-	FTimerHandle RespawnTimerHandle;
 protected:
 	virtual void SetupInputComponent() override;
 	virtual void PostSeamlessTravel() override;
@@ -80,7 +78,15 @@ protected:
 	/* 크로스헤어 */
 	void OnCrosshairStateTagChanged(const FGameplayTag Tag, int32 NewCount);
 	void UpdateCrosshairVisibility();
-
+	
+public:
+	/* KillLog 델리게이트 */
+	FOnKillLog OnKillLog;
+	
+	/* 리스폰 타이머 핸들*/
+	FTimerHandle RespawnTimerHandle;
+	
+protected:
 	// GameplayTag Delegate Handles
 	FDelegateHandle EquipTagHandle;
 	FDelegateHandle SprintTagHandle;

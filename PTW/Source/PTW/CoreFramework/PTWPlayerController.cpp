@@ -305,20 +305,53 @@ void APTWPlayerController::MulticastRPC_StartSpectating_Implementation()
 
 void APTWPlayerController::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn)
 {
-	if (IsValid(InNewPawn)) return;
-	OnPossessedPawnChanged.RemoveDynamic(this, &ThisClass::SpectateNextPlayer);
+	if (OnPossessedPawnChanged.IsAlreadyBound(this, &ThisClass::SpectateNextPlayer))
+	{
+		OnPossessedPawnChanged.RemoveDynamic(this, &ThisClass::SpectateNextPlayer);
+	}
 	
-	if (!IsValid(PlayerState)) return;
-	if (PlayerState->GetPawn() || GetPawn()) return;
+	if (IsValid(InNewPawn)) return;
+	
+	if (APawn* NewTargetView = FindNextSpectatorTarget(InNewPawn))
+	{
+		SetSpectatorTarget(NewTargetView);
+	}
+}
+
+APawn* APTWPlayerController::FindNextSpectatorTarget(APawn* InNewPawn)
+{
+	if (IsValid(InNewPawn))
+	{
+		return nullptr;
+	}
+	
+	if (!IsValid(PlayerState))
+	{
+		return nullptr;
+	}
+	
+	if (PlayerState->GetPawn() || GetPawn())
+	{
+		return nullptr;
+	}
 
 	UWorld* World = GetWorld();
-	if (!IsValid(World)) return;
+	if (!IsValid(World))
+	{
+		return nullptr;
+	}
 	
 	AGameStateBase* GS = World->GetGameState();
-	if (!IsValid(GS)) return;
+	if (!IsValid(GS))
+	{
+		return nullptr;
+	}
 	
 	const TArray<APlayerState*>& PlayArray = GS->PlayerArray;
-	if (PlayArray.IsEmpty()) return;
+	if (PlayArray.IsEmpty())
+	{
+		return nullptr;
+	}
 	
 	APawn* CurrentViewTarget = nullptr;
 	APawn* NewViewTarget = nullptr;
@@ -367,16 +400,24 @@ void APTWPlayerController::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn
 	{
 		if (!IsValid(CurrentViewTarget) || (CurrentViewTarget != NewViewTarget))
 		{
-			TWeakObjectPtr<ThisClass> WeakThis = this;
-			TWeakObjectPtr<APawn> WeakViewTarget = NewViewTarget;
-			FTimerHandle NextViewTimerHandle;
-			GetWorldTimerManager().SetTimer(NextViewTimerHandle, [WeakThis, WeakViewTarget]()
-			{
-				if (WeakThis.IsValid() && WeakViewTarget.IsValid())
-				WeakThis->SetViewTargetWithBlend(WeakViewTarget.Get(), 0.5f, VTBlend_Cubic);
-			}, 0.1f, false);
+			return NewViewTarget;
 		}
 	}
+	return nullptr;
+}
+
+void APTWPlayerController::SetSpectatorTarget(APawn* NewViewTarget)
+{
+	TWeakObjectPtr<ThisClass> WeakThis = this;
+	TWeakObjectPtr<APawn> WeakViewTarget = NewViewTarget;
+	FTimerHandle NextViewTimerHandle;
+	GetWorldTimerManager().SetTimer(NextViewTimerHandle, [WeakThis, WeakViewTarget]()
+	{
+		if (WeakThis.IsValid() && WeakViewTarget.IsValid() && !IsValid(WeakThis->GetPawn()))
+		{
+			WeakThis->SetViewTargetWithBlend(WeakViewTarget.Get(), 0.5f, VTBlend_Cubic);
+		}
+	}, 0.1f, false);
 }
 
 void APTWPlayerController::OnInputSpectateNext()

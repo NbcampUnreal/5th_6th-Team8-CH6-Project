@@ -43,7 +43,9 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 		}
 	}
 	
-	UNiagaraFunctionLibrary::SpawnSystemAttached(
+	if (FireVFX && TargetWeapon)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAttached(
 		FireVFX,
 		TargetWeapon->GetMuzzleComponent(),
 		NAME_None,
@@ -52,6 +54,7 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 		EAttachLocation::SnapToTargetIncludingScale,
 		true
 		);
+	}
 	
 	if (FireSFX)
 	{

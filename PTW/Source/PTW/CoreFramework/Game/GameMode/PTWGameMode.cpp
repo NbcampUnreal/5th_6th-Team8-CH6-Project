@@ -86,8 +86,10 @@ void APTWGameMode::EndTimer()
 	ClearTimer();
 	
 	SaveGameDataToSubsystem();
-	
-	TravelLevel();
+
+	// 잠깐 딜레이 후 ServerTravel 실행
+	FTimerHandle DelayTimerHandle;
+	GetWorldTimerManager().SetTimer(DelayTimerHandle, this, &APTWGameMode::TravelLevel, 2.f);
 }
 
 void APTWGameMode::TravelLevel()

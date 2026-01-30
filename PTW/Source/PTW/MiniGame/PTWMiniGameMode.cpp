@@ -77,15 +77,16 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	if (!NewPlayer) return;
 
 	Super::RestartPlayer(NewPlayer);
-	// if (PlayerStarts.Num() == 0)
-	// {
-	// 	Super::RestartPlayer(NewPlayer);
-	// }
-	// else
-	// {
-	// 	int32 RandomInt = FMath::RandRange(0, PlayerStarts.Num()-1);
-	// 	RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[RandomInt]);
-	// }
+	
+	if (PlayerStarts.Num() == 0)
+	{
+		Super::RestartPlayer(NewPlayer);
+	}
+	else
+	{
+		int32 RandomInt = FMath::RandRange(0, PlayerStarts.Num()-1);
+		RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[RandomInt]);
+	}
 	
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);
@@ -112,17 +113,33 @@ void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 
 void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {
+	if (!IsValid(DeadActor)) return;
+	
 	APTWPlayerController* DeadPlayerController = nullptr;
-	if (APTWBaseCharacter* DeadCharacter = Cast<APTWBaseCharacter>(DeadActor))
+	APTWPlayerState* DeadPlayerState = nullptr;
+
+	if (const APawn* DeadPawn = Cast<APawn>(DeadActor))
 	{
-		DeadPlayerController = DeadCharacter->GetController<APTWPlayerController>();
-		if (APTWPlayerState* DeadPlayerState = Cast<APTWPlayerState>(DeadCharacter->GetPlayerState()))
-		{
-			DeadPlayerState->AddDeathCount();
-		}
+		DeadPlayerController = DeadPawn->GetController<APTWPlayerController>();
+		DeadPlayerState = DeadPawn->GetPlayerState<APTWPlayerState>();
 	}
 
-	if (APTWPlayerState* KillPlayerState = Cast<APTWPlayerState>(KillActor))
+	if (DeadPlayerState)
+	{
+		DeadPlayerState->AddDeathCount();
+	}
+
+	APTWPlayerState* KillPlayerState = nullptr;
+
+	if (IsValid(KillActor))
+	{
+		if (APawn* KillPawn = Cast<APawn>(KillActor))
+		{
+			KillPlayerState = KillPawn->GetPlayerState<APTWPlayerState>();
+		}
+	}
+	
+	if (IsValid(KillPlayerState))
 	{
 		KillPlayerState->AddKillCount();
 		KillPlayerState->AddScore(1);

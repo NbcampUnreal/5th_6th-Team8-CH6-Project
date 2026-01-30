@@ -24,14 +24,30 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void APTWGameState::UpdateRanking()
 {
-// 	RankedPlayers.Sort([](const TObjectPtr<APTWPlayerState> A, const TObjectPtr<APTWPlayerState> B) {
-// 	return A->GetPlayerRoundData().Score > B->GetPlayerRoundData().Score;
-// });
+	TArray<APTWPlayerState*> RankingPlayers;
+	
+	for (APlayerState* PlayerState:PlayerArray)
+	{
+		if(APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState))
+		{
+			if (IsValid(PTWPlayerState))
+			{
+				RankingPlayers.Add(PTWPlayerState);
+			}
+		}
+	}
+	
+	RankingPlayers.Sort([](const APTWPlayerState* A, const APTWPlayerState* B) {
+		
+		if (!IsValid(A)) return false;     
+		if (!IsValid(B)) return true;
 
-	// for (APTWPlayerState* PlayerState : RankedPlayers)
-	// {
-	// 	UE_LOG(LogTemp, Warning, TEXT("Score: %d"), PlayerState->GetPlayerRoundData().Score);
-	// }
+		const auto& APD = A->GetPlayerRoundData();
+		const auto& BPD = B->GetPlayerRoundData();
+		
+		return APD.Score > BPD.Score;
+});
+	
 }
 
 void APTWGameState::AddRankedPlayer(APTWPlayerState* NewPlayerState)

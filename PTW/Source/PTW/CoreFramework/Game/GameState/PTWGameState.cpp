@@ -24,9 +24,9 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void APTWGameState::UpdateRanking()
 {
-	RankedPlayers.Sort([](const TObjectPtr<APTWPlayerState> A, const TObjectPtr<APTWPlayerState> B) {
-	return A->GetPlayerRoundData().Score > B->GetPlayerRoundData().Score;
-});
+// 	RankedPlayers.Sort([](const TObjectPtr<APTWPlayerState> A, const TObjectPtr<APTWPlayerState> B) {
+// 	return A->GetPlayerRoundData().Score > B->GetPlayerRoundData().Score;
+// });
 
 	// for (APTWPlayerState* PlayerState : RankedPlayers)
 	// {

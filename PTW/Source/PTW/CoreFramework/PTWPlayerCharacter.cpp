@@ -174,16 +174,11 @@ void APTWPlayerCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	InitAbilityActorInfo();
-
 	UpdateNameTagText(); // PlayerNameTag
 
 	if (IsLocallyControlled())
 	{
-		if (APTWPlayerController* PC = Cast<APTWPlayerController>(GetController()))
-		{
-			PC->TryInitializeHUD();
-		}
+		InitAbilityActorInfo();
 
 		CurrentWeaponTag = FGameplayTag::EmptyTag;
 		CurrentWeapon = nullptr;

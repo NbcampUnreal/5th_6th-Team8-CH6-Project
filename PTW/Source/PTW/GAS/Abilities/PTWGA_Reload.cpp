@@ -16,7 +16,6 @@
 
 UPTWGA_Reload::UPTWGA_Reload()
 {
-	//AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Reload")));
 	ActivationOwnedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Reload")));
 }
 
@@ -26,29 +25,28 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
-	if (!PC)
+	UAnimMontage* MontageToPlay = GetReloadMontage(PC);
+
+	if (!PC || !MontageToPlay || !CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-
-	UAnimMontage* MontageToPlay = nullptr;
-	UPTWInventoryComponent* Inven = PC->GetInventoryComponent();
-
-	if (Inven)
+	
+	UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		this, NAME_None, MontageToPlay, 1.0f, NAME_None, false);
+	
+	if (MontageTask)
 	{
-		if (UPTWItemInstance* CurrentItem = Inven->GetCurrentWeaponInst())
-		{
-			if (UPTWWeaponData* WData = CurrentItem->GetWeaponData())
-			{
-				if (WData->AnimMap.Contains(ReloadAnimTag))
-				{
-					MontageToPlay = *WData->AnimMap.Find(ReloadAnimTag);
-				}
-			}
-		}
+		MontageTask->OnBlendOut.AddDynamic(this, &ThisClass::OnMontageCompleted);
+		MontageTask->OnCompleted.AddDynamic(this, &ThisClass::OnMontageCompleted);
+		MontageTask->OnInterrupted.AddDynamic(this, &ThisClass::OnMontageCancelled);
+		MontageTask->OnCancelled.AddDynamic(this, &ThisClass::OnMontageCancelled);
+		MontageTask->ReadyForActivation();
 	}
-
+	
+	PC->PlayMontage1P(MontageToPlay);
+	
 	if (!MontageToPlay)
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -61,36 +59,8 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 
-	UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this,
-		NAME_None,
-		MontageToPlay,
-		1.0f,
-		NAME_None,
-		false
-	);
-
-	if (MontageTask)
-	{
-		MontageTask->OnBlendOut.AddDynamic(this, &ThisClass::OnMontageCompleted);
-		MontageTask->OnCompleted.AddDynamic(this, &ThisClass::OnMontageCompleted);
-		MontageTask->OnInterrupted.AddDynamic(this, &ThisClass::OnMontageCancelled);
-		MontageTask->OnCancelled.AddDynamic(this, &ThisClass::OnMontageCancelled);
-
-		MontageTask->ReadyForActivation();
-	}
-
-	PC->PlayMontage1P(MontageToPlay);
-
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag(FName("Event.Weapon.ReloadRefill"));
-
-	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-		this,
-		EventTag,
-		nullptr,
-		false,
-		false
-	);
+	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, EventTag);
 
 	if (WaitEventTask)
 	{
@@ -99,17 +69,34 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	}
 }
 
+UAnimMontage* UPTWGA_Reload::GetReloadMontage(APTWPlayerCharacter* PC) const
+{
+	if (!PC) return nullptr;
+    
+	UPTWInventoryComponent* Inven = PC->GetInventoryComponent();
+	if (!Inven) return nullptr;
+
+	UPTWItemInstance* CurrentItem = Inven->GetCurrentWeaponInst();
+	if (!CurrentItem) return nullptr;
+
+	UPTWWeaponData* WData = CurrentItem->GetWeaponData();
+	if (WData && WData->AnimMap.Contains(ReloadAnimTag))
+	{
+		return WData->AnimMap[ReloadAnimTag];
+	}
+
+	return nullptr;
+}
+
 void UPTWGA_Reload::OnGameplayEventReceived(FGameplayEventData Payload)
 {
 	if (ReloadEffectClass)
 	{
-		ApplyGameplayEffectToOwner(
-			GetCurrentAbilitySpecHandle(),
-			GetCurrentActorInfo(),
-			GetCurrentActivationInfo(),
-			ReloadEffectClass.GetDefaultObject(),
-			1.0f
-		);
+		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(ReloadEffectClass);
+		if (SpecHandle.IsValid())
+		{
+			ApplyGameplayEffectSpecToOwner(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), SpecHandle);
+		}
 	}
 }
 

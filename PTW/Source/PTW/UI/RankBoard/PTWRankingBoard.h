@@ -9,6 +9,7 @@
 class UVerticalBox;
 class UPTWRankingEntry;
 class APTWPlayerState;
+class UTextBlock;
 
 /**
  * 
@@ -34,11 +35,27 @@ protected:
 	UFUNCTION()
 	void OnPlayerDataChanged(const FPTWPlayerData& NewData);
 
+	// 상단 미니게임 제목 표시용
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* Text_GameTitle;
+
 	UPROPERTY(meta = (BindWidget))
 	UVerticalBox* RankingList;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Ranking")
-	TSubclassOf<UPTWRankingEntry> RankingEntryClass;
+	/* 페이즈별 위젯 클래스 설정 (에디터에서 할당) */
+	UPROPERTY(EditDefaultsOnly, Category = "Ranking|Classes")
+	TSubclassOf<UPTWRankingEntry> PreGameEntryClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Ranking|Classes")
+	TSubclassOf<UPTWRankingEntry> MiniGameEntryClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Ranking|Classes")
+	TSubclassOf<UPTWRankingEntry> PostGameEntryClass;
+	/* 페이즈별 상단 헤더 위젯 클래스 */
+	UPROPERTY(EditDefaultsOnly, Category = "Ranking|Header")
+	TSubclassOf<UUserWidget> PreGameHeaderClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Ranking|Header")
+	TSubclassOf<UUserWidget> MiniGameHeaderClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Ranking|Header")
+	TSubclassOf<UUserWidget> PostGameHeaderClass;
 
 	/* 캐싱 */
 	UPROPERTY()

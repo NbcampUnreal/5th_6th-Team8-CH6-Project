@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "CoreFramework/PTWPlayerData.h"
 #include "PTWRankingEntry.generated.h"
 
 class UTextBlock;
-struct FPTWPlayerData;
 
 /**
  * 
@@ -18,20 +18,13 @@ class PTW_API UPTWRankingEntry : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	void SetEntry(int32 InRank, const FPTWPlayerData& InData, FString SteamName, bool bIsMe);
+	// 공통 데이터 세팅 (Virtual로 선언하여 자식들이 오버라이드 가능하게 함)
+	virtual void SetEntryData(int32 InRank, const FPTWPlayerData& InData, const FPTWPlayerRoundData& InRoundData, FString SteamName, bool bIsMe);
 
 protected:
-	virtual void NativeConstruct() override;
-
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
 	UTextBlock* Text_Rank;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
 	UTextBlock* Text_Name;
-
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* Text_WinPoints;
-
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* Text_Gold;
 };

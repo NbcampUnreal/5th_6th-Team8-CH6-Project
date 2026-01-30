@@ -5,24 +5,14 @@
 #include "Components/TextBlock.h"
 #include "CoreFramework/PTWPlayerData.h"
 
-void UPTWRankingEntry::SetEntry(int32 InRank, const FPTWPlayerData& InData, FString SteamName, bool bIsMe)
+void UPTWRankingEntry::SetEntryData(int32 InRank, const FPTWPlayerData& InData, const FPTWPlayerRoundData& InRoundData, FString SteamName, bool bIsMe)
 {
-	if (Text_Rank)
-		Text_Rank->SetText(FText::AsNumber(InRank));
+	if (Text_Rank) Text_Rank->SetText(FText::AsNumber(InRank));
 
-	if (Text_Name) {
-		if (InData.PlayerName.IsEmpty()) Text_Name->SetText(FText::FromString(SteamName));
-		else Text_Name->SetText(FText::FromString(InData.PlayerName));
+	if (Text_Name)
+	{
+		FString DisplayName = InData.PlayerName.IsEmpty() ? SteamName : InData.PlayerName;
+		Text_Name->SetText(FText::FromString(DisplayName));
+		if (bIsMe) Text_Name->SetColorAndOpacity(FLinearColor::Yellow);
 	}
-
-	if (Text_WinPoints)
-		Text_WinPoints->SetText(FText::AsNumber(InData.TotalWinPoints));
-
-	if (Text_Gold)
-		Text_Gold->SetText(FText::AsNumber(InData.Gold));
-}
-
-void UPTWRankingEntry::NativeConstruct()
-{
-	Super::NativeConstruct();
 }

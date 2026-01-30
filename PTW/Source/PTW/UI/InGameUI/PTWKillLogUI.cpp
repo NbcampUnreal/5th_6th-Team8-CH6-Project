@@ -47,10 +47,6 @@ void UPTWKillLogUI::NativeConstruct()
 
 void UPTWKillLogUI::OnKilllogReceived(AActor* DeadActor, AActor* KillerActor)
 {
-	UE_LOG(LogTemp, Warning, TEXT("KillLog Received - Killer: %s, Victim: %s"),
-		KillerActor ? *KillerActor->GetName() : TEXT("NULL"),
-		DeadActor ? *DeadActor->GetName() : TEXT("NULL"));
-
 	// Actor가 유효한지 확인 후 이름 추출
 	FString KillerName = TEXT("Unknown");
 	if (APTWPlayerState* KPS = Cast<APTWPlayerState>(KillerActor))

@@ -100,41 +100,40 @@ void APTWPlayerController::OnUnPossess()
 
 void APTWPlayerController::TryInitializeHUD()
 {
-	UE_LOG(LogTemp, Error, TEXT("Controller TryInitializeHUD"));
-	// HUD 확인
+	if (!IsLocalController()) return;
+
 	TObjectPtr<APTWHUD> PTWHUD = Cast<APTWHUD>(GetHUD());
-	if (!PTWHUD)
-	{
-		return;
-	}
-
-	// PlayerState 확인
 	TObjectPtr<APTWPlayerState> PTWPS = GetPlayerState<APTWPlayerState>();
-	if (!PTWPS)
+
+	if (PTWHUD && PTWPS)
 	{
-		return;
+		TObjectPtr<UAbilitySystemComponent> ASC = PTWPS->GetAbilitySystemComponent();
+		if (!ASC || !ASC->AbilityActorInfo.IsValid())
+		{
+			GetWorldTimerManager().SetTimerForNextTick(this, &APTWPlayerController::TryInitializeHUD);
+			return;
+		}
+		else
+		{
+			// HUD 초기화
+			PTWHUD->InitializeHUD(ASC);
+
+			// 태그 변화 감지 (크로스헤어)
+			if (ASC)
+			{
+				// 무기 장착 상태 변경 감지
+				ASC->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")), EGameplayTagEventType::NewOrRemoved)
+					.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
+
+				// 달리기 상태 변경 감지
+				ASC->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("State.Movement.Sprinting")), EGameplayTagEventType::NewOrRemoved)
+					.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
+			}
+		}
 	}
-
-	// ASC 확인
-	TObjectPtr<UAbilitySystemComponent> ASC = PTWPS->GetAbilitySystemComponent();
-	if (!ASC)
+	else
 	{
-		return;
-	}
-
-	// HUD 초기화
-	PTWHUD->InitializeHUD(ASC);
-
-	// 태그 변화 감지 (크로스헤어)
-	if (ASC)
-	{
-		// 무기 장착 상태 변경 감지
-		ASC->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")), EGameplayTagEventType::NewOrRemoved)
-			.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
-
-		// 달리기 상태 변경 감지
-		ASC->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag(FName("State.Movement.Sprinting")), EGameplayTagEventType::NewOrRemoved)
-			.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
+		GetWorldTimerManager().SetTimerForNextTick(this, &APTWPlayerController::TryInitializeHUD);
 	}
 }
 

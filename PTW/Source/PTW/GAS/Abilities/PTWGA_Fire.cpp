@@ -70,9 +70,12 @@ void UPTWGA_Fire::StartFire(const FGameplayAbilitySpecHandle Handle, const FGame
 	
 	if (!GetWorld()->GetTimerManager().IsTimerActive(AutoFireTimer))
 	{
-		GetWorld()->GetTimerManager().SetTimer(AutoFireTimer, FTimerDelegate::CreateLambda([Handle,ActorInfo,ActivationInfo, this]()
+		TWeakObjectPtr<ThisClass> WeakThis = this;
+		
+		GetWorld()->GetTimerManager().SetTimer(AutoFireTimer, FTimerDelegate::CreateLambda([Handle,ActorInfo,ActivationInfo, WeakThis]()
 		{
-			AutoFire(Handle, ActorInfo, ActivationInfo);
+			WeakThis->AutoFire(Handle, ActorInfo, ActivationInfo);
+			
 		}),FireRate, true);
 	}
 }
@@ -258,7 +261,8 @@ void UPTWGA_Fire::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGam
 }
 
 void UPTWGA_Fire::OnInputReleasedCallback(float TimeHold)
-{
+{ 
+	StopFire();
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 

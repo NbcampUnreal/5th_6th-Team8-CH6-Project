@@ -36,6 +36,7 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	Mesh1P->SetupAttachment(PlayerCamera);
+	Mesh1P->SetHiddenInGame(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	CrouchedEyeHeight = 40.0f;

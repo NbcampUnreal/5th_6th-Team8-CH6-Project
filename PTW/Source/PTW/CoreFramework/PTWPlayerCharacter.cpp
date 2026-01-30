@@ -144,6 +144,10 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 
 	if (AbilitySystemComponent)
 	{
+		if (HasAuthority())
+		{
+			AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
+		}
 		FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 
 		if (AbilitySystemComponent->HasMatchingGameplayTag(EquipTag))
@@ -188,6 +192,10 @@ void APTWPlayerCharacter::OnRep_PlayerState()
 		{
 			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 			AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
+			if (HasAuthority())
+			{
+				AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
+			}
 		}
 	}
 }
@@ -209,7 +217,8 @@ void APTWPlayerCharacter::InitAbilityActorInfo()
 			*PS->GetName(), 
 			*GetName());
 	}
-	else {
+	else 
+	{
 		UE_LOG(LogTemp, Error, TEXT("InitAbility Failed: PlayerState is NULL for %s"), *GetName());
 	}
 }

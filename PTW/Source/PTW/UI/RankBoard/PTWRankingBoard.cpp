@@ -104,57 +104,7 @@ void UPTWRankingBoard::UpdateRanking()
 		}
 	}
 
-	/* 중간 진입자 체크 (현재 GameState에 있는 모든 PlayerState를 다시 확인) */
-	for (APlayerState* PS : GS->PlayerArray)
-	{
-		if (APTWPlayerState* PTWPS = Cast<APTWPlayerState>(PS))
-		{
-			// 이미 바인딩 되어있는지 확인 후 없으면 추가 (델리게이트 중복 방지)
-			if (!CachedPlayerStates.Contains(PTWPS))
-			{
-				PTWPS->OnPlayerDataUpdated.AddDynamic(this, &UPTWRankingBoard::OnPlayerDataChanged);
-				CachedPlayerStates.Add(PTWPS);
-			}
-		}
-	}
-	/* 중간 이탈자 체크 */
-	for (int32 i = CachedPlayerStates.Num() - 1; i >= 0; --i)
-	{
-		if (CachedPlayerStates[i] == nullptr || !GS->PlayerArray.Contains(CachedPlayerStates[i]))
-		{
-			// 델리게이트 바인딩 해제 후 배열에서 제거
-			if (CachedPlayerStates[i])
-			{
-				CachedPlayerStates[i]->OnPlayerDataUpdated.RemoveDynamic(this, &UPTWRankingBoard::OnPlayerDataChanged);
-			}
-			CachedPlayerStates.RemoveAt(i);
-		}
-	}
-
-	/* 정렬용 배열 */
-	TArray<APTWPlayerState*> SortedPlayerStates;
-	for (APTWPlayerState* PS : CachedPlayerStates)
-	{
-		if (PS)
-		{
-			SortedPlayerStates.Add(PS);
-		}
-	}
-
-	/* 정렬: 1. 승점  2. 골드 */
-	SortedPlayerStates.Sort(
-		[](const APTWPlayerState& A, const APTWPlayerState& B)
-		{
-			const FPTWPlayerData& DA = A.GetPlayerData();
-			const FPTWPlayerData& DB = B.GetPlayerData();
-
-			if (DA.TotalWinPoints != DB.TotalWinPoints)
-			{
-				return DA.TotalWinPoints > DB.TotalWinPoints;
-			}
-			return DA.Gold > DB.Gold;
-		}
-	);
+	const TArray<APTWPlayerState*>& SortedPlayerStates = GS->GetRankedPlayers();
 
 	/* 내 PlayerState */
 	APTWPlayerState* MyPlayerState = GetOwningPlayerState<APTWPlayerState>();
@@ -168,6 +118,7 @@ void UPTWRankingBoard::UpdateRanking()
 	for (int32 i = 0; i < SortedPlayerStates.Num(); ++i)
 	{
 		APTWPlayerState* PS = SortedPlayerStates[i];
+		if (!PS) continue; // 방어 코드
 		const FPTWPlayerData& CurrentData = PS->GetPlayerData();
 		TotalProcessed++;
 

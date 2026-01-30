@@ -41,6 +41,10 @@ void APTWBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (HasAuthority())
+	{
+		AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
+	}
 }
 
 void APTWBaseCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)

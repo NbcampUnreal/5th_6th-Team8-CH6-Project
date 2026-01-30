@@ -81,7 +81,7 @@ void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
 		if (AbilitySystemComponent)
 		{
 			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
-
+			AbilitySystemComponent->CancelAllAbilities();
 			AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
 			AbilitySystemComponent->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
 		}

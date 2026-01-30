@@ -41,6 +41,7 @@ protected:
 	
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	
+	void SpawnDefaultWeapon(AController* NewPlayer);
 	/** 미니게임 진행 시간 (초) */
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
 	float MiniGameTime = 90;
@@ -48,7 +49,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")
 	TObjectPtr<UPTWItemDefinition> ItemDefinition;
 
-	void SpawnDefaultWeapon(AController* NewPlayer);
+	UPROPERTY()
+	TArray<TObjectPtr<APlayerStart>> PlayerStarts;
+	
 
 private:
 	// 플레이어 사망 처리
@@ -60,6 +63,6 @@ private:
 	
 	void InitPlayerHealth(AController* Controller);
 
-	void MiniGameEnd();
+	void ApplyMiniGameRankScore();
 	
 };

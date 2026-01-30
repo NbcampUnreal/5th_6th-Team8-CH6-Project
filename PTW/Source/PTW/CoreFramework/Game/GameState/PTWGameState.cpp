@@ -24,7 +24,8 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void APTWGameState::UpdateRanking()
 {
-	TArray<APTWPlayerState*> RankingPlayers;
+	//TArray<APTWPlayerState*> RankingPlayers;
+	RankedPlayers.Reset();
 	
 	for (APlayerState* PlayerState:PlayerArray)
 	{
@@ -32,12 +33,12 @@ void APTWGameState::UpdateRanking()
 		{
 			if (IsValid(PTWPlayerState))
 			{
-				RankingPlayers.Add(PTWPlayerState);
+				RankedPlayers.Add(PTWPlayerState);
 			}
 		}
 	}
 	
-	RankingPlayers.Sort([](const APTWPlayerState& A, const APTWPlayerState& B) {
+	RankedPlayers.Sort([](const APTWPlayerState& A, const APTWPlayerState& B) {
        
 		   if (!IsValid(&A)) return false;     
 		   if (!IsValid(&B)) return true;

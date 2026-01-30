@@ -18,21 +18,29 @@ class PTW_API UPTWKillLogUI : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintCallable)
-	void AddKillLog(const FString& Killer, const FString& Victim); // 인자에 무기 종류 추가해야함
+	
 
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
-	// 델리게이트와 연결될 함수
+	/* 델리게이트 바인드 */
+	void BindGameStates();
+	void UnbindGameStates();
+
+	/* 델리게이트와 연결될 함수 */
 	UFUNCTION()
 	void OnKilllogReceived(AActor* DeadActor, AActor* KillerActor);
+
+	/* 킬로그 엔트리 추가 */
+	UFUNCTION(BlueprintCallable)
+	void AddKillLog(const FString& Killer, const FString& Victim); // 인자에 무기 종류 추가해야함
 
 	/* 로그가 쌓일 컨테이너 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UVerticalBox> LogList;
 
-	/* 엔트리 위젯 클래스 */
+	/* 엔트리 위젯 클래스 (에디터에서 설정) */
 	UPROPERTY(EditDefaultsOnly, Category = "KillLog")
 	TSubclassOf<UPTWKillLogEntry> KillLogEntryClass;
 

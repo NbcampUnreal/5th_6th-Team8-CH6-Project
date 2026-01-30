@@ -36,34 +36,31 @@ void APTWProjectile::BeginPlay()
 void APTWProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (OtherActor && OtherActor != GetInstigator())
-	{
-		if (HasAuthority())
-		{
-			AActor* Shooter = GetInstigator();
-			UAbilitySystemComponent* ASC  = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Shooter);
+	if (!HasAuthority() || !OtherActor || OtherActor == GetInstigator()) return;
 	
-			float FinalDamage = 0.0f;
-			if (ASC)
-			{
-				FinalDamage = ASC->GetNumericAttributeChecked(UPTWWeaponAttributeSet::GetDamageAttribute());
-			}
-			
-			TArray<FOverlapResult> OverlapResults;
-			
-			if (ExplosionOverlapSetter(OverlapResults))
-			{
-				ApplyExplosionDamage(OverlapResults, FinalDamage);
-			}
-			
-			
-			FGameplayCueParameters CueParams;
-			CueParams.Location = GetActorLocation();
-			ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Explosion")), CueParams);
-			
-			Destroy();
-		}
+	AActor* Shooter = GetInstigator();
+	UAbilitySystemComponent* InstigatorASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Shooter);
+	
+	if (!InstigatorASC)
+	{
+		Destroy();
+		return;
 	}
+	
+	float FinalDamage = InstigatorASC->GetNumericAttributeChecked(UPTWWeaponAttributeSet::GetDamageAttribute());
+	
+	TArray<FOverlapResult> OverlapResults;
+	if (ExplosionOverlapSetter(OverlapResults))
+	{
+		ApplyExplosionDamage(OverlapResults, FinalDamage);
+	}
+	
+	FGameplayCueParameters CueParams;
+	CueParams.Location = GetActorLocation();
+	CueParams.Instigator = Shooter;
+	InstigatorASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Explosion")), CueParams);
+	
+	Destroy();
 }
 
 bool APTWProjectile::ExplosionOverlapSetter(TArray<FOverlapResult>& OverlapResults)
@@ -92,7 +89,7 @@ bool APTWProjectile::ExplosionOverlapSetter(TArray<FOverlapResult>& OverlapResul
 void APTWProjectile::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults, float FinalDamage)
 {
 	TSet<AActor*> ProcessedActors; // 중복 제거를 위해 사용
-	FVector ExplosionLocation = GetActorLocation();
+	const FVector ExplosionLocation = GetActorLocation();
 	
 	for (const FOverlapResult& Result : OverlapResults)
 	{
@@ -101,52 +98,53 @@ void APTWProjectile::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults
 		if (!HitActor || ProcessedActors.Contains(HitActor)) continue;
 		ProcessedActors.Add(HitActor);
 		
-		
 		FHitResult ObstarcleHit;
-		bool bBlocked = CheckingBlock(ObstarcleHit, ExplosionLocation, HitActor);
 		
-		if (!bBlocked || ObstarcleHit.GetActor() == HitActor)
+		if (CheckingBlock(ObstarcleHit, ExplosionLocation, HitActor))
 		{
-			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
+			if (ObstarcleHit.GetActor() != HitActor) continue;
+		}
 			
-			if (TargetASC && DamageSpecHandle.IsValid())
+		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
+		if (TargetASC && DamageSpecHandle.IsValid())
+		{
+			FGameplayEffectSpecHandle NewHandle = TargetASC->MakeOutgoingSpec(
+					DamageSpecHandle.Data->Def->GetClass(), 
+					1.0f, 
+					TargetASC->MakeEffectContext()
+			);
+			
+			if (NewHandle.IsValid())
 			{
-				FGameplayEffectSpec* NewSpec = new FGameplayEffectSpec(*DamageSpecHandle.Data.Get());
-				FGameplayEffectSpecHandle NewHandle(NewSpec);
-						
-				NewHandle.Data.Get()->SetSetByCallerMagnitude(
-				FGameplayTag::RequestGameplayTag(FName("Data.Damage")), 
-				-FinalDamage); 
-						
+				NewHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName("Data.Damage")), -FinalDamage);
 				TargetASC->ApplyGameplayEffectSpecToSelf(*NewHandle.Data.Get());
 				
-				FGameplayCueParameters CueParams;
-				CueParams.Location = HitActor->GetActorLocation();
-				
-				TargetASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.HitImpact")), CueParams);
+				FGameplayCueParameters TargetCueParams;
+				TargetCueParams.Location = HitActor->GetActorLocation();
+				TargetCueParams.Instigator = GetInstigator();
+				TargetASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.HitImpact")), TargetCueParams);
 			}
 		}
 	}
+	
 }
 
 bool APTWProjectile::CheckingBlock(FHitResult& ObstarcleHit, const FVector ExplosionLocation, const AActor* HitActor)
 {
-	FVector EyeLocation = ExplosionLocation;
-	FVector TargetLocation = HitActor->GetActorLocation() + FVector(0, 0, 50.0f);
-		
+	if (!HitActor) return false;
+	
 	FCollisionQueryParams CollisionParams;
-				
 	CollisionParams.AddIgnoredActor(this);
 	CollisionParams.AddIgnoredActor(GetInstigator());
-		
-	bool bBlocked = GetWorld()->LineTraceSingleByChannel(
+	
+	FVector TargetPoint = HitActor->GetActorLocation() + FVector(0.f, 0.f, 40.f);
+	
+	return GetWorld()->LineTraceSingleByChannel(
 		ObstarcleHit,
-		EyeLocation,
-		TargetLocation,
+		ExplosionLocation,
+		TargetPoint,
 		ECC_Visibility,
 		CollisionParams
-		);
-	
-	return bBlocked;
+	);
 }
 

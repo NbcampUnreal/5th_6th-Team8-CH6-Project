@@ -24,20 +24,7 @@ UCLASS()
 class PTW_API APTWPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
 public:
-	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	virtual void OnRep_PlayerState() override;
-	virtual void BeginSpectatingState() override;
-	virtual void OnRep_Pawn() override;
-	virtual void OnPossess(APawn* InPawn) override;
-	virtual void OnUnPossess() override;
-	virtual void SetViewTarget(AActor* NewViewTarget, 
-		FViewTargetTransitionParams TransitionParams = FViewTargetTransitionParams());
-	
-	void SetOwnerNoSeeRecursive(USceneComponent* InParentComponent, bool bNewOwnerNoSee);
-	void SetSetOnlyOwnerSeeRecursive(USceneComponent* InParentComponent, bool bNewOnlyOwnerSee);
 	/* HUD 초기화 */
 	void TryInitializeHUD();
 	void StartRetryTimer();
@@ -53,6 +40,8 @@ public:
 	void MulticastRPC_StartSpectating();
 	UFUNCTION()
 	void SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn);
+	APawn* FindNextSpectatorTarget(APawn* InNewPawn);
+	void SetSpectatorTarget(APawn* NewViewTarget);
 	UFUNCTION()
 	void OnInputSpectateNext();
 	
@@ -60,12 +49,20 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientRPC_ShowDamageIndicator(FVector DamageCauserLocation);
 
-	/* KillLog 델리게이트 */
-	FOnKillLog OnKillLog;
-	
-	/* 리스폰 타이머 핸들*/
-	FTimerHandle RespawnTimerHandle;
 protected:
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void OnRep_PlayerState() override;
+	virtual void BeginSpectatingState() override;
+	virtual void OnRep_Pawn() override;
+	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnUnPossess() override;
+	virtual void SetViewTarget(AActor* NewViewTarget, 
+		FViewTargetTransitionParams TransitionParams = FViewTargetTransitionParams()) override;
+	
+	void SetOwnerNoSeeRecursive(USceneComponent* InParentComponent, bool bNewOwnerNoSee);
+	void SetSetOnlyOwnerSeeRecursive(USceneComponent* InParentComponent, bool bNewOnlyOwnerSee);
+	
 	virtual void SetupInputComponent() override;
 	virtual void PostSeamlessTravel() override;
 
@@ -80,15 +77,19 @@ protected:
 	/* 크로스헤어 */
 	void OnCrosshairStateTagChanged(const FGameplayTag Tag, int32 NewCount);
 	void UpdateCrosshairVisibility();
-
-	// GameplayTag Delegate Handles
-	FDelegateHandle EquipTagHandle;
-	FDelegateHandle SprintTagHandle;
-
-	// 캐싱된 태그 (매번 Request 하지 않기 위함)
-	FGameplayTag EquipTag;
-	FGameplayTag SprintTag;
-
+	
+	/* 플레이어 이름 */
+	/* 닉네임 가시성 업데이트 로직 */
+	void UpdateNameTagsVisibility();
+	
+public:
+	/* KillLog 델리게이트 */
+	FOnKillLog OnKillLog;
+	
+	/* 리스폰 타이머 핸들*/
+	FTimerHandle RespawnTimerHandle;
+	
+protected:
 	/* ---------- Input ---------- */
 	// 랭킹보드 (Tab)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -113,10 +114,7 @@ protected:
 	// PauseMenu
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> PauseMenuClass; 
-
-	/* 플레이어 이름 */
-	/* 닉네임 가시성 업데이트 로직 */
-	void UpdateNameTagsVisibility();
+	
 	/* 가시성 설정 */
 	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag")
 	float NameTagMaxDistance = 1500.f;
@@ -130,5 +128,12 @@ protected:
 
 	// HUD 초기화용
 	FTimerHandle HUDInitTimerHandle;
+	
+	// GameplayTag Delegate Handles
+	FDelegateHandle EquipTagHandle;
+	FDelegateHandle SprintTagHandle;
 
+	// 캐싱된 태그 (매번 Request 하지 않기 위함)
+	FGameplayTag EquipTag;
+	FGameplayTag SprintTag;
 };

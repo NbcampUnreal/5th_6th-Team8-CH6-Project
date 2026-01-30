@@ -8,13 +8,9 @@
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
 
-/********** UPTWUISubsystem **********/
-
 void UPTWUISubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-
-	UE_LOG(LogTemp, Log, TEXT("UPTWUISubsystem Initialized"));
 }
 
 void UPTWUISubsystem::Deinitialize()
@@ -32,79 +28,8 @@ void UPTWUISubsystem::Deinitialize()
 	CachedWidgets.Empty();
 	HUDWidget = nullptr;
 
-	UE_LOG(LogTemp, Log, TEXT("UPTWUISubsystem Deinitialized"));
-
 	Super::Deinitialize();
 }
-
-/********** Helpers **********/
-
-APlayerController* UPTWUISubsystem::GetPlayerController() const
-{
-	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
-	{
-		return LocalPlayer->GetPlayerController(GetWorld());
-	}
-	return nullptr;
-}
-
-UUserWidget* UPTWUISubsystem::GetOrCreateWidget(TSubclassOf<UUserWidget> WidgetClass)
-{
-	if (!WidgetClass)
-		return nullptr;
-
-	// 이미 캐싱되어 있다면 재사용
-	if (TObjectPtr<UUserWidget>* Found = CachedWidgets.Find(WidgetClass))
-	{
-		return Found->Get();
-	}
-
-	APlayerController* PC = GetPlayerController();
-	if (!PC)
-		return nullptr;
-
-	UUserWidget* NewWidget = CreateWidget<UUserWidget>(PC, WidgetClass);
-	if (!NewWidget)
-		return nullptr;
-
-	CachedWidgets.Add(WidgetClass, NewWidget);
-	return NewWidget;
-}
-
-
-/********** Input Policy **********/
-
-void UPTWUISubsystem::ApplyInputPolicy(EUIInputPolicy Policy)
-{
-	APlayerController* PC = GetPlayerController();
-	if (!PC) return;
-
-	switch (Policy)
-	{
-	case EUIInputPolicy::GameOnly:
-	{
-		PC->SetShowMouseCursor(false);
-		PC->SetInputMode(FInputModeGameOnly());
-		break;
-	}
-	case EUIInputPolicy::UIOnly:
-	{
-		PC->SetShowMouseCursor(true);
-		PC->SetInputMode(FInputModeUIOnly());
-		break;
-	}
-	case EUIInputPolicy::GameAndUI:
-	{
-		PC->SetShowMouseCursor(true);
-		PC->SetInputMode(FInputModeGameAndUI());
-		break;
-	}
-	default:
-		break;
-	}
-}
-
-/********** Stack-based UI **********/
 
 void UPTWUISubsystem::PushWidget(TSubclassOf<UUserWidget> WidgetClass, EUIInputPolicy InputPolicy)
 {
@@ -116,7 +41,7 @@ void UPTWUISubsystem::PushWidget(TSubclassOf<UUserWidget> WidgetClass, EUIInputP
 	if (Widget->IsInViewport())
 		return;
 
-	// 기본 정책 (필요하면 나중에 위젯별로 커스터마이즈 가능)
+	// 기본 Policy
 	FUIStackEntry Entry;
 	Entry.Widget = Widget;
 	Entry.ZOrder = 99; // Window Layer
@@ -169,9 +94,6 @@ bool UPTWUISubsystem::IsStackEmpty() const
 	return WidgetStack.Num() == 0;
 }
 
-
-/********** HUD (Non-stack UI) **********/
-
 void UPTWUISubsystem::ShowHUD(TSubclassOf<UUserWidget> HUDClass)
 {
 	if (HUDWidget)
@@ -197,4 +119,66 @@ void UPTWUISubsystem::ShowDamageIndicator(const FVector& DamageCauserLocation)
 
 	Indicator->AddToViewport(50); 
 	Indicator->Init(DamageCauserLocation);
+}
+
+UUserWidget* UPTWUISubsystem::GetOrCreateWidget(TSubclassOf<UUserWidget> WidgetClass)
+{
+	if (!WidgetClass)
+		return nullptr;
+
+	// 이미 캐싱되어 있다면 재사용
+	if (TObjectPtr<UUserWidget>* Found = CachedWidgets.Find(WidgetClass))
+	{
+		return Found->Get();
+	}
+
+	APlayerController* PC = GetPlayerController();
+	if (!PC)
+		return nullptr;
+
+	UUserWidget* NewWidget = CreateWidget<UUserWidget>(PC, WidgetClass);
+	if (!NewWidget)
+		return nullptr;
+
+	CachedWidgets.Add(WidgetClass, NewWidget);
+	return NewWidget;
+}
+
+APlayerController* UPTWUISubsystem::GetPlayerController() const
+{
+	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+	{
+		return LocalPlayer->GetPlayerController(GetWorld());
+	}
+	return nullptr;
+}
+
+void UPTWUISubsystem::ApplyInputPolicy(EUIInputPolicy Policy)
+{
+	APlayerController* PC = GetPlayerController();
+	if (!PC) return;
+
+	switch (Policy)
+	{
+	case EUIInputPolicy::GameOnly:
+	{
+		PC->SetShowMouseCursor(false);
+		PC->SetInputMode(FInputModeGameOnly());
+		break;
+	}
+	case EUIInputPolicy::UIOnly:
+	{
+		PC->SetShowMouseCursor(true);
+		PC->SetInputMode(FInputModeUIOnly());
+		break;
+	}
+	case EUIInputPolicy::GameAndUI:
+	{
+		PC->SetShowMouseCursor(true);
+		PC->SetInputMode(FInputModeGameAndUI());
+		break;
+	}
+	default:
+		break;
+	}
 }

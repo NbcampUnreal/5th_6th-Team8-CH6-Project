@@ -8,6 +8,7 @@
 #include "PTW.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "Abilities/Tasks/AbilityTask_WaitTargetData.h"
+#include "CoreFramework/PTWCombatInterface.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerController.h"
@@ -139,9 +140,7 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 	
 	if (CurrentWeponHitType == EHitType::HitScan)
 	{
-		
 		HandleHitScan(Handle, ActorInfo, ActivationInfo, Context);
-		
 	}
 	else if (CurrentWeponHitType == EHitType::Projectile)
 	{
@@ -201,34 +200,39 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayAbilityTargetDataHandle& TargetData, float BaseDamage)
 {
-	if (!HasAuthority(&CurrentActivationInfo)) return;
+	if (!HasAuthority(&CurrentActivationInfo) || !DamageGEClass) return;
 	
-	if (!DamageGEClass) return;
+	const FGameplayTag Tag_Damage = FGameplayTag::RequestGameplayTag(FName("Data.Damage"));
+	const FGameplayTag HeadShotTag = FGameplayTag::RequestGameplayTag(FName("State.HitReaction.HeadShot"));
+	
 	
 	for (auto Data : TargetData.Data)
 	{
 		const FHitResult* HitResult = Data->GetHitResult();
-		if (HitResult && HitResult->GetActor())
+		AActor* HitActor = HitResult ? HitResult->GetActor() : nullptr;
+        
+		if (!HitActor) continue;
+
+		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
+		if (!TargetASC) continue;
+		
+		IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(HitActor);
+		float CurrentDamage = BaseDamage;
+		if (CombatInt)
 		{
-			FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageGEClass, GetAbilityLevel());
-			FGameplayTag Tag_Damage = FGameplayTag::RequestGameplayTag(FName("Data.Damage"));
+			CurrentDamage *= CombatInt->GetDamageMultiplier(HitResult->BoneName);
 			
-			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult->GetActor());
 			if (HitResult->BoneName == FName("head"))
 			{
-				BaseDamage *= 2.0f;
-				
-				//FIXME : 테스트 용도// 후에 GE로 변경하거나, 해당 코드를 그대로 사용 하되, 애니메이션 몽타주가 끝날 때 해당 태그 제거 하는 방식으로 변경 예정
-				FGameplayTag HeadShotTag = FGameplayTag::RequestGameplayTag(FName("State.HitReaction.HeadShot"));
-				TargetASC->AddLooseGameplayTag(HeadShotTag);
+				CombatInt->HandleHitReaction(HeadShotTag);
 			}
-			
-			SpecHandle.Data.Get()->SetSetByCallerMagnitude(Tag_Damage, -BaseDamage);
-			
-			if (TargetASC)
-			{
-				ApplyGameplayEffectSpecToTarget(Handle,ActorInfo, ActivationInfo, SpecHandle, TargetData);
-			}
+		}
+		
+		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageGEClass, GetAbilityLevel());
+		if (SpecHandle.IsValid())
+		{
+			SpecHandle.Data->SetSetByCallerMagnitude(Tag_Damage, -CurrentDamage);
+			ApplyGameplayEffectSpecToTarget(Handle, ActorInfo, ActivationInfo, SpecHandle, TargetData);
 		}
 	}
 }

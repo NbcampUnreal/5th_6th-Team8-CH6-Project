@@ -45,7 +45,7 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	/** Window Stack */
+	/** Window 스택관리 */
 	void PushWidget(TSubclassOf<UUserWidget> WidgetClass, EUIInputPolicy InputPolicy);
 	void PopWidget();
 	bool IsWidgetInStack(TSubclassOf<UUserWidget> WidgetClass) const;

@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "FindSessionsCallbackProxy.h"
@@ -16,12 +15,10 @@ class PTW_API UPTWSessionSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
-	// 로비세션 생성 함수
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Session")
 	void CreateLobbySession(const TArray<FSessionPropertyKeyPair>& LobbySettings, 
-		int32 MaxPlayers, bool bisPrivate = false);
+		int32 MaxPlayers, bool bIsPrivate = false);
 	
-	// 로비세션 참여 함수
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Session")
 	void JoinLobbySession(const FBlueprintSessionResult& SessionResult);
 	
@@ -33,7 +30,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void OnFindLobbiesComplete(const TArray<FBlueprintSessionResult>& SessionResults);
 	
-	// 리슨서버로 레벨오픈하는 함수
+	// 리슨서버로 레벨 생성하는 함수
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void CreateListenServer(FName MapName);
 	

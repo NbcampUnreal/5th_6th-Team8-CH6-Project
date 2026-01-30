@@ -25,9 +25,6 @@ public:
 	/* 초기화 (HUD 에서 ASC 받고, 하위 위젯에 ASC 전달) */
 	void InitializeUI(UAbilitySystemComponent* ASC);
 
-	// 킬로그
-	UFUNCTION()
-	void AddKillLog(const FString& Killer, const FString& Victim); // 인자에 무기 종류 추가해야함
 	// 크로스헤어
 	UFUNCTION()
 	void SetCrosshairVisibility(bool bVisible);

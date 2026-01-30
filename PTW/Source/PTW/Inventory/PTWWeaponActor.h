@@ -29,11 +29,15 @@ public:
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	
-public:
-	UPROPERTY(ReplicatedUsing = OnRep_IsFirstPersonWeapon)
-	bool bIsFirstPersonWeapon = false;
+	void SetFirstPersonMode(bool bIsFirstPerson);
+	
+	FORCEINLINE bool IsFirstPersonMode() const {return bIsFirstPersonWeapon;}
+	
 protected:
 	virtual void BeginPlay() override;
+	
+	UFUNCTION()
+	void OnRep_IsFirstPersonWeapon();
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
@@ -48,6 +52,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon|Data")
 	TObjectPtr<UPTWWeaponData> WeaponData;	
 	
-	UFUNCTION()
-	void OnRep_IsFirstPersonWeapon();
+	UPROPERTY(ReplicatedUsing = OnRep_IsFirstPersonWeapon)
+	bool bIsFirstPersonWeapon = false;
 };

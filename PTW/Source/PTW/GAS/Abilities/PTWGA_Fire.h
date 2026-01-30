@@ -26,6 +26,24 @@ public:
 	APTWPlayerCharacter* PlayerCharacter;	
 };
 
+USTRUCT(BlueprintType)
+struct FPTWFireConext
+{
+	GENERATED_BODY();
+	
+public:
+	UPROPERTY()
+	APTWPlayerCharacter* PC = nullptr;
+	
+	UPROPERTY()
+	UAbilitySystemComponent* ASC = nullptr;
+	
+	UPROPERTY()
+	UPTWItemInstance* WeaponInst = nullptr;
+	
+	bool IsValid() const {return PC && ASC && WeaponInst;}
+};
+
 
 UCLASS()
 class PTW_API UPTWGA_Fire : public UPTWGameplayAbility
@@ -58,6 +76,8 @@ public:
 		FPTWGameplayCueMakingInfo Infos);
 	
 	void StopFire();
+	
+	FPTWFireConext GetFireContext() const;
 	
 protected:
 	FTimerHandle AutoFireTimer;
@@ -93,4 +113,13 @@ protected:
 	
 	void ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* ItemInstance);
 	
+	void HandleHitScan(const FGameplayAbilitySpecHandle Handle, 
+								  const FGameplayAbilityActorInfo* ActorInfo,
+								  const FGameplayAbilityActivationInfo ActivationInfo,
+								  const FPTWFireConext Context);
+	
+	void ExecuteHitImpactCue(const FHitResult& HitResult);
+	
+private:
+	float MaxRange = 5000.0f;
 };

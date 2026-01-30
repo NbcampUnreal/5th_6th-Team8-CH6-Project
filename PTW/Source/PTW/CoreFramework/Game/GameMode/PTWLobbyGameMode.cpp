@@ -44,13 +44,11 @@ void APTWLobbyGameMode::InitGameState()
 			PTWGameState->AdvanceRound(); // 라운드 증가
 		}
 	}
-	
 }
 
 void APTWLobbyGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
@@ -76,7 +74,6 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 			}
 		}
 	}
-	
 }
 
 void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)

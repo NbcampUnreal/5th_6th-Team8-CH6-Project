@@ -76,6 +76,7 @@ void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
 			PC->StartSpectating();
 		}
 	}
+	
 	if (HasAuthority())
 	{
 		if (AbilitySystemComponent)

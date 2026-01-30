@@ -13,53 +13,57 @@
 
 bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
 {
-	if (!MyTarget)
-	{
-		return false;
-	}
-	
-	const APTWWeaponActor* SourceWeapon = Cast<APTWWeaponActor>(Parameters.SourceObject);
-	const APTWWeaponActor* TargetWeapon = nullptr;
-	
 	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(MyTarget);
-	
 	if (!PC) return false;
 	
+	const APTWWeaponActor* TargetWeapon = nullptr;
 	
 	if (PC->IsLocallyControlled())
 	{
-		TargetWeapon = SourceWeapon;
+		TargetWeapon = Cast<APTWWeaponActor>(Parameters.SourceObject);
 	}
 	else
 	{
-		// 서버기준으로 서버에 해당하는 PC의 인벤토리 참조해서 가져오기
 		if (UPTWInventoryComponent* InvenComp = PC->GetInventoryComponent())
 		{
-			if (UPTWItemInstance* ItemInstServer = InvenComp->GetCurrentWeaponInst())
+			if (UPTWItemInstance* ItemInst = InvenComp->GetCurrentWeaponInst())
 			{
-				TargetWeapon = ItemInstServer->SpawnedWeapon3P;
+				TargetWeapon = ItemInst->SpawnedWeapon3P;
 			}
 		}
 	}
 	
-	if (FireVFX && TargetWeapon)
+	if (!TargetWeapon || !TargetWeapon->GetMuzzleComponent())
+	{
+		return false;
+	}
+	
+	USceneComponent* MuzzleComp = TargetWeapon->GetMuzzleComponent();
+	
+	
+	if (FireVFX)
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAttached(
-		FireVFX,
-		TargetWeapon->GetMuzzleComponent(),
-		NAME_None,
-		FVector::ZeroVector,
-		FRotator::ZeroRotator, 
-		EAttachLocation::SnapToTargetIncludingScale,
-		true
+			FireVFX,
+			MuzzleComp,
+			NAME_None,
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::SnapToTargetIncludingScale,
+			true
 		);
 	}
-	
+
+	// 5. SFX 재생 (총구 위치에서 재생하여 입체감 부여)
 	if (FireSFX)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireSFX, MyTarget->GetActorLocation());
+		// 소리는 총구 위치에서 나는 것이 더 자연스럽습니다.
+		UGameplayStatics::PlaySoundAtLocation(
+			GetWorld(), 
+			FireSFX, 
+			MuzzleComp->GetComponentLocation()
+		);
 	}
-	
+
 	return true;
-	
 }

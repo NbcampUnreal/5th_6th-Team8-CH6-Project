@@ -119,37 +119,42 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	if (!IsValid(DeadActor)) return;
 	
 	APTWPlayerController* DeadPlayerController = nullptr;
-	APTWPlayerState* DeadPlayerState = nullptr;
+	APlayerState* DeadPlayState = nullptr;
 
 	if (const APawn* DeadPawn = Cast<APawn>(DeadActor))
 	{
 		DeadPlayerController = DeadPawn->GetController<APTWPlayerController>();
-		DeadPlayerState = DeadPawn->GetPlayerState<APTWPlayerState>();
+		DeadPlayState = DeadPawn->GetPlayerState();
 	}
 
-	if (DeadPlayerState)
+	if (DeadPlayState)
 	{
-		DeadPlayerState->AddDeathCount();
+		if (IPTWPlayerRoundDataInterface* DeadPlayerData = Cast<IPTWPlayerRoundDataInterface>(DeadPlayState))
+		{
+			DeadPlayerData->AddDeathCount(1);
+		}
 	}
 
-	APTWPlayerState* KillPlayerState = nullptr;
-
+	APlayerState* KillPlayerState = nullptr;
 	if (IsValid(KillActor))
 	{
 		if (APawn* KillPawn = Cast<APawn>(KillActor))
 		{
-			KillPlayerState = KillPawn->GetPlayerState<APTWPlayerState>();
+			KillPlayerState = KillPawn->GetPlayerState<APlayerState>();
 		}
-		else if (APTWPlayerState* KillPS = Cast<APTWPlayerState>(KillActor))
+		else
 		{
-			KillPlayerState = KillPS;
+			KillPlayerState = Cast<APlayerState>(KillActor);
 		}
 	}
 	
 	if (IsValid(KillPlayerState))
 	{
-		KillPlayerState->AddKillCount();
-		KillPlayerState->AddScore(1);
+		if (IPTWPlayerRoundDataInterface* KillPlayerData = Cast<IPTWPlayerRoundDataInterface>(KillPlayerState))
+		{
+			KillPlayerData->AddKillCount();
+			KillPlayerData->AddScore(1);
+		}
 	}
 	
 	if (!PTWGameState) return;
@@ -177,9 +182,9 @@ void APTWMiniGameMode::ResetPlayerRoundData()
 	if (!PTWGameState) return;
 	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 	{
-		if (APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState))
+		if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(PlayerState))
 		{
-			PTWPlayerState->ResetPlayerRoundData();
+			RoundDataInterface->ResetRoundData();
 		}
 	}
 }

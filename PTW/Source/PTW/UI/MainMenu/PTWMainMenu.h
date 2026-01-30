@@ -10,11 +10,10 @@ class UCanvas;
 class UButton;
 class UWidgetSwitcher;
 class UPTWLobbyBrowser;
+
 /**
  * 
  */
-
-
 
 UCLASS()
 class PTW_API UPTWMainMenu : public UUserWidget

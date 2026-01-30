@@ -25,6 +25,8 @@ public:
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
 	
+	UAnimMontage* GetReloadMontage(APTWPlayerCharacter* PC) const;
+	
 protected:
 	/** 몽타주가 정상 종료되었을 때 (BlendOut 포함) */
 	UFUNCTION()

@@ -3,7 +3,6 @@
 
 #include "GC_WeaponFire.h"
 
-#include "IDetailTreeNode.h"
 #include "NiagaraFunctionLibrary.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"

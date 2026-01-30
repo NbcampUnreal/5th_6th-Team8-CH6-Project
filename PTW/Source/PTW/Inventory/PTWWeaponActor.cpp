@@ -66,6 +66,15 @@ void APTWWeaponActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>
 	DOREPLIFETIME(APTWWeaponActor, bIsFirstPersonWeapon);
 }
 
+void APTWWeaponActor::SetFirstPersonMode(bool bIsFirstPerson)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		bIsFirstPersonWeapon = bIsFirstPerson;
+		OnRep_IsFirstPersonWeapon();
+	}
+}
+
 void APTWWeaponActor::BeginPlay()
 {
 	Super::BeginPlay();

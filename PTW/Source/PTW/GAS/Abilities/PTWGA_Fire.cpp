@@ -45,9 +45,11 @@ void UPTWGA_Fire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 		return;
 	}
 	
-	UAbilityTask_WaitInputRelease* WaitInputRelease = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
-	WaitInputRelease->OnRelease.AddDynamic(this, &UPTWGA_Fire::OnInputReleasedCallback);
-	WaitInputRelease->ReadyForActivation();
+	if (UAbilityTask_WaitInputRelease* WaitInputRelease = UAbilityTask_WaitInputRelease::WaitInputRelease(this))
+	{
+		WaitInputRelease->OnRelease.AddDynamic(this, &UPTWGA_Fire::OnInputReleasedCallback);
+		WaitInputRelease->ReadyForActivation();
+	}
 	
 	StartFire(Handle, ActorInfo, ActivationInfo);
 }
@@ -55,34 +57,50 @@ void UPTWGA_Fire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 void UPTWGA_Fire::StartFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 							   const FGameplayAbilityActivationInfo ActivationInfo)
 {
-	AutoFire(Handle, ActorInfo, ActivationInfo);
+	const FPTWFireConext Context = GetFireContext();
 	
-	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
-	if (!PC) return;
-	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PC);
-	if (!ASC) return;
+	if (!Context.IsValid()) return;
 	
-	const UPTWWeaponAttributeSet* AS = Cast<UPTWWeaponAttributeSet>(ASC->GetAttributeSet(WeaponAttributeClass));
-	if (AS)
+	if (const UPTWWeaponAttributeSet* AS = Cast<UPTWWeaponAttributeSet>(Context.ASC->GetAttributeSet(WeaponAttributeClass)))
 	{
 		FireRate = AS->GetFireRate();
 	}
 	
+	AutoFire(Handle, ActorInfo, ActivationInfo);
+	
 	if (!GetWorld()->GetTimerManager().IsTimerActive(AutoFireTimer))
 	{
 		TWeakObjectPtr<ThisClass> WeakThis = this;
-		
-		GetWorld()->GetTimerManager().SetTimer(AutoFireTimer, FTimerDelegate::CreateLambda([Handle,ActorInfo,ActivationInfo, WeakThis]()
+		GetWorld()->GetTimerManager().SetTimer(AutoFireTimer, FTimerDelegate::CreateLambda([WeakThis, Handle, ActorInfo, ActivationInfo]()
 		{
-			WeakThis->AutoFire(Handle, ActorInfo, ActivationInfo);
-			
-		}),FireRate, true);
+			if (WeakThis.IsValid())
+			{
+				WeakThis->AutoFire(Handle, ActorInfo, ActivationInfo);
+			}
+		}), FireRate, true);
 	}
 }
 
 void UPTWGA_Fire::StopFire()
 {
 	GetWorld()->GetTimerManager().ClearTimer(AutoFireTimer);
+}
+
+FPTWFireConext UPTWGA_Fire::GetFireContext() const
+{
+	FPTWFireConext Context;
+	Context.PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
+	
+	if (Context.PC)
+	{
+		Context.ASC = Context.PC->GetAbilitySystemComponent();
+		if (UPTWInventoryComponent* Inven = Context.PC->GetInventoryComponent())
+		{
+			Context.WeaponInst = Inven->GetCurrentWeaponInst();
+		}
+	}
+	
+	return Context;
 }
 
 void UPTWGA_Fire::MakeGameplayCue(const FGameplayAbilitySpecHandle Handle, 
@@ -103,71 +121,35 @@ void UPTWGA_Fire::MakeGameplayCue(const FGameplayAbilitySpecHandle Handle,
 void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
                            const FGameplayAbilityActivationInfo ActivationInfo)
 {
-	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
-	if (!PC) return;
-	
-	UPTWInventoryComponent* Inven = PC->FindComponentByClass<UPTWInventoryComponent>();
-	if (!Inven) return;
-	
-	UPTWItemInstance* CurrentInst = Inven->GetCurrentWeaponInst();
-	if (!CurrentInst) return;
-	
-	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PC);
-	if (!ASC) return;
-	
-	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+	const FPTWFireConext Context = GetFireContext();
+	if (!Context.IsValid() || !CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
 		StopFire();
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
 	
-
-	FPTWGameplayCueMakingInfo Infos;
-	Infos.PlayerCharacter = PC;
-	Infos.Weapon1P = CurrentInst->SpawnedWeapon1P;
 	
-	MakeGameplayCue(Handle, ActorInfo, ActivationInfo, Infos);
+	FPTWGameplayCueMakingInfo CueInfos;
+	CueInfos.PlayerCharacter = Context.PC;
+	CueInfos.Weapon1P = Context.WeaponInst->SpawnedWeapon1P;
+	MakeGameplayCue(Handle, ActorInfo, ActivationInfo, CueInfos);
 	
-	if (CurrentInst->GetWeaponHitType() == EHitType::HitScan)
+	EHitType CurrentWeponHitType = Context.WeaponInst->GetWeaponHitType();
+	
+	if (CurrentWeponHitType == EHitType::HitScan)
 	{
-		FHitResult HitResult;
-		PerformLineTrace(HitResult, PC);
-	
-		FGameplayAbilityTargetDataHandle TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(HitResult);
-	
-		// Server-side Validation 피격 처리
-		if (HasAuthority(&ActivationInfo))
-		{
-			if (ValidateHitResult(HitResult)) 
-			{
-				float Damage = CurrentInst->SpawnedWeapon1P->GetWeaponData()->BaseDamage;
-				ApplyDamageToTarget(Handle, ActorInfo, ActivationInfo, TargetData, Damage);
-				
-				 if (HitResult.bBlockingHit && HitResult.GetActor())
-				 {
-				 	FName ProfileName = HitResult.Component->GetCollisionProfileName();
-				 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor());
-				 	
-				 	if (ProfileName.IsEqual(FName("Hit")))
-				 	{
-				 		FGameplayCueParameters CueParams;
-				 		CueParams.Location = HitResult.ImpactPoint;
-				 		CueParams.Normal = HitResult.ImpactNormal;
-				 		
-				 		TargetASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.HitImpact")), CueParams);
-				 	}
-				 }
-			}
-		}
+		
+		HandleHitScan(Handle, ActorInfo, ActivationInfo, Context);
+		
 	}
-	else if (CurrentInst->GetWeaponHitType() == EHitType::Projectile)
+	else if (CurrentWeponHitType == EHitType::Projectile)
 	{
-		ProjectileTypeFire(PC, CurrentInst);
+		ProjectileTypeFire(Context.PC, Context.WeaponInst);
 	}
 	
 	//캐릭터 반동 함수 호출(박태웅)
-	PC->ApplyRecoil();
+	Context.PC->ApplyRecoil();
 }
 
 void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* PlayerCharacter)
@@ -179,7 +161,7 @@ void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* P
 	FRotator Rot;
 	Controller->GetPlayerViewPoint(StartLoc, Rot);
 	
-	FVector End = StartLoc + (Rot.Vector() * 5000.0f);
+	FVector End = StartLoc + (Rot.Vector() * MaxRange);
 	
 	AActor* Avatar = GetAvatarActorFromActorInfo();
 	
@@ -187,7 +169,6 @@ void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* P
 	Params.AddIgnoredActor(Avatar); 
 	
 	GetWorld()->LineTraceSingleByChannel(HitResult, StartLoc,End, ECC_WeaponAttack, Params);
-	//DrawDebugLine(GetWorld(), StartLoc, End, FColor::Green, false, 10.0f);
 }
 
 bool UPTWGA_Fire::ValidateHitResult(FHitResult& HitResult)
@@ -195,7 +176,6 @@ bool UPTWGA_Fire::ValidateHitResult(FHitResult& HitResult)
 	if (!HitResult.bBlockingHit) return true; 
 
 	AActor* Avatar = GetAvatarActorFromActorInfo();
-	float MaxRange = 5000.f; 
 	
 	float Distance = FVector::Dist(Avatar->GetActorLocation(), HitResult.ImpactPoint);
 	if (Distance > MaxRange + 100.f) return false; 
@@ -308,5 +288,46 @@ void UPTWGA_Fire::ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* 
 	if (Bullet)
 	{
 		Bullet->DamageSpecHandle = SpecHandle;
+	}
+}
+
+void UPTWGA_Fire::HandleHitScan(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo, const FPTWFireConext Context)
+{
+	FHitResult HitResult;
+	PerformLineTrace(HitResult, Context.PC);
+	
+	if (!HasAuthority(&CurrentActivationInfo)) return;
+	
+	if (ValidateHitResult(HitResult))
+	{
+		FGameplayAbilityTargetDataHandle TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(HitResult);
+		float Damage = 0.0f;
+		
+		if (const UPTWWeaponAttributeSet* AS = Cast<UPTWWeaponAttributeSet>(Context.ASC->GetAttributeSet(WeaponAttributeClass)))
+		{
+			Damage = AS->GetDamage();
+		}
+		
+		ApplyDamageToTarget(Handle, ActorInfo, ActivationInfo, TargetData, Damage);
+		ExecuteHitImpactCue(HitResult);
+	}
+}
+
+void UPTWGA_Fire::ExecuteHitImpactCue(const FHitResult& HitResult)
+{
+	if (HitResult.bBlockingHit && HitResult.GetActor())
+	{
+		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor());
+				 	
+		if (TargetASC && HitResult.Component->GetCollisionProfileName() == FName("Hit"))
+		{
+			FGameplayCueParameters CueParams;
+			CueParams.Location = HitResult.ImpactPoint;
+			CueParams.Normal = HitResult.ImpactNormal;
+			CueParams.Instigator = GetAvatarActorFromActorInfo();
+				 		
+			TargetASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.HitImpact")), CueParams);
+		}
 	}
 }

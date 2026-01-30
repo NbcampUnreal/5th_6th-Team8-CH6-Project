@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameState.h"
+#include "MiniGame/PTWMiniGameRule.h"
 #include "PTWGameState.generated.h"
 
 class APTWPlayerState;
@@ -70,16 +71,12 @@ class PTW_API APTWGameState : public AGameState
 public:
 	/** 기본 생성자 */
 	APTWGameState();
-
-	/** 서버에서 남은 시간을 감소 */
-	void DecreaseTimer();
-
-	void AdvanceRound();
-	void UpdateRanking();
-	void AddRankedPlayer(APTWPlayerState* NewPlayerState);
 	
+	/** 남은 시간 설정 */
 	void SetRemainTime(int32 NewTime);
+	/** 현재 라운드 설정 */
 	void SetCurrentRound(int32 NewRound);
+	/** 현재 게임 페이즈 설정 */
 	void SetCurrentPhase(EPTWGamePhase NewGamePhase);
 
 	/** 서버에서 호출하여 모든 클라이언트의 델리게이트를 실행시키는 RPC */
@@ -94,12 +91,15 @@ public:
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnTimerFinished OnTimerFinished;
 	
+	/** 라운드 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnRoundChanged OnRoundChanged;
 
+	/** 게임 페이즈 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnGamePhaseChanged OnGamePhaseChanged;
 	
+	/** 랭킹 플레이어 갱신 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnUpdateRankedPlayers OnUpdateRankedPlayers;
 
@@ -141,4 +141,22 @@ private:
 
 	UFUNCTION()
 	void OnRep_RankedPlayers();
+
+
+public:
+	/** 서버에서 남은 시간을 감소 */
+	void DecreaseTimer();
+	
+	/** 라운드 증가 */
+	void AdvanceRound();
+
+	/** 현재 상태 기준으로 랭킹 갱신 */
+	void UpdateRanking();
+	
+	/** 순위 정렬을 위해 플레이어 추가 */
+	void AddRankedPlayer(APTWPlayerState* NewPlayerState);
+	
+	/** 미니 게임 순위를 기준으로 승점 부여 */
+	void ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule);
+	
 };

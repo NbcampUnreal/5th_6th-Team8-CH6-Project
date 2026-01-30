@@ -48,13 +48,27 @@ void APTWGameState::UpdateRanking()
        
 		   return APD.Score > BPD.Score;
 	});
-	
 }
 
 void APTWGameState::AddRankedPlayer(APTWPlayerState* NewPlayerState)
 {
 	RankedPlayers.AddUnique(NewPlayerState);
 }
+
+void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
+{
+	// 현재 랭킹을 기준으로 승리 포인트 추가
+	
+	// 승리 포인트는 임시로 플레이어 인원 수만큼 지급
+	// 동점 계산 X
+	for (int i = 0; i < RankedPlayers.Num(); i++)
+	{
+		FPTWPlayerData PlayerData = RankedPlayers[i]->GetPlayerData();
+		PlayerData.TotalWinPoints += RankedPlayers.Num() - i;
+		RankedPlayers[i]->SetPlayerData(PlayerData);
+	}
+}
+
 
 void APTWGameState::DecreaseTimer()
 {

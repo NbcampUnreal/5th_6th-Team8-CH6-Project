@@ -8,6 +8,7 @@
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWMiniGameMode.generated.h"
 
+class APTWPlayerController;
 class APTWPlayerState;
 class UPTWItemDefinition;
 class APTWWeaponActor;
@@ -20,15 +21,8 @@ class PTW_API APTWMiniGameMode : public APTWGameMode
 public:
 	APTWMiniGameMode();
 
-	/** 플레이어의 승점을 증가시키는 함수
-	* - 특정 Pawn에 대응되는 플레이어 데이터에 승점을 누적
-	*
-	* @param PointPawn 승점을 획득한 플레이어의 Pawn
-	* @param AddPoint 추가할 승점 값
-	*/
-	UFUNCTION(BlueprintCallable)
-	void AddWinPoint(APawn* PointPawn, int32 AddPoint);
-
+	void AddWinPoint(APawn* Pawn, int32 Score);
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule")
 	FPTWMiniGameRule MiniGameRule;
 protected:
@@ -42,6 +36,7 @@ protected:
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	
 	void SpawnDefaultWeapon(AController* NewPlayer);
+	
 	/** 미니게임 진행 시간 (초) */
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
 	float MiniGameTime = 90;
@@ -54,17 +49,21 @@ protected:
 	
 
 private:
-	// 플레이어 사망 처리
+	/** 플레이어 사망 처리 */
 	UFUNCTION()
 	void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor);
+
+	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
+	void UpdatePlayerRoundData(APlayerState* DeadPlayerState, APlayerState* KillPlayerState);
 	
-	// 라운드 시작 시 플레이어의 라운드 전용 데이터 초기화
+	/** 라운드 시작 시 플레이어의 라운드 전용 데이터 초기화*/
 	void ResetPlayerRoundData();
+
+	void RespawnPlayer(APTWPlayerController* SpawnPlayerController);
 	
+	/** 리스폰 시 플레이어 체력 초기화 */
 	void InitPlayerHealth(AController* Controller);
-
-	void ApplyMiniGameRankScore();
-
+	
 	int32 PlayerStartCount = 0;
 	
 };

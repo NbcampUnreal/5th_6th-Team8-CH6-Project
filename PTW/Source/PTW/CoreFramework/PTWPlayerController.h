@@ -40,9 +40,13 @@ public:
 	void SetSetOnlyOwnerSeeRecursive(USceneComponent* InParentComponent, bool bNewOnlyOwnerSee);
 	/* HUD 초기화 */
 	void TryInitializeHUD();
-	// ASC 를 받아와서 HUD 에게 넘겨주는 함수이지만
-	// 여기서 컨트롤러가 ASC 태그 변경에 델리게이트 바인드 하기도함
+	void StartRetryTimer();
+	void StopRetryTimer();
 	
+	/*  ASC Delegate 바인딩 */
+	void BindASCDelegates(UAbilitySystemComponent* ASC);
+	void UnbindASCDelegates(UAbilitySystemComponent* ASC);
+
 	/* 관전 시스템 함수 */
 	void StartSpectating();
 	UFUNCTION(NetMulticast, Reliable)
@@ -74,8 +78,16 @@ protected:
 	void HandleMenuInput();
 
 	/* 크로스헤어 */
-	void OnCrosshairStateTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+	void OnCrosshairStateTagChanged(const FGameplayTag Tag, int32 NewCount);
 	void UpdateCrosshairVisibility();
+
+	// GameplayTag Delegate Handles
+	FDelegateHandle EquipTagHandle;
+	FDelegateHandle SprintTagHandle;
+
+	// 캐싱된 태그 (매번 Request 하지 않기 위함)
+	FGameplayTag EquipTag;
+	FGameplayTag SprintTag;
 
 	/* ---------- Input ---------- */
 	// 랭킹보드 (Tab)
@@ -115,4 +127,8 @@ protected:
 	float NameTagMinScale = 0.4f; // 가장 멀리 있을 때의 최소 크기 (0.4)
 
 	FTimerHandle NameTagTimerHandle;
+
+	// HUD 초기화용
+	FTimerHandle HUDInitTimerHandle;
+
 };

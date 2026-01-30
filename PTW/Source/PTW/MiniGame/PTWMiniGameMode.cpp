@@ -137,6 +137,10 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 		{
 			KillPlayerState = KillPawn->GetPlayerState<APTWPlayerState>();
 		}
+		else if (APTWPlayerState* KillPS = Cast<APTWPlayerState>(KillActor))
+		{
+			KillPlayerState = KillPS;
+		}
 	}
 	
 	if (IsValid(KillPlayerState))

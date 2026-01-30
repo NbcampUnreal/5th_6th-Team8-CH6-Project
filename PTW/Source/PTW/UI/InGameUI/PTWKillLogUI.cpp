@@ -7,41 +7,33 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "CoreFramework/PTWPlayerState.h"
 
-void UPTWKillLogUI::AddKillLog(const FString& Killer,const FString& Victim)
-{
-	if (!KillLogEntryClass || !LogList)
-		return;
-
-	UPTWKillLogEntry* NewEntry = CreateWidget<UPTWKillLogEntry>(GetWorld(), KillLogEntryClass);
-
-	if (!NewEntry)
-		return;
-
-	/* 만료 델리게이트 바인딩 */
-	NewEntry->OnExpired.AddUObject(this, &UPTWKillLogUI::HandleEntryExpired);
-
-	NewEntry->Init(Killer, Victim, LogLifeTime);
-
-	/* 최신 로그를 위로*/
-	LogList->InsertChildAt(0, NewEntry);
-	ActiveEntries.Insert(NewEntry, 0);
-
-	/* 개수 초과 시 가장 오래된 로그 제거*/
-	if (ActiveEntries.Num() > MaxLogCount)
-	{
-		RemoveOldest();
-	}
-}
-
 void UPTWKillLogUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// 1. GameState 가져오기
+	BindGameStates();
+}
+
+void UPTWKillLogUI::NativeDestruct()
+{
+	UnbindGameStates();
+
+	Super::NativeDestruct();
+}
+
+void UPTWKillLogUI::BindGameStates()
+{
 	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
 	{
-		// 2. 델리게이트 바인드 (AddDynamic 사용)
 		GS->OnKilllogBroadcast.AddDynamic(this, &UPTWKillLogUI::OnKilllogReceived);
+	}
+}
+
+void UPTWKillLogUI::UnbindGameStates()
+{
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		GS->OnKilllogBroadcast.RemoveAll(this);
 	}
 }
 
@@ -65,6 +57,32 @@ void UPTWKillLogUI::OnKilllogReceived(AActor* DeadActor, AActor* KillerActor)
 	}
 
 	AddKillLog(KillerName, VictimName);
+}
+
+void UPTWKillLogUI::AddKillLog(const FString& Killer, const FString& Victim)
+{
+	if (!KillLogEntryClass || !LogList)
+		return;
+
+	UPTWKillLogEntry* NewEntry = CreateWidget<UPTWKillLogEntry>(GetWorld(), KillLogEntryClass);
+
+	if (!NewEntry)
+		return;
+
+	/* 만료 델리게이트 바인딩 */
+	NewEntry->OnExpired.AddUObject(this, &UPTWKillLogUI::HandleEntryExpired);
+
+	NewEntry->Init(Killer, Victim, LogLifeTime);
+
+	/* 최신 로그를 위로*/
+	LogList->InsertChildAt(0, NewEntry);
+	ActiveEntries.Insert(NewEntry, 0);
+
+	/* 개수 초과 시 가장 오래된 로그 제거 */
+	if (ActiveEntries.Num() > MaxLogCount)
+	{
+		RemoveOldest();
+	}
 }
 
 void UPTWKillLogUI::RemoveOldest()

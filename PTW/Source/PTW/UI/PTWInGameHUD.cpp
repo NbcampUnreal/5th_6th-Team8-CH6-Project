@@ -25,14 +25,6 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 	if (AmmoWidget) AmmoWidget->InitWithASC(ASC);
 }
 
-void UPTWInGameHUD::AddKillLog(const FString& Killer, const FString& Victim)
-{
-	if (KillLogUI)
-	{
-		KillLogUI->AddKillLog(Killer, Victim);
-	}
-}
-
 void UPTWInGameHUD::SetCrosshairVisibility(bool bVisible)
 {
 	if (CrosshairWidget)

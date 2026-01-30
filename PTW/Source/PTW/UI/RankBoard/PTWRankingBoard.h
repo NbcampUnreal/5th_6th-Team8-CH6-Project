@@ -38,7 +38,7 @@ protected:
 	// 상단 미니게임 제목 표시용
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Text_GameTitle;
-
+	// 하단 랭킹 엔트리 출력용
 	UPROPERTY(meta = (BindWidget))
 	UVerticalBox* RankingList;
 
@@ -49,7 +49,7 @@ protected:
 	TSubclassOf<UPTWRankingEntry> MiniGameEntryClass;
 	UPROPERTY(EditDefaultsOnly, Category = "Ranking|Classes")
 	TSubclassOf<UPTWRankingEntry> PostGameEntryClass;
-	/* 페이즈별 상단 헤더 위젯 클래스 */
+	/* 페이즈별 상단 헤더 위젯 클래스 (에디터에서 할당) */
 	UPROPERTY(EditDefaultsOnly, Category = "Ranking|Header")
 	TSubclassOf<UUserWidget> PreGameHeaderClass;
 	UPROPERTY(EditDefaultsOnly, Category = "Ranking|Header")

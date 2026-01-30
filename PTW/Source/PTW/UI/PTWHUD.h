@@ -28,10 +28,10 @@ public:
 	void SetCrosshairVisibility(bool bVisible);
 
 protected:
-	/* HUD에 표시할 메인 위젯 클래스 (에디터/블루프린트에서 설정) */
+	/* HUD에 표시할 메인 위젯 클래스 (에디터에서 설정) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UPTWInGameHUD> InGameHUDClass;
-
+	/* 데미지 인디케이터 (UI 서브시스템에서 가져감) */
 	UPROPERTY(EditDefaultsOnly, Category = "UI|DamageIndicator")
 	TSubclassOf<class UPTWDamageIndicator> DamageIndicatorClass;
 

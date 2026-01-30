@@ -64,5 +64,7 @@ private:
 	void InitPlayerHealth(AController* Controller);
 
 	void ApplyMiniGameRankScore();
+
+	int32 PlayerStartCount = 0;
 	
 };

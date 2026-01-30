@@ -183,8 +183,7 @@ void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* P
 	Params.AddIgnoredActor(Avatar); 
 	
 	GetWorld()->LineTraceSingleByChannel(HitResult, StartLoc,End, ECC_WeaponAttack, Params);
-	
-	DrawDebugLine(GetWorld(), StartLoc, End, FColor::Green, false, 10.0f);
+	//DrawDebugLine(GetWorld(), StartLoc, End, FColor::Green, false, 10.0f);
 }
 
 bool UPTWGA_Fire::ValidateHitResult(FHitResult& HitResult)

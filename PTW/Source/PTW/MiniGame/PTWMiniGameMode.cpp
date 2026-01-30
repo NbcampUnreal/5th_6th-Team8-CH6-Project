@@ -78,15 +78,15 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 
 	Super::RestartPlayer(NewPlayer);
 	
-	if (PlayerStarts.Num() == 0)
-	{
-		Super::RestartPlayer(NewPlayer);
-	}
-	else
-	{
-		int32 RandomInt = FMath::RandRange(0, PlayerStarts.Num()-1);
-		RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[RandomInt]);
-	}
+	// if (PlayerStarts.Num() == 0)
+	// {
+	// 	Super::RestartPlayer(NewPlayer);
+	// }
+	// else
+	// {
+	// 	int32 RandomInt = FMath::RandRange(0, PlayerStarts.Num()-1);
+	// 	RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[RandomInt]);
+	// }
 	
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);

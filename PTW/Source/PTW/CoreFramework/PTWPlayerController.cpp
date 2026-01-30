@@ -115,6 +115,73 @@ void APTWPlayerController::OnUnPossess()
 	Super::OnUnPossess();
 }
 
+void APTWPlayerController::SetViewTarget(AActor* NewViewTarget, FViewTargetTransitionParams TransitionParams)
+{
+	AActor* PrevViewTarget = GetViewTarget();
+	Super::SetViewTarget(NewViewTarget, TransitionParams);
+	
+	if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(PrevViewTarget))
+	{
+		SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh1P(), true);
+		SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh1P(), true);
+			
+		SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh3P(), false);
+		SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh3P(), false);
+	}
+	
+	if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewViewTarget))
+	{
+		if (GetPawn() == NewViewTarget)		// 내 카메라를 사용할 경우
+		{
+			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh1P(), true);
+			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh1P(), false);
+			
+			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh3P(), false);
+			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh3P(), true);
+		}
+		else
+		{
+			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh1P(), false);
+			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh1P(), false);
+			
+			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh3P(), true);
+			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh3P(), true);
+		}
+	}
+}
+
+void APTWPlayerController::SetOwnerNoSeeRecursive(USceneComponent* InParentComponent, bool bNewOwnerNoSee)
+{
+	if (!InParentComponent) return;
+	
+	if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(InParentComponent))
+	{
+		PrimComp->SetOwnerNoSee(bNewOwnerNoSee);
+	}
+	
+	TArray<USceneComponent*> _Children = InParentComponent->GetAttachChildren();
+	for (USceneComponent* Child : _Children)
+	{
+		SetOwnerNoSeeRecursive(Child, bNewOwnerNoSee);
+	}
+}
+
+void APTWPlayerController::SetSetOnlyOwnerSeeRecursive(USceneComponent* InParentComponent, bool bNewOnlyOwnerSee)
+{
+	if (!InParentComponent) return;
+	
+	if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(InParentComponent))
+	{
+		PrimComp->SetOnlyOwnerSee(bNewOnlyOwnerSee);
+	}
+	
+	TArray<USceneComponent*> _Children = InParentComponent->GetAttachChildren();
+	for (USceneComponent* Child : _Children)
+	{
+		SetSetOnlyOwnerSeeRecursive(Child, bNewOnlyOwnerSee);
+	}
+}
+
 void APTWPlayerController::TryInitializeHUD()
 {
 	if (!IsLocalController()) return;

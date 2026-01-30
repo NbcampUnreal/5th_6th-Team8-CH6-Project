@@ -76,17 +76,20 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
 	if (!NewPlayer) return;
 
-	Super::RestartPlayer(NewPlayer);
+	//Super::RestartPlayer(NewPlayer);
 	
-	// if (PlayerStarts.Num() == 0)
-	// {
-	// 	Super::RestartPlayer(NewPlayer);
-	// }
-	// else
-	// {
-	// 	int32 RandomInt = FMath::RandRange(0, PlayerStarts.Num()-1);
-	// 	RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[RandomInt]);
-	// }
+	if (PlayerStarts.Num() == 0)
+	{
+		Super::RestartPlayer(NewPlayer);
+	}
+	else
+	{
+		if(PlayerStartCount >= PlayerStarts.Num()-1)
+		{
+			PlayerStartCount = 0;
+		}
+		RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[PlayerStartCount++]);
+	}
 	
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);
@@ -136,6 +139,10 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 		if (APawn* KillPawn = Cast<APawn>(KillActor))
 		{
 			KillPlayerState = KillPawn->GetPlayerState<APTWPlayerState>();
+		}
+		else if (APTWPlayerState* KillPS = Cast<APTWPlayerState>(KillActor))
+		{
+			KillPlayerState = KillPS;
 		}
 	}
 	

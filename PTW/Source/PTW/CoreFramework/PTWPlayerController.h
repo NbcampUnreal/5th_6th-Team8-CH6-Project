@@ -33,7 +33,11 @@ public:
 	virtual void OnRep_Pawn() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
-
+	virtual void SetViewTarget(AActor* NewViewTarget, 
+		FViewTargetTransitionParams TransitionParams = FViewTargetTransitionParams());
+	
+	void SetOwnerNoSeeRecursive(USceneComponent* InParentComponent, bool bNewOwnerNoSee);
+	void SetSetOnlyOwnerSeeRecursive(USceneComponent* InParentComponent, bool bNewOnlyOwnerSee);
 	/* HUD 초기화 */
 	void TryInitializeHUD();
 	void StartRetryTimer();

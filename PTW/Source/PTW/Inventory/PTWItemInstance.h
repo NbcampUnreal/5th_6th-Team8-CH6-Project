@@ -38,6 +38,8 @@ public:
 	FORCEINLINE EHitType GetWeaponHitType() const {return SpawnedWeapon1P->GetWeaponData()->HitType;}
 	FORCEINLINE UPTWWeaponData* GetWeaponData() const {return SpawnedWeapon1P->GetWeaponData();}
 	
+	void DestroySpawnedActors();
+	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated)
 	TObjectPtr<UPTWItemDefinition> ItemDef;

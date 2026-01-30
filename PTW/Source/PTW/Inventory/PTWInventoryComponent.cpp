@@ -23,7 +23,6 @@ UPTWInventoryComponent::UPTWInventoryComponent()
 
 void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemInstance> ItemClass)
 {
-	//WeaponArr.AddUnique(AddItemDef)
 	WeaponArr.Add(ItemClass);
 }
 
@@ -32,7 +31,7 @@ void UPTWInventoryComponent::SwapWeapon(int32 SlotIndex)
 	
 }
 
-void UPTWInventoryComponent::EqiupWeapon(int32 SlotIndex)
+void UPTWInventoryComponent::EquipWeapon(int32 SlotIndex)
 {
 	// TODO: 장착 GA 실행
 	APawn* Pawn = Cast<APawn>(GetOwner());
@@ -41,26 +40,15 @@ void UPTWInventoryComponent::EqiupWeapon(int32 SlotIndex)
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn);
 	if (!ASC) return;
 	
-	if (!WeaponArr.IsValidIndex(SlotIndex) || !WeaponArr[SlotIndex]) return;
-	UPTWItemInstance* TargetInstance = WeaponArr[SlotIndex];
-	CurrentWeapon = TargetInstance;
-	
-	bool bHasEquip = ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
-	
-	FGameplayTag EquipTag = bHasEquip ? FGameplayTag::RequestGameplayTag(FName("Weapon.State.UnEquip")) : 
-	FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
-	
-	FGameplayEventData Payload;
-	Payload.OptionalObject = TargetInstance;
-	Payload.EventMagnitude = static_cast<float>(SlotIndex);
-	
-	ASC->HandleGameplayEvent(EquipTag, &Payload);
+	SendEquipEventToASC(SlotIndex, ASC);
 }
 
 void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
 	DOREPLIFETIME(UPTWInventoryComponent, WeaponArr);
+	DOREPLIFETIME(UPTWInventoryComponent, CurrentWeapon);
 }
 
  bool UPTWInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch,
@@ -84,14 +72,13 @@ void UPTWInventoryComponent::SetCurrentWeaponInst(const UPTWItemInstance* Weapon
 	CurrentWeapon = const_cast<UPTWItemInstance*>(WeaponInst);
 }
 
-void UPTWInventoryComponent::WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool SetHidden)
+void UPTWInventoryComponent::WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool bSetHidden)
 {
 	for (auto Weapon : WeaponArr)
 	{
-		if (Weapon->ItemDef->WeaponTag == WeaponTag)
+		if (Weapon && Weapon->ItemDef && Weapon->ItemDef->WeaponTag == WeaponTag)
 		{
-			Weapon->SpawnedWeapon1P->SetActorHiddenInGame(SetHidden);
-			Weapon->SpawnedWeapon3P->SetActorHiddenInGame(SetHidden);
+			SetWeaponActorHidden(Weapon, bSetHidden);
 		}
 	}
 }
@@ -109,20 +96,35 @@ void UPTWInventoryComponent::ClearAndDestroyInventory()
 
 	for (UPTWItemInstance* Item : WeaponArr)
 	{
-		if (Item)
-		{
-			if (Item->SpawnedWeapon1P)
-			{
-				Item->SpawnedWeapon1P->Destroy();
-				Item->SpawnedWeapon1P = nullptr;
-			}
-			if (Item->SpawnedWeapon3P)
-			{
-				Item->SpawnedWeapon3P->Destroy();
-				Item->SpawnedWeapon3P = nullptr;
-			}
-		}
+		if (!Item) continue;
+		Item->DestroySpawnedActors(); 
 	}
 
 	WeaponArr.Empty();
+}
+
+void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex, UAbilitySystemComponent* ASC)
+{
+	if (!WeaponArr.IsValidIndex(SlotIndex) || !WeaponArr[SlotIndex]) return;
+	UPTWItemInstance* TargetInstance = WeaponArr[SlotIndex];
+	CurrentWeapon = TargetInstance;
+	
+	bool bHasEquip = ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
+	
+	FGameplayTag EquipTag = bHasEquip ? FGameplayTag::RequestGameplayTag(FName("Weapon.State.UnEquip")) : 
+	FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+	
+	FGameplayEventData Payload;
+	Payload.OptionalObject = TargetInstance;
+	Payload.EventMagnitude = static_cast<float>(SlotIndex);
+	Payload.Instigator = GetOwner();
+	
+	ASC->HandleGameplayEvent(EquipTag, &Payload);
+}
+
+void UPTWInventoryComponent::SetWeaponActorHidden(UPTWItemInstance* Weapon, bool bInHidden)
+{
+	if (!Weapon) return;
+	if (Weapon->SpawnedWeapon1P) Weapon->SpawnedWeapon1P->SetActorHiddenInGame(bInHidden);
+	if (Weapon->SpawnedWeapon3P) Weapon->SpawnedWeapon3P->SetActorHiddenInGame(bInHidden);
 }

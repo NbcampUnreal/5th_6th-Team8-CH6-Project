@@ -41,8 +41,8 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 		return;
 	}
 	
-	SpawnedWeapon1P->bIsFirstPersonWeapon = true;
-	SpawnedWeapon3P->bIsFirstPersonWeapon = false;
+	SpawnedWeapon1P->SetFirstPersonMode(true);
+	SpawnedWeapon3P->SetFirstPersonMode(false);
 
 	//Fix 박태웅(01.29) - (업데이트 시도)
 	SpawnedWeapon1P->ForceNetUpdate();

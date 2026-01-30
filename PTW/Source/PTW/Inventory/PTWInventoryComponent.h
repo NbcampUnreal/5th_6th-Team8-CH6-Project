@@ -11,6 +11,7 @@ struct FGameplayTag;
 class UPTWItemInstance;
 class APTWWeaponActor;
 class UPTWItemDefinition;
+class UAbilitySystemComponent;
 
 
 
@@ -28,16 +29,20 @@ public:
 	void SwapWeapon(int32 SlotIndex);
 	
 	UFUNCTION(BlueprintCallable)
-	void EqiupWeapon(int32 SlotIndex);
+	void EquipWeapon(int32 SlotIndex);
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
 	FORCEINLINE UPTWItemInstance* GetCurrentWeaponInst() const {return CurrentWeapon;}
 	void SetCurrentWeaponInst(const UPTWItemInstance* WeaponInst);
 	
-	void WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool SetHidden);
+	void WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool bSetHidden);
 	
 	void ClearAndDestroyInventory();
+	
+	void SendEquipEventToASC(int32 SlotIndex, UAbilitySystemComponent* ASC);
+	
+	void SetWeaponActorHidden(UPTWItemInstance* Weapon, bool bInHidden);
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

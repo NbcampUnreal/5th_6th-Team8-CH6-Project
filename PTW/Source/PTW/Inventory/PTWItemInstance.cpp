@@ -31,6 +31,15 @@ void UPTWItemInstance::OnRep_SpawnedWeapon3P()
 	
 }
 
+void UPTWItemInstance::DestroySpawnedActors()
+{
+	SpawnedWeapon1P->Destroy();
+	SpawnedWeapon3P->Destroy();
+	
+	SpawnedWeapon1P = nullptr;
+	SpawnedWeapon3P = nullptr;
+}
+
 void UPTWItemInstance::SetCurrentAmmo(int32 NewAmmo)
 {
 	int32 MaxAmmo = GetMaxAmmo();

@@ -107,6 +107,7 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 	if (!Inven) return;
 	
 	UPTWItemInstance* CurrentInst = Inven->GetCurrentWeaponInst();
+	if (!CurrentInst) return;
 	
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PC);
 	if (!ASC) return;

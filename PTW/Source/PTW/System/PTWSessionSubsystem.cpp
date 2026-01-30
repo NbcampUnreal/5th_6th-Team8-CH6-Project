@@ -4,7 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 
 void UPTWSessionSubsystem::CreateLobbySession_Implementation(const TArray<FSessionPropertyKeyPair>& LobbySettings,
-	int32 MaxPlayers, bool bisPrivate)
+	int32 MaxPlayers, bool bIsPrivate)
 {
 }
 

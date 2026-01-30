@@ -36,10 +36,10 @@ void APTWMiniGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
-	{
-		PlayerStarts.Add(*It);
-	}
+	//for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+	//{
+	//	PlayerStarts.Add(*It);
+	//}
 	
 	StartTimer(MiniGameTime);
 }
@@ -76,20 +76,20 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
 	if (!NewPlayer) return;
 
-	//Super::RestartPlayer(NewPlayer);
+	Super::RestartPlayer(NewPlayer);
 	
-	if (PlayerStarts.Num() == 0)
-	{
-		Super::RestartPlayer(NewPlayer);
-	}
-	else
-	{
-		if(PlayerStartCount >= PlayerStarts.Num()-1)
-		{
-			PlayerStartCount = 0;
-		}
-		RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[PlayerStartCount++]);
-	}
+	// if (PlayerStarts.Num() == 0)
+	// {
+	// 	Super::RestartPlayer(NewPlayer);
+	// }
+	// else
+	// {
+	// 	if(PlayerStartCount >= PlayerStarts.Num()-1)
+	// 	{
+	// 		PlayerStartCount = 0;
+	// 	}
+	// 	RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[PlayerStartCount++]);
+	// }
 	
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);

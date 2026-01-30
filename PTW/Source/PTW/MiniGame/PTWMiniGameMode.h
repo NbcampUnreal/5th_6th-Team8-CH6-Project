@@ -49,8 +49,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")
 	TObjectPtr<UPTWItemDefinition> ItemDefinition;
 
-	UPROPERTY()
-	TArray<TObjectPtr<APlayerStart>> PlayerStarts;
+	//UPROPERTY()
+	//TArray<TObjectPtr<APlayerStart>> PlayerStarts;
 	
 
 private:

@@ -130,7 +130,9 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
 	
 	Multicast_Death();
-
+	
+	AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
+	
 	if (OnCharacterDied.IsBound())
 	{
 		OnCharacterDied.Broadcast(this, Attacker);

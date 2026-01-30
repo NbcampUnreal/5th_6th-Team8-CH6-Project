@@ -296,11 +296,12 @@ void APTWPlayerController::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn
 		{
 			TWeakObjectPtr<ThisClass> WeakThis = this;
 			TWeakObjectPtr<APawn> WeakViewTarget = NewViewTarget;
-			GetWorldTimerManager().SetTimerForNextTick([WeakThis, WeakViewTarget]()
+			FTimerHandle NextViewTimerHandle;
+			GetWorldTimerManager().SetTimer(NextViewTimerHandle, [WeakThis, WeakViewTarget]()
 			{
 				if (WeakThis.IsValid() && WeakViewTarget.IsValid())
 				WeakThis->SetViewTargetWithBlend(WeakViewTarget.Get(), 0.5f, VTBlend_Cubic);
-			});
+			}, 0.1f, false);
 		}
 	}
 }

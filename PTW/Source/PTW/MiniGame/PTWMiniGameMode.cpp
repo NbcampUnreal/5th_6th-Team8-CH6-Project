@@ -8,8 +8,10 @@
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "GameFramework/PlayerStart.h"
 #include "GAS/PTWAttributeSet.h"
 #include "System/PTWScoreSubsystem.h"
+#include "EngineUtils.h"
 #include "PTW/Inventory/PTWItemDefinition.h"
 
 class UPTWScoreSubsystem;
@@ -33,17 +35,21 @@ void APTWMiniGameMode::InitGameState()
 void APTWMiniGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+	{
+		PlayerStarts.Add(*It);
+	}
 	
 	StartTimer(MiniGameTime);
 }
 
 void APTWMiniGameMode::EndTimer()
 {
+	ApplyMiniGameRankScore();
 	ResetPlayerRoundData();
-	MiniGameEnd();
 	
 	Super::EndTimer();
-	
 	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
 }
 
@@ -68,15 +74,26 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 
 void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
+	if (!NewPlayer) return;
+
 	Super::RestartPlayer(NewPlayer);
+	// if (PlayerStarts.Num() == 0)
+	// {
+	// 	Super::RestartPlayer(NewPlayer);
+	// }
+	// else
+	// {
+	// 	int32 RandomInt = FMath::RandRange(0, PlayerStarts.Num()-1);
+	// 	RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[RandomInt]);
+	// }
 	
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);
 	
-	if (APTWBaseCharacter* BaseCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
+	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
 	{
+		BaseCharacter->OnCharacterDied.RemoveDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
 		BaseCharacter->OnCharacterDied.AddDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
-		UE_LOG(LogTemp, Warning, TEXT("RestartPlayer"));
 	}
 }
 
@@ -114,6 +131,7 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	if (!PTWGameState) return;
 
 	PTWGameState->UpdateRanking();
+
 	
 	if (IsValid(DeadPlayerController))
 	{
@@ -156,7 +174,7 @@ void APTWMiniGameMode::InitPlayerHealth(AController* Controller)
 	AttributeSet->SetHealth(AttributeSet->GetMaxHealth());
 }
 
-void APTWMiniGameMode::MiniGameEnd()
+void APTWMiniGameMode::ApplyMiniGameRankScore()
 {
 	// 현재 랭킹을 기준으로 승리 포인트 추가
 
@@ -170,7 +188,6 @@ void APTWMiniGameMode::MiniGameEnd()
 		PlayerData.TotalWinPoints += PTWGameState->GetRankedPlayers().Num() - i;
 		PTWGameState->GetRankedPlayers()[i]->SetPlayerData(PlayerData);
 	}
-	
 }
 
 void APTWMiniGameMode::AddWinPoint(APawn* PointPawn, int32 AddPoint)

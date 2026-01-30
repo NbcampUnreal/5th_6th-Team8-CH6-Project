@@ -23,13 +23,13 @@ class PTW_API IPTWPlayerRoundDataInterface
 	
 public:
 	/** 라운드 킬 증가 */
-	virtual void AddKillCount(int32 Amount = 1);
+	virtual void AddKillCount(int32 Amount = 1) =0;
 	
 	/** 라운드 데스 증가 */
-	virtual void AddDeathCount(int32 Amount = 1);
+	virtual void AddDeathCount(int32 Amount = 1) =0;
 	
 	/** 라운드 점수 증가 */
-	virtual void AddScore(int32 Amount);
+	virtual void AddScore(int32 Amount)=0;
 	
 	/** 라운드 더어터 초기화 */
 	virtual void ResetRoundData() = 0;

@@ -20,6 +20,12 @@ APTWMiniGameMode::APTWMiniGameMode()
 {
 	
 }
+
+void APTWMiniGameMode::AddWinPoint(APawn* Pawn, int32 Score)
+{
+	
+}
+
 void APTWMiniGameMode::InitGameState()
 {
 	Super::InitGameState();
@@ -46,7 +52,9 @@ void APTWMiniGameMode::BeginPlay()
 
 void APTWMiniGameMode::EndTimer()
 {
-	ApplyMiniGameRankScore();
+	if (!PTWGameState) return;
+	
+	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
 	ResetPlayerRoundData();
 	
 	Super::EndTimer();
@@ -64,7 +72,7 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 
-	if (!PTWGameState) return;
+	if (!IsValid(PTWGameState)) return;
 
 	if (APTWPlayerState* PlayerState = NewPlayer->GetPlayerState<APTWPlayerState>())
 	{
@@ -119,22 +127,14 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	if (!IsValid(DeadActor)) return;
 	
 	APTWPlayerController* DeadPlayerController = nullptr;
-	APlayerState* DeadPlayState = nullptr;
+	APlayerState* DeadPlayerState = nullptr;
 
 	if (const APawn* DeadPawn = Cast<APawn>(DeadActor))
 	{
 		DeadPlayerController = DeadPawn->GetController<APTWPlayerController>();
-		DeadPlayState = DeadPawn->GetPlayerState();
+		DeadPlayerState = DeadPawn->GetPlayerState();
 	}
-
-	if (DeadPlayState)
-	{
-		if (IPTWPlayerRoundDataInterface* DeadPlayerData = Cast<IPTWPlayerRoundDataInterface>(DeadPlayState))
-		{
-			DeadPlayerData->AddDeathCount(1);
-		}
-	}
-
+	
 	APlayerState* KillPlayerState = nullptr;
 	if (IsValid(KillActor))
 	{
@@ -148,6 +148,24 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 		}
 	}
 	
+	UpdatePlayerRoundData(DeadPlayerState, KillPlayerState);
+	
+	if (!PTWGameState) return;
+	PTWGameState->UpdateRanking();
+	
+	RespawnPlayer(DeadPlayerController);
+}
+
+void APTWMiniGameMode::UpdatePlayerRoundData(APlayerState* DeadPlayerState, APlayerState* KillPlayerState)
+{
+	if (IsValid(DeadPlayerState))
+	{
+		if (IPTWPlayerRoundDataInterface* DeadPlayerData = Cast<IPTWPlayerRoundDataInterface>(DeadPlayerState))
+		{
+			DeadPlayerData->AddDeathCount(1);
+		}
+	}
+
 	if (IsValid(KillPlayerState))
 	{
 		if (IPTWPlayerRoundDataInterface* KillPlayerData = Cast<IPTWPlayerRoundDataInterface>(KillPlayerState))
@@ -155,25 +173,6 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 			KillPlayerData->AddKillCount();
 			KillPlayerData->AddScore(1);
 		}
-	}
-	
-	if (!PTWGameState) return;
-
-	PTWGameState->UpdateRanking();
-
-	
-	if (IsValid(DeadPlayerController))
-	{
-		GetWorldTimerManager().ClearTimer(DeadPlayerController->RespawnTimerHandle);		// 방어 코드
-		TWeakObjectPtr<ThisClass> WeakThis = this;
-		TWeakObjectPtr<APTWPlayerController> WeakDeadController = DeadPlayerController;
-		GetWorldTimerManager().SetTimer(WeakDeadController->RespawnTimerHandle, [WeakThis, WeakDeadController]()
-		{
-			if (WeakThis.IsValid() && WeakDeadController.IsValid())		// 파괴 방어
-			{
-				WeakThis->RestartPlayer(WeakDeadController.Get());
-			}
-		}, 5.0f, false);
 	}
 }
 
@@ -186,6 +185,23 @@ void APTWMiniGameMode::ResetPlayerRoundData()
 		{
 			RoundDataInterface->ResetRoundData();
 		}
+	}
+}
+
+void APTWMiniGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController)
+{
+	if (IsValid(SpawnPlayerController))
+	{
+		GetWorldTimerManager().ClearTimer(SpawnPlayerController->RespawnTimerHandle);		// 방어 코드
+		TWeakObjectPtr<ThisClass> WeakThis = this;
+		TWeakObjectPtr<APTWPlayerController> WeakDeadController = SpawnPlayerController;
+		GetWorldTimerManager().SetTimer(WeakDeadController->RespawnTimerHandle, [WeakThis, WeakDeadController]()
+		{
+			if (WeakThis.IsValid() && WeakDeadController.IsValid())		// 파괴 방어
+			{
+				WeakThis->RestartPlayer(WeakDeadController.Get());
+			}
+		}, 5.0f, false);
 	}
 }
 
@@ -203,30 +219,7 @@ void APTWMiniGameMode::InitPlayerHealth(AController* Controller)
 	AttributeSet->SetHealth(AttributeSet->GetMaxHealth());
 }
 
-void APTWMiniGameMode::ApplyMiniGameRankScore()
-{
-	// 현재 랭킹을 기준으로 승리 포인트 추가
 
-	if (!IsValid(PTWGameState)) return;
 
-	// 승리 포인트는 임시로 플레이어 인원 수만큼 지급
-	// 동점 계산 X
-	for (int i = 0; i < PTWGameState->GetRankedPlayers().Num(); i++)
-	{
-		FPTWPlayerData PlayerData = PTWGameState->GetRankedPlayers()[i]->GetPlayerData();
-		PlayerData.TotalWinPoints += PTWGameState->GetRankedPlayers().Num() - i;
-		PTWGameState->GetRankedPlayers()[i]->SetPlayerData(PlayerData);
-	}
-}
-
-void APTWMiniGameMode::AddWinPoint(APawn* PointPawn, int32 AddPoint)
-{
-	if (APTWPlayerState* PTWPlayerState = PointPawn->GetPlayerState<APTWPlayerState>())
-	{
-		FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
-		PlayerData.TotalWinPoints += AddPoint;
-		PTWPlayerState->SetPlayerData(PlayerData);
-	}
-}
 
 

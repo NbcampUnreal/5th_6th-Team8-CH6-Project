@@ -36,6 +36,7 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	Mesh1P->SetupAttachment(PlayerCamera);
+	Mesh1P->SetHiddenInGame(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	CrouchedEyeHeight = 40.0f;
@@ -80,7 +81,7 @@ void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
 		if (AbilitySystemComponent)
 		{
 			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
-
+			AbilitySystemComponent->CancelAllAbilities();
 			AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
 			AbilitySystemComponent->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
 		}
@@ -143,6 +144,10 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 
 	if (AbilitySystemComponent)
 	{
+		if (HasAuthority())
+		{
+			AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
+		}
 		FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 
 		if (AbilitySystemComponent->HasMatchingGameplayTag(EquipTag))
@@ -187,6 +192,10 @@ void APTWPlayerCharacter::OnRep_PlayerState()
 		{
 			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 			AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
+			if (HasAuthority())
+			{
+				AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
+			}
 		}
 	}
 }
@@ -208,7 +217,8 @@ void APTWPlayerCharacter::InitAbilityActorInfo()
 			*PS->GetName(), 
 			*GetName());
 	}
-	else {
+	else 
+	{
 		UE_LOG(LogTemp, Error, TEXT("InitAbility Failed: PlayerState is NULL for %s"), *GetName());
 	}
 }

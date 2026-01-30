@@ -41,6 +41,10 @@ void APTWBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (HasAuthority())
+	{
+		AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
+	}
 }
 
 void APTWBaseCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -130,7 +134,9 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
 	
 	Multicast_Death();
-
+	
+	AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
+	
 	if (OnCharacterDied.IsBound())
 	{
 		OnCharacterDied.Broadcast(this, Attacker);

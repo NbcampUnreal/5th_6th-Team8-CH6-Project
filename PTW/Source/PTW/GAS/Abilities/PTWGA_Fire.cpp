@@ -107,6 +107,7 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 	if (!Inven) return;
 	
 	UPTWItemInstance* CurrentInst = Inven->GetCurrentWeaponInst();
+	if (!CurrentInst) return;
 	
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PC);
 	if (!ASC) return;
@@ -258,7 +259,6 @@ void UPTWGA_Fire::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGam
 
 void UPTWGA_Fire::OnInputReleasedCallback(float TimeHold)
 {
-	StopFire();
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 

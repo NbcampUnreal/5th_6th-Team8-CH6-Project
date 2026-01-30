@@ -259,7 +259,6 @@ void UPTWGA_Fire::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGam
 
 void UPTWGA_Fire::OnInputReleasedCallback(float TimeHold)
 {
-	StopFire();
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 

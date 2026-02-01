@@ -12,6 +12,7 @@
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerController.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "EntitySystem/MovieSceneEntitySystemRunner.h"
 #include "GAS/PTWWeaponAttributeSet.h"
 #include "Inventory/PTWInventoryComponent.h"
@@ -148,7 +149,7 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 	}
 	
 	//캐릭터 반동 함수 호출(박태웅)
-	Context.PC->ApplyRecoil();
+	Context.PC->GetWeaponComponent()->ApplyRecoil();
 }
 
 void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* PlayerCharacter)

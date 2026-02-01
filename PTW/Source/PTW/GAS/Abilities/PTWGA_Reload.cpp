@@ -9,6 +9,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
@@ -45,7 +46,7 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		MontageTask->ReadyForActivation();
 	}
 	
-	PC->PlayMontage1P(MontageToPlay);
+	PC->GetWeaponComponent()->PlayMontage1P(MontageToPlay);
 	
 	if (!MontageToPlay)
 	{

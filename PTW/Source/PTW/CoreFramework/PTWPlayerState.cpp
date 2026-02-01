@@ -7,6 +7,8 @@
 #include "PTW/GAS/PTWAbilitySystemComponent.h"
 #include "PTW/GAS/PTWAttributeSet.h"
 #include "Net/UnrealNetwork.h"
+#include "GameplayEffect.h"
+#include "GameplayAbilitySpec.h"
 
 APTWPlayerState::APTWPlayerState()
 {
@@ -62,6 +64,96 @@ FPTWPlayerData APTWPlayerState::GetPlayerData() const
 FPTWPlayerRoundData APTWPlayerState::GetPlayerRoundData() const
 {
 	return PlayerRoundData;
+}
+
+void APTWPlayerState::InjectAbility(TSubclassOf<UGameplayAbility> AbilityClass)
+{
+	if (!AbilityClass || !HasAuthority()) return;
+
+	if (!AdditionalAbilities.Contains(AbilityClass))
+	{
+		AdditionalAbilities.Add(AbilityClass);
+	}
+	if (AbilitySystemComponent)
+	{
+		if (!AbilitySystemComponent->FindAbilitySpecFromClass(AbilityClass))
+		{
+			FGameplayAbilitySpec Spec(AbilityClass, 1, INDEX_NONE, this);
+			AbilitySystemComponent->GiveAbility(Spec);
+		}
+	}
+}
+
+void APTWPlayerState::InjectEffect(TSubclassOf<UGameplayEffect> EffectClass)
+{
+	if (!EffectClass || !HasAuthority()) return;
+
+	if (!AdditionalEffects.Contains(EffectClass))
+	{
+		AdditionalEffects.Add(EffectClass);
+	}
+
+	if (AbilitySystemComponent)
+	{
+		const UGameplayEffect* EffectCDO = EffectClass->GetDefaultObject<UGameplayEffect>();
+
+		if (EffectCDO->DurationPolicy == EGameplayEffectDurationType::Infinite)
+		{
+
+		}
+
+		FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
+		Context.AddSourceObject(this);
+		FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, 1.0f, Context);
+
+		if (Spec.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+		}
+	}
+}
+
+void APTWPlayerState::ApplyAdditionalAbilities()
+{
+	if (!HasAuthority() || !AbilitySystemComponent) return;
+
+	for (const TSubclassOf<UGameplayAbility>& AbilityClass : AdditionalAbilities)
+	{
+		if (AbilityClass)
+		{
+			if (!AbilitySystemComponent->FindAbilitySpecFromClass(AbilityClass))
+			{
+				FGameplayAbilitySpec Spec(AbilityClass, 1, INDEX_NONE, this);
+				AbilitySystemComponent->GiveAbility(Spec);
+			}
+		}
+	}
+}
+
+void APTWPlayerState::ApplyAdditionalEffects()
+{
+	if (!HasAuthority() || !AbilitySystemComponent) return;
+
+	for (const TSubclassOf<UGameplayEffect>& EffectClass : AdditionalEffects)
+	{
+		if (!EffectClass) continue;
+
+		const UGameplayEffect* EffectCDO = EffectClass->GetDefaultObject<UGameplayEffect>();
+
+		 if (EffectCDO->DurationPolicy == EGameplayEffectDurationType::Infinite)
+		 {
+		      if (AbilitySystemComponent->HasAnyMatchingGameplayTags(EffectCDO->InheritableGameplayEffectTags.CombinedTags)) continue;
+		 }
+
+		FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
+		Context.AddSourceObject(this);
+		FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, 1.0f, Context);
+
+		if (Spec.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+		}
+	}
 }
 
 void APTWPlayerState::AddKillCount(int32 KillCount)

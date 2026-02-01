@@ -2,27 +2,27 @@
 
 
 #include "PTWPlayerCharacter.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Camera/CameraComponent.h"
-#include "AbilitySystemComponent.h"
-#include "PTWPlayerState.h"
-#include "PTW/GAS/PTWAbilitySystemComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Net/UnrealNetwork.h"
+#include "GameplayTagContainer.h"
+#include "Camera/CameraComponent.h"
+#include "AbilitySystemComponent.h"
+#include "Components/WidgetComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+
+#include "PTWPlayerState.h"
 #include "PTWInputComponent.h"
 #include "PTWPlayerController.h"
 #include "GAS/PTWGameplayAbility.h"
-#include "Inventory/PTWInventoryComponent.h"
-#include "Inventory/PTWWeaponActor.h"
-#include "Inventory/PTWItemDefinition.h"
 #include "System/PTWItemSpawnManager.h"
-#include "Net/UnrealNetwork.h"
-#include "Components/WidgetComponent.h" // PlayerNameTag
-#include "UI/CharacterUI/PTWPlayerName.h" // PlayerNameTag
-#include "CoreFramework/PTWPlayerState.h"
-#include "PTW/Inventory/PTWWeaponData.h"
-#include "GameplayTagContainer.h"
+#include "PTW/GAS/PTWAbilitySystemComponent.h"
+#include "Inventory/PTWInventoryComponent.h"
+#include "Inventory/PTWItemDefinition.h"
+#include "UI/CharacterUI/PTWPlayerName.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
+#include "CoreFramework/Character/Component/PTWReactorComponent.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -46,59 +46,23 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 
 	/* PlayerNameTag */
 	NameTagWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("NameTagWidget"));
-	NameTagWidget->SetupAttachment(GetMesh()); // 메시에 부착
-	NameTagWidget->SetRelativeLocation(FVector(0.f, 0.f, 200.f)); // 머리 위 적절한 높이
-	NameTagWidget->SetWidgetSpace(EWidgetSpace::Screen); // 항상 화면을 향하도록 설정
+	NameTagWidget->SetupAttachment(GetMesh());
+	NameTagWidget->SetRelativeLocation(FVector(0.f, 0.f, 200.f));
+	NameTagWidget->SetWidgetSpace(EWidgetSpace::Screen);
 	NameTagWidget->SetDrawAtDesiredSize(true);
 
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
+
+	WeaponComponent = CreateDefaultSubobject<UPTWWeaponComponent>(TEXT("WeaponComponent"));
+	WeaponComponent->SetIsReplicated(true);
 }
 
 void APTWPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(APTWPlayerCharacter, CurrentWeaponTag);
-	DOREPLIFETIME(APTWPlayerCharacter, CurrentWeapon);
-}
-
-void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
-{
-	Super::HandleDeath(Attacker);
-	
-	if (APTWPlayerController* PC = GetController<APTWPlayerController>())
-	{
-		if (HasAuthority())
-		{
-			// TODO: 임시 관전 전환 로직
-			PC->StartSpectating();
-		}
-	}
-	
-	if (HasAuthority())
-	{
-		if (AbilitySystemComponent)
-		{
-			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
-			AbilitySystemComponent->CancelAllAbilities();
-			AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
-			AbilitySystemComponent->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
-		}
-
-		if (InventoryComponent)
-		{
-			InventoryComponent->ClearAndDestroyInventory();
-		}
-
-		CurrentWeapon = nullptr;
-		CurrentWeaponTag = FGameplayTag::EmptyTag;
-
-		OnRep_CurrentWeaponTag(FGameplayTag::EmptyTag);
-
-		SpawnedWeapons.Empty();
-	}
 }
 
 void APTWPlayerCharacter::BeginPlay()
@@ -115,20 +79,6 @@ void APTWPlayerCharacter::BeginPlay()
 			}
 		}
 	}
-
-	if (IsLocallyControlled())
-	{
-		CurrentWeaponTag = FGameplayTag::EmptyTag;
-		CurrentWeapon = nullptr;
-
-		if (InventoryComponent)
-		{
-			InventoryComponent->WeaponVisibleSetting(FGameplayTag::EmptyTag, true);
-			InventoryComponent->SetCurrentWeaponInst(nullptr);
-		}
-		UE_LOG(LogTemp, Warning, TEXT("[Client] BeginPlay: Force Unequip Visuals"));
-	}
-
 	if (Mesh1P)
 	{
 		Mesh1P->SetHiddenInGame(false);
@@ -161,11 +111,6 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 		}
 	}
 
-	CurrentWeapon = nullptr;
-	CurrentWeaponTag = FGameplayTag::EmptyTag;
-
-	OnRep_CurrentWeaponTag(FGameplayTag::EmptyTag);
-
 	GiveDefaultAbilities();
 	ApplyDefaultEffects();
 	UpdateNameTagText();
@@ -185,13 +130,8 @@ void APTWPlayerCharacter::OnRep_PlayerState()
 		{
 			PC->TryInitializeHUD();
 		}
-
-		CurrentWeaponTag = FGameplayTag::EmptyTag;
-		CurrentWeapon = nullptr;
-
 		if (InventoryComponent)
 		{
-			InventoryComponent->WeaponVisibleSetting(FGameplayTag::EmptyTag, true);
 			InventoryComponent->SetCurrentWeaponInst(nullptr);
 		}
 		if (AbilitySystemComponent)
@@ -217,7 +157,6 @@ void APTWPlayerCharacter::InitAbilityActorInfo()
 		AbilitySystemComponent = PS->GetAbilitySystemComponent();
 		AttributeSet = PS->GetAttributeSet();
 	
-		// [중요 디버깅 로그]
 		UE_LOG(LogTemp, Warning, TEXT("[%s] InitAbility - PS: %s, Avatar: %s"), 
 			HasAuthority() ? TEXT("SERVER") : TEXT("CLIENT"),
 			*PS->GetName(), 
@@ -312,89 +251,6 @@ void APTWPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 	}
 }
 
-void APTWPlayerCharacter::EquipWeaponByTag(FGameplayTag NewWeaponTag)
-{
-	if (!HasAuthority()) return;
-	
-	OnRep_CurrentWeaponTag(CurrentWeaponTag);
-
-	// 같은 무기면 해제 로직
-	if (CurrentWeaponTag == NewWeaponTag)
-	{
-		if (CurrentWeapon)
-		{
-			if (FWeaponPair* CurrentPair = SpawnedWeapons.Find(CurrentWeaponTag))
-			{
-				if (CurrentPair->Weapon1P) CurrentPair->Weapon1P->SetActorHiddenInGame(true);
-				if (CurrentPair->Weapon3P) CurrentPair->Weapon3P->SetActorHiddenInGame(true);
-			}
-
-			CurrentWeapon = nullptr;
-		}
-
-		CurrentWeaponTag = FGameplayTag::EmptyTag;
-		UE_LOG(LogTemp, Log, TEXT("Weapon Unequipped (Toggle Off)"));
-		return;
-	}
-
-	if (CurrentWeaponTag.IsValid())
-	{
-		if (FWeaponPair* OldPair = SpawnedWeapons.Find(CurrentWeaponTag))
-		{
-			if (OldPair->Weapon1P) OldPair->Weapon1P->SetActorHiddenInGame(true);
-			if (OldPair->Weapon3P) OldPair->Weapon3P->SetActorHiddenInGame(true);
-		}
-	}
-
-	if (FWeaponPair* FoundPair = SpawnedWeapons.Find(NewWeaponTag))
-	{
-		APTWWeaponActor* NewWeapon1P = FoundPair->Weapon1P;
-		APTWWeaponActor* NewWeapon3P = FoundPair->Weapon3P;
-
-		if (NewWeapon1P && NewWeapon3P)
-		{
-			NewWeapon1P->SetActorHiddenInGame(false);
-			NewWeapon3P->SetActorHiddenInGame(false);
-
-			CurrentWeapon = NewWeapon1P;
-			CurrentWeaponTag = NewWeaponTag;
-			
-			UE_LOG(LogTemp, Log, TEXT("Weapon Equipped: %s"), *NewWeaponTag.ToString());
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot find weapon with tag: %s"), *NewWeaponTag.ToString());
-	}
-}
-
-void APTWPlayerCharacter::OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon)
-{
-	
-}
-
-void APTWPlayerCharacter::AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag)
-{
-	if (!NewWeapon1P || !NewWeapon3P) return;
-
-	FWeaponPair Weaponpair;
-	Weaponpair.Weapon1P = NewWeapon1P;
-	Weaponpair.Weapon3P = NewWeapon3P;
-	SpawnedWeapons.Add(WeaponTag, Weaponpair);
-
-	NewWeapon1P->AttachToComponent(GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
-	NewWeapon3P->AttachToComponent(GetMesh3P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
-
-	NewWeapon1P->ApplyVisualPerspective();
-	NewWeapon3P->ApplyVisualPerspective();
-
-	NewWeapon1P->SetActorHiddenInGame(true);
-	NewWeapon3P->SetActorHiddenInGame(true);
-
-	NewWeapon1P->SetActorEnableCollision(false);
-	NewWeapon3P->SetActorEnableCollision(false);
-}
-
 UWidgetComponent* APTWPlayerCharacter::GetNameTagWidget() const
 {
 	return NameTagWidget;
@@ -404,7 +260,6 @@ void APTWPlayerCharacter::UpdateNameTagText()
 {
 	if (!NameTagWidget) return;
 
-	// PlayerState에서 이름 가져오기
 	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
 	UPTWPlayerName* NameWidget = Cast<UPTWPlayerName>(NameTagWidget->GetUserWidgetObject());
 
@@ -415,7 +270,6 @@ void APTWPlayerCharacter::UpdateNameTagText()
 	}
 	GetWorldTimerManager().ClearTimer(NameTagRetryTimer);
 
-	// 이름 설정 (1순위 : 플레이어데이터의 닉네임, 2순위 : 스팀아이디닉네임)
 	FString Name;
 	const FPTWPlayerData& PD = PS->GetPlayerData();
 	if (!PD.PlayerName.IsEmpty())
@@ -426,55 +280,6 @@ void APTWPlayerCharacter::UpdateNameTagText()
 	{
 		Name = PS->GetPlayerName();
 	}
-	
-	// UI 반영
+
 	NameWidget->SetPlayerName(Name);
-}
-
-void APTWPlayerCharacter::OnRep_CurrentWeaponTag(const FGameplayTag& OldTag)
-{
-	if (OldTag != FGameplayTag::EmptyTag)
-	{
-		InventoryComponent->WeaponVisibleSetting(OldTag, true);
-	}
-	
-	InventoryComponent->WeaponVisibleSetting(CurrentWeaponTag, false);
-	
-}
-
-void APTWPlayerCharacter::ApplyRecoil()
-{
-	if (!CurrentWeapon) return;
-	const UPTWWeaponData* Data = CurrentWeapon->GetWeaponData();
-	if (!Data) return;
-
-	FGameplayTag FireTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Anim.Fire"));
-	if (Data->AnimMap.Contains(FireTag))
-	{
-		UAnimMontage* Montage = *Data->AnimMap.Find(FireTag);
-		if (Montage)
-		{
-			UAnimInstance* AnimInstance = (IsLocallyControlled() && Mesh1P) ? Mesh1P->GetAnimInstance() : GetMesh()->GetAnimInstance();
-			if (AnimInstance)
-			{
-				AnimInstance->Montage_Play(Montage, 1.0f);
-			}
-		}
-	}
-}
-
-float APTWPlayerCharacter::PlayMontage1P(UAnimMontage* MontageToPlay)
-{
-	if (!IsLocallyControlled() || !Mesh1P || !MontageToPlay)
-	{
-		return 0.0f;
-	}
-
-	UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-	if (AnimInstance)
-	{
-		return AnimInstance->Montage_Play(MontageToPlay, 1.0f);
-	}
-
-	return 0.0f;
 }

@@ -11,6 +11,7 @@
 #include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWWeaponData.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 
 UPTWGA_Equip::UPTWGA_Equip()
 {
@@ -30,7 +31,7 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 
 		if (HasAuthority(&CurrentActivationInfo))
 		{
-			Character->EquipWeaponByTag(CurrentWeaponTag);
+			Character->GetWeaponComponent()->EquipWeaponByTag(CurrentWeaponTag);
 			 if (UPTWInventoryComponent* InvenComp = Character->GetInventoryComponent())
 			 {
 			 	InvenComp->SetCurrentWeaponInst(WeaponItemInstance);

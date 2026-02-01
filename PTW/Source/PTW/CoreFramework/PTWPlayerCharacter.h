@@ -14,21 +14,9 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 class UPTWInventoryComponent;
-class APTWWeaponActor;
 class UWidgetComponent;
-
-USTRUCT(BlueprintType)
-struct FWeaponPair
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<APTWWeaponActor> Weapon1P;
-
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<APTWWeaponActor> Weapon3P;
-};
+class UPTWWeaponComponent;
+class UPTWReactorComponent;
 
 UCLASS()
 class PTW_API APTWPlayerCharacter : public APTWBaseCharacter
@@ -36,13 +24,28 @@ class PTW_API APTWPlayerCharacter : public APTWBaseCharacter
 	GENERATED_BODY()
 	
 public:
+	// 1. 생성자 (Constructor)
 	APTWPlayerCharacter();
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	virtual void HandleDeath(AActor* Attacker) override;
+	// 2. [Public] 인터페이스 함수 (외부에서 호출하는 함수)
+
+
+	// 3. [Public] Getter / Setter (FORCEINLINE 권장)
+	FORCEINLINE UPTWWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
+	FORCEINLINE UCameraComponent* GetPlayerCamera() const { return PlayerCamera; }
+	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+
+
+	UWidgetComponent* GetNameTagWidget() const;
+
+	UFUNCTION(BlueprintPure, Category = "Mesh")
+	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+	UFUNCTION(BlueprintPure, Category = "Mesh")
+	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
+
 protected:
-	//생성자
+	// 4. [Protected] 오버라이드 함수 (LifeCycle) - BeginPlay, EndPlay 등
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
@@ -50,50 +53,26 @@ protected:
 	virtual void InitAbilityActorInfo() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-protected:
+
+	// 5. [Protected] 내부 구현 로직 (상속받은 자식이 쓸 수 있는 함수)
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
 	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
 
-public:
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void EquipWeaponByTag(FGameplayTag NewWeaponTag);
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon);
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	APTWWeaponActor* GetCurrentWeapon() const { return CurrentWeapon; }
+	/* 위젯에 닉네임 전달 */
+	void UpdateNameTagText();
 
-	UFUNCTION(BlueprintPure, Category = "Mesh")
-	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-	UFUNCTION(BlueprintPure, Category = "Mesh")
-	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
+private:
+	// 6. [Private] 내부 전용 유틸리티 함수 (외부/자식 노출 X)
 
-	void AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag);
-
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void ApplyRecoil();
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	float PlayMontage1P(UAnimMontage* MontageToPlay);
 
 public:
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	TMap<FGameplayTag, TSubclassOf<APTWWeaponActor>> WeaponClasses;
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentWeaponTag, VisibleInstanceOnly, Category = "Weapon")
-	FGameplayTag CurrentWeaponTag;
-	UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
-	TMap<FGameplayTag, FWeaponPair> SpawnedWeapons;
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon", ReplicatedUsing = OnRep_CurrentWeapon)
-	APTWWeaponActor* CurrentWeapon;
+	// 7. [Public] 멤버 변수 (대부분의 설정값)
+
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	TObjectPtr<UCameraComponent> PlayerCamera;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USkeletalMeshComponent> Mesh1P;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UPTWInventoryComponent> InventoryComponent;
+	// 8. [Protected] 멤버 변수 (내부 상태값)
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UPTWInputConfig> InputConfig;
@@ -108,24 +87,28 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Temp")
 	TObjectPtr<UPTWItemDefinition> ItemDef;
 
-public:
-	FORCEINLINE UCameraComponent* GetPlayerCamera() const { return PlayerCamera; }
-	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
-
-	/* PlayerNameTag */
-public:
-	UWidgetComponent* GetNameTagWidget() const;
-protected:
-	/* 위젯에 닉네임 전달 */
-	void UpdateNameTagText();
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	TObjectPtr<UWidgetComponent> NameTagWidget;
-	// 이름표 갱신 재시도를 위한 타이머 핸들
+
 	FTimerHandle NameTagRetryTimer;
-	
-	UFUNCTION()
-	void OnRep_CurrentWeaponTag(const FGameplayTag& OldTag);
-	
+
+
+	// 9. [Protected] 컴포넌트 (Components)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+	TObjectPtr<UCameraComponent> PlayerCamera;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> Mesh1P;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UPTWInventoryComponent> InventoryComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UPTWWeaponComponent> WeaponComponent;
+
+private:
+	// 10. [Private] 멤버 변수 (완벽히 숨겨야 하는 값)
+
+
+public:
+	// 11. [Delegate] 델리게이트 (최하단 배치 규칙 준수)
+
 
 };

@@ -9,6 +9,7 @@
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWWeaponData.h"
 #include "PTW/CoreFramework/PTWPlayerCharacter.h"
+#include "PTW/CoreFramework/Character/Component/PTWWeaponComponent.h"
 
 
 void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, UPTWItemDefinition* ItemDefinition, FGameplayTag WeaponTag)
@@ -64,5 +65,5 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	}
 
 	Inventory->AddItem(WeaponItemInst);
-	TargetPlayer->AttachWeaponToSocket(SpawnedWeapon1P, SpawnedWeapon3P, WeaponTag);
+	TargetPlayer->GetWeaponComponent()->AttachWeaponToSocket(SpawnedWeapon1P, SpawnedWeapon3P, WeaponTag);
 }

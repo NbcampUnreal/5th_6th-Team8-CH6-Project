@@ -23,14 +23,8 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 	if (HealthBar) HealthBar->InitWithASC(ASC);
 	/* AmmoWidget 초기화*/
 	if (AmmoWidget) AmmoWidget->InitWithASC(ASC);
-}
-
-void UPTWInGameHUD::SetCrosshairVisibility(bool bVisible)
-{
-	if (CrosshairWidget)
-	{
-		CrosshairWidget->SetCrosshairVisibility(bVisible);
-	}
+	/* 크로스헤어 초기화 */
+	if (CrosshairWidget) CrosshairWidget->InitWithASC(ASC);
 }
 
 bool UPTWInGameHUD::Initialize()

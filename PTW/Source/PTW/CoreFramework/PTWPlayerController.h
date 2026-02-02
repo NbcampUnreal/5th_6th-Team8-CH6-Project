@@ -10,13 +10,14 @@
 /* KillLog 델리게이트 */
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnKillLog, const FString&, const FString&);
 
-class APTWHUD;
+class UPTWInGameHUD;
 class APTWPlayerState;
 class UAbilitySystemComponent;
 class UInputMappingContext;
 class UInputAction;
 class UPTWRankingBoard;
 class UPTWItemInstance;
+class UPTWUISubsystem;
 /**
  * 
  */
@@ -24,16 +25,8 @@ UCLASS()
 class PTW_API APTWPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-public:
-	/* HUD 초기화 */
-	void TryInitializeHUD();
-	void StartRetryTimer();
-	void StopRetryTimer();
-	
-	/*  ASC Delegate 바인딩 */
-	void BindASCDelegates(UAbilitySystemComponent* ASC);
-	void UnbindASCDelegates(UAbilitySystemComponent* ASC);
 
+public:
 	/* 관전 시스템 함수 */
 	void StartSpectating();
 	UFUNCTION(NetMulticast, Reliable)
@@ -53,31 +46,33 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void OnRep_PlayerState() override;
-	virtual void BeginSpectatingState() override;
 	virtual void OnRep_Pawn() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
+	virtual void BeginSpectatingState() override;
 	virtual void SetViewTarget(AActor* NewViewTarget, 
 		FViewTargetTransitionParams TransitionParams = FViewTargetTransitionParams()) override;
-	
+
 	void SetOwnerNoSeeRecursive(USceneComponent* InParentComponent, bool bNewOwnerNoSee);
 	void SetSetOnlyOwnerSeeRecursive(USceneComponent* InParentComponent, bool bNewOnlyOwnerSee);
 	
+	/*  ASC Delegate 바인딩 */
+	//void BindASCDelegates();
+	//void UnbindASCDelegates();
+
 	virtual void SetupInputComponent() override;
 	virtual void PostSeamlessTravel() override;
 
-	/* 랭킹보드 */
+	/* UI 생성 */
+	void CreateUI();
+
+	/* 랭킹보드 (Tab) */
 	void OnRankingPressed();
 	void OnRankingReleased();
-	void CreateRankingBoard();
 
-	/* PauseMenu */
+	/* PauseMenu (ESC) */
 	void HandleMenuInput();
 
-	/* 크로스헤어 */
-	void OnCrosshairStateTagChanged(const FGameplayTag Tag, int32 NewCount);
-	void UpdateCrosshairVisibility();
-	
 	/* 플레이어 이름 */
 	/* 닉네임 가시성 업데이트 로직 */
 	void UpdateNameTagsVisibility();
@@ -90,6 +85,27 @@ public:
 	FTimerHandle RespawnTimerHandle;
 	
 protected:
+	/* 캐싱된 Ability System Component */
+	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> ASC;
+
+	/* 캐싱된 UI 서브시스템 */
+	UPROPERTY()
+	TObjectPtr<UPTWUISubsystem> UISubsystem;
+
+	/* 닉네임 업데이트용 타이머 핸들 */
+	FTimerHandle NameTagTimerHandle;
+
+	/* 닉네임 표시 제한거리 */
+	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag")
+	float NameTagMaxDistance = 1500.f;
+	/* 닉네임 표시 업데이트 주기 */
+	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag")
+	float NameTagUpdateInterval = 0.1f; // 0.1초
+	/* 닉네임 표시 크기 */
+	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag")
+	float NameTagMinScale = 0.4f; // 가장 멀리 있을 때의 최소 크기 (0.4)
+
 	/* ---------- Input ---------- */
 	// 랭킹보드 (Tab)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -105,35 +121,13 @@ protected:
 	TObjectPtr<UInputAction> PauseMenuAction;
 	
 	/* ---------- UI ---------- */
+	// HUD
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UPTWInGameHUD> HUDClass;
 	// 랭킹보드
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UPTWRankingBoard> RankingBoardClass;
-	UPROPERTY()
-	TObjectPtr<UPTWRankingBoard> RankingBoard;
-
 	// PauseMenu
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> PauseMenuClass; 
-	
-	/* 가시성 설정 */
-	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag")
-	float NameTagMaxDistance = 1500.f;
-	/* 가시성 체크 주기 */
-	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag")
-	float NameTagUpdateInterval = 0.1f; // 0.1초마다 체크
-	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag")
-	float NameTagMinScale = 0.4f; // 가장 멀리 있을 때의 최소 크기 (0.4)
-
-	FTimerHandle NameTagTimerHandle;
-
-	// HUD 초기화용
-	FTimerHandle HUDInitTimerHandle;
-	
-	// GameplayTag Delegate Handles
-	FDelegateHandle EquipTagHandle;
-	FDelegateHandle SprintTagHandle;
-
-	// 캐싱된 태그 (매번 Request 하지 않기 위함)
-	FGameplayTag EquipTag;
-	FGameplayTag SprintTag;
 };

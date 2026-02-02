@@ -2,11 +2,17 @@
 
 
 #include "UI/PTWUISubsystem.h"
-#include "UI/InGameUI/PTWDamageIndicator.h"
-
 #include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"           // PlayerState 접근을 위해 필요
+#include "AbilitySystemInterface.h"              // IAbilitySystemInterface 정의
+#include "AbilitySystemComponent.h"              // UAbilitySystemComponent 반환 타입을 위해 필요
+
+#include "GameFramework/PlayerController.h"
+#include "UI/InGameUI/PTWDamageIndicator.h"
+#include "PTWInGameHUD.h"
+#include "RankBoard/PTWRankingBoard.h"
 
 void UPTWUISubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -29,6 +35,26 @@ void UPTWUISubsystem::Deinitialize()
 	HUDWidget = nullptr;
 
 	Super::Deinitialize();
+}
+
+UAbilitySystemComponent* UPTWUISubsystem::GetLocalPlayerASC() const
+{
+	APlayerController* PC = GetPlayerController();
+	if (!PC)
+	{
+		UE_LOG(LogTemp, Error, TEXT("GetLocalPlayerASC : !PC"));
+
+		return nullptr;
+	}
+
+	// PlayerState에서 가져오기
+	if (IAbilitySystemInterface* ASCInterface = Cast<IAbilitySystemInterface>(PC->PlayerState))
+	{
+		return ASCInterface->GetAbilitySystemComponent();
+	}
+	UE_LOG(LogTemp, Error, TEXT("GetLocalPlayerASC : !PS"));
+
+	return nullptr;
 }
 
 void UPTWUISubsystem::PushWidget(TSubclassOf<UUserWidget> WidgetClass, EUIInputPolicy InputPolicy)
@@ -96,14 +122,49 @@ bool UPTWUISubsystem::IsStackEmpty() const
 
 void UPTWUISubsystem::ShowHUD(TSubclassOf<UUserWidget> HUDClass)
 {
-	if (HUDWidget)
-		return;
-
 	HUDWidget = GetOrCreateWidget(HUDClass);
-	if (!HUDWidget)
-		return;
+	if (!HUDWidget) return;
 
-	HUDWidget->AddToViewport(0); // HUD Layer (가장 뒤)
+	if (!HUDWidget->IsInViewport())
+	{
+		HUDWidget->AddToViewport(0);
+	}
+
+	if (UPTWInGameHUD* InGameHUD = Cast<UPTWInGameHUD>(HUDWidget))
+	{
+		InGameHUD->InitializeUI(GetLocalPlayerASC());
+	}
+}
+
+UUserWidget* UPTWUISubsystem::CreatePersistentWidget(TSubclassOf<UUserWidget> WidgetClass, int32 ZOrder)
+{
+	UUserWidget* Widget = GetOrCreateWidget(WidgetClass);
+
+	if (Widget && !Widget->IsInViewport())
+	{
+		Widget->AddToViewport(ZOrder);
+		Widget->SetVisibility(ESlateVisibility::Hidden); // 처음엔 숨김 처리
+	}
+	return Widget;
+}
+
+void UPTWUISubsystem::SetWidgetVisibility(TSubclassOf<UUserWidget> WidgetClass, bool bVisible)
+{
+	if (TObjectPtr<UUserWidget>* Found = CachedWidgets.Find(WidgetClass))
+	{
+		UUserWidget* Widget = Found->Get();
+
+		ESlateVisibility Visibility = bVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
+		Widget->SetVisibility(Visibility);
+
+		if (bVisible)
+		{
+			if (UPTWRankingBoard* RankBoard = Cast<UPTWRankingBoard>(Widget))
+			{
+				RankBoard->UpdateRanking(); // 최신 정보로 갱신
+			}
+		}
+	}
 }
 
 void UPTWUISubsystem::ShowDamageIndicator(const FVector& DamageCauserLocation)

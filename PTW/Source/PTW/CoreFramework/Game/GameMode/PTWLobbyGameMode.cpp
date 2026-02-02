@@ -4,6 +4,8 @@
 #include "PTWLobbyGameMode.h"
 
 #include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
+#include "MiniGame/PTWMiniGameMapRow.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
 
@@ -12,12 +14,12 @@ void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options,
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
 	
-	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+	if (UPTWGameInstance* PTWGameInstance = Cast<UPTWGameInstance>(GetGameInstance()))
 	{
-		if (PTWScoreSubsystem->bIsFirstLobby == true)
+		if (PTWGameInstance->bIsFirstLobby == true)
 		{
 			bIsFirstLobby = true;	
-			PTWScoreSubsystem->bIsFirstLobby = false;
+			PTWGameInstance->bIsFirstLobby = false;
 		}
 		else
 		{
@@ -63,15 +65,21 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	{
 		AddRandomGold(NewPlayer);
 		
-		UE_LOG(LogTemp, Warning, TEXT("Login Players :%d"), PTWGameState->PlayerArray.Num());
 		// PreGameLobby 상태에서 최소 인원 충족 되면 WaitingTimer 시작
-		if (PTWGameState->PlayerArray.Num() >= GameFlowRule.MinPlayersToStart)
+		// if (PTWGameState->PlayerArray.Num() >= GameFlowRule.MinPlayersToStart)
+		// {
+		// 	if (bWaitingTimerStarted == false)
+		// 	{
+		// 		StartTimer(GameFlowRule.WaitingTime);
+		// 		bWaitingTimerStarted = true;
+		// 	}
+		// }
+
+		if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
 		{
-			if (bWaitingTimerStarted == false)
-			{
-				StartTimer(GameFlowRule.WaitingTime);
-				bWaitingTimerStarted = true;
-			}
+			StartTimer(GameFlowRule.WaitingTime);
+
+	
 		}
 	}
 }
@@ -93,6 +101,9 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 		if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
 		{
 			StartTimer(GameFlowRule.NextMiniGameWaitTime);
+
+			FTimerHandle RouletteDelayTimerHandle;
+			GetWorldTimerManager().SetTimer(RouletteDelayTimerHandle, this, &APTWLobbyGameMode::StartRoulette, GameFlowRule.RouletteDelay);
 		}
 	}
 }
@@ -103,17 +114,17 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 	
 	if (!IsValid(PTWGameState)) return;
 
-	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
-	{
-		if (PTWGameState->PlayerArray.Num() < GameFlowRule.MinPlayersToStart)
-		{
-			if (bWaitingTimerStarted == true)
-			{
-				ClearTimer();
-				bWaitingTimerStarted = false;
-			}
-		}
-	}
+	// if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
+	// {
+	// 	if (PTWGameState->PlayerArray.Num() < GameFlowRule.MinPlayersToStart)
+	// 	{
+	// 		if (bWaitingTimerStarted == true)
+	// 		{
+	// 			ClearTimer();
+	// 			bWaitingTimerStarted = false;
+	// 		}
+	// 	}
+	// }
 }
 
 void APTWLobbyGameMode::AddRandomGold(APlayerController* NewPlayer)
@@ -128,6 +139,64 @@ void APTWLobbyGameMode::AddRandomGold(APlayerController* NewPlayer)
 
 		UE_LOG(LogTemp, Warning, TEXT("RandomGold: %d"), RandomGold);
 	}
+}
+
+void APTWLobbyGameMode::StartRoulette()
+{
+	if (!PTWGameState) return;
+	if (!MiniGameMapTable) return;
+	
+	TArray<FName> SelectableRowNames = GetSelectableMapRowNames();
+
+	if (SelectableRowNames.Num() == 0) return;
+	
+	const int32 RandomIndex = FMath::RandRange(0, SelectableRowNames.Num()-1);
+	const FName SelectedRowName = SelectableRowNames[RandomIndex];
+
+	const FPTWMiniGameMapRow* Row = MiniGameMapTable->FindRow<FPTWMiniGameMapRow>(SelectedRowName, TEXT("Map"));
+
+	if (Row)
+	{
+		TravelLevelName = Row->Map.ToSoftObjectPath().GetLongPackageName();
+		GEngine->AddOnScreenDebugMessage(0, 3.f, FColor::Black, Row->DisplayName.ToString());
+	}
+	
+	PTWGameState->SetSelectedMapRowName(SelectedRowName); // GameState에 전달
+}
+
+TArray<FName> APTWLobbyGameMode::GetSelectableMapRowNames()
+{
+	TArray<FName> SelectableRowNames;
+	
+	if (!PTWGameState)
+	{
+		return SelectableRowNames;
+	}
+	if (!MiniGameMapTable)
+	{
+		return SelectableRowNames;
+	}
+
+	int32 PlayerCount = PTWGameState->PlayerArray.Num();
+	TArray<FName> RowNames = MiniGameMapTable->GetRowNames();
+
+	SelectableRowNames.Reserve(RowNames.Num());
+
+	// 모든 Row를 순회하면서 선택 가능 여부를 검사
+	for (const FName& RowName : RowNames)
+	{
+		const FPTWMiniGameMapRow* Row = MiniGameMapTable->FindRow<FPTWMiniGameMapRow>(RowName, TEXT("Map"));
+
+		if (!Row) continue;
+		
+		if (Row->MinPlayers <= PlayerCount && Row->MaxPlayers >= PlayerCount)
+		{
+			// 조건을 만족하면 선택 가능한 후보로 추가
+			SelectableRowNames.Add(RowName);
+		}
+	}
+	// 조건을 만족하는 모든 맵 RowName 반환
+	return SelectableRowNames;
 }
 
 

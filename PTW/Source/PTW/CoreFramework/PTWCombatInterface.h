@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "PTWCombatInterface.generated.h"
 
+struct FGameplayEffectContextHandle;
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UPTWCombatInterface : public UInterface
@@ -21,8 +22,10 @@ class PTW_API IPTWCombatInterface
 {
 	GENERATED_BODY()
 public:
-	virtual float GetDamageMultiplier(const FName& BoneName) = 0;
+	virtual float GetDamageMultiplier(const FName& BoneName) const = 0; // 데미지 배율 계산
 	
-	virtual void HandleHitReaction(const FGameplayTag& HitTag) = 0;
+	virtual void RemoveEffectWithTag(const FGameplayTag& TagToRemove) = 0;
+	
+	virtual void ApplyGameplayEffectToSelf(TSubclassOf<class UGameplayEffect> EffectClass, float Level, FGameplayEffectContextHandle Context) = 0;
 	
 };

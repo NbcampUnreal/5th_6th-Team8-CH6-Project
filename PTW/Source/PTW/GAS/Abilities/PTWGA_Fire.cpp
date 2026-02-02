@@ -225,7 +225,7 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle,
 			
 			if (HitResult->BoneName == FName("head"))
 			{
-				CombatInt->HandleHitReaction(HeadShotTag);
+				CombatInt->ApplyGameplayEffectToSelf(HeadShotEffectClass, 1.0f, MakeEffectContext(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo()));
 			}
 		}
 		

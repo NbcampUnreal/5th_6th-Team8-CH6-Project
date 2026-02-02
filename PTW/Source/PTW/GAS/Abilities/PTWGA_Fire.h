@@ -89,6 +89,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Damage")
 	TSubclassOf<UGameplayEffect> DamageGEClass;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TSubclassOf<UGameplayEffect> HeadShotEffectClass;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Damage")
 	TSubclassOf<UAttributeSet> WeaponAttributeClass;
 	

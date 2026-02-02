@@ -10,6 +10,7 @@
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemInstance.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 
 void UPTWAnimInstance::NativeInitializeAnimation()
 {
@@ -134,7 +135,7 @@ void UPTWAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 
 	if (Character)
 	{
-		FGameplayTag CurrentTag = Character->CurrentWeaponTag;
+		FGameplayTag CurrentTag = Character->GetWeaponComponent()->CurrentWeaponTag;
 
 		if (const int32* FoundIndex = WeaponTagToPoseIndex.Find(CurrentTag))
 		{

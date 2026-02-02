@@ -4,6 +4,7 @@
 #include "PTWGA_UnEquip.h"
 #include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "Inventory/PTWItemInstance.h"
 
@@ -26,7 +27,7 @@ void UPTWGA_UnEquip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		
 		if (HasAuthority(&CurrentActivationInfo))
 		{
-			Character->EquipWeaponByTag(CurrentWeaponTag);
+			Character->GetWeaponComponent()->EquipWeaponByTag(CurrentWeaponTag);
 		}
 	
 		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();

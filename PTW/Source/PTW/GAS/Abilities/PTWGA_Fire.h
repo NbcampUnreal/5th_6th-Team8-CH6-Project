@@ -62,22 +62,15 @@ public:
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
 	
-	void StartFire(const FGameplayAbilitySpecHandle Handle, 
-		const FGameplayAbilityActorInfo* ActorInfo,
-		const FGameplayAbilityActivationInfo ActivationInfo);
+	virtual void StartFire();
 	
-	void AutoFire(const FGameplayAbilitySpecHandle Handle, 
-		const FGameplayAbilityActorInfo* ActorInfo,
-		const FGameplayAbilityActivationInfo ActivationInfo);
+	virtual void AutoFire();
 	
-	void MakeGameplayCue(const FGameplayAbilitySpecHandle Handle, 
-		const FGameplayAbilityActorInfo* ActorInfo,
-		const FGameplayAbilityActivationInfo ActivationInfo,
-		FPTWGameplayCueMakingInfo Infos);
+	virtual void MakeGameplayCue(FPTWGameplayCueMakingInfo Infos);
 	
-	void StopFire();
+	virtual void StopFire();
 	
-	FPTWFireConext GetFireContext() const;
+	virtual FPTWFireConext GetFireContext() const;
 	
 protected:
 	FTimerHandle AutoFireTimer;
@@ -89,6 +82,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Damage")
 	TSubclassOf<UGameplayEffect> DamageGEClass;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
+	TSubclassOf<UGameplayEffect> HeadShotEffectClass;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect|Damage")
 	TSubclassOf<UAttributeSet> WeaponAttributeClass;
 	
@@ -96,29 +92,20 @@ protected:
 	TSubclassOf<APTWProjectile> ProjectileClass;
 	
 protected:
-	void PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* PlayerCharacter);
-	bool ValidateHitResult(FHitResult& HitResult);
-	void ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle, 
-		const FGameplayAbilityActorInfo* ActorInfo,
-		const FGameplayAbilityActivationInfo ActivationInfo,
-		const FGameplayAbilityTargetDataHandle& TargetData,
-		float BaseDamage);
+	virtual void PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* PlayerCharacter);
+	virtual bool ValidateHitResult(FHitResult& HitResult);
+	virtual void ApplyDamageToTarget(const FGameplayAbilityTargetDataHandle& TargetData, float BaseDamage);
 	
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	
 	UFUNCTION()
-	void OnInputReleasedCallback(float TimeHold);
+	virtual void OnInputReleasedCallback(float TimeHold);
 	
-	void HitScanTypeFire(APTWPlayerCharacter* PC);
+	virtual void ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* ItemInstance);
 	
-	void ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* ItemInstance);
+	virtual void HandleHitScan(const FPTWFireConext Context);
 	
-	void HandleHitScan(const FGameplayAbilitySpecHandle Handle, 
-								  const FGameplayAbilityActorInfo* ActorInfo,
-								  const FGameplayAbilityActivationInfo ActivationInfo,
-								  const FPTWFireConext Context);
-	
-	void ExecuteHitImpactCue(const FHitResult& HitResult);
+	virtual void ExecuteHitImpactCue(const FHitResult& HitResult);
 	
 private:
 	float MaxRange = 5000.0f;

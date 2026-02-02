@@ -7,12 +7,11 @@
 #include "AbilitySystemComponent.h"
 #include "PTW.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
-#include "Abilities/Tasks/AbilityTask_WaitTargetData.h"
 #include "CoreFramework/PTWCombatInterface.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerController.h"
-#include "EntitySystem/MovieSceneEntitySystemRunner.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "GAS/PTWWeaponAttributeSet.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemInstance.h"
@@ -52,11 +51,10 @@ void UPTWGA_Fire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 		WaitInputRelease->ReadyForActivation();
 	}
 	
-	StartFire(Handle, ActorInfo, ActivationInfo);
+	StartFire();
 }
 
-void UPTWGA_Fire::StartFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-							   const FGameplayAbilityActivationInfo ActivationInfo)
+void UPTWGA_Fire::StartFire()
 {
 	const FPTWFireConext Context = GetFireContext();
 	
@@ -67,18 +65,12 @@ void UPTWGA_Fire::StartFire(const FGameplayAbilitySpecHandle Handle, const FGame
 		FireRate = AS->GetFireRate();
 	}
 	
-	AutoFire(Handle, ActorInfo, ActivationInfo);
+	AutoFire();
 	
 	if (!GetWorld()->GetTimerManager().IsTimerActive(AutoFireTimer))
 	{
 		TWeakObjectPtr<ThisClass> WeakThis = this;
-		GetWorld()->GetTimerManager().SetTimer(AutoFireTimer, FTimerDelegate::CreateLambda([WeakThis, Handle, ActorInfo, ActivationInfo]()
-		{
-			if (WeakThis.IsValid())
-			{
-				WeakThis->AutoFire(Handle, ActorInfo, ActivationInfo);
-			}
-		}), FireRate, true);
+		GetWorld()->GetTimerManager().SetTimer(AutoFireTimer, this, &UPTWGA_Fire::AutoFire ,FireRate, true);
 	}
 }
 
@@ -104,13 +96,10 @@ FPTWFireConext UPTWGA_Fire::GetFireContext() const
 	return Context;
 }
 
-void UPTWGA_Fire::MakeGameplayCue(const FGameplayAbilitySpecHandle Handle, 
-                                  const FGameplayAbilityActorInfo* ActorInfo,
-                                  const FGameplayAbilityActivationInfo ActivationInfo,
-                                  FPTWGameplayCueMakingInfo Infos)
+void UPTWGA_Fire::MakeGameplayCue(FPTWGameplayCueMakingInfo Infos)
 {
 	FGameplayCueParameters Params;
-	Params.Instigator = ActorInfo->OwnerActor.Get();
+	Params.Instigator = CurrentActorInfo->OwnerActor.Get();
 	Params.SourceObject = Infos.Weapon1P; 
 	
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(
@@ -119,14 +108,13 @@ void UPTWGA_Fire::MakeGameplayCue(const FGameplayAbilitySpecHandle Handle,
 	);
 }
 
-void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-                           const FGameplayAbilityActivationInfo ActivationInfo)
+void UPTWGA_Fire::AutoFire()
 {
 	const FPTWFireConext Context = GetFireContext();
-	if (!Context.IsValid() || !CommitAbility(Handle, ActorInfo, ActivationInfo))
+	if (!Context.IsValid() || !CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo))
 	{
 		StopFire();
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 		return;
 	}
 	
@@ -134,13 +122,13 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 	FPTWGameplayCueMakingInfo CueInfos;
 	CueInfos.PlayerCharacter = Context.PC;
 	CueInfos.Weapon1P = Context.WeaponInst->SpawnedWeapon1P;
-	MakeGameplayCue(Handle, ActorInfo, ActivationInfo, CueInfos);
+	MakeGameplayCue(CueInfos);
 	
 	EHitType CurrentWeponHitType = Context.WeaponInst->GetWeaponHitType();
 	
 	if (CurrentWeponHitType == EHitType::HitScan)
 	{
-		HandleHitScan(Handle, ActorInfo, ActivationInfo, Context);
+		HandleHitScan(Context);
 	}
 	else if (CurrentWeponHitType == EHitType::Projectile)
 	{
@@ -148,7 +136,7 @@ void UPTWGA_Fire::AutoFire(const FGameplayAbilitySpecHandle Handle, const FGamep
 	}
 	
 	//캐릭터 반동 함수 호출(박태웅)
-	Context.PC->ApplyRecoil();
+	Context.PC->GetWeaponComponent()->ApplyRecoil();
 }
 
 void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* PlayerCharacter)
@@ -195,16 +183,11 @@ bool UPTWGA_Fire::ValidateHitResult(FHitResult& HitResult)
 	return true;
 }
 
-void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle, 
-		const FGameplayAbilityActorInfo* ActorInfo,
-		const FGameplayAbilityActivationInfo ActivationInfo,
-		const FGameplayAbilityTargetDataHandle& TargetData, float BaseDamage)
+void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilityTargetDataHandle& TargetData, float BaseDamage)
 {
 	if (!HasAuthority(&CurrentActivationInfo) || !DamageGEClass) return;
 	
 	const FGameplayTag Tag_Damage = FGameplayTag::RequestGameplayTag(FName("Data.Damage"));
-	const FGameplayTag HeadShotTag = FGameplayTag::RequestGameplayTag(FName("State.HitReaction.HeadShot"));
-	
 	
 	for (auto Data : TargetData.Data)
 	{
@@ -224,7 +207,7 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle,
 			
 			if (HitResult->BoneName == FName("head"))
 			{
-				CombatInt->HandleHitReaction(HeadShotTag);
+				CombatInt->ApplyGameplayEffectToSelf(HeadShotEffectClass, 1.0f, MakeEffectContext(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo()));
 			}
 		}
 		
@@ -232,7 +215,7 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilitySpecHandle Handle,
 		if (SpecHandle.IsValid())
 		{
 			SpecHandle.Data->SetSetByCallerMagnitude(Tag_Damage, -CurrentDamage);
-			ApplyGameplayEffectSpecToTarget(Handle, ActorInfo, ActivationInfo, SpecHandle, TargetData);
+			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, TargetData);
 		}
 	}
 }
@@ -248,11 +231,6 @@ void UPTWGA_Fire::OnInputReleasedCallback(float TimeHold)
 { 
 	StopFire();
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-}
-
-void UPTWGA_Fire::HitScanTypeFire(APTWPlayerCharacter* PC)
-{
-	
 }
 
 void UPTWGA_Fire::ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* ItemInstance)
@@ -295,8 +273,7 @@ void UPTWGA_Fire::ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* 
 	}
 }
 
-void UPTWGA_Fire::HandleHitScan(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo, const FPTWFireConext Context)
+void UPTWGA_Fire::HandleHitScan(const FPTWFireConext Context)
 {
 	FHitResult HitResult;
 	PerformLineTrace(HitResult, Context.PC);
@@ -313,7 +290,7 @@ void UPTWGA_Fire::HandleHitScan(const FGameplayAbilitySpecHandle Handle, const F
 			Damage = AS->GetDamage();
 		}
 		
-		ApplyDamageToTarget(Handle, ActorInfo, ActivationInfo, TargetData, Damage);
+		ApplyDamageToTarget(TargetData, Damage);
 		ExecuteHitImpactCue(HitResult);
 	}
 }

@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PTW/CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerController.h"
+#include "CoreFramework/Character/Component/PTWReactorComponent.h"
 
 UPTWAttributeSet::UPTWAttributeSet()
 {
@@ -80,7 +81,7 @@ void UPTWAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 				const FHitResult* Hit = Data.EffectSpec.GetContext().GetHitResult();
 				FVector ImpactPoint = Hit ? (FVector)Hit->ImpactPoint : TargetChar->GetActorLocation();
 
-				TargetChar->Multicast_PlayHitReact(ImpactPoint);
+				TargetChar->GetReactorComponent()->Multicast_PlayHitReact(ImpactPoint);
 			}
 		}
 

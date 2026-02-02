@@ -11,14 +11,175 @@
 #include "GameplayTagContainer.h"
 #include "EngineUtils.h"
 #include "Components/WidgetComponent.h"
+#include "GameFramework/Pawn.h"
 
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "UI/PTWUISubsystem.h"
 #include "UI/PTWHUD.h"
+#include "UI/PTWInGameHUD.h"
 #include "UI/RankBoard/PTWRankingBoard.h"
 #include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
+
+void APTWPlayerController::StartSpectating()
+{
+	if (HasAuthority())
+	{
+		MulticastRPC_StartSpectating();
+	}
+}
+
+void APTWPlayerController::MulticastRPC_StartSpectating_Implementation()
+{
+	if (IsLocalController())
+	{
+		if (!OnPossessedPawnChanged.IsAlreadyBound(this, &ThisClass::SpectateNextPlayer))
+		{
+			OnPossessedPawnChanged.AddDynamic(this, &ThisClass::SpectateNextPlayer);
+		}
+	}
+
+	UnPossess();
+	ChangeState(NAME_Spectating);
+	if (HasAuthority())
+	{
+		ClientGotoState(NAME_Spectating);
+	}
+}
+
+void APTWPlayerController::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn)
+{
+	if (OnPossessedPawnChanged.IsAlreadyBound(this, &ThisClass::SpectateNextPlayer))
+	{
+		OnPossessedPawnChanged.RemoveDynamic(this, &ThisClass::SpectateNextPlayer);
+	}
+
+	if (IsValid(InNewPawn)) return;
+
+	if (APawn* NewTargetView = FindNextSpectatorTarget(InNewPawn))
+	{
+		SetSpectatorTarget(NewTargetView);
+	}
+}
+
+APawn* APTWPlayerController::FindNextSpectatorTarget(APawn* InNewPawn)
+{
+	if (IsValid(InNewPawn))
+	{
+		return nullptr;
+	}
+
+	if (!IsValid(PlayerState))
+	{
+		return nullptr;
+	}
+
+	if (PlayerState->GetPawn() || GetPawn())
+	{
+		return nullptr;
+	}
+
+	UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		return nullptr;
+	}
+
+	AGameStateBase* GS = World->GetGameState();
+	if (!IsValid(GS))
+	{
+		return nullptr;
+	}
+
+	const TArray<APlayerState*>& PlayArray = GS->PlayerArray;
+	if (PlayArray.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	APawn* CurrentViewTarget = nullptr;
+	APawn* NewViewTarget = nullptr;
+
+	if (AActor* CurrentViewTargetActor = GetViewTarget())
+	{
+		CurrentViewTarget = Cast<APawn>(CurrentViewTargetActor);
+		if (IsValid(CurrentViewTarget))
+		{
+			if (APlayerState* CurrentViewTargetPS = CurrentViewTarget->GetPlayerState())
+			{
+				if (!IsValid(CurrentViewTargetPS))
+				{
+					CurrentViewTargetPS = PlayerState;
+				}
+
+				int32 FoundIndex = PlayArray.Find(CurrentViewTargetPS);
+				if (FoundIndex != INDEX_NONE)
+				{
+					for (int32 i = FoundIndex + 1; i < PlayArray.Num(); i++)
+					{
+						if (PlayArray[i] && PlayArray[i]->GetPawn() && !PlayArray[i]->IsSpectator())
+						{
+							NewViewTarget = PlayArray[i]->GetPawn();
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if (!IsValid(NewViewTarget))
+	{
+		for (APlayerState* PS : PlayArray)
+		{
+			if (PS && (PS != PlayerState) && (!PS->IsSpectator()) && PS->GetPawn())
+			{
+				NewViewTarget = PS->GetPawn();
+				break;
+			}
+		}
+	}
+
+	if (IsValid(NewViewTarget))
+	{
+		if (!IsValid(CurrentViewTarget) || (CurrentViewTarget != NewViewTarget))
+		{
+			return NewViewTarget;
+		}
+	}
+	return nullptr;
+}
+
+void APTWPlayerController::SetSpectatorTarget(APawn* NewViewTarget)
+{
+	TWeakObjectPtr<ThisClass> WeakThis = this;
+	TWeakObjectPtr<APawn> WeakViewTarget = NewViewTarget;
+	FTimerHandle NextViewTimerHandle;
+	GetWorldTimerManager().SetTimer(NextViewTimerHandle, [WeakThis, WeakViewTarget]()
+		{
+			if (WeakThis.IsValid() && WeakViewTarget.IsValid() && !IsValid(WeakThis->GetPawn()))
+			{
+				WeakThis->SetViewTargetWithBlend(WeakViewTarget.Get(), 0.5f, VTBlend_Cubic);
+			}
+		}, 0.1f, false);
+}
+
+void APTWPlayerController::OnInputSpectateNext()
+{
+	if (GetStateName() == NAME_Spectating)
+	{
+		SpectateNextPlayer(GetPawn(), GetPawn());
+	}
+}
+
+void APTWPlayerController::ClientRPC_ShowDamageIndicator_Implementation(FVector DamageCauserLocation)
+{
+	if (IsLocalController())
+	{
+		UISubsystem->ShowDamageIndicator(DamageCauserLocation);
+	}
+}
 
 void APTWPlayerController::BeginPlay()
 {
@@ -29,15 +190,17 @@ void APTWPlayerController::BeginPlay()
 		return;
 	}
 
-	EquipTag = FGameplayTag::RequestGameplayTag(TEXT("Weapon.State.Equip"));
-	SprintTag = FGameplayTag::RequestGameplayTag(TEXT("State.Movement.Sprinting"));
-
-	/* HUD 초기화 */
-	UE_LOG(LogTemp, Error, TEXT("Controller BeginPlay"));
-	TryInitializeHUD();
+	//EquipTag = FGameplayTag::RequestGameplayTag(TEXT("Weapon.State.Equip"));
+	//SprintTag = FGameplayTag::RequestGameplayTag(TEXT("State.Movement.Sprinting"));
 
 	/* 플레이어 이름 가시성 체크 타이머 */
 	GetWorldTimerManager().SetTimer(NameTagTimerHandle, this, &APTWPlayerController::UpdateNameTagsVisibility, NameTagUpdateInterval, true);
+
+	/* UI 서브시스템 등록 */
+	if (ULocalPlayer* LP = GetLocalPlayer())
+	{
+		UISubsystem = LP->GetSubsystem<UPTWUISubsystem>();
+	}
 
 	/* Input Mapping Context 추가 */
 	if (ULocalPlayer* LP = GetLocalPlayer())
@@ -49,8 +212,8 @@ void APTWPlayerController::BeginPlay()
 		}
 	}
 
-	/* 랭킹보드 위젯 생성 */
-	CreateRankingBoard();
+	/* UI 위젯 생성 */
+	CreateUI();
 }
 
 void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -72,47 +235,27 @@ void APTWPlayerController::OnRep_PlayerState()
 		return;
 	}
 
-	TryInitializeHUD();
-}
-
-void APTWPlayerController::BeginSpectatingState()
-{
-	Super::BeginSpectatingState();
+	CreateUI();
 }
 
 void APTWPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
-
-	TryInitializeHUD();
 }
 
 void APTWPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-
-	TryInitializeHUD();
-	//if (APTWBaseCharacter* PTWCharacter = Cast<APTWBaseCharacter>(InPawn))
-	//{
-	//	//캐릭터의 무기 변경 이벤트 구독 
-	//	 ex) PTWCharacter->OnWeaponChanged.AddUObject(this, &ThisClass::HandleWeaponChanged);
-	//}
 }
 
 void APTWPlayerController::OnUnPossess()
 {
-	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
-	if (PS)
-	{
-		if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
-		{
-			UnbindASCDelegates(ASC);
-		}
-	}
-
-	StopRetryTimer();
-
 	Super::OnUnPossess();
+}
+
+void APTWPlayerController::BeginSpectatingState()
+{
+	Super::BeginSpectatingState();
 }
 
 void APTWPlayerController::SetViewTarget(AActor* NewViewTarget, FViewTargetTransitionParams TransitionParams)
@@ -182,264 +325,15 @@ void APTWPlayerController::SetSetOnlyOwnerSeeRecursive(USceneComponent* InParent
 	}
 }
 
-void APTWPlayerController::TryInitializeHUD()
-{
-	if (!IsLocalController()) return;
-
-	APTWHUD* HUD = Cast<APTWHUD>(GetHUD());
-	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
-	if (!HUD || !PS)
-	{
-		StartRetryTimer();
-		return;
-	}
-
-	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
-	if (!ASC || !ASC->AbilityActorInfo.IsValid() || !PS->GetAttributeSet())
-	{
-		StartRetryTimer();
-		return;
-	}
-
-	// HUD 초기화
-	HUD->InitializeHUD(ASC);
-
-	// 태그 이벤트 바인딩
-	BindASCDelegates(ASC);
-
-	StopRetryTimer();
-}
-
-void APTWPlayerController::StartRetryTimer()
-{
-	if (GetWorldTimerManager().IsTimerActive(HUDInitTimerHandle) ||
-		GetWorldTimerManager().IsTimerPending(HUDInitTimerHandle))
-	{
-		return;
-	}
-
-	GetWorldTimerManager().SetTimer(
-		HUDInitTimerHandle,
-		this,
-		&APTWPlayerController::TryInitializeHUD,
-		0.1f,
-		true
-	);
-}
-
-void APTWPlayerController::StopRetryTimer()
-{
-	if (GetWorldTimerManager().IsTimerActive(HUDInitTimerHandle) ||
-		GetWorldTimerManager().IsTimerPending(HUDInitTimerHandle))
-	{
-		GetWorldTimerManager().ClearTimer(HUDInitTimerHandle);
-	}
-}
-
-void APTWPlayerController::BindASCDelegates(UAbilitySystemComponent* ASC)
-{
-	if (!ASC) return;
-
-	UnbindASCDelegates(ASC); // 중복 방어
-
-	EquipTagHandle =
-		ASC->RegisterGameplayTagEvent(EquipTag, EGameplayTagEventType::NewOrRemoved)
-		.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
-
-	SprintTagHandle =
-		ASC->RegisterGameplayTagEvent(SprintTag, EGameplayTagEventType::NewOrRemoved)
-		.AddUObject(this, &APTWPlayerController::OnCrosshairStateTagChanged);
-}
-
-void APTWPlayerController::UnbindASCDelegates(UAbilitySystemComponent* ASC)
-{
-	if (!ASC) return;
-
-
-	if (EquipTagHandle.IsValid())
-	{
-		ASC->UnregisterGameplayTagEvent(
-			EquipTagHandle,
-			EquipTag,
-			EGameplayTagEventType::NewOrRemoved
-		);
-		EquipTagHandle.Reset();
-	}
-
-	if (SprintTagHandle.IsValid())
-	{
-		ASC->UnregisterGameplayTagEvent(
-			SprintTagHandle,
-			SprintTag,
-			EGameplayTagEventType::NewOrRemoved
-		);
-		SprintTagHandle.Reset();
-	}
-}
-
-void APTWPlayerController::StartSpectating()
-{
-	if (HasAuthority())
-	{
-		MulticastRPC_StartSpectating();
-	}
-}
-
-void APTWPlayerController::MulticastRPC_StartSpectating_Implementation()
-{
-	if (IsLocalController())
-	{
-		if (!OnPossessedPawnChanged.IsAlreadyBound(this, &ThisClass::SpectateNextPlayer))
-		{
-			OnPossessedPawnChanged.AddDynamic(this, &ThisClass::SpectateNextPlayer);
-		}
-	}
-	
-	UnPossess();
-	ChangeState(NAME_Spectating);
-	if (HasAuthority())
-	{
-		ClientGotoState(NAME_Spectating);
-	}
-}
-
-void APTWPlayerController::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn)
-{
-	if (OnPossessedPawnChanged.IsAlreadyBound(this, &ThisClass::SpectateNextPlayer))
-	{
-		OnPossessedPawnChanged.RemoveDynamic(this, &ThisClass::SpectateNextPlayer);
-	}
-	
-	if (IsValid(InNewPawn)) return;
-	
-	if (APawn* NewTargetView = FindNextSpectatorTarget(InNewPawn))
-	{
-		SetSpectatorTarget(NewTargetView);
-	}
-}
-
-APawn* APTWPlayerController::FindNextSpectatorTarget(APawn* InNewPawn)
-{
-	if (IsValid(InNewPawn))
-	{
-		return nullptr;
-	}
-	
-	if (!IsValid(PlayerState))
-	{
-		return nullptr;
-	}
-	
-	if (PlayerState->GetPawn() || GetPawn())
-	{
-		return nullptr;
-	}
-
-	UWorld* World = GetWorld();
-	if (!IsValid(World))
-	{
-		return nullptr;
-	}
-	
-	AGameStateBase* GS = World->GetGameState();
-	if (!IsValid(GS))
-	{
-		return nullptr;
-	}
-	
-	const TArray<APlayerState*>& PlayArray = GS->PlayerArray;
-	if (PlayArray.IsEmpty())
-	{
-		return nullptr;
-	}
-	
-	APawn* CurrentViewTarget = nullptr;
-	APawn* NewViewTarget = nullptr;
-
-	if (AActor* CurrentViewTargetActor = GetViewTarget())
-	{
-		CurrentViewTarget = Cast<APawn>(CurrentViewTargetActor);
-		if (IsValid(CurrentViewTarget))
-		{
-			if (APlayerState* CurrentViewTargetPS = CurrentViewTarget->GetPlayerState())
-			{
-				if (!IsValid(CurrentViewTargetPS))
-				{
-					CurrentViewTargetPS= PlayerState;
-				}
-				
-				int32 FoundIndex = PlayArray.Find(CurrentViewTargetPS);
-				if (FoundIndex != INDEX_NONE)
-				{
-					for (int32 i = FoundIndex + 1; i < PlayArray.Num(); i++)
-					{
-						if (PlayArray[i] && PlayArray[i]->GetPawn() && !PlayArray[i]->IsSpectator())
-						{
-							NewViewTarget = PlayArray[i]->GetPawn();
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	if (!IsValid(NewViewTarget))
-	{
-		for (APlayerState* PS : PlayArray)
-		{
-			if (PS && (PS != PlayerState) && (!PS->IsSpectator()) && PS->GetPawn())
-			{
-				NewViewTarget = PS->GetPawn();
-				break;
-			}
-		}
-	}
-	
-	if (IsValid(NewViewTarget))
-	{
-		if (!IsValid(CurrentViewTarget) || (CurrentViewTarget != NewViewTarget))
-		{
-			return NewViewTarget;
-		}
-	}
-	return nullptr;
-}
-
-void APTWPlayerController::SetSpectatorTarget(APawn* NewViewTarget)
-{
-	TWeakObjectPtr<ThisClass> WeakThis = this;
-	TWeakObjectPtr<APawn> WeakViewTarget = NewViewTarget;
-	FTimerHandle NextViewTimerHandle;
-	GetWorldTimerManager().SetTimer(NextViewTimerHandle, [WeakThis, WeakViewTarget]()
-	{
-		if (WeakThis.IsValid() && WeakViewTarget.IsValid() && !IsValid(WeakThis->GetPawn()))
-		{
-			WeakThis->SetViewTargetWithBlend(WeakViewTarget.Get(), 0.5f, VTBlend_Cubic);
-		}
-	}, 0.1f, false);
-}
-
-void APTWPlayerController::OnInputSpectateNext()
-{
-	if (GetStateName() == NAME_Spectating)
-	{
-		SpectateNextPlayer(GetPawn(), GetPawn());
-	}
-}
-
-void APTWPlayerController::ClientRPC_ShowDamageIndicator_Implementation(FVector DamageCauserLocation)
-{
-	if (IsLocalController())
-	{
-		ULocalPlayer* LP = GetLocalPlayer();
-		
-		if (UPTWUISubsystem* UISubsystem = GetLocalPlayer()->GetSubsystem<UPTWUISubsystem>())
-		{
-			UISubsystem->ShowDamageIndicator(DamageCauserLocation);
-		}
-	}
-}
+//void APTWPlayerController::BindASCDelegates()
+//{
+//	
+//}
+//
+//void APTWPlayerController::UnbindASCDelegates()
+//{
+//	
+//}
 
 void APTWPlayerController::SetupInputComponent()
 {
@@ -476,53 +370,52 @@ void APTWPlayerController::SetupInputComponent()
 	}
 }
 
+void APTWPlayerController::PostSeamlessTravel()
+{
+	Super::PostSeamlessTravel();
+
+	// 로컬 컨트롤러인지 다시 확인
+	if (IsLocalController())
+	{
+		// 서브시스템 캐싱 (레벨 이동 후 PC가 새로 생성될 수 있으므로 다시 할당)
+		if (ULocalPlayer* LP = GetLocalPlayer())
+		{
+			UISubsystem = LP->GetSubsystem<UPTWUISubsystem>();
+		}
+
+		// 위젯 재생성 및 뷰포트 재등록
+		CreateUI();
+	}
+}
+
+void APTWPlayerController::CreateUI()
+{
+	if (UISubsystem)
+	{
+		UISubsystem->ShowHUD(HUDClass);
+		UISubsystem->CreatePersistentWidget(RankingBoardClass, 10);
+	}
+}
+
 void APTWPlayerController::OnRankingPressed()
 {
-	if (!RankingBoard) return;
-
-	RankingBoard->UpdateRanking();
-	RankingBoard->SetVisibility(ESlateVisibility::Visible);
+	if(UISubsystem)
+	{
+		UISubsystem->SetWidgetVisibility(RankingBoardClass, true);
+	}
 }
 
 void APTWPlayerController::OnRankingReleased()
 {
-	if (!RankingBoard) return;
-
-	RankingBoard->SetVisibility(ESlateVisibility::Hidden);
-}
-
-void APTWPlayerController::CreateRankingBoard()
-{
-	if (RankingBoard)
+	if (UISubsystem)
 	{
-		RankingBoard->RemoveFromParent();
-		RankingBoard = nullptr;
-	}
-
-	if (!RankingBoardClass)
-	{
-		return;
-	}
-
-	RankingBoard = CreateWidget<UPTWRankingBoard>(this, RankingBoardClass);
-
-	if (RankingBoard)
-	{
-		RankingBoard->AddToViewport();
-		RankingBoard->SetVisibility(ESlateVisibility::Hidden);
+		UISubsystem->SetWidgetVisibility(RankingBoardClass, false);
 	}
 }
 
 void APTWPlayerController::HandleMenuInput()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[ESC] HandleMenuInput Called"));
 	if (!IsLocalController()) return;
-
-	ULocalPlayer* LP = GetLocalPlayer();
-	if (!LP) return;
-
-	UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>();
-	if (!UISubsystem) return;
 
 	if (!UISubsystem->IsStackEmpty())
 	{
@@ -537,42 +430,6 @@ void APTWPlayerController::HandleMenuInput()
 			UISubsystem->PushWidget(PauseMenuClass, EUIInputPolicy::GameAndUI);
 		}
 	}
-}
-
-void APTWPlayerController::OnCrosshairStateTagChanged(const FGameplayTag Tag, int32 NewCount)
-{
-	UpdateCrosshairVisibility();
-}
-
-void APTWPlayerController::UpdateCrosshairVisibility()
-{
-	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
-	if (!PS || !PS->GetAbilitySystemComponent()) return;
-
-	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
-	APTWHUD* PTWHUD = Cast<APTWHUD>(GetHUD());
-	if (!PTWHUD) return;
-
-	// 조건 판별
-	bool bHasWeapon = ASC->HasMatchingGameplayTag(EquipTag);
-	bool bIsSprinting = ASC->HasMatchingGameplayTag(SprintTag);
-
-	// 최종 결과: 무기를 들고 있고(AND) 달리는 중이 아닐 때(NOT)만 표시
-	bool bShouldShow = bHasWeapon && !bIsSprinting;
-
-	PTWHUD->SetCrosshairVisibility(bShouldShow);
-}
-
-void APTWPlayerController::PostSeamlessTravel()
-{
-	Super::PostSeamlessTravel();
-
-	if (!IsLocalController())
-	{
-		return;
-	}
-
-	CreateRankingBoard();
 }
 
 void APTWPlayerController::UpdateNameTagsVisibility()
@@ -664,4 +521,10 @@ void APTWPlayerController::UpdateNameTagsVisibility()
 			WidgetComp->SetVisibility(false);
 		}
 	}
+}
+
+void APTWPlayerController::Client_SetInputRestricted_Implementation(bool bRestricted)
+{
+	SetIgnoreMoveInput(bRestricted);
+	SetIgnoreLookInput(bRestricted);
 }

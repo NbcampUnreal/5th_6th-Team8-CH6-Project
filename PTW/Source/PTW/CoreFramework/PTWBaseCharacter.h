@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
+#include "PTWCombatInterface.h"
 #include "PTWBaseCharacter.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterDeathSignature, AActor*, DeadActor, AActor*, KillerActor);
@@ -14,64 +15,87 @@ class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayAbility;
 class UGameplayEffect;
+class UPTWReactorComponent;
 
 
 UCLASS()
-class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterface
+class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterface, public IPTWCombatInterface
 {
 	GENERATED_BODY()
 
+
 public:
-	//생성자
+	// 1. 생성자 (Constructor)
 	APTWBaseCharacter();
 
-	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	// 2. [Public] 인터페이스 함수 (외부에서 호출하는 함수)
 	UFUNCTION(BlueprintPure)
 	bool IsDead() const;
 
-protected:
-	virtual void InitAbilityActorInfo();
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	/*  ReactorComponet에서 Death 로직 구현됨 */
+	virtual void HandleDeath(AActor* Attacker);
+
+
+	// 3. [Public] Getter / Setter (FORCEINLINE 권장)
+	FORCEINLINE UPTWReactorComponent* GetReactorComponent() const { return ReactorComponent; }
+	
+	/*CombatInterface 구현*/
+	virtual float GetDamageMultiplier(const FName& BoneName) const override;
+	
+	virtual void RemoveEffectWithTag(const FGameplayTag& TagToRemove) override;
+	
+	virtual void ApplyGameplayEffectToSelf(TSubclassOf<class UGameplayEffect> EffectClass, float Level, FGameplayEffectContextHandle Context) override;
+	
+	virtual void ApplyGameplayEffectWithDuration(TSubclassOf<class UGameplayEffect> EffectClass, 
+		float Level, 
+		float Duration, 
+		FGameplayEffectContextHandle Context) override;
+
+protected:
+	//4. LifeCycle 함수
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	// 5. [Protected] 내부 구현 로직 (상속받은 자식이 쓸 수 있는 함수)
+	virtual void InitAbilityActorInfo();
 	void GiveDefaultAbilities();
 	void ApplyDefaultEffects();
 
-public:
-	UFUNCTION(NetMulticast, Unreliable)
-	void Multicast_PlayHitReact(const FVector& ImpactPoint);
-
-	virtual void HandleDeath(AActor* Attacker);
-
-protected:
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_Death();
+private:
+	// 6. [Private] 내부 전용 유틸리티 함수 (외부/자식 노출 X)
 
 public:
-	UPROPERTY(BlueprintAssignable, Category = "Events")
-	FOnCharacterDeathSignature OnCharacterDied;
-
+	// 7. [Public] 멤버 변수 (대부분의 설정값)
 	FGameplayTag DeadTag;
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
-	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
-	UPROPERTY()
-	TObjectPtr<UAttributeSet> AttributeSet;
-
+	// 8. [Protected] 멤버 변수 (내부 상태값)
 	UPROPERTY(EditAnywhere, Category = "GAS|Default")
 	TArray<TSubclassOf<UGameplayAbility>> DefaultAbilities;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS|Default")
 	TArray<TSubclassOf<UGameplayEffect>> DefaultEffects;
+	UPROPERTY(Transient)
+	TArray<TSubclassOf<UGameplayAbility>> AdditionalAbilities;
+	UPROPERTY(Transient)
+	TArray<TSubclassOf<UGameplayEffect>> AdditionalEffects;
+	UPROPERTY()
+	TObjectPtr<UAttributeSet> AttributeSet;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Combat|Animation")
-	TObjectPtr<UAnimMontage> HitReact_Front;
-	UPROPERTY(EditDefaultsOnly, Category = "Combat|Animation")
-	TObjectPtr<UAnimMontage> HitReact_Back;
-	UPROPERTY(EditDefaultsOnly, Category = "Combat|Animation")
-	TObjectPtr<UAnimMontage> HitReact_Left;
-	UPROPERTY(EditDefaultsOnly, Category = "Combat|Animation")
-	TObjectPtr<UAnimMontage> HitReact_Right;
+	// 9. [Protected] 컴포넌트 (Components)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UPTWReactorComponent> ReactorComponent;
+
+private:
+	// 10. [Private] 멤버 변수 (완벽히 숨겨야 하는 값)
+	
+public:
+	// 11. [Delegate] 델리게이트 (최하단 배치 규칙 준수)
+	UPROPERTY(BlueprintAssignable)
+	FOnCharacterDeathSignature OnCharacterDied;
 
 };

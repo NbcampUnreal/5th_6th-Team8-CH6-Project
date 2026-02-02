@@ -2,40 +2,123 @@
 
 
 #include "PTWBaseCharacter.h"
-
-#include "AbilitySystemBlueprintLibrary.h"
-#include "Components/CapsuleComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "AbilitySystemComponent.h"
-#include "GAS/PTWGameplayAbility.h"
-#include "Inventory/PTWWeaponActor.h"
 #include "Net/UnrealNetwork.h"
-#include "AbilitySystemBlueprintLibrary.h"
-#include "PTWPlayerController.h"
+#include "AbilitySystemComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Game/GameState/PTWGameState.h"
 #include "GameFramework/PlayerState.h" 
+#include "Components/CapsuleComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
+
+#include "PTWPlayerState.h"
+#include "PTWPlayerController.h"
+#include "GAS/PTWGameplayAbility.h"
+#include "Game/GameState/PTWGameState.h"
+#include "CoreFramework/Character/Component/PTWReactorComponent.h"
+
 
 APTWBaseCharacter::APTWBaseCharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
-	bUseControllerRotationRoll = false;
-
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
-	GetCharacterMovement()->JumpZVelocity = 420.f;
-	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
-
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+	ReactorComponent = CreateDefaultSubobject<UPTWReactorComponent>(TEXT("ReactorComponent"));
 	
 	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Dead"));
 }
+
+bool APTWBaseCharacter::IsDead() const
+{
+	return AbilitySystemComponent->HasMatchingGameplayTag(DeadTag);
+}
+
+UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void APTWBaseCharacter::HandleDeath(AActor* Attacker)
+{
+	if (!HasAuthority() || !AbilitySystemComponent) return;
+
+	FGameplayEventData Payload;
+	Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Dead"));
+	Payload.Instigator = Attacker;
+	Payload.Target = this;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
+
+	if (ReactorComponent)
+	{
+		ReactorComponent->ProcessDeath();
+	}
+
+	AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
+
+	if (OnCharacterDied.IsBound())
+	{
+		OnCharacterDied.Broadcast(this, Attacker);
+	}
+
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		AActor* MyPS = GetPlayerState();
+		GS->Multicast_BroadcastKilllog(MyPS, Attacker);
+	}
+}
+
+float APTWBaseCharacter::GetDamageMultiplier(const FName& BoneName) const
+{
+	if (BoneName == "head")
+	{
+		return 2.0f;
+	}
+	
+	return 1.0f;
+}
+
+void APTWBaseCharacter::RemoveEffectWithTag(const FGameplayTag& TagToRemove)
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(TagToRemove));
+	}
+}
+
+void APTWBaseCharacter::ApplyGameplayEffectToSelf(TSubclassOf<class UGameplayEffect> EffectClass, float Level,
+	FGameplayEffectContextHandle Context)
+{
+	if (AbilitySystemComponent && EffectClass)
+	{
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, Level, Context);
+		if (SpecHandle.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
+}
+
+void APTWBaseCharacter::ApplyGameplayEffectWithDuration(TSubclassOf<class UGameplayEffect> EffectClass, float Level,
+	float Duration, FGameplayEffectContextHandle Context)
+{
+	if (AbilitySystemComponent && EffectClass)
+	{
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, Level, Context);
+		if (SpecHandle.IsValid())
+		{
+			SpecHandle.Data->SetSetByCallerMagnitude(
+				FGameplayTag::RequestGameplayTag(FName("Data.Duration")),
+				Duration
+				);
+			
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
+	
+}
+
 
 void APTWBaseCharacter::BeginPlay()
 {
@@ -52,21 +135,6 @@ void APTWBaseCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	OnCharacterDied.RemoveAll(this);
 	
 	Super::EndPlay(EndPlayReason);
-}
-
-UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
-{
-	return AbilitySystemComponent;
-}
-
-bool APTWBaseCharacter::IsDead() const
-{
-	if (AbilitySystemComponent == nullptr)
-	{
-		return false;
-	}
-
-	return AbilitySystemComponent->HasMatchingGameplayTag(DeadTag);
 }
 
 void APTWBaseCharacter::InitAbilityActorInfo()
@@ -99,6 +167,11 @@ void APTWBaseCharacter::GiveDefaultAbilities()
 			AbilitySystemComponent->GiveAbility(Spec);
 		}
 	}
+
+	if (APTWPlayerState* PS = GetPlayerState<APTWPlayerState>())
+	{
+		PS->ApplyAdditionalAbilities();
+	}
 }
 
 void APTWBaseCharacter::ApplyDefaultEffects()
@@ -119,101 +192,10 @@ void APTWBaseCharacter::ApplyDefaultEffects()
 			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
 	}
-}
 
-void APTWBaseCharacter::HandleDeath(AActor* Attacker)
-{
-	if (!HasAuthority() || !AbilitySystemComponent)
+	if (APTWPlayerState* PS = GetPlayerState<APTWPlayerState>())
 	{
-		return;
-	}
-	FGameplayEventData Payload;
-	Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Dead"));
-	Payload.Instigator = Attacker;
-	Payload.Target = this;
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
-	
-	Multicast_Death();
-	
-	AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
-	
-	if (OnCharacterDied.IsBound())
-	{
-		OnCharacterDied.Broadcast(this, Attacker);
-	}
-
-	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
-	{
-		AActor* MyPS = GetPlayerState();
-		GS->Multicast_BroadcastKilllog(MyPS, Attacker);
+		PS->ApplyAdditionalEffects();
 	}
 }
-
-void APTWBaseCharacter::Multicast_PlayHitReact_Implementation(const FVector& ImpactPoint)
-{
-	if (this && IsDead()) return;
-
-	FVector HitVector = (ImpactPoint - GetActorLocation()).GetSafeNormal();
-
-	FRotator HitLocalRot = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(), HitVector).Rotation();
-	float HitYaw = HitLocalRot.Yaw;
-
-	UAnimMontage* MontageToPlay = nullptr;
-
-	if (HitYaw >= -45.f && HitYaw <= 45.f)
-	{
-		MontageToPlay = HitReact_Front;
-	}
-	else if (HitYaw >= -135.f && HitYaw < -45.f)
-	{
-		MontageToPlay = HitReact_Left;
-	}
-	else if (HitYaw > 45.f && HitYaw <= 135.f)
-	{
-		MontageToPlay = HitReact_Right;
-	}
-	else
-	{
-		MontageToPlay = HitReact_Back;
-	}
-
-	if (MontageToPlay)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(MontageToPlay, 1.0f);
-		}
-	}
-}
-
-void APTWBaseCharacter::Multicast_Death_Implementation()
-{
-	if (GetCapsuleComponent())
-	{
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-
-	if (GetCharacterMovement())
-	{
-		GetCharacterMovement()->StopMovementImmediately();
-		GetCharacterMovement()->DisableMovement();
-		GetCharacterMovement()->SetComponentTickEnabled(false);
-	}
-
-	if (GetMesh())
-	{
-		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
-		GetMesh()->SetAllBodiesSimulatePhysics(true);
-		GetMesh()->SetSimulatePhysics(true);
-		GetMesh()->WakeAllRigidBodies();
-		GetMesh()->bPauseAnims = true;
-	}
-
-	SetLifeSpan(3.0f); 
-}
-
-
 

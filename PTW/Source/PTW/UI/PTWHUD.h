@@ -23,9 +23,9 @@ public:
 	/* 컨트롤러에서 ASC를 받아와 UI를 초기화하는 함수 */
 	void InitializeHUD(UAbilitySystemComponent* ASC);
 
-	// 컨트롤러에서 호출할 가시성 제어 함수
-	UFUNCTION()
-	void SetCrosshairVisibility(bool bVisible);
+	//// 컨트롤러에서 호출할 가시성 제어 함수
+	//UFUNCTION()
+	//void SetCrosshairVisibility(bool bVisible);
 
 protected:
 	/* HUD에 표시할 메인 위젯 클래스 (에디터에서 설정) */

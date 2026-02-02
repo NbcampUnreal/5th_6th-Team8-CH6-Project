@@ -9,12 +9,15 @@
 #include "PTWPlayerRoundDataInterface.h"
 #include "PTWPlayerState.generated.h"
 
-class UPTWWeaponAttributeSet;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDataChanged, const FPTWPlayerData&, NewData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerRoundDataChanged, const FPTWPlayerRoundData&, NewData);
 
+class UGameplayAbility;
+class UGameplayEffect;
 class UAbilitySystemComponent;
 class UAttributeSet;
+class UPTWWeaponAttributeSet;
 
 UCLASS()
 class PTW_API APTWPlayerState : public APlayerState, public IAbilitySystemInterface, public IPTWPlayerRoundDataInterface
@@ -52,6 +55,15 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnPlayerRoundDataChanged OnPlayerRoundDataUpdated;
 
+	//GAS 추가 GA,GE 변경함수
+	UFUNCTION(BlueprintCallable, Category = "GAS|Injection")
+	void InjectAbility(TSubclassOf<UGameplayAbility> AbilityClass);
+	UFUNCTION(BlueprintCallable, Category = "GAS|Injection")
+	void InjectEffect(TSubclassOf<UGameplayEffect> EffectClass);
+
+	void ApplyAdditionalAbilities();
+	void ApplyAdditionalEffects();
+
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
@@ -65,6 +77,12 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerRoundData, VisibleAnywhere, BlueprintReadOnly, Category = "Data")
 	FPTWPlayerRoundData PlayerRoundData;
+
+	//GAS 추가 GA,GE 변수
+	UPROPERTY(Transient)
+	TArray<TSubclassOf<UGameplayAbility>> AdditionalAbilities;
+	UPROPERTY(Transient)
+	TArray<TSubclassOf<UGameplayEffect>> AdditionalEffects;
 
 public:
 	virtual void AddKillCount(int32 AddKillCount = 1) override;

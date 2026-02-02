@@ -91,10 +91,10 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	InitAbilityActorInfo();
-
 	if (AbilitySystemComponent)
 	{
+		InitAbilityActorInfo();
+
 		if (HasAuthority())
 		{
 			AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
@@ -126,10 +126,6 @@ void APTWPlayerCharacter::OnRep_PlayerState()
 
 	if (IsLocallyControlled())
 	{
-		if (APTWPlayerController* PC = Cast<APTWPlayerController>(GetController()))
-		{
-			PC->TryInitializeHUD();
-		}
 		if (InventoryComponent)
 		{
 			InventoryComponent->SetCurrentWeaponInst(nullptr);

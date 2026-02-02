@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
+#include "PTWCombatInterface.h"
 #include "PTWBaseCharacter.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterDeathSignature, AActor*, DeadActor, AActor*, KillerActor);
@@ -18,7 +19,7 @@ class UPTWReactorComponent;
 
 
 UCLASS()
-class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterface
+class PTW_API APTWBaseCharacter : public ACharacter, public IAbilitySystemInterface, public IPTWCombatInterface
 {
 	GENERATED_BODY()
 
@@ -40,6 +41,13 @@ public:
 
 	// 3. [Public] Getter / Setter (FORCEINLINE 권장)
 	FORCEINLINE UPTWReactorComponent* GetReactorComponent() const { return ReactorComponent; }
+	
+	/*CombatInterface 구현*/
+	virtual float GetDamageMultiplier(const FName& BoneName) const override;
+	
+	virtual void RemoveEffectWithTag(const FGameplayTag& TagToRemove) override;
+	
+	virtual void ApplyGameplayEffectToSelf(TSubclassOf<class UGameplayEffect> EffectClass, float Level, FGameplayEffectContextHandle Context) override;
 
 protected:
 	//4. LifeCycle 함수

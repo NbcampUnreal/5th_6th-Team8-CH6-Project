@@ -69,6 +69,38 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 	}
 }
 
+float APTWBaseCharacter::GetDamageMultiplier(const FName& BoneName) const
+{
+	if (BoneName == "head")
+	{
+		return 2.0f;
+	}
+	
+	return 1.0f;
+}
+
+void APTWBaseCharacter::RemoveEffectWithTag(const FGameplayTag& TagToRemove)
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(TagToRemove));
+	}
+}
+
+void APTWBaseCharacter::ApplyGameplayEffectToSelf(TSubclassOf<class UGameplayEffect> EffectClass, float Level,
+	FGameplayEffectContextHandle Context)
+{
+	if (AbilitySystemComponent && EffectClass)
+	{
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, Level, Context);
+		if (SpecHandle.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
+}
+
+
 void APTWBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();

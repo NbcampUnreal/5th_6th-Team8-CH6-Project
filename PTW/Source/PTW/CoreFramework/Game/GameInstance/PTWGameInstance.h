@@ -13,5 +13,10 @@ UCLASS()
 class PTW_API UPTWGameInstance : public UAdvancedFriendsGameInstance
 {
 	GENERATED_BODY()
+
+
+public:
+	bool bIsFirstLobby = true;
+	
 	
 };

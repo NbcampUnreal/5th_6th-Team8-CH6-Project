@@ -42,6 +42,10 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientRPC_ShowDamageIndicator(FVector DamageCauserLocation);
 
+	/* 입력 제한 함수 */
+	UFUNCTION(Client, Reliable)
+	void Client_SetInputRestricted(bool bRestricted);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

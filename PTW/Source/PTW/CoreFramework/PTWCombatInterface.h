@@ -28,4 +28,9 @@ public:
 	
 	virtual void ApplyGameplayEffectToSelf(TSubclassOf<class UGameplayEffect> EffectClass, float Level, FGameplayEffectContextHandle Context) = 0;
 	
+	virtual void ApplyGameplayEffectWithDuration(TSubclassOf<class UGameplayEffect> EffectClass, 
+		float Level, 
+		float Duration, 
+		FGameplayEffectContextHandle Context) = 0;
+	
 };

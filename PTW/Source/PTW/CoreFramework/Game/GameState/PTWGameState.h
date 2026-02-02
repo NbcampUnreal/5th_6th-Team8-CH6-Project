@@ -63,6 +63,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpdateRankedPlayers, TArray<APTWP
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilllogBroadcastSignature, AActor*, DeadActor, AActor*, KillerActor);
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelectedMiniGameMap, FName, SelectedMapRowName);
+
 UCLASS()
 class PTW_API APTWGameState : public AGameState
 {
@@ -78,7 +81,9 @@ public:
 	void SetCurrentRound(int32 NewRound);
 	/** 현재 게임 페이즈 설정 */
 	void SetCurrentPhase(EPTWGamePhase NewGamePhase);
-
+	/** 게임 모드에서 선택한 다음 레벨 RowName */
+	void SetSelectedMapRowName(FName MapRowName);
+	
 	/** 서버에서 호출하여 모든 클라이언트의 델리게이트를 실행시키는 RPC */
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_BroadcastKilllog(AActor* DeadActor, AActor* KillerActor);
@@ -106,11 +111,15 @@ public:
 	/** 킬로그 이벤트: UI가 이 이벤트를 구독합니다. */
 	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
 	FOnKilllogBroadcastSignature OnKilllogBroadcast;
+
+	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
+	FOnSelectedMiniGameMap OnSelectedMiniGameMap;
 	
 	FORCEINLINE int32 GetRemainTime() const { return RemainTime; }
 	FORCEINLINE int32 GetCurrentRound() const {return CurrentRound;}
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
 	FORCEINLINE TArray<APTWPlayerState*> GetRankedPlayers() const {return RankedPlayers;}
+	FORCEINLINE FName GetSelectedMapRowName() const {return SelectedMapRowName;}
 protected:
 	/** 복제 설정 */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -142,6 +151,11 @@ private:
 	UFUNCTION()
 	void OnRep_RankedPlayers();
 
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_SelectedMapRowName, Category = "GameFlow|Roulette")
+	FName SelectedMapRowName;
+
+	UFUNCTION()
+	void OnRep_SelectedMapRowName();
 
 public:
 	/** 서버에서 남은 시간을 감소 */

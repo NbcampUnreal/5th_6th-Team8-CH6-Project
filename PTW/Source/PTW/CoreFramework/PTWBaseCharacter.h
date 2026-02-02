@@ -48,6 +48,11 @@ public:
 	virtual void RemoveEffectWithTag(const FGameplayTag& TagToRemove) override;
 	
 	virtual void ApplyGameplayEffectToSelf(TSubclassOf<class UGameplayEffect> EffectClass, float Level, FGameplayEffectContextHandle Context) override;
+	
+	virtual void ApplyGameplayEffectWithDuration(TSubclassOf<class UGameplayEffect> EffectClass, 
+		float Level, 
+		float Duration, 
+		FGameplayEffectContextHandle Context) override;
 
 protected:
 	//4. LifeCycle 함수

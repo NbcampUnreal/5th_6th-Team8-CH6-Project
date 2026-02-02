@@ -3,30 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PTWGA_Fire.h"
-#include "PTWGA_BombPistol.generated.h"
+#include "GAS/PTWGameplayAbility.h"
+#include "PTWGA_BombPistol_Handler.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PTW_API UPTWGA_BombPistol : public UPTWGA_Fire
+class PTW_API UPTWGA_BombPistol_Handler : public UPTWGameplayAbility
 {
 	GENERATED_BODY()
 	
-protected:
+public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	
-	virtual void ApplyDamageToTarget(
-		const FGameplayAbilityTargetDataHandle& TargetData,
-		float BaseDamage) override;
-	
-	float CalculateBombTimer();
-	
-	
-	
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Special Effects")
-	TSubclassOf<UGameplayEffect> BombPistolEffect;
+	UFUNCTION()
+	void OnBombTagRemoved();
 	
+	UFUNCTION()
+	void OnBombTagAdded();
+	
+	void StartWaitTagRemoved(const FGameplayTag& BombTag);
 };

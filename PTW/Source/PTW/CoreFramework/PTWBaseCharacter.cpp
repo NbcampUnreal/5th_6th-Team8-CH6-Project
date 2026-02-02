@@ -100,6 +100,25 @@ void APTWBaseCharacter::ApplyGameplayEffectToSelf(TSubclassOf<class UGameplayEff
 	}
 }
 
+void APTWBaseCharacter::ApplyGameplayEffectWithDuration(TSubclassOf<class UGameplayEffect> EffectClass, float Level,
+	float Duration, FGameplayEffectContextHandle Context)
+{
+	if (AbilitySystemComponent && EffectClass)
+	{
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, Level, Context);
+		if (SpecHandle.IsValid())
+		{
+			SpecHandle.Data->SetSetByCallerMagnitude(
+				FGameplayTag::RequestGameplayTag(FName("Data.Duration")),
+				Duration
+				);
+			
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
+	
+}
+
 
 void APTWBaseCharacter::BeginPlay()
 {

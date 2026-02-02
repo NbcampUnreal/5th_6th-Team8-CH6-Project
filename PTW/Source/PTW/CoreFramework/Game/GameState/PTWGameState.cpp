@@ -70,6 +70,8 @@ void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
 }
 
 
+
+
 void APTWGameState::DecreaseTimer()
 {
 	if (!HasAuthority()) return;
@@ -115,6 +117,15 @@ void APTWGameState::SetCurrentPhase(EPTWGamePhase NewGamePhase)
 	CurrentGamePhase = NewGamePhase;
 }
 
+void APTWGameState::SetSelectedMapRowName(FName MapRowName)
+{
+	if (!HasAuthority()) return;
+
+	SelectedMapRowName = MapRowName;
+
+	OnRep_SelectedMapRowName();
+}
+
 void APTWGameState::Multicast_BroadcastKilllog_Implementation(AActor* DeadActor, AActor* KillerActor)
 {
 	if (OnKilllogBroadcast.IsBound())
@@ -141,4 +152,9 @@ void APTWGameState::OnRep_CurrentGamePhase()
 void APTWGameState::OnRep_RankedPlayers()
 {
 	OnUpdateRankedPlayers.Broadcast(RankedPlayers);
+}
+
+void APTWGameState::OnRep_SelectedMapRowName()
+{
+	OnSelectedMiniGameMap.Broadcast(SelectedMapRowName);
 }

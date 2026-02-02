@@ -6,6 +6,7 @@
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWLobbyGameMode.generated.h"
 
+struct FPTWMiniGameMapRow;
 /**
  * 게임 라운드 및 진행 흐름에 대한 규칙 정의 구조체
  * - 로비 대기, 라운드 수, 플레이어 제한 등
@@ -19,7 +20,10 @@ struct FPTWGameFlowRule
 	/** 로비에서 최소 인원이 충족 됐을 때 플레이어 대기 시간(초) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
 	float WaitingTime = 60.f;
-
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
+	float RouletteDelay = 5.f;
+	
 	/** 미니 게임 종료 후 다음 미니 게임 시작까지의 대기 시간(초) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
 	float NextMiniGameWaitTime = 60.f;
@@ -59,8 +63,15 @@ protected:
 	virtual void Logout(AController* Exiting) override;
 private:
 	void AddRandomGold(APlayerController* NewPlayer);
+
+	void StartRoulette();
 	
-	/**  */
+	TArray<FName> GetSelectableMapRowNames();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Roulette")
+	TObjectPtr<UDataTable> MiniGameMapTable;
+	
+	/**  */	
 	bool bIsFirstLobby;
 	bool bWaitingTimerStarted = false;
 	

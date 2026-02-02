@@ -60,6 +60,9 @@ void UPTWRankingBoard::UpdateRanking()
 {
 	if (!RankingList) return;
 
+	//UnbindPlayerStates();
+	//BindPlayerStates();
+
 	APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>();
 	if (!GS) return;
 

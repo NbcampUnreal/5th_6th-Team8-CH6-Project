@@ -30,12 +30,12 @@ void APTWHUD::BeginPlay()
 		}
 	}
 	
-	/* 위젯 생성 후 초기화 요청 */
-	if (APTWPlayerController* PC =
-		Cast<APTWPlayerController>(GetOwningPlayerController()))
-	{
-		PC->TryInitializeHUD();
-	}
+	///* 위젯 생성 후 초기화 요청 */
+	//if (APTWPlayerController* PC =
+	//	Cast<APTWPlayerController>(GetOwningPlayerController()))
+	//{
+	//	PC->RestoreASC();
+	//}
 }
 
 void APTWHUD::InitializeHUD(UAbilitySystemComponent* ASC)
@@ -57,13 +57,5 @@ void APTWHUD::InitializeHUD(UAbilitySystemComponent* ASC)
 				UISubsystem->SetDamageIndicatorClass(DamageIndicatorClass);
 			}
 		}
-	}
-}
-
-void APTWHUD::SetCrosshairVisibility(bool bVisible)
-{
-	if (InGameHUDInstance)
-	{
-		InGameHUDInstance->SetCrosshairVisibility(bVisible);
 	}
 }

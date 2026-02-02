@@ -25,10 +25,6 @@ public:
 	/* 초기화 (HUD 에서 ASC 받고, 하위 위젯에 ASC 전달) */
 	void InitializeUI(UAbilitySystemComponent* ASC);
 
-	// 크로스헤어
-	UFUNCTION()
-	void SetCrosshairVisibility(bool bVisible);
-
 	/* 위젯 바인딩 */
 	/* 체력바 */
 	UPROPERTY(meta = (BindWidget))

@@ -71,9 +71,7 @@ private:
 
 	void ApplyEffectToSelf(TSubclassOf<UGameplayEffect> EffectClass);
 
-	/** ✅ 내부: GameplayEvent 발사 (Event.Bomb.Explode) */
 	void SendExplodeEvent(AActor* InstigatorActor);
 
-	/** (선택) 중복 폭발 방지용 */
 	bool bExplodeRequested = false;
 };

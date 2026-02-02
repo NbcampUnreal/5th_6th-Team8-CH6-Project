@@ -11,6 +11,7 @@
 #include "GameplayTagContainer.h"
 #include "EngineUtils.h"
 #include "Components/WidgetComponent.h"
+#include "GameFramework/Pawn.h"
 
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
@@ -520,4 +521,10 @@ void APTWPlayerController::UpdateNameTagsVisibility()
 			WidgetComp->SetVisibility(false);
 		}
 	}
+}
+
+void APTWPlayerController::Client_SetInputRestricted_Implementation(bool bRestricted)
+{
+	SetIgnoreMoveInput(bRestricted);
+	SetIgnoreLookInput(bRestricted);
 }

@@ -59,9 +59,20 @@ protected:
 	void Look(const FInputActionValue& Value);
 	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
 	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
+	
+	/*인벤토리 관련 인풋 바인딩 함수(현정석(26.02.03))*/
+	void EquipWeapon(const FInputActionValue& Value);
+	void UseActiveItem(const FInputActionValue& Value);
 
 	/* 위젯에 닉네임 전달 */
 	void UpdateNameTagText();
+	
+	/*인벤토리 RPC 함수 추가(현정석(26.02.03))*/
+	UFUNCTION(Server, Reliable)
+	void ServerRPCEquipWeapon(); // 후에 인풋 바인딩에 무기 슬롯 인덱스 받을 수도?
+	
+	UFUNCTION(Server, Reliable)
+	void ServerRPCUseActiveItem();
 
 private:
 	// 6. [Private] 내부 전용 유틸리티 함수 (외부/자식 노출 X)
@@ -82,6 +93,10 @@ protected:
 	TObjectPtr<UInputAction> MoveAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> EquipWeaponAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> UseActiveItemAction;
 
 	//FIXME : 테스트 용도
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Temp")

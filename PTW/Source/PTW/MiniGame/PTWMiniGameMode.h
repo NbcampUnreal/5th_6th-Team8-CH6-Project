@@ -48,6 +48,13 @@ protected:
 	//UPROPERTY()
 	//TArray<TObjectPtr<APlayerStart>> PlayerStarts;
 	
+	/** 라운드 시작 전 카운트 다운 10초 */
+	UPROPERTY(EditDefaultsOnly, Category="Game|Timer")
+	int32 StartCountDownTime = 10;
+	/** 본게임 라운드 진행 시간 */
+	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
+	float RoundPlayTime = 90.f;
+	
 
 private:
 	/** 플레이어 사망 처리 */
@@ -69,5 +76,13 @@ private:
 	TSubclassOf<UGameplayEffect> MiniGameEffectClass;
 	
 	int32 PlayerStartCount = 0;
+	
+	FTimerHandle CountDownTimerHandle;
+	
+	int32 CurrentCountDown = 0;
+	/** 카운트 다운 시작 */
+	void StartCountDown();
+	/** 매초마다 카운트다운 감소 */
+	void TickCountDown();
 	
 };

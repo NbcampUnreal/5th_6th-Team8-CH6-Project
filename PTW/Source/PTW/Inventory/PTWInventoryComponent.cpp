@@ -7,9 +7,9 @@
 #include "PTWItemDefinition.h"
 #include "Instance/PTWItemInstance.h"
 #include "PTWWeaponActor.h"
-#include "CoreFramework/PTWPlayerCharacter.h"
 #include "Engine/ActorChannel.h"
 #include "GAS/PTWGameplayAbility.h"
+#include "Instance/PTWActiveItemInstance.h"
 #include "Instance/PTWWeaponInstance.h"
 #include "Net/UnrealNetwork.h"
 
@@ -24,6 +24,7 @@ UPTWInventoryComponent::UPTWInventoryComponent()
 
 void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemInstance> ItemClass)
 {
+	if (!GetOwner()->HasAuthority()) return;
 	ItemArr.Add(ItemClass);
 }
 
@@ -65,7 +66,7 @@ void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimePr
  			WroteSomething |= Channel->ReplicateSubobject(Item, *Bunch, *RepFlags);
  		}
  	}
-	
+	WroteSomething |= Channel->ReplicateSubobject(CurrentActiveItemSlot, *Bunch, *RepFlags);
  	return WroteSomething;
  }
 
@@ -125,7 +126,9 @@ void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex, UAbilitySystem
 	Payload.EventMagnitude = static_cast<float>(SlotIndex);
 	Payload.Instigator = GetOwner();
 	
-	ASC->HandleGameplayEvent(EquipTag, &Payload);
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EquipTag, Payload);
+	
+	//ASC->HandleGameplayEvent(EquipTag, &Payload);
 }
 
 void UPTWInventoryComponent::SetWeaponActorHidden(UPTWItemInstance* Weapon, bool bInHidden)
@@ -149,9 +152,9 @@ void UPTWInventoryComponent::UseActiveItem()
 }
 
 
-bool UPTWInventoryComponent::EquipActiveItem(TObjectPtr<UPTWItemInstance> ActiveItemInstance)
+bool UPTWInventoryComponent::EquipActiveItem(UPTWItemInstance* ActiveItemInstance)
 {
-	if (CurrentActiveItemSlot) return false; // 이미 장착된 아이템이 있다면
+	//if (CurrentActiveItemSlot) return false; // 이미 장착된 아이템이 있다면
 	if (!ActiveItemInstance || !ActiveItemInstance->ItemDef->AbilityToGrant) return false; 
 	
 	CurrentActiveItemSlot = ActiveItemInstance;
@@ -181,4 +184,12 @@ void UPTWInventoryComponent::ConsumeActiveItem()
 	}
 	
 	CurrentActiveItemSlot = nullptr;
+}
+
+void UPTWInventoryComponent::SetActiveItem_Implementation(UPTWItemDefinition* ItemDef)
+{
+	UPTWActiveItemInstance* ActiveItemInstance = NewObject<UPTWActiveItemInstance>(this);
+	if (!ActiveItemInstance) return;
+	ActiveItemInstance->ItemDef = ItemDef;
+	EquipActiveItem(ActiveItemInstance);
 }

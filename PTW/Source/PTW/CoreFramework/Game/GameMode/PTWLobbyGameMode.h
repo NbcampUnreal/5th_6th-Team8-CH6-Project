@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWLobbyGameMode.generated.h"
 
@@ -63,16 +64,30 @@ protected:
 	virtual void Logout(AController* Exiting) override;
 private:
 	void AddRandomGold(APlayerController* NewPlayer);
+	void SelectedRandomMap();
+	void SelectedRandomEvent();
 
+	void StartMapRoulette();
+	void StartRoundEventRoulette();
+
+	void EndRoulette();
+	
 	void StartRoulette();
 	
 	TArray<FName> GetSelectableMapRowNames();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Roulette")
 	TObjectPtr<UDataTable> MiniGameMapTable;
-	
+
+	UPROPERTY(EditDefaultsOnly, Category = "Roulette")
+	TObjectPtr<UDataTable> LobbyRoundEventTable;
 	/**  */	
 	bool bIsFirstLobby;
 	bool bWaitingTimerStarted = false;
+
+	FTimerHandle RouletteTimer;
+
+	FGameplayTag MapTag;
+	FGameplayTag EventTag;
 	
 };

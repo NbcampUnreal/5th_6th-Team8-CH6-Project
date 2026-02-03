@@ -6,8 +6,10 @@
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "MiniGame/PTWMiniGameMapRow.h"
+#include "MiniGame/Data/PTWRoundEvent.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
+#include "System/Shop/PTWShopSubsystem.h"
 
 
 void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -26,6 +28,7 @@ void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options,
 			bIsFirstLobby = false;	
 		}
 	}
+	
 }
 
 void APTWLobbyGameMode::InitGameState()
@@ -78,8 +81,6 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
 		{
 			StartTimer(GameFlowRule.WaitingTime);
-
-	
 		}
 	}
 }
@@ -143,6 +144,14 @@ void APTWLobbyGameMode::AddRandomGold(APlayerController* NewPlayer)
 
 void APTWLobbyGameMode::StartRoulette()
 {
+	SelectedRandomMap();
+	SelectedRandomEvent();
+	
+	StartMapRoulette();
+}
+
+void APTWLobbyGameMode::SelectedRandomMap()
+{
 	if (!PTWGameState) return;
 	if (!MiniGameMapTable) return;
 	
@@ -158,10 +167,77 @@ void APTWLobbyGameMode::StartRoulette()
 	if (Row)
 	{
 		TravelLevelName = Row->Map.ToSoftObjectPath().GetLongPackageName();
-		GEngine->AddOnScreenDebugMessage(0, 3.f, FColor::Black, Row->DisplayName.ToString());
+		MapTag = Row->MiniGameTag;
+		GEngine->AddOnScreenDebugMessage(0, 3.f, FColor::Black, Row->DisplayName.ToString(), false);
+	}
+
+	FPTWRouletteData RouletteData = PTWGameState->GetRouletteData();
+	RouletteData.MapRowName = SelectedRowName;
+	PTWGameState->SetRouletteData(RouletteData); // GameState에 전달
+}
+
+void APTWLobbyGameMode::SelectedRandomEvent()
+{
+	if (!PTWGameState) return;
+	if (!LobbyRoundEventTable) return;
+
+	TArray<FName> RowNames = LobbyRoundEventTable->GetRowNames();
+
+	if (RowNames.Num() ==0) return;
+
+	const int32 RandomIndex = FMath::RandRange(0, RowNames.Num()-1);
+	const FName SelectedRowName = RowNames[RandomIndex];
+
+	const FPTWRoundEventRow* Row = LobbyRoundEventTable->FindRow<FPTWRoundEventRow>(SelectedRowName, TEXT("Round Event"));
+	
+	if (Row)
+	{
+		EventTag = Row->EventTag;
+		GEngine->AddOnScreenDebugMessage(0, 3.f, FColor::Black, Row->EventName.ToString());
 	}
 	
-	PTWGameState->SetSelectedMapRowName(SelectedRowName); // GameState에 전달
+	FPTWRouletteData RouletteData = PTWGameState->GetRouletteData();
+	RouletteData.EventRowName = SelectedRowName;
+	PTWGameState->SetRouletteData(RouletteData);
+}
+
+void APTWLobbyGameMode::StartMapRoulette()
+{
+	if (!PTWGameState) return;
+
+	FPTWRouletteData RouletteData = PTWGameState->GetRouletteData();
+	RouletteData.CurrentPhase = EPTWRoulettePhase::MapRoulette;
+	RouletteData.RouletteDuration = 5.f;
+	PTWGameState->SetRouletteData(RouletteData);
+
+	GetWorldTimerManager().SetTimer(RouletteTimer, this, &APTWLobbyGameMode::StartRoundEventRoulette, 5.f);
+	
+}
+
+void APTWLobbyGameMode::StartRoundEventRoulette()
+{
+	if (!PTWGameState) return;
+	
+	FPTWRouletteData RouletteData = PTWGameState->GetRouletteData();
+	RouletteData.CurrentPhase = EPTWRoulettePhase::RoundEventRoulette;
+	RouletteData.RouletteDuration = 5.f;
+	PTWGameState->SetRouletteData(RouletteData);
+
+	GetWorldTimerManager().SetTimer(RouletteTimer, this, &APTWLobbyGameMode::EndRoulette, 5.f);
+}
+
+void APTWLobbyGameMode::EndRoulette()
+{
+	if (!PTWGameState) return;
+	
+	FPTWRouletteData RouletteData = PTWGameState->GetRouletteData();
+	RouletteData.CurrentPhase = EPTWRoulettePhase::Finished;
+	PTWGameState->SetRouletteData(RouletteData);
+	
+	if (UPTWShopSubsystem* ShopSubsystem = GetWorld()->GetSubsystem<UPTWShopSubsystem>())
+	{
+		ShopSubsystem->InitializeShopsForRound(MapTag, EventTag);
+	}
 }
 
 TArray<FName> APTWLobbyGameMode::GetSelectableMapRowNames()

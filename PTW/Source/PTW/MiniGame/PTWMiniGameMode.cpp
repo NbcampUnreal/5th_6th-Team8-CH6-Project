@@ -46,8 +46,6 @@ void APTWMiniGameMode::BeginPlay()
 	//{
 	//	PlayerStarts.Add(*It);
 	//}
-
-	
 	
 	StartTimer(MiniGameTime);
 }

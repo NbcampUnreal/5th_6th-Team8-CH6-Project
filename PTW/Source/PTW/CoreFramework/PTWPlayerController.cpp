@@ -8,18 +8,24 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/GameState.h"
+#include "GameFramework/PlayerState.h"
 #include "GameplayTagContainer.h"
 #include "EngineUtils.h"
 #include "Components/WidgetComponent.h"
-#include "GameFramework/Pawn.h"
 
+#include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "UI/PTWUISubsystem.h"
 #include "UI/PTWHUD.h"
 #include "UI/PTWInGameHUD.h"
 #include "UI/RankBoard/PTWRankingBoard.h"
-#include "Inventory/PTWItemInstance.h"
+#include "Inventory/Instance/PTWItemInstance.h"
+#include "UI/ChatWidget/PTWChatList.h"
+#include "UI/ChatWidget/PTWChatInput.h"
+#include "UI/InGameUI/PTWDamageIndicator.h"
+#include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 
 void APTWPlayerController::StartSpectating()
@@ -180,6 +186,31 @@ void APTWPlayerController::ClientRPC_ShowDamageIndicator_Implementation(FVector 
 		UISubsystem->ShowDamageIndicator(DamageCauserLocation);
 	}
 }
+
+bool APTWPlayerController::Server_SendChatMessage_Validate(const FString& Message)
+{
+	// 너무 긴 메시지를 보내 서버를 공격하는 것을 방지 (200자 제한)
+	return Message.Len() <= 200;
+}
+
+void APTWPlayerController::Server_SendChatMessage_Implementation(const FString& Message)
+{
+	FString SenderName = TEXT("Unknown");
+
+	if (APTWPlayerState* PS = GetPlayerState<APTWPlayerState>())
+	{
+		FPTWPlayerData Data = PS->GetPlayerData();
+
+		if (!Data.PlayerName.IsEmpty()) SenderName = Data.PlayerName;
+		else SenderName = PS->GetPlayerName();
+	}
+
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		GS->BroadcastChatMessage(SenderName, Message);
+	}
+}
+
 
 void APTWPlayerController::BeginPlay()
 {

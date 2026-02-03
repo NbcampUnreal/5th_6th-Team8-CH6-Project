@@ -5,11 +5,12 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "PTWItemDefinition.h"
-#include "PTWItemInstance.h"
+#include "Instance/PTWItemInstance.h"
 #include "PTWWeaponActor.h"
-#include "PTWWeaponData.h"
-#include "CoreFramework/PTWBaseCharacter.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "Engine/ActorChannel.h"
+#include "GAS/PTWGameplayAbility.h"
+#include "Instance/PTWWeaponInstance.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -23,7 +24,7 @@ UPTWInventoryComponent::UPTWInventoryComponent()
 
 void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemInstance> ItemClass)
 {
-	WeaponArr.Add(ItemClass);
+	ItemArr.Add(ItemClass);
 }
 
 void UPTWInventoryComponent::SwapWeapon(int32 SlotIndex)
@@ -47,8 +48,9 @@ void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimePr
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	
-	DOREPLIFETIME(UPTWInventoryComponent, WeaponArr);
+	DOREPLIFETIME(UPTWInventoryComponent, ItemArr);
 	DOREPLIFETIME(UPTWInventoryComponent, CurrentWeapon);
+	DOREPLIFETIME(UPTWInventoryComponent, CurrentActiveItemSlot);
 }
 
  bool UPTWInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch,
@@ -56,7 +58,7 @@ void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimePr
  {
  	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
  	
- 	for (UPTWItemInstance* Item : WeaponArr)
+ 	for (UPTWItemInstance* Item : ItemArr)
  	{
  		if (Item)
  		{
@@ -74,7 +76,7 @@ void UPTWInventoryComponent::SetCurrentWeaponInst(const UPTWItemInstance* Weapon
 
 void UPTWInventoryComponent::WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool bSetHidden)
 {
-	for (auto Weapon : WeaponArr)
+	for (auto Weapon : ItemArr)
 	{
 		if (Weapon && Weapon->ItemDef && Weapon->ItemDef->WeaponTag == WeaponTag)
 		{
@@ -94,19 +96,23 @@ void UPTWInventoryComponent::ClearAndDestroyInventory()
 {
 	CurrentWeapon = nullptr;
 
-	for (UPTWItemInstance* Item : WeaponArr)
+	for (UPTWItemInstance* Item : ItemArr)
 	{
 		if (!Item) continue;
-		Item->DestroySpawnedActors(); 
+		if (UPTWWeaponInstance* WeaponItemInst = Cast<UPTWWeaponInstance>(Item))
+		{
+			WeaponItemInst->DestroySpawnedActors(); 
+		}
+		
 	}
 
-	WeaponArr.Empty();
+	ItemArr.Empty();
 }
 
 void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex, UAbilitySystemComponent* ASC)
 {
-	if (!WeaponArr.IsValidIndex(SlotIndex) || !WeaponArr[SlotIndex]) return;
-	UPTWItemInstance* TargetInstance = WeaponArr[SlotIndex];
+	if (!ItemArr.IsValidIndex(SlotIndex) || !ItemArr[SlotIndex]) return;
+	UPTWItemInstance* TargetInstance = ItemArr[SlotIndex];
 	CurrentWeapon = TargetInstance;
 	
 	bool bHasEquip = ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
@@ -125,6 +131,54 @@ void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex, UAbilitySystem
 void UPTWInventoryComponent::SetWeaponActorHidden(UPTWItemInstance* Weapon, bool bInHidden)
 {
 	if (!Weapon) return;
-	if (Weapon->SpawnedWeapon1P) Weapon->SpawnedWeapon1P->SetActorHiddenInGame(bInHidden);
-	if (Weapon->SpawnedWeapon3P) Weapon->SpawnedWeapon3P->SetActorHiddenInGame(bInHidden);
+	if (UPTWWeaponInstance* WeaponInstance = Cast<UPTWWeaponInstance>(Weapon))
+	{
+		if (WeaponInstance->SpawnedWeapon1P) WeaponInstance->SpawnedWeapon1P->SetActorHiddenInGame(bInHidden);
+		if (WeaponInstance->SpawnedWeapon3P) WeaponInstance->SpawnedWeapon3P->SetActorHiddenInGame(bInHidden);
+	}
+}
+
+void UPTWInventoryComponent::UseActiveItem()
+{
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+	
+	if (ASC && ActiveItemAbilityHandle.IsValid())
+	{
+		ASC->TryActivateAbility(ActiveItemAbilityHandle);
+	}
+}
+
+
+bool UPTWInventoryComponent::EquipActiveItem(TObjectPtr<UPTWItemInstance> ActiveItemInstance)
+{
+	if (CurrentActiveItemSlot) return false; // 이미 장착된 아이템이 있다면
+	if (!ActiveItemInstance || !ActiveItemInstance->ItemDef->AbilityToGrant) return false; 
+	
+	CurrentActiveItemSlot = ActiveItemInstance;
+
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+	if (ASC)
+	{
+		if (ActiveItemAbilityHandle.IsValid())
+		{
+			ASC->ClearAbility(ActiveItemAbilityHandle);
+		}
+		ActiveItemAbilityHandle = ASC->GiveAbility(FGameplayAbilitySpec(CurrentActiveItemSlot->ItemDef->AbilityToGrant, 1));
+	}
+	
+	return true;
+}
+
+void UPTWInventoryComponent::ConsumeActiveItem()
+{
+	if (ActiveItemAbilityHandle.IsValid())
+	{
+		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()))
+		{
+			ASC->ClearAbility(ActiveItemAbilityHandle);
+			ActiveItemAbilityHandle = FGameplayAbilitySpecHandle();
+		}
+	}
+	
+	CurrentActiveItemSlot = nullptr;
 }

@@ -18,6 +18,9 @@ class UInputAction;
 class UPTWRankingBoard;
 class UPTWItemInstance;
 class UPTWUISubsystem;
+class UPTWDamageIndicator;
+class UPTWChatList;
+class UPTWChatInput;
 /**
  * 
  */
@@ -45,6 +48,15 @@ public:
 	/* 입력 제한 함수 */
 	UFUNCTION(Client, Reliable)
 	void Client_SetInputRestricted(bool bRestricted);
+
+	/* 클라이언트가 서버에 메시지 전송을 요청하는 RPC */
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_SendChatMessage(const FString& Message);
+	/* 서버가 모든 클라이언트에게 메시지를 전송하는 RPC */
+	//UFUNCTION(NetMulticast, Reliable)
+	//void Multicast_BroadcastChatMessage(const FString& Sender, const FString& Message);
+	/* 채팅창 종료 시 호출될 콜백 (ChatInput 위젯에서 호출) */
+	void OnChatInputFinished();
 
 protected:
 	virtual void BeginPlay() override;
@@ -76,6 +88,9 @@ protected:
 
 	/* PauseMenu (ESC) */
 	void HandleMenuInput();
+
+	/* 채팅창 (Enter) */
+	void OnChatPressed();
 
 	/* 플레이어 이름 */
 	/* 닉네임 가시성 업데이트 로직 */
@@ -123,6 +138,10 @@ protected:
 	// PauseMenu (ESC)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> PauseMenuAction;
+
+	// 채팅 (Enter)
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> ChattingAction;
 	
 	/* ---------- UI ---------- */
 	// HUD
@@ -134,4 +153,12 @@ protected:
 	// PauseMenu
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> PauseMenuClass; 
+	// Chat
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Chat")
+	TSubclassOf<UPTWChatList> ChatListClass;
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Chat")
+	TSubclassOf<UPTWChatInput> ChatInputClass;
+	// 데미지 인디케이터
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UPTWDamageIndicator> DamageIndicatorClass;
 };

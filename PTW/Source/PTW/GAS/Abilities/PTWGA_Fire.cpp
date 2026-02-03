@@ -14,10 +14,11 @@
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "GAS/PTWWeaponAttributeSet.h"
 #include "Inventory/PTWInventoryComponent.h"
-#include "Inventory/PTWItemInstance.h"
+#include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/PTWProjectile.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWWeaponData.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
 #include "Kismet/KismetMathLibrary.h"
 
 UPTWGA_Fire::UPTWGA_Fire()
@@ -89,7 +90,7 @@ FPTWFireConext UPTWGA_Fire::GetFireContext() const
 		Context.ASC = Context.PC->GetAbilitySystemComponent();
 		if (UPTWInventoryComponent* Inven = Context.PC->GetInventoryComponent())
 		{
-			Context.WeaponInst = Inven->GetCurrentWeaponInst();
+			Context.WeaponInst = Cast<UPTWWeaponInstance>(Inven->GetCurrentWeaponInst());
 		}
 	}
 	
@@ -233,7 +234,7 @@ void UPTWGA_Fire::OnInputReleasedCallback(float TimeHold)
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-void UPTWGA_Fire::ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* ItemInstance)
+void UPTWGA_Fire::ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWWeaponInstance* ItemInstance)
 {
 	if (!HasAuthority(&CurrentActivationInfo)) return;
 	FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageGEClass, GetAbilityLevel());

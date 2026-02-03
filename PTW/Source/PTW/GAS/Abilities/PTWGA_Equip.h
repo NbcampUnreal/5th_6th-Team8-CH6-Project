@@ -10,7 +10,7 @@
  * 
  */
 
-class UPTWItemInstance;
+class UPTWWeaponInstance;
 class APTWPlayerCharacter;
 UCLASS()
 class PTW_API UPTWGA_Equip : public UPTWGameplayAbility
@@ -28,5 +28,5 @@ public:
 	
 protected:
 	
-	void SetCharacterWeaponAttribute(const UPTWItemInstance* WeaponItemInstance, APTWPlayerCharacter* Character);
+	void SetCharacterWeaponAttribute(const UPTWWeaponInstance* WeaponItemInstance, APTWPlayerCharacter* Character);
 };

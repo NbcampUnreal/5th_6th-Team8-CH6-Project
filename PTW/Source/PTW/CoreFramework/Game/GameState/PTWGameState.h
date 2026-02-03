@@ -66,6 +66,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilllogBroadcastSignature, AActo
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelectedMiniGameMap, FName, SelectedMapRowName);
 
+/* 채팅 */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+	FOnChatMessageBroadcast,
+	const FString&, Sender,
+	const FString&, Message
+);
+
+
 UCLASS()
 class PTW_API APTWGameState : public AGameState
 {
@@ -87,6 +95,9 @@ public:
 	/** 서버에서 호출하여 모든 클라이언트의 델리게이트를 실행시키는 RPC */
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_BroadcastKilllog(AActor* DeadActor, AActor* KillerActor);
+
+	/* 채팅 RPC */
+	void BroadcastChatMessage(const FString& Sender, const FString& Message);
 	
 	/** 남은 시간 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
@@ -114,7 +125,11 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnSelectedMiniGameMap OnSelectedMiniGameMap;
-	
+
+	/* 채팅 */
+	UPROPERTY(BlueprintAssignable, Category = "Chat")
+	FOnChatMessageBroadcast OnChatMessageBroadcast;
+
 	FORCEINLINE int32 GetRemainTime() const { return RemainTime; }
 	FORCEINLINE int32 GetCurrentRound() const {return CurrentRound;}
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
@@ -123,6 +138,10 @@ public:
 protected:
 	/** 복제 설정 */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	/* 채팅 RPC */
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_BroadcastChatMessage(const FString& Sender, const FString& Message);
 
 private:
 	/** 남은 시간(초) - 서버에서 갱신, 클라이언트로 복제 */

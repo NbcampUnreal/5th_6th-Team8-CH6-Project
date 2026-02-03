@@ -6,7 +6,7 @@
 #include "GAS/PTWGameplayAbility.h"
 #include "PTWGA_Fire.generated.h"
 
-class UPTWItemInstance;
+class UPTWWeaponInstance;
 class APTWWeaponActor;
 class APTWProjectile;
 /**
@@ -39,7 +39,7 @@ public:
 	UAbilitySystemComponent* ASC = nullptr;
 	
 	UPROPERTY()
-	UPTWItemInstance* WeaponInst = nullptr;
+	UPTWWeaponInstance* WeaponInst = nullptr;
 	
 	bool IsValid() const {return PC && ASC && WeaponInst;}
 };
@@ -101,7 +101,7 @@ protected:
 	UFUNCTION()
 	virtual void OnInputReleasedCallback(float TimeHold);
 	
-	virtual void ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWItemInstance* ItemInstance);
+	virtual void ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWWeaponInstance* ItemInstance);
 	
 	virtual void HandleHitScan(const FPTWFireConext Context);
 	

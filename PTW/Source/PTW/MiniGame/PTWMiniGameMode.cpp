@@ -46,6 +46,8 @@ void APTWMiniGameMode::BeginPlay()
 	//{
 	//	PlayerStarts.Add(*It);
 	//}
+
+	
 	
 	StartCountDown();
 }
@@ -74,10 +76,9 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 
 	if (!IsValid(PTWGameState)) return;
 
-	if (APTWPlayerState* PlayerState = NewPlayer->GetPlayerState<APTWPlayerState>())
-	{
-		PTWGameState->AddRankedPlayer(PlayerState);
-	}
+	APTWPlayerState* PlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
+	if (!IsValid(PlayerState)) return;
+	
 }
 
 void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
@@ -98,6 +99,18 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	// 	}
 	// 	RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[PlayerStartCount++]);
 	// }
+
+	if (!MiniGameEffectClass) return;
+	
+	if (APTWBaseCharacter* PTWBaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
+	{
+		UAbilitySystemComponent* AbilitySystemComponent = PTWBaseCharacter->GetAbilitySystemComponent();
+		if (!AbilitySystemComponent) return;
+	
+		FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
+		
+		PTWBaseCharacter->ApplyGameplayEffectToSelf(MiniGameEffectClass, 1, Context);
+	}
 	
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);

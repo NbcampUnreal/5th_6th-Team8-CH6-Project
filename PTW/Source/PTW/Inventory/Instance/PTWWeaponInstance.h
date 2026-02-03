@@ -3,27 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PTWWeaponActor.h"
-#include "PTWWeaponData.h"
-#include "UObject/Object.h"
-#include "PTWItemInstance.generated.h"
+#include "PTWItemInstance.h"
+#include "PTWWeaponInstance.generated.h"
 
-enum class EHitType : uint8;
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAmmoChangedSignature, int32 /*CurrentAmmo*/, int32 /*MaxAmmo*/);
 
-class APTWWeaponActor;
-class UPTWItemDefinition;
 /**
  * 
  */
 UCLASS()
-class PTW_API UPTWItemInstance : public UObject
+class PTW_API UPTWWeaponInstance : public UPTWItemInstance
 {
 	GENERATED_BODY()
 	
 public:
-	virtual bool IsSupportedForNetworking() const override {return true;}
-	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	UFUNCTION()
@@ -41,9 +34,6 @@ public:
 	void DestroySpawnedActors();
 	
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated)
-	TObjectPtr<UPTWItemDefinition> ItemDef;
-	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentAmmo)
 	int32 CurrentAmmo;
 	
@@ -61,4 +51,5 @@ public:
 	void SetCurrentAmmo(int32 NewAmmo);
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	int32 GetMaxAmmo();
+	
 };

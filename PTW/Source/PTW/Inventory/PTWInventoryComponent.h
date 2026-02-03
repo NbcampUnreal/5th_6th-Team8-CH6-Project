@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "Components/ActorComponent.h"
 #include "PTWInventoryComponent.generated.h"
 
@@ -12,6 +13,8 @@ class UPTWItemInstance;
 class APTWWeaponActor;
 class UPTWItemDefinition;
 class UAbilitySystemComponent;
+class UPTWWeaponInstance;
+
 
 
 
@@ -24,7 +27,6 @@ public:
 	// Sets default values for this component's properties
 	UPTWInventoryComponent();
 	
-	//FIXME : 파리미터 임시 추가(WeaponActor)
 	void AddItem(TObjectPtr<UPTWItemInstance>);
 	void SwapWeapon(int32 SlotIndex);
 	
@@ -32,8 +34,11 @@ public:
 	void EquipWeapon(int32 SlotIndex);
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	
 	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
+	
 	FORCEINLINE UPTWItemInstance* GetCurrentWeaponInst() const {return CurrentWeapon;}
+	
 	void SetCurrentWeaponInst(const UPTWItemInstance* WeaponInst);
 	
 	void WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool bSetHidden);
@@ -43,17 +48,27 @@ public:
 	void SendEquipEventToASC(int32 SlotIndex, UAbilitySystemComponent* ASC);
 	
 	void SetWeaponActorHidden(UPTWItemInstance* Weapon, bool bInHidden);
+	
+	/*사용 아이템 사용 함수*/
+	void UseActiveItem();
+	
+	/*필드에 드랍된 아이템을 먹거나, 상점에서 구입한 사용 아이템은 해당 함수 호출 */
+	bool EquipActiveItem(TObjectPtr<UPTWItemInstance> ActiveItemInstance);
+	
+	void ConsumeActiveItem();
+	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Replicated)
-	TArray<TObjectPtr<UPTWItemInstance>> WeaponArr;
+	TArray<TObjectPtr<UPTWItemInstance>> ItemArr; // 아이템 전체를 저장하는 배열
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
 	TObjectPtr<UPTWItemInstance> CurrentWeapon;
-
-private:
-	//FIXME : 일단 임시로 현재 무기 Actor로 저장
-	//TObjectPtr<UPTWItemInstance> CurrentWeapon;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
+	TObjectPtr<UPTWItemInstance> CurrentActiveItemSlot;
+	
+	FGameplayAbilitySpecHandle ActiveItemAbilityHandle;
 };

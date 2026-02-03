@@ -1,0 +1,43 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Gameplay/Shop/PTWDisplayItem.h"
+#include "Components/WidgetComponent.h"
+#include "System/Shop/PTWShopSubsystem.h"
+#include "CoreFramework/PTWPlayerState.h" 
+
+APTWDisplayItem::APTWDisplayItem()
+{
+	PrimaryActorTick.bCanEverTick = false;
+	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemMesh"));
+	RootComponent = ItemMesh;
+
+	InfoWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InfoWidget"));
+	InfoWidget->SetupAttachment(RootComponent);
+	InfoWidget->SetWidgetSpace(EWidgetSpace::World);
+}
+
+void APTWDisplayItem::InitDisplay(FName NewItemID)
+{
+	ItemID = NewItemID;
+	if (UPTWShopSubsystem* Sys = GetWorld()->GetSubsystem<UPTWShopSubsystem>())
+	{
+		if (const FShopItemRow* Data = Sys->GetShopItemData(ItemID))
+		{
+			if (!Data->DisplayMesh.IsNull())
+				ItemMesh->SetStaticMesh(Data->DisplayMesh.LoadSynchronous());
+
+			// TODO : 3D Widget 업데이트 호출
+		}
+	}
+}
+
+void APTWDisplayItem::TryPurchase(APlayerController* Player)
+{
+	if (!Player || !ParentShop) return;
+
+	if (APTWPlayerState* PS = Player->GetPlayerState<APTWPlayerState>())
+	{
+
+	}
+}

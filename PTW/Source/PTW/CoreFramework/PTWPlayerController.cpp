@@ -2,23 +2,27 @@
 
 
 #include "PTWPlayerController.h"
-#include "PTWPlayerState.h"
 
 #include "AbilitySystemComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/GameState.h"
+#include "GameFramework/PlayerState.h"
 #include "GameplayTagContainer.h"
 #include "EngineUtils.h"
 #include "Components/WidgetComponent.h"
-#include "GameFramework/Pawn.h"
 
+#include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "UI/PTWUISubsystem.h"
 #include "UI/PTWHUD.h"
 #include "UI/PTWInGameHUD.h"
 #include "UI/RankBoard/PTWRankingBoard.h"
+#include "UI/ChatWidget/PTWChatList.h"
+#include "UI/ChatWidget/PTWChatInput.h"
+#include "UI/InGameUI/PTWDamageIndicator.h"
 #include "Inventory/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 
@@ -178,6 +182,60 @@ void APTWPlayerController::ClientRPC_ShowDamageIndicator_Implementation(FVector 
 	if (IsLocalController())
 	{
 		UISubsystem->ShowDamageIndicator(DamageCauserLocation);
+	}
+}
+
+bool APTWPlayerController::Server_SendChatMessage_Validate(const FString& Message)
+{
+	// 너무 긴 메시지를 보내 서버를 공격하는 것을 방지 (200자 제한)
+	return Message.Len() <= 200;
+}
+
+void APTWPlayerController::Server_SendChatMessage_Implementation(const FString& Message)
+{
+	FString SenderName = TEXT("Unknown");
+
+	if (APTWPlayerState* PS = GetPlayerState<APTWPlayerState>())
+	{
+		FPTWPlayerData Data = PS->GetPlayerData();
+
+		if (!Data.PlayerName.IsEmpty()) SenderName = Data.PlayerName;
+		else SenderName = PS->GetPlayerName();
+	}
+
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		GS->BroadcastChatMessage(SenderName, Message);
+	}
+}
+
+//void APTWPlayerController::Multicast_BroadcastChatMessage_Implementation(const FString& Sender, const FString& Message)
+//{
+//	UWorld* World = GetWorld();
+//	if (!World) return;
+//
+//	if (ULocalPlayer* LP = World->GetFirstLocalPlayerFromController())
+//	{
+//		if (UPTWUISubsystem* UISub = LP->GetSubsystem<UPTWUISubsystem>())
+//		{
+//			if (UPTWChatList* ChatList =
+//				Cast<UPTWChatList>(UISub->GetOrCreateWidget(ChatListClass)))
+//			{
+//				ChatList->AddChatMessage(Sender, Message);
+//			}
+//		}
+//	}
+//}
+
+void APTWPlayerController::OnChatInputFinished()
+{
+	if (UISubsystem)
+	{
+		/* 리스트 위젯을 다시 투명 모드로 되돌림 */
+		if (UPTWChatList* ChatList = Cast<UPTWChatList>(UISubsystem->GetOrCreateWidget(ChatListClass)))
+		{
+			ChatList->SetInteractionMode(false);
+		}
 	}
 }
 
@@ -341,32 +399,42 @@ void APTWPlayerController::SetupInputComponent()
 
 	if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(InputComponent))
 	{
+		// 랭킹보드 (Tab)
 		EIC->BindAction(
 			ShowRankingAction,
 			ETriggerEvent::Started,
 			this,
 			&APTWPlayerController::OnRankingPressed
 		);
-
 		EIC->BindAction(
 			ShowRankingAction,
 			ETriggerEvent::Completed,
 			this,
 			&APTWPlayerController::OnRankingReleased
 		);
+
 		EIC->BindAction(
 			SpectateNextAction, 
 			ETriggerEvent::Started, 
 			this, 
 			&ThisClass::OnInputSpectateNext);
 
-		// ESC / Pause Menu
+		// Pause Menu (ESC)
 		EIC->BindAction(
 			PauseMenuAction,
 			ETriggerEvent::Started,
 			this,
 			&APTWPlayerController::HandleMenuInput
 		);
+
+		// 채팅 (Enter)
+		EIC->BindAction(
+			ChattingAction,
+			ETriggerEvent::Started,
+			this,
+			&APTWPlayerController::OnChatPressed
+		);
+
 	}
 }
 
@@ -384,17 +452,42 @@ void APTWPlayerController::PostSeamlessTravel()
 		}
 
 		// 위젯 재생성 및 뷰포트 재등록
+		UE_LOG(LogTemp, Error, TEXT("PTWPlayerController : PostSeamlessTravel"));
 		CreateUI();
 	}
+
 }
 
 void APTWPlayerController::CreateUI()
 {
 	if (UISubsystem)
 	{
-		UISubsystem->ShowHUD(HUDClass);
-		UISubsystem->CreatePersistentWidget(RankingBoardClass, 10);
+		if (HUDClass)
+		{
+			UISubsystem->ShowHUD(HUDClass);
+		}
+		if (RankingBoardClass)
+		{
+			UISubsystem->CreatePersistentWidget(RankingBoardClass, 10);
+		}
+		if (ChatListClass)
+		{
+			if (UUserWidget* ChatListWidget = UISubsystem->CreatePersistentWidget(ChatListClass, 70))
+			{
+				ChatListWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			}
+			UISubsystem->SetChatListClass(ChatListClass);
+		}
+		if (UISubsystem)
+		{
+			UISubsystem->SetChatInputClass(ChatInputClass);
+		}
+		if (DamageIndicatorClass)
+		{
+			UISubsystem->SetDamageIndicatorClass(DamageIndicatorClass);
+		}
 	}
+
 }
 
 void APTWPlayerController::OnRankingPressed()
@@ -428,6 +521,28 @@ void APTWPlayerController::HandleMenuInput()
 		if (PauseMenuClass)
 		{
 			UISubsystem->PushWidget(PauseMenuClass, EUIInputPolicy::GameAndUI);
+		}
+	}
+}
+
+void APTWPlayerController::OnChatPressed()
+{
+	if (!UISubsystem || !ChatInputClass || !ChatListClass) return;
+
+	/* 이미 채팅 입력창이 떠 있는지 확인 */
+	if (UISubsystem->IsWidgetInStack(ChatInputClass))
+	{
+		return;
+	}
+	else
+	{
+		/* 채팅창 새로 열기(Push) */
+		UISubsystem->PushWidget(ChatInputClass, EUIInputPolicy::GameAndUI);
+
+		/* ChatList를 찾아 활성화 */
+		if (UPTWChatList* ChatList = Cast<UPTWChatList>(UISubsystem->GetOrCreateWidget(ChatListClass)))
+		{
+			ChatList->SetInteractionMode(true);
 		}
 	}
 }

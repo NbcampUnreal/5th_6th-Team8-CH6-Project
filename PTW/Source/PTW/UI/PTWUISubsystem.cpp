@@ -9,8 +9,9 @@
 #include "AbilitySystemInterface.h"              // IAbilitySystemInterface 정의
 #include "AbilitySystemComponent.h"              // UAbilitySystemComponent 반환 타입을 위해 필요
 
-#include "GameFramework/PlayerController.h"
 #include "UI/InGameUI/PTWDamageIndicator.h"
+#include "UI/ChatWidget/PTWChatInput.h"
+#include "UI/ChatWidget/PTWChatList.h"
 #include "PTWInGameHUD.h"
 #include "RankBoard/PTWRankingBoard.h"
 
@@ -77,6 +78,11 @@ void UPTWUISubsystem::PushWidget(TSubclassOf<UUserWidget> WidgetClass, EUIInputP
 	WidgetStack.Add(Entry);
 
 	ApplyInputPolicy(Entry.InputPolicy);
+
+	if (InputPolicy != EUIInputPolicy::GameOnly)
+	{
+		Widget->SetKeyboardFocus();
+	}
 }
 
 void UPTWUISubsystem::PopWidget()
@@ -90,6 +96,15 @@ void UPTWUISubsystem::PopWidget()
 	if (TopEntry.Widget)
 	{
 		TopEntry.Widget->RemoveFromParent();
+	}
+
+	// 채팅위젯 닫을때 감지
+	if (TopEntry.Widget && ChatInputClass && TopEntry.Widget->GetClass() == ChatInputClass)
+	{
+		if (UPTWChatList* ChatList = Cast<UPTWChatList>(GetOrCreateWidget(ChatListClass)))
+		{
+			ChatList->SetInteractionMode(false);
+		}
 	}
 
 	// 다음 입력 정책 결정
@@ -118,6 +133,15 @@ bool UPTWUISubsystem::IsWidgetInStack(TSubclassOf<UUserWidget> WidgetClass) cons
 bool UPTWUISubsystem::IsStackEmpty() const
 {
 	return WidgetStack.Num() == 0;
+}
+
+UUserWidget* UPTWUISubsystem::GetTopWidget() const
+{
+	if (WidgetStack.Num() > 0)
+	{
+		return WidgetStack.Last().Widget;
+	}
+	return nullptr;
 }
 
 void UPTWUISubsystem::ShowHUD(TSubclassOf<UUserWidget> HUDClass)

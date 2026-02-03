@@ -10,6 +10,8 @@ class UAbilitySystemComponent;
 class UUserWidget;
 class UPTWInGameHUD;
 class UPTWDamageIndicator;
+class UPTWChatInput;
+class UPTWChatList;
 
 UENUM(BlueprintType)
 enum class EUIInputPolicy : uint8
@@ -51,17 +53,19 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UAbilitySystemComponent* GetLocalPlayerASC() const;
 
-	/** UI 스택관리 */
+	/* UI 스택관리 */
 	void PushWidget(TSubclassOf<UUserWidget> WidgetClass, EUIInputPolicy InputPolicy);
 	void PopWidget();
 	bool IsWidgetInStack(TSubclassOf<UUserWidget> WidgetClass) const;
 	bool IsStackEmpty() const;
+	UUserWidget* GetTopWidget() const;
 
-	/** HUD */
+	/* HUD */
 	void ShowHUD(TSubclassOf<UUserWidget> HUDClass);
 
 	/* 상시 존재 UI 생성 (랭킹보드) */
 	UUserWidget* CreatePersistentWidget(TSubclassOf<UUserWidget> WidgetClass, int32 ZOrder = 10);
+
 	/* 위젯 가시성 조절 */
 	void SetWidgetVisibility(TSubclassOf<UUserWidget> WidgetClass, bool bVisible);
 
@@ -70,24 +74,26 @@ public:
 	void ShowDamageIndicator(const FVector& DamageCauserLocation);
 	void SetDamageIndicatorClass(TSubclassOf<UPTWDamageIndicator> InClass) { DamageIndicatorClass = InClass; }
 
-private:
-	/** Helpers */
+	/* 채팅 */
+	void SetChatInputClass(TSubclassOf<UPTWChatInput> InClass) { ChatInputClass = InClass; }
+	void SetChatListClass(TSubclassOf<UPTWChatList> InClass) { ChatListClass = InClass; }
+
+	/* Helpers */
 	UUserWidget* GetOrCreateWidget(TSubclassOf<UUserWidget> WidgetClass);
+
+private:
+	/* Helpers */
 	APlayerController* GetPlayerController() const;
 
 	void ApplyInputPolicy(EUIInputPolicy Policy);
 
-	/** Stack-based UI */
+	/* UI 스택 */
 	UPROPERTY()
 	TArray<FUIStackEntry> WidgetStack;
 
-	/** Cached widgets */
+	/* 캐시된 위젯 */
 	UPROPERTY()
 	TMap<TSubclassOf<UUserWidget>, TObjectPtr<UUserWidget>> CachedWidgets;
-
-	// 스택 외 독립적으로 화면에 떠 있는 위젯들 (Key: 클래스, Value: 위젯 인스턴스)
-	UPROPERTY()
-	TMap<TSubclassOf<UUserWidget>, TObjectPtr<UUserWidget>> PersistentWidgets;
 
 	/** HUD */
 	UPROPERTY()
@@ -96,4 +102,10 @@ private:
 	/* 데미지 인디케이터 */
 	UPROPERTY(EditDefaultsOnly, Category = "DamageIndicator")
 	TSubclassOf<UPTWDamageIndicator> DamageIndicatorClass;
+
+	/* 채팅 */
+	UPROPERTY()
+	TSubclassOf<UPTWChatInput> ChatInputClass;
+	UPROPERTY()
+	TSubclassOf<UPTWChatList> ChatListClass;
 };

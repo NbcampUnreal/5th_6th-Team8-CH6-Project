@@ -126,6 +126,17 @@ void APTWGameState::SetSelectedMapRowName(FName MapRowName)
 	OnRep_SelectedMapRowName();
 }
 
+void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& Message)
+{
+	// 서버 전용
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	Multicast_BroadcastChatMessage(Sender, Message);
+}
+
 void APTWGameState::Multicast_BroadcastKilllog_Implementation(AActor* DeadActor, AActor* KillerActor)
 {
 	if (OnKilllogBroadcast.IsBound())
@@ -133,6 +144,12 @@ void APTWGameState::Multicast_BroadcastKilllog_Implementation(AActor* DeadActor,
 		OnKilllogBroadcast.Broadcast(DeadActor, KillerActor);
 	}
 }
+
+void APTWGameState::Multicast_BroadcastChatMessage_Implementation(const FString& Sender, const FString& Message)
+{
+	OnChatMessageBroadcast.Broadcast(Sender, Message);
+}
+
 
 void APTWGameState::OnRep_RemainTime()
 {

@@ -12,13 +12,16 @@ class APTWPlayerCharacter;
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract)
 class PTW_API UPTWGA_ItemAbilityBase : public UPTWGameplayAbility
 {
 	GENERATED_BODY()
 public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void ConsumeItem();
+	virtual void InitializeVariable();
+	virtual void ApplyItemEffect() PURE_VIRTUAL(UPTWGA_ItemAbilityBase::ApplyItemEffect, );
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ability Effect Class")
 	TSubclassOf<UGameplayEffect> EffectClass;

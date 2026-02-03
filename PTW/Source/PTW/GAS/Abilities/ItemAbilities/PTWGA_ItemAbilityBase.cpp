@@ -11,9 +11,25 @@ void UPTWGA_ItemAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle Ha
                                              const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	InitializeVariable();
+	ApplyItemEffect();
+	ConsumeItem();
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
 void UPTWGA_ItemAbilityBase::ConsumeItem()
 {
 	InventoryComponent->ConsumeActiveItem();
+}
+
+void UPTWGA_ItemAbilityBase::InitializeVariable()
+{
+	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
+	if (!TargetCharacter) return;
+	
+	UPTWInventoryComponent* TargetInvenComp = TargetCharacter->GetInventoryComponent();
+	if (!TargetInvenComp) return;
+	
+	PlayerCharacter = TargetCharacter;
+	InventoryComponent = TargetInvenComp;
 }

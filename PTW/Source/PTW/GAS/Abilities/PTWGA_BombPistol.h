@@ -20,11 +20,7 @@ protected:
 	virtual void ApplyDamageToTarget(
 		const FGameplayAbilityTargetDataHandle& TargetData,
 		float BaseDamage) override;
-	
-	float CalculateBombTimer();
-	
-	
-	
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Special Effects")
 	TSubclassOf<UGameplayEffect> BombPistolEffect;

@@ -9,7 +9,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWInventoryComponent.h"
-#include "Inventory/PTWItemInstance.h"
+#include "Inventory/Instance/PTWItemInstance.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 
 void UPTWAnimInstance::NativeInitializeAnimation()

@@ -5,7 +5,7 @@
 
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemDefinition.h"
-#include "Inventory/PTWItemInstance.h"
+#include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWWeaponData.h"
 #include "PTW/CoreFramework/PTWPlayerCharacter.h"

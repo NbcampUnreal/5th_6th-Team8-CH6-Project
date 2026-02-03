@@ -6,7 +6,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
-#include "Inventory/PTWItemInstance.h"
+#include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Kismet/GameplayStatics.h"
 

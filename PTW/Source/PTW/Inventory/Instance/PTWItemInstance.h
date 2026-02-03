@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PTWWeaponActor.h"
-#include "PTWWeaponData.h"
+#include "../PTWWeaponActor.h"
+#include "../PTWWeaponData.h"
 #include "UObject/Object.h"
 #include "PTWItemInstance.generated.h"
 

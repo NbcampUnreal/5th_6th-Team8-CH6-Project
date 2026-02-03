@@ -19,7 +19,7 @@
 #include "UI/PTWHUD.h"
 #include "UI/PTWInGameHUD.h"
 #include "UI/RankBoard/PTWRankingBoard.h"
-#include "Inventory/PTWItemInstance.h"
+#include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 
 void APTWPlayerController::StartSpectating()

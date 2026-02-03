@@ -48,12 +48,8 @@ protected:
 	virtual void BeginPlay() override;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Replicated)
-	TArray<TObjectPtr<UPTWItemInstance>> WeaponArr;
+	TArray<TObjectPtr<UPTWItemInstance>> ItemArr; // 아이템 전체를 저장하는 배열
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
 	TObjectPtr<UPTWItemInstance> CurrentWeapon;
-
-private:
-	//FIXME : 일단 임시로 현재 무기 Actor로 저장
-	//TObjectPtr<UPTWItemInstance> CurrentWeapon;
 };

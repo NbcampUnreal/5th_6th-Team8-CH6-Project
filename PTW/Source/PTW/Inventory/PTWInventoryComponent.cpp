@@ -5,10 +5,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "PTWItemDefinition.h"
-#include "PTWItemInstance.h"
+#include "Instance/PTWItemInstance.h"
 #include "PTWWeaponActor.h"
-#include "PTWWeaponData.h"
-#include "CoreFramework/PTWBaseCharacter.h"
 #include "Engine/ActorChannel.h"
 #include "Net/UnrealNetwork.h"
 
@@ -23,7 +21,7 @@ UPTWInventoryComponent::UPTWInventoryComponent()
 
 void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemInstance> ItemClass)
 {
-	WeaponArr.Add(ItemClass);
+	ItemArr.Add(ItemClass);
 }
 
 void UPTWInventoryComponent::SwapWeapon(int32 SlotIndex)
@@ -47,7 +45,7 @@ void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimePr
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	
-	DOREPLIFETIME(UPTWInventoryComponent, WeaponArr);
+	DOREPLIFETIME(UPTWInventoryComponent, ItemArr);
 	DOREPLIFETIME(UPTWInventoryComponent, CurrentWeapon);
 }
 
@@ -56,7 +54,7 @@ void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimePr
  {
  	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
  	
- 	for (UPTWItemInstance* Item : WeaponArr)
+ 	for (UPTWItemInstance* Item : ItemArr)
  	{
  		if (Item)
  		{
@@ -74,7 +72,7 @@ void UPTWInventoryComponent::SetCurrentWeaponInst(const UPTWItemInstance* Weapon
 
 void UPTWInventoryComponent::WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool bSetHidden)
 {
-	for (auto Weapon : WeaponArr)
+	for (auto Weapon : ItemArr)
 	{
 		if (Weapon && Weapon->ItemDef && Weapon->ItemDef->WeaponTag == WeaponTag)
 		{
@@ -94,19 +92,19 @@ void UPTWInventoryComponent::ClearAndDestroyInventory()
 {
 	CurrentWeapon = nullptr;
 
-	for (UPTWItemInstance* Item : WeaponArr)
+	for (UPTWItemInstance* Item : ItemArr)
 	{
 		if (!Item) continue;
 		Item->DestroySpawnedActors(); 
 	}
 
-	WeaponArr.Empty();
+	ItemArr.Empty();
 }
 
 void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex, UAbilitySystemComponent* ASC)
 {
-	if (!WeaponArr.IsValidIndex(SlotIndex) || !WeaponArr[SlotIndex]) return;
-	UPTWItemInstance* TargetInstance = WeaponArr[SlotIndex];
+	if (!ItemArr.IsValidIndex(SlotIndex) || !ItemArr[SlotIndex]) return;
+	UPTWItemInstance* TargetInstance = ItemArr[SlotIndex];
 	CurrentWeapon = TargetInstance;
 	
 	bool bHasEquip = ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));

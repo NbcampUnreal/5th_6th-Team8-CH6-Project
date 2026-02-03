@@ -3,8 +3,8 @@
 
 #include "PTWItemInstance.h"
 
-#include "PTWWeaponActor.h"
-#include "PTWWeaponData.h"
+#include "../PTWWeaponActor.h"
+#include "../PTWWeaponData.h"
 #include "Net/UnrealNetwork.h"
 
 void UPTWItemInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

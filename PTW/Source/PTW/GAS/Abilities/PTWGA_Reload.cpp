@@ -11,7 +11,7 @@
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Inventory/PTWInventoryComponent.h"
-#include "Inventory/PTWItemInstance.h"
+#include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWWeaponData.h"
 

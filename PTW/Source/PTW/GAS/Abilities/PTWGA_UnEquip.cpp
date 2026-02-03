@@ -6,7 +6,7 @@
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Inventory/PTWItemDefinition.h"
-#include "Inventory/PTWItemInstance.h"
+#include "Inventory/Instance/PTWItemInstance.h"
 
 UPTWGA_UnEquip::UPTWGA_UnEquip()
 {

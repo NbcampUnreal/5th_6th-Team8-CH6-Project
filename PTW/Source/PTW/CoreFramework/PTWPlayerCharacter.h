@@ -17,6 +17,7 @@ class UPTWInventoryComponent;
 class UWidgetComponent;
 class UPTWWeaponComponent;
 class UPTWReactorComponent;
+class UPTWInteractComponent;
 
 UCLASS()
 class PTW_API APTWPlayerCharacter : public APTWBaseCharacter
@@ -35,14 +36,12 @@ public:
 	FORCEINLINE UPTWWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
 	FORCEINLINE UCameraComponent* GetPlayerCamera() const { return PlayerCamera; }
 	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
-
-
-	UWidgetComponent* GetNameTagWidget() const;
-
+	FORCEINLINE UWidgetComponent* GetNameTagWidget() const { return NameTagWidget; }
 	UFUNCTION(BlueprintPure, Category = "Mesh")
 	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	UFUNCTION(BlueprintPure, Category = "Mesh")
 	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
+	FORCEINLINE UPTWInteractComponent* GetInteractComponent() const { return InteractComponent; }
 
 protected:
 	// 4. [Protected] 오버라이드 함수 (LifeCycle) - BeginPlay, EndPlay 등
@@ -102,6 +101,8 @@ protected:
 	TObjectPtr<UPTWInventoryComponent> InventoryComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UPTWWeaponComponent> WeaponComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UPTWInteractComponent> InteractComponent;
 
 private:
 	// 10. [Private] 멤버 변수 (완벽히 숨겨야 하는 값)

@@ -247,11 +247,6 @@ void APTWPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 	}
 }
 
-UWidgetComponent* APTWPlayerCharacter::GetNameTagWidget() const
-{
-	return NameTagWidget;
-}
-
 void APTWPlayerCharacter::UpdateNameTagText()
 {
 	if (!NameTagWidget) return;

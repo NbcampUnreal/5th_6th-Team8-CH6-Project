@@ -1,26 +1,32 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "CoreFramework/Interface/PTWInteractInterface.h"
 #include "PTWInteractableActor.generated.h"
 
 UCLASS()
-class PTW_API APTWInteractableActor : public AActor
+class PTW_API APTWInteractableActor : public AActor, public IPTWInteractInterface
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
+
+public:
 	APTWInteractableActor();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	virtual void OnInteract_Implementation(APawn* InstigatorPawn) override;
+	virtual FText GetInteractionKeyword_Implementation() override;
+	virtual bool IsInteractable_Implementation() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UStaticMeshComponent> MeshComp;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	FText InteractionText;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	bool bIsInteractable = true;
 };

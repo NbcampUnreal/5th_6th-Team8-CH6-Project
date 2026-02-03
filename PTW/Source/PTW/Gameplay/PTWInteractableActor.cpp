@@ -1,27 +1,28 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Gameplay/PTWInteractableActor.h"
 
-// Sets default values
 APTWInteractableActor::APTWInteractableActor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
+	PrimaryActorTick.bCanEverTick = false;
+	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+	RootComponent = MeshComp;
+	InteractionText = FText::FromString(TEXT("상호작용"));
 }
 
-// Called when the game starts or when spawned
-void APTWInteractableActor::BeginPlay()
+void APTWInteractableActor::OnInteract_Implementation(APawn* InstigatorPawn)
 {
-	Super::BeginPlay();
-	
+	UE_LOG(LogTemp, Log, TEXT("[%s] Interacted with [%s]"), *InstigatorPawn->GetName(), *GetName());
 }
 
-// Called every frame
-void APTWInteractableActor::Tick(float DeltaTime)
+FText APTWInteractableActor::GetInteractionKeyword_Implementation()
 {
-	Super::Tick(DeltaTime);
+	return InteractionText;
+}
 
+bool APTWInteractableActor::IsInteractable_Implementation()
+{
+	return bIsInteractable;
 }
 

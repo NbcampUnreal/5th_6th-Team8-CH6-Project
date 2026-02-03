@@ -60,7 +60,7 @@ public:
 	void ConsumeActiveItem();
    
 	//FIXME : TestCode
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void SetActiveItem(UPTWItemDefinition* ItemDef);
 	
 protected:

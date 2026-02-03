@@ -188,6 +188,14 @@ void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		{
 			EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APTWPlayerCharacter::Look);
 		}
+		if (EquipWeaponAction)
+		{
+			EnhancedInputComponent->BindAction(EquipWeaponAction, ETriggerEvent::Started, this, &APTWPlayerCharacter::EquipWeapon);
+		}
+		if (UseActiveItemAction)
+		{
+			EnhancedInputComponent->BindAction(UseActiveItemAction, ETriggerEvent::Started, this, &APTWPlayerCharacter::UseActiveItem);
+		}
 		
 		UPTWInputComponent* PTWInputComp = CastChecked<UPTWInputComponent>(PlayerInputComponent);
 
@@ -229,6 +237,16 @@ void APTWPlayerCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void APTWPlayerCharacter::EquipWeapon(const FInputActionValue& Value)
+{
+	ServerRPCEquipWeapon();
+}
+
+void APTWPlayerCharacter::UseActiveItem(const FInputActionValue& Value)
+{
+	ServerRPCUseActiveItem();
 }
 
 void APTWPlayerCharacter::Input_AbilityInputTagPressed(FGameplayTag InputTag)
@@ -278,4 +296,20 @@ void APTWPlayerCharacter::UpdateNameTagText()
 	}
 
 	NameWidget->SetPlayerName(Name);
+}
+
+void APTWPlayerCharacter::ServerRPCUseActiveItem_Implementation()
+{
+	if (InventoryComponent)
+	{
+		InventoryComponent->UseActiveItem();
+	}
+}
+
+void APTWPlayerCharacter::ServerRPCEquipWeapon_Implementation()
+{
+	if (InventoryComponent)
+	{
+		InventoryComponent->EquipWeapon(0);
+	}
 }

@@ -8,6 +8,7 @@
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWMiniGameMode.generated.h"
 
+class UGameplayEffect;
 class APTWPlayerController;
 class APTWPlayerState;
 class UPTWItemDefinition;
@@ -63,6 +64,9 @@ private:
 	
 	/** 리스폰 시 플레이어 체력 초기화 */
 	void InitPlayerHealth(AController* Controller);
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> MiniGameEffectClass;
 	
 	int32 PlayerStartCount = 0;
 	

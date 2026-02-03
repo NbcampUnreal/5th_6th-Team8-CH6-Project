@@ -149,9 +149,10 @@ void UPTWInventoryComponent::UseActiveItem()
 }
 
 
-void UPTWInventoryComponent::EquipActiveItem(TObjectPtr<UPTWItemInstance> ActiveItemInstance)
+bool UPTWInventoryComponent::EquipActiveItem(TObjectPtr<UPTWItemInstance> ActiveItemInstance)
 {
-	if (!ActiveItemInstance || !ActiveItemInstance->ItemDef->AbilityToGrant) return;
+	if (CurrentActiveItemSlot) return false; // 이미 장착된 아이템이 있다면
+	if (!ActiveItemInstance || !ActiveItemInstance->ItemDef->AbilityToGrant) return false; 
 	
 	CurrentActiveItemSlot = ActiveItemInstance;
 
@@ -164,6 +165,8 @@ void UPTWInventoryComponent::EquipActiveItem(TObjectPtr<UPTWItemInstance> Active
 		}
 		ActiveItemAbilityHandle = ASC->GiveAbility(FGameplayAbilitySpec(CurrentActiveItemSlot->ItemDef->AbilityToGrant, 1));
 	}
+	
+	return true;
 }
 
 void UPTWInventoryComponent::ConsumeActiveItem()

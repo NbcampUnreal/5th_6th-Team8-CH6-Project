@@ -53,7 +53,7 @@ public:
 	void UseActiveItem();
 	
 	/*필드에 드랍된 아이템을 먹거나, 상점에서 구입한 사용 아이템은 해당 함수 호출 */
-	void EquipActiveItem(TObjectPtr<UPTWItemInstance> ActiveItemInstance);
+	bool EquipActiveItem(TObjectPtr<UPTWItemInstance> ActiveItemInstance);
 	
 	void ConsumeActiveItem();
 	

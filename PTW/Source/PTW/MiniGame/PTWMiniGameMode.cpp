@@ -49,7 +49,7 @@ void APTWMiniGameMode::BeginPlay()
 
 	
 	
-	StartTimer(MiniGameTime);
+	StartCountDown();
 }
 
 void APTWMiniGameMode::EndTimer()
@@ -230,6 +230,33 @@ void APTWMiniGameMode::InitPlayerHealth(AController* Controller)
 	if (!AttributeSet) return;
 
 	AttributeSet->SetHealth(AttributeSet->GetMaxHealth());
+}
+
+void APTWMiniGameMode::StartCountDown()
+{
+	CurrentCountDown = StartCountDownTime;
+	
+	UE_LOG(LogTemp, Warning, TEXT("StartCountDown : %d"), CurrentCountDown);
+	
+	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
+	
+	GetWorldTimerManager().SetTimer(CountDownTimerHandle, this, &APTWMiniGameMode::TickCountDown, 1.0f, true);
+}
+
+void APTWMiniGameMode::TickCountDown()
+{
+	CurrentCountDown--;
+	
+	if (CurrentCountDown > 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CountDown : %d"), CurrentCountDown);
+		return;
+	}
+	// 0이되면 카운트 다운 종료 -> 라운드 시작
+	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
+	UE_LOG(LogTemp, Warning, TEXT("Round Start"));
+	
+	StartTimer(RoundPlayTime);
 }
 
 

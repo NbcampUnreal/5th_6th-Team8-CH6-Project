@@ -10,6 +10,7 @@
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "Engine/ActorChannel.h"
 #include "GAS/PTWGameplayAbility.h"
+#include "Instance/PTWActiveItemInstance.h"
 #include "Instance/PTWWeaponInstance.h"
 #include "Net/UnrealNetwork.h"
 
@@ -149,9 +150,9 @@ void UPTWInventoryComponent::UseActiveItem()
 }
 
 
-bool UPTWInventoryComponent::EquipActiveItem(TObjectPtr<UPTWItemInstance> ActiveItemInstance)
+bool UPTWInventoryComponent::EquipActiveItem(UPTWItemInstance* ActiveItemInstance)
 {
-	if (CurrentActiveItemSlot) return false; // 이미 장착된 아이템이 있다면
+	//if (CurrentActiveItemSlot) return false; // 이미 장착된 아이템이 있다면
 	if (!ActiveItemInstance || !ActiveItemInstance->ItemDef->AbilityToGrant) return false; 
 	
 	CurrentActiveItemSlot = ActiveItemInstance;
@@ -181,4 +182,12 @@ void UPTWInventoryComponent::ConsumeActiveItem()
 	}
 	
 	CurrentActiveItemSlot = nullptr;
+}
+
+void UPTWInventoryComponent::SetActiveItem(UPTWItemDefinition* ItemDef)
+{
+	UPTWActiveItemInstance* ActiveItemInstance = NewObject<UPTWActiveItemInstance>(this);
+	if (!ActiveItemInstance) return;
+	ActiveItemInstance->ItemDef = ItemDef;
+	EquipActiveItem(ActiveItemInstance);
 }

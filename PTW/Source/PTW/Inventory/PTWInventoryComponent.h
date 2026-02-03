@@ -50,12 +50,18 @@ public:
 	void SetWeaponActorHidden(UPTWItemInstance* Weapon, bool bInHidden);
 	
 	/*사용 아이템 사용 함수*/
+	UFUNCTION(BlueprintCallable)
 	void UseActiveItem();
 	
 	/*필드에 드랍된 아이템을 먹거나, 상점에서 구입한 사용 아이템은 해당 함수 호출 */
-	bool EquipActiveItem(TObjectPtr<UPTWItemInstance> ActiveItemInstance);
+	UFUNCTION(BlueprintCallable)
+	bool EquipActiveItem(UPTWItemInstance* ActiveItemInstance);
 	
 	void ConsumeActiveItem();
+   
+	//FIXME : TestCode
+	UFUNCTION(BlueprintCallable)
+	void SetActiveItem(UPTWItemDefinition* ItemDef);
 	
 protected:
 	// Called when the game starts

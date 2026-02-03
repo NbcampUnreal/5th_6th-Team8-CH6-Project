@@ -8,6 +8,7 @@
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWWeaponData.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
 #include "PTW/CoreFramework/PTWPlayerCharacter.h"
 #include "PTW/CoreFramework/Character/Component/PTWWeaponComponent.h"
 
@@ -24,7 +25,7 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	UPTWInventoryComponent* Inventory = TargetPlayer->GetInventoryComponent();
 	if (!Inventory) return;
 	
-	UPTWItemInstance* WeaponItemInst = NewObject<UPTWItemInstance>(Inventory);
+	UPTWWeaponInstance* WeaponItemInst = NewObject<UPTWWeaponInstance>(Inventory);
 	if (!WeaponItemInst) return;
 
 	FActorSpawnParameters SpawnParams;

@@ -11,6 +11,7 @@
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
 
 void UPTWAnimInstance::NativeInitializeAnimation()
 {
@@ -87,7 +88,7 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 		if (Inventory)
 		{
-			UPTWItemInstance* CurrentItem = Inventory->GetCurrentWeaponInst();
+			UPTWWeaponInstance* CurrentItem = Cast<UPTWWeaponInstance>(Inventory->GetCurrentWeaponInst());
 			if (CurrentItem)
 			{
 				UMeshComponent* TargetWeaponMesh = nullptr;

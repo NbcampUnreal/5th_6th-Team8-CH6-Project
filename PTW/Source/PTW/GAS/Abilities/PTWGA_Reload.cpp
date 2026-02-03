@@ -14,6 +14,7 @@
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWWeaponData.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
 
 UPTWGA_Reload::UPTWGA_Reload()
 {
@@ -77,7 +78,7 @@ UAnimMontage* UPTWGA_Reload::GetReloadMontage(APTWPlayerCharacter* PC) const
 	UPTWInventoryComponent* Inven = PC->GetInventoryComponent();
 	if (!Inven) return nullptr;
 
-	UPTWItemInstance* CurrentItem = Inven->GetCurrentWeaponInst();
+	UPTWWeaponInstance* CurrentItem = Cast<UPTWWeaponInstance>(Inven->GetCurrentWeaponInst());
 	if (!CurrentItem) return nullptr;
 
 	UPTWWeaponData* WData = CurrentItem->GetWeaponData();

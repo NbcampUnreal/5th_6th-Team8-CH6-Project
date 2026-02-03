@@ -25,7 +25,7 @@
 #include "UI/ChatWidget/PTWChatList.h"
 #include "UI/ChatWidget/PTWChatInput.h"
 #include "UI/InGameUI/PTWDamageIndicator.h"
-#include "Inventory/PTWItemInstance.h"
+#include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 
 void APTWPlayerController::StartSpectating()

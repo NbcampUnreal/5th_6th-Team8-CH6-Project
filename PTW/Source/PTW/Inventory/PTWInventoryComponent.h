@@ -12,6 +12,8 @@ class UPTWItemInstance;
 class APTWWeaponActor;
 class UPTWItemDefinition;
 class UAbilitySystemComponent;
+class UPTWWeaponInstance;
+
 
 
 

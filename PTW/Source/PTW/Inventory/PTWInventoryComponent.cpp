@@ -8,6 +8,7 @@
 #include "Instance/PTWItemInstance.h"
 #include "PTWWeaponActor.h"
 #include "Engine/ActorChannel.h"
+#include "Instance/PTWWeaponInstance.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -95,7 +96,11 @@ void UPTWInventoryComponent::ClearAndDestroyInventory()
 	for (UPTWItemInstance* Item : ItemArr)
 	{
 		if (!Item) continue;
-		Item->DestroySpawnedActors(); 
+		if (UPTWWeaponInstance* WeaponItemInst = Cast<UPTWWeaponInstance>(Item))
+		{
+			WeaponItemInst->DestroySpawnedActors(); 
+		}
+		
 	}
 
 	ItemArr.Empty();
@@ -123,6 +128,9 @@ void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex, UAbilitySystem
 void UPTWInventoryComponent::SetWeaponActorHidden(UPTWItemInstance* Weapon, bool bInHidden)
 {
 	if (!Weapon) return;
-	if (Weapon->SpawnedWeapon1P) Weapon->SpawnedWeapon1P->SetActorHiddenInGame(bInHidden);
-	if (Weapon->SpawnedWeapon3P) Weapon->SpawnedWeapon3P->SetActorHiddenInGame(bInHidden);
+	if (UPTWWeaponInstance* WeaponInstance = Cast<UPTWWeaponInstance>(Weapon))
+	{
+		if (WeaponInstance->SpawnedWeapon1P) WeaponInstance->SpawnedWeapon1P->SetActorHiddenInGame(bInHidden);
+		if (WeaponInstance->SpawnedWeapon3P) WeaponInstance->SpawnedWeapon3P->SetActorHiddenInGame(bInHidden);
+	}
 }

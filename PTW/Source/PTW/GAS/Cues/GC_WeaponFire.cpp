@@ -8,8 +8,11 @@
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
 #include "Kismet/GameplayStatics.h"
 
+
+class UPTWWeaponInstance;
 
 bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
 {
@@ -26,7 +29,7 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 	{
 		if (UPTWInventoryComponent* InvenComp = PC->GetInventoryComponent())
 		{
-			if (UPTWItemInstance* ItemInst = InvenComp->GetCurrentWeaponInst())
+			if (UPTWWeaponInstance* ItemInst = Cast<UPTWWeaponInstance>(InvenComp->GetCurrentWeaponInst()))
 			{
 				TargetWeapon = ItemInst->SpawnedWeapon3P;
 			}

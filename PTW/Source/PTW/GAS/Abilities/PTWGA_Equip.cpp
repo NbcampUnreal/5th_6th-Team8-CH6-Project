@@ -12,6 +12,7 @@
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWWeaponData.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
 
 UPTWGA_Equip::UPTWGA_Equip()
 {
@@ -38,7 +39,7 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 			 }
 		}
 		
-		SetCharacterWeaponAttribute(WeaponItemInstance, Character);
+		SetCharacterWeaponAttribute(Cast<UPTWWeaponInstance>(WeaponItemInstance), Character);
 		
 		FGameplayTag StatTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 		
@@ -51,7 +52,7 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
-void UPTWGA_Equip::SetCharacterWeaponAttribute(const UPTWItemInstance* WeaponItemInstance,
+void UPTWGA_Equip::SetCharacterWeaponAttribute(const UPTWWeaponInstance* WeaponItemInstance,
 	APTWPlayerCharacter* Character)
 {
 	if (WeaponItemInstance)

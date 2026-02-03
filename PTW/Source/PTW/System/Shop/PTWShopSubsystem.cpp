@@ -10,7 +10,7 @@
 void UPTWShopSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	UDataTable* LoadedTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Data/DT_ShopItems"));
+	UDataTable* LoadedTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/_PTW/Data/DT_ShopItems"));
 
 	if (LoadedTable)
 	{
@@ -27,6 +27,19 @@ void UPTWShopSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 				CachedShopItems.Add(Name, *Row);
 		}
 	}
+
+	FString NPCPath = TEXT("/Game/_PTW/BluePrints/Gameplay/Shop/BP_PTWShopNPC.BP_PTWShopNPC_C");
+
+	UClass* LoadedNPCClass = LoadClass<APTWShopNPC>(nullptr, *NPCPath);
+
+	if (LoadedNPCClass)
+	{
+		ShopNPCClass = LoadedNPCClass;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load ShopNPC Class at path: %s"), *NPCPath);
+	}
 }
 
 void UPTWShopSubsystem::RegisterShopSpot(APTWShopSpot* Spot)
@@ -41,20 +54,24 @@ void UPTWShopSubsystem::UnregisterShopSpot(APTWShopSpot* Spot)
 
 void UPTWShopSubsystem::InitializeShopsForRound(FGameplayTag NextMinigameTag, FGameplayTag RoundEventTag)
 {
-	if (ShopSpots.Num() == 0 || !ShopNPCClass) return;
+	if (ShopSpots.Num() == 0 || !ShopNPCClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ShopSubsystem] Error: No ShopSpots or NPCClass is missing."));
+		return;
+	}
 
 	CurrentRoundEventTag = RoundEventTag;
 
 	for (const auto& NPC : ActiveNPCs)
 	{
-		if (IsValid(NPC))
-		{
-			NPC->Destroy();
-		}
+		if (IsValid(NPC)) NPC->Destroy();
 	}
 	ActiveNPCs.Empty();
 
-	TArray<EShopCategory> SelectedCategories = SelectShopCategories();
+	TArray<EShopCategory> SelectedCategories;
+
+	//FIXME : 테스트용으로 (유틸리티 상점으로만 채움)
+	SelectedCategories.Init(EShopCategory::Utility, ShopSpots.Num());
 
 	TArray<APTWShopSpot*> ShuffledSpots = ShopSpots;
 	int32 LastIndex = ShuffledSpots.Num() - 1;
@@ -100,7 +117,18 @@ int32 UPTWShopSubsystem::GetItemPrice(FName ItemID) const
 
 float UPTWShopSubsystem::GetPriceMultiplier() const
 {
-	//TODO : 현재 이벤트 태그에 따른 가격 배율 계산 (0.5 ~ 2.0)
+	// 1. [인플레이션] 물가 폭등 (2배)
+	// 태그: Event.Round.Economy.Inflation
+	if (CurrentRoundEventTag.MatchesTag(FGameplayTag::RequestGameplayTag("Event.Round.Economy.Inflation")))
+	{
+		return 2.0f;
+	}
+	// 2. [경제 대공황] 물가 대폭락 (50% 할인)
+	// 태그: Event.Round.Economy.Depression
+	if (CurrentRoundEventTag.MatchesTag(FGameplayTag::RequestGameplayTag("Event.Round.Economy.Depression")))
+	{
+		return 0.5f;
+	}
 	
 	return 1.0f;
 }

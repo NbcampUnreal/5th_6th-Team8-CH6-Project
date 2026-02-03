@@ -31,17 +31,21 @@ protected:
 	void UpdateVisualState(bool bIsOpen);
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TObjectPtr<USkeletalMeshComponent> NPCMesh;
-
 	UPROPERTY(Replicated, VisibleInstanceOnly)
 	EShopCategory ShopCategory;
-
 	UPROPERTY()
 	TArray<TObjectPtr<APTWDisplayItem>> DisplayItems;
-
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<APTWDisplayItem> DisplayItemClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<USceneComponent> DefaultSceneRoot;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<USkeletalMeshComponent> NPCMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Visual")
+	TObjectPtr<UStaticMeshComponent> StandMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Visual")
+	TObjectPtr<UStaticMeshComponent> DecoMesh;
 
 	bool bIsLocallyOpen;
 };

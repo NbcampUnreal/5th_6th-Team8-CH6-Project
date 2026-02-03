@@ -4,11 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Gameplay/Shop/PTWShopItemData.h"
 #include "PTWShopSpot.generated.h"
 
-class APTWShopNPC;
 class UArrowComponent;
+class UStaticMeshComponent;
 
 UCLASS()
 class PTW_API APTWShopSpot : public AActor
@@ -27,14 +26,13 @@ public:
 	const TArray<FTransform>& GetItemSpawnTransforms() const { return ItemSpawnTransforms; }
 
 protected:
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UStaticMeshComponent> StandMesh;
-
 	UPROPERTY(EditAnywhere, Category = "Config", meta = (MakeEditWidget = true))
 	TArray<FTransform> ItemSpawnTransforms;
 
-	UPROPERTY()
-	TObjectPtr<UBillboardComponent> Sprite;
-	UPROPERTY()
-	TObjectPtr<UArrowComponent> Arrow;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<USceneComponent> RootScene;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UStaticMeshComponent> VisualizationMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UArrowComponent> SpawnDirectionArrow;
 };

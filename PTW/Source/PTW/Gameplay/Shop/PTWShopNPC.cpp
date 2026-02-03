@@ -9,8 +9,21 @@
 
 APTWShopNPC::APTWShopNPC()
 {
+	PrimaryActorTick.bCanEverTick = false;
+	
+	DefaultSceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneRoot"));
+	RootComponent = DefaultSceneRoot;
+
 	NPCMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("NPCMesh"));
-	RootComponent = NPCMesh;
+	NPCMesh->SetupAttachment(RootComponent);
+
+	StandMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StandMesh"));
+	StandMesh->SetupAttachment(RootComponent);
+	StandMesh->SetCollisionProfileName(TEXT("BlockAll"));
+
+	DecoMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DecoMesh"));
+	DecoMesh->SetupAttachment(RootComponent);
+	DecoMesh->SetCollisionProfileName(TEXT("NoCollision"));
 	bReplicates = true;
 	bIsLocallyOpen = true;
 }

@@ -59,7 +59,7 @@ protected:
 	UPROPERTY()
 	TArray<TObjectPtr<APTWShopNPC>> ActiveNPCs;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Config")
+	UPROPERTY()
 	TSubclassOf<APTWShopNPC> ShopNPCClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Shop State")

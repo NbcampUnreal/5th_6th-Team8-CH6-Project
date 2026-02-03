@@ -3,12 +3,24 @@
 
 #include "Gameplay/Shop/PTWShopSpot.h"
 #include "System/Shop/PTWShopSubsystem.h"
+#include "Components/ArrowComponent.h"
 
 APTWShopSpot::APTWShopSpot()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	StandMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StandMesh"));
-	RootComponent = StandMesh;
+
+	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
+	SetRootComponent(RootScene);
+
+	VisualizationMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisualizationMesh"));
+	VisualizationMesh->SetupAttachment(RootScene);
+	VisualizationMesh->SetHiddenInGame(true);
+	VisualizationMesh->SetCollisionProfileName(TEXT("NoCollision"));
+	VisualizationMesh->SetCastShadow(false);
+
+	SpawnDirectionArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("SpawnDirectionArrow"));
+	SpawnDirectionArrow->SetupAttachment(RootScene);
+	SpawnDirectionArrow->ArrowSize = 1.0f;
 }
 
 void APTWShopSpot::BeginPlay()

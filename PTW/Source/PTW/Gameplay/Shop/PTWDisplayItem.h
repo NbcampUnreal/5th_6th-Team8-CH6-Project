@@ -33,6 +33,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UWidgetComponent> InfoWidget;
 
+	UPROPERTY(VisibleAnywhere)
 	FName ItemID;
 
 	UPROPERTY()

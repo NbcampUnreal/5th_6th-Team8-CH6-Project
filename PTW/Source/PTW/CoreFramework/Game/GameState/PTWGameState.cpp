@@ -20,6 +20,7 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(APTWGameState, CurrentRound);
 	DOREPLIFETIME(APTWGameState, CurrentGamePhase);
 	DOREPLIFETIME(APTWGameState, RankedPlayers);
+	DOREPLIFETIME(APTWGameState, RouletteData);
 }
 
 void APTWGameState::UpdateRanking()
@@ -69,9 +70,6 @@ void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
 	}
 }
 
-
-
-
 void APTWGameState::DecreaseTimer()
 {
 	if (!HasAuthority()) return;
@@ -117,13 +115,12 @@ void APTWGameState::SetCurrentPhase(EPTWGamePhase NewGamePhase)
 	CurrentGamePhase = NewGamePhase;
 }
 
-void APTWGameState::SetSelectedMapRowName(FName MapRowName)
+void APTWGameState::SetRouletteData(const FPTWRouletteData& NewData)
 {
 	if (!HasAuthority()) return;
 
-	SelectedMapRowName = MapRowName;
-
-	OnRep_SelectedMapRowName();
+	RouletteData = NewData;
+	
 }
 
 void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& Message)
@@ -171,7 +168,7 @@ void APTWGameState::OnRep_RankedPlayers()
 	OnUpdateRankedPlayers.Broadcast(RankedPlayers);
 }
 
-void APTWGameState::OnRep_SelectedMapRowName()
+void APTWGameState::OnRep_RouletteData()
 {
-	OnSelectedMiniGameMap.Broadcast(SelectedMapRowName);
+	OnRoulettePhaseChanged.Broadcast(RouletteData);
 }

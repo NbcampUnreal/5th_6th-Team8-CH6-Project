@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "PTWMiniGameMapRow.generated.h"
 /**
  * 
@@ -19,6 +20,9 @@ struct FPTWMiniGameMapRow : public FTableRowBase
 	UPROPERTY(EditAnywhere)
 	FText DisplayName;
 
+	UPROPERTY(EditAnywhere)
+	FGameplayTag MiniGameTag;
+	
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UTexture2D> Thumbnail;
 

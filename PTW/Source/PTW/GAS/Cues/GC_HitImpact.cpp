@@ -23,7 +23,11 @@ bool UGC_HitImpact::OnExecute_Implementation(AActor* MyTarget, const FGameplayCu
 	
 	if (ImpactSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, Location);
+		APawn* InstigatingPawn = Cast<APawn>(Parameters.Instigator);
+		if (InstigatingPawn && InstigatingPawn->IsLocallyControlled())
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, Location);
+		}
 	}
 	
 	return Super::OnExecute_Implementation(MyTarget, Parameters);

@@ -7,7 +7,9 @@
 #include "PTWItemDefinition.h"
 #include "Instance/PTWItemInstance.h"
 #include "PTWWeaponActor.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "Engine/ActorChannel.h"
+#include "GAS/PTWGameplayAbility.h"
 #include "Instance/PTWWeaponInstance.h"
 #include "Net/UnrealNetwork.h"
 
@@ -48,6 +50,7 @@ void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimePr
 	
 	DOREPLIFETIME(UPTWInventoryComponent, ItemArr);
 	DOREPLIFETIME(UPTWInventoryComponent, CurrentWeapon);
+	DOREPLIFETIME(UPTWInventoryComponent, CurrentActiveItemSlot);
 }
 
  bool UPTWInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch,
@@ -133,4 +136,46 @@ void UPTWInventoryComponent::SetWeaponActorHidden(UPTWItemInstance* Weapon, bool
 		if (WeaponInstance->SpawnedWeapon1P) WeaponInstance->SpawnedWeapon1P->SetActorHiddenInGame(bInHidden);
 		if (WeaponInstance->SpawnedWeapon3P) WeaponInstance->SpawnedWeapon3P->SetActorHiddenInGame(bInHidden);
 	}
+}
+
+void UPTWInventoryComponent::UseActiveItem()
+{
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+	
+	if (ASC && ActiveItemAbilityHandle.IsValid())
+	{
+		ASC->TryActivateAbility(ActiveItemAbilityHandle);
+	}
+}
+
+
+void UPTWInventoryComponent::EquipActiveItem(TObjectPtr<UPTWItemInstance> ActiveItemInstance)
+{
+	if (!ActiveItemInstance || !ActiveItemInstance->ItemDef->AbilityToGrant) return;
+	
+	CurrentActiveItemSlot = ActiveItemInstance;
+
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+	if (ASC)
+	{
+		if (ActiveItemAbilityHandle.IsValid())
+		{
+			ASC->ClearAbility(ActiveItemAbilityHandle);
+		}
+		ActiveItemAbilityHandle = ASC->GiveAbility(FGameplayAbilitySpec(CurrentActiveItemSlot->ItemDef->AbilityToGrant, 1));
+	}
+}
+
+void UPTWInventoryComponent::ConsumeActiveItem()
+{
+	if (ActiveItemAbilityHandle.IsValid())
+	{
+		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()))
+		{
+			ASC->ClearAbility(ActiveItemAbilityHandle);
+			ActiveItemAbilityHandle = FGameplayAbilitySpecHandle();
+		}
+	}
+	
+	CurrentActiveItemSlot = nullptr;
 }

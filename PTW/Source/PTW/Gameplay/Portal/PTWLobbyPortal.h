@@ -17,8 +17,11 @@ public:
 	
 	APTWLobbyPortal();
 
+	void SetPortalEnabled(bool bEnable);
+	
 protected:
 	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	UFUNCTION()
 	void OnComponentBeginOverlap(
@@ -38,9 +41,19 @@ protected:
 		);
 	
 	void UpdatePortalCount();
+	void ApplyPortalEnabled(bool bEnable);
+	
 	
 	UPROPERTY(VisibleAnywhere, Category = "Component");
 	TObjectPtr<USphereComponent> SphereCollision;
 
 	TSet<TObjectPtr<APlayerState>> PlayerInPortal;
+
+	UPROPERTY(ReplicatedUsing=OnRep_PortalEnabled)
+	bool bPortalEnabled =false;
+
+	UFUNCTION()
+	void OnRep_PortalEnabled();
+
+	
 };

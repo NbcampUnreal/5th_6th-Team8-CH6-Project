@@ -237,7 +237,7 @@ private:
 	void OnRep_RemainTime();
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentRound, Category = "GameFlow|Round")
-	int32 CurrentRound;
+	int32 CurrentRound =0;
 
 	UFUNCTION()
 	void OnRep_CurrentRound();

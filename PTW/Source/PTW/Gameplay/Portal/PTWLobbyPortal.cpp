@@ -90,8 +90,9 @@ void APTWLobbyPortal::UpdatePortalCount()
 	if (!PTWGameState) return;
 
 	const int32 InPortal = PlayerInPortal.Num();
+	//const int32 Required = FMath::Clamp(PTWGameState->PlayerArray.Num() / 2 + 1, 2, 16); 
 	const int32 Required = PTWGameState->PlayerArray.Num() / 2 + 1;
-
+	
 	PTWGameState->SetPortalCount(InPortal, Required);
 
 	if (InPortal >= Required)

@@ -79,3 +79,20 @@ void APTWShopNPC::CheckShopAvailability()
 
 	//TODO : 로컬 클라이언트에서 닫은 상점인지 체크하기
 }
+
+void APTWShopNPC::CloseShop()
+{
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
+
+	for (APTWDisplayItem* Item : DisplayItems)
+	{
+		if (Item)
+		{
+			Item->SetActorHiddenInGame(true);
+			Item->SetActorEnableCollision(false);
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Shop Closed Visuals Executed."));
+}

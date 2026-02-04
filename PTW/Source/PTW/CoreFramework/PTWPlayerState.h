@@ -18,6 +18,7 @@ class UGameplayEffect;
 class UAbilitySystemComponent;
 class UAttributeSet;
 class UPTWWeaponAttributeSet;
+class APTWShopNPC;
 
 UCLASS()
 class PTW_API APTWPlayerState : public APlayerState, public IAbilitySystemInterface, public IPTWPlayerRoundDataInterface
@@ -48,6 +49,16 @@ public:
 	void SetPlayerRoundData(const FPTWPlayerRoundData& NewData);
 	UFUNCTION(BlueprintPure, Category = "Data")
 	FPTWPlayerRoundData GetPlayerRoundData() const;
+
+	/** * 상점에 아이템 구매 요청
+	 * @param ItemID : 구매할 아이템 ID (FName)
+	 * @param Cost : 가격
+	 */
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Shop")
+	void ServerRequestPurchase(APTWShopNPC* ShopNPC, FName ItemID, int32 Cost);
+
+	UFUNCTION(Client, Reliable)
+	void ClientPurchaseSuccess(APTWShopNPC* ShopNPC);
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnPlayerDataChanged OnPlayerDataUpdated;

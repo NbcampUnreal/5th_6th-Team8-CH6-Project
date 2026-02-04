@@ -66,6 +66,12 @@ void APTWGameMode::Logout(AController* Exiting)
 	
 }
 
+void APTWGameMode::GetSeamlessTravelActorList(bool bToTransition, TArray<AActor*>& ActorList)
+{
+	Super::GetSeamlessTravelActorList(bToTransition, ActorList);
+	
+}
+
 void APTWGameMode::StartTimer(float TimeDuration)
 {
 	if (PTWGameState)

@@ -125,6 +125,18 @@ void UPTWAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, 
 			}
 		}
 	}
+	if (Attribute == GetJumpZVelocityAttribute())
+	{
+		UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+		if (ASC && ASC->GetAvatarActor())
+		{
+			ACharacter* Character = Cast<ACharacter>(ASC->GetAvatarActor());
+			if (Character && Character->GetCharacterMovement())
+			{
+				Character->GetCharacterMovement()->JumpZVelocity = NewValue;
+			}
+		}
+	}
 }
 
 void UPTWAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, Health, OldHealth); }

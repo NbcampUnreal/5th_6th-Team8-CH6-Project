@@ -117,7 +117,9 @@ void UPTWLobbyBrowser::OnClickedCreateLobbyButton()
 	{
 		return;
 	}
+	
 	SessionSubsystem->CreateLobbySession(LobbySettings, 16, false);
+	// SessionSubsystem->LaunchDedicatedServer(LobbySettings, 16, false);
 }
 
 void UPTWLobbyBrowser::OnClickedFindLobbyButton()

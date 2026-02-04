@@ -82,7 +82,8 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 
 	APTWPlayerState* PlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
 	if (!IsValid(PlayerState)) return;
-	
+
+	PTWGameState->AddRankedPlayer(PlayerState);
 }
 
 void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)

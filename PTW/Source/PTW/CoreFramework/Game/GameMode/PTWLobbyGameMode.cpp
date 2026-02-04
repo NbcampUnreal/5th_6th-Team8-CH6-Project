@@ -34,18 +34,18 @@ void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options,
 void APTWLobbyGameMode::InitGameState()
 {
 	Super::InitGameState();
-
-	TravelLevelName = TEXT("/Game/_PTW/Maps/MiniGame_Bomb");
-
+	
 	if (IsValid(PTWGameState))
 	{
 		if (bIsFirstLobby == true)
 		{
 			PTWGameState->SetCurrentPhase(EPTWGamePhase::PreGameLobby);
+			TravelLevelName = TEXT("/Game/_PTW/Maps/Lobby");
 		}
 		else
 		{
 			PTWGameState->SetCurrentPhase(EPTWGamePhase::PostGameLobby);
+			TravelLevelName = TEXT("/Game/_PTW/Maps/MiniGame_Bomb");
 			PTWGameState->AdvanceRound(); // 라운드 증가
 		}
 	}
@@ -127,6 +127,8 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 	// 		}
 	// 	}
 	// }
+
+	// 로그 아웃하면 gamestate portal 부분 수정
 }
 
 void APTWLobbyGameMode::AddRandomGold(APlayerController* NewPlayer)

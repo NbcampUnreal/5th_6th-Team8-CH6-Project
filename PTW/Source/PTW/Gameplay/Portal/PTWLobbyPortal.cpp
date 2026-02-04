@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Gimmick/PTWLobbyPortal.h"
+#include "Gameplay/Portal/PTWLobbyPortal.h"
 
 #include "Components/SphereComponent.h"
 #include "CoreFramework/Game/GameMode/PTWGameMode.h"
@@ -114,6 +114,8 @@ void APTWLobbyPortal::SetPortalEnabled(bool bEnable)
 	if (!HasAuthority()) return;
 	
 	bPortalEnabled = bEnable;
+
+	ApplyPortalEnabled(bPortalEnabled);
 }
 
 void APTWLobbyPortal::OnRep_PortalEnabled()

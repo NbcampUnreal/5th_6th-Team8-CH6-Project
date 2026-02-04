@@ -50,7 +50,7 @@ protected:
 	TSet<TObjectPtr<APlayerState>> PlayerInPortal;
 
 	UPROPERTY(ReplicatedUsing=OnRep_PortalEnabled)
-	bool bPortalEnabled;
+	bool bPortalEnabled =false;
 
 	UFUNCTION()
 	void OnRep_PortalEnabled();

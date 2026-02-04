@@ -27,8 +27,10 @@ struct FPTWPlayerData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Gold = 0;
 
-	// 향후 인벤토리 시스템 확장 시 사용 예정
-	// TArray<AActor> InventoryItem;
+	/** 플레이어가 보유한 아이템ID */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FString> InventoryItemIDs;
+
 };
 
 /**

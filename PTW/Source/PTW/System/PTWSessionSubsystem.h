@@ -9,6 +9,8 @@
  * 
  */
 
+struct FSessionPropertyKeyPair;
+
 UCLASS(Abstract, Blueprintable)
 class PTW_API UPTWSessionSubsystem : public UGameInstanceSubsystem
 {
@@ -30,9 +32,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void OnFindLobbiesComplete(const TArray<FBlueprintSessionResult>& SessionResults);
 	
+	UFUNCTION(BlueprintCallable, Category = "Session")
+	void LaunchDedicatedServer(const TArray<FSessionPropertyKeyPair>& LobbySettings,
+	int32 MaxPlayers, bool bIsPrivate);
+	
 	// 리슨서버로 레벨 생성하는 함수
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void CreateListenServer(FName MapName);
+	void CreateListenLevel(FName MapName);
 	
 	// 로비세션 탐색결과를 송신할 델리게이트
 	UPROPERTY(BlueprintAssignable, Category = "Session")

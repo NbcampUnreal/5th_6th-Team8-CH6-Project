@@ -6,13 +6,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "CoreFramework/Interface/PTWInteractInterface.h"
 #include "PTWDisplayItem.generated.h"
 
 class UWidgetComponent;
 class APTWShopNPC;
 
 UCLASS()
-class PTW_API APTWDisplayItem : public AActor
+class PTW_API APTWDisplayItem : public AActor, public IPTWInteractInterface
 {
 	GENERATED_BODY()
 
@@ -26,6 +27,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void TryPurchase(APlayerController* Player);
 
+	virtual void OnInteract_Implementation(APawn* InstigatorPawn) override;
+	virtual FText GetInteractionKeyword_Implementation() override;
+	virtual bool IsInteractable_Implementation() override;
+
 protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStaticMeshComponent> ItemMesh;
@@ -38,4 +43,6 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<APTWShopNPC> ParentShop;
+
+	int32 CachedPrice = 0;
 };

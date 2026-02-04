@@ -14,13 +14,20 @@ void UPTWTimer::NativeConstruct()
 
 	if (PTWGameState)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Timer : bind"));
+
 		// 델리게이트 바인딩
 		PTWGameState->OnRemainTimeChanged.AddDynamic(
 			this, &UPTWTimer::HandleRemainTimeChanged
 		);
 
+		PTWGameState->OnMiniGameCountdownChanged.AddDynamic(
+			this, &UPTWTimer::MiniGameCountdownChanged
+		);
+
 		// 초기 값 반영
 		HandleRemainTimeChanged(PTWGameState->GetRemainTime());
+		MiniGameCountdownChanged(PTWGameState->IsMiniGameCountdown());
 	}
 }
 
@@ -30,6 +37,10 @@ void UPTWTimer::NativeDestruct()
 	{
 		PTWGameState->OnRemainTimeChanged.RemoveDynamic(
 			this, &UPTWTimer::HandleRemainTimeChanged
+		);
+
+		PTWGameState->OnMiniGameCountdownChanged.RemoveDynamic(
+			this, &UPTWTimer::MiniGameCountdownChanged
 		);
 	}
 
@@ -41,6 +52,21 @@ void UPTWTimer::HandleRemainTimeChanged(int32 NewRemainTime)
 	if (!RemainTimeText) return;
 
 	RemainTimeText->SetText(FormatTime(NewRemainTime));
+}
+
+void UPTWTimer::MiniGameCountdownChanged(bool iscountdown)
+{
+	// false 면 visible
+	if (!RemainTimeText) return;
+
+	if (iscountdown)
+	{
+		RemainTimeText->SetVisibility(ESlateVisibility::Hidden);
+	}
+	else
+	{
+		RemainTimeText->SetVisibility(ESlateVisibility::Visible);
+	}
 }
 
 FText UPTWTimer::FormatTime(int32 Seconds) const

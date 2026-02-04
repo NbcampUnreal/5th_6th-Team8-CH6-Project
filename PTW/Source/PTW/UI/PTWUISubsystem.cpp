@@ -172,6 +172,46 @@ UUserWidget* UPTWUISubsystem::CreatePersistentWidget(TSubclassOf<UUserWidget> Wi
 	return Widget;
 }
 
+UUserWidget* UPTWUISubsystem::ShowSystemWidget(TSubclassOf<UUserWidget> WidgetClass, int32 ZOrder)
+{
+	if (!WidgetClass)
+		return nullptr;
+
+	APlayerController* PC = GetPlayerController();
+	if (!PC)
+		return nullptr;
+
+	// 이미 떠 있으면 재사용
+	if (TObjectPtr<UUserWidget>* Found = CachedWidgets.Find(WidgetClass))
+	{
+		UUserWidget* Widget = Found->Get();
+		if (!Widget->IsInViewport())
+		{
+			Widget->AddToViewport(ZOrder);
+		}
+		Widget->SetVisibility(ESlateVisibility::Visible);
+		return Widget;
+	}
+
+	// 새로 생성
+	UUserWidget* Widget = CreateWidget<UUserWidget>(PC, WidgetClass);
+	if (!Widget)
+		return nullptr;
+
+	Widget->AddToViewport(ZOrder);
+	CachedWidgets.Add(WidgetClass, Widget);
+	return Widget;
+}
+
+void UPTWUISubsystem::HideSystemWidget(TSubclassOf<UUserWidget> WidgetClass)
+{
+	if (TObjectPtr<UUserWidget>* Found = CachedWidgets.Find(WidgetClass))
+	{
+		UUserWidget* Widget = Found->Get();
+		Widget->RemoveFromParent();
+	}
+}
+
 void UPTWUISubsystem::SetWidgetVisibility(TSubclassOf<UUserWidget> WidgetClass, bool bVisible)
 {
 	if (TObjectPtr<UUserWidget>* Found = CachedWidgets.Find(WidgetClass))

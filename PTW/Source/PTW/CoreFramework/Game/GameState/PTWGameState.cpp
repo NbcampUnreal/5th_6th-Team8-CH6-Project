@@ -20,7 +20,9 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(APTWGameState, CurrentRound);
 	DOREPLIFETIME(APTWGameState, CurrentGamePhase);
 	DOREPLIFETIME(APTWGameState, RankedPlayers);
-	DOREPLIFETIME(APTWGameState, RouletteData);
+	DOREPLIFETIME(APTWGameState, bMiniGameCountdown);
+	DOREPLIFETIME(APTWGameState, MiniGameCountDown);
+
 }
 
 void APTWGameState::UpdateRanking()
@@ -132,6 +134,35 @@ void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& M
 	}
 
 	Multicast_BroadcastChatMessage(Sender, Message);
+}
+
+void APTWGameState::SetbMiniGameCountdown(bool bCountdown)
+{
+	if (!HasAuthority()) return;
+
+	// 값이 실제로 변할 때만 처리 (네트워크 트래픽 최적화)
+	if (bMiniGameCountdown == bCountdown) return;
+
+	bMiniGameCountdown = bCountdown;
+	OnMiniGameCountdownChanged.Broadcast(bMiniGameCountdown);
+}
+
+void APTWGameState::OnRep_MiniGameCountdown()
+{
+	OnMiniGameCountdownChanged.Broadcast(bMiniGameCountdown);
+}
+
+void APTWGameState::SetMiniGameCountdown(int32 NewValue)
+{
+	if (!HasAuthority()) return;
+
+	MiniGameCountDown = NewValue;
+	OnMiniGameCountdownValueChanged.Broadcast(MiniGameCountDown);
+}
+
+void APTWGameState::OnRep_MiniGameCountDownValue()
+{
+	OnMiniGameCountdownValueChanged.Broadcast(MiniGameCountDown);
 }
 
 void APTWGameState::Multicast_BroadcastKilllog_Implementation(AActor* DeadActor, AActor* KillerActor)

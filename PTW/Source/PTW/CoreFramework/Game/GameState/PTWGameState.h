@@ -101,6 +101,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	const FString&, Message
 );
 
+/* 미니게임 카운트다운 시작 여부 */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMiniGameCountdownChanged, bool, bCountdown);
+/* 미니게임 카운트다운 숫자 */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMiniGameCountDownValueChanged, int32, CountDown);
 
 UCLASS()
 class PTW_API APTWGameState : public AGameState
@@ -126,6 +130,11 @@ public:
 
 	/* 채팅 RPC */
 	void BroadcastChatMessage(const FString& Sender, const FString& Message);
+
+	/* 미니게임 카운트다운 */
+	bool IsMiniGameCountdown() const { return bMiniGameCountdown; }
+	void SetbMiniGameCountdown(bool bCountdown);
+	void SetMiniGameCountdown(int32 NewValue);
 	
 	/** 남은 시간 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
@@ -158,8 +167,14 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
 	FOnRoulettePhaseChanged OnRoulettePhaseChanged;
 
+	/* 미니게임 카운트다운 */
+	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
+	FOnMiniGameCountdownChanged OnMiniGameCountdownChanged;
+	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
+	FOnMiniGameCountDownValueChanged OnMiniGameCountdownValueChanged;
 	
 	FORCEINLINE int32 GetRemainTime() const { return RemainTime; }
+	FORCEINLINE int32 GetMiniGameCountDown() const { return MiniGameCountDown; }
 	FORCEINLINE int32 GetCurrentRound() const {return CurrentRound;}
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
 	FORCEINLINE TArray<APTWPlayerState*> GetRankedPlayers() const {return RankedPlayers;}
@@ -171,6 +186,17 @@ protected:
 	/* 채팅 RPC */
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_BroadcastChatMessage(const FString& Sender, const FString& Message);
+
+	/* 미니게임 카운트다운 */
+	UFUNCTION()
+	void OnRep_MiniGameCountdown();
+	UFUNCTION()
+	void OnRep_MiniGameCountDownValue();
+
+	UPROPERTY(ReplicatedUsing = OnRep_MiniGameCountdown)
+	bool bMiniGameCountdown = false;
+	UPROPERTY(ReplicatedUsing = OnRep_MiniGameCountDownValue)
+	int32 MiniGameCountDown = 0;
 
 private:
 	/** 남은 시간(초) - 서버에서 갱신, 클라이언트로 복제 */

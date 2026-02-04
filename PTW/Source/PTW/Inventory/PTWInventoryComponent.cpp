@@ -104,11 +104,12 @@ void UPTWInventoryComponent::OnItemInstanceCreated(UPTWItemInstance* ItemInstanc
 	}
 }
 
+#pragma optimize("", off)
 void UPTWInventoryComponent::ApplyAllPassiveItems(UPTWItemInstance* ItemInstance)
 {
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
 		
-	if (!ASC || !ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("GameState.MiniGame.Bomb")))) return;
+	if (!ASC) return;
 		
 	UPTWPassiveItemInstance* PassiveItemInstance = Cast<UPTWPassiveItemInstance>(ItemInstance);
 	UPTWItemDefinition* ItemDef = PassiveItemInstance->ItemDef;
@@ -128,6 +129,7 @@ void UPTWInventoryComponent::ApplyAllPassiveItems(UPTWItemInstance* ItemInstance
 		}
 	}
 }
+#pragma optimize("", on)
 
 void UPTWInventoryComponent::RemoveAllPassiveItems(UPTWItemInstance* ItemInstance)
 {

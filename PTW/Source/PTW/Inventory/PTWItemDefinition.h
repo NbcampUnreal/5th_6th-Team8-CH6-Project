@@ -31,30 +31,32 @@ class PTW_API UPTWItemDefinition : public UDataAsset
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDefault")
 	FText DisplayName;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDefault")
 	TSubclassOf<UPTWGameplayAbility> AbilityToGrant;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef", meta = (EditCondition = "ItemType == EItemType::Weapon", EditConditionHides))
-	TSubclassOf<APTWWeaponActor> WeaponClass;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef",meta = (EditCondition = "ItemType == EItemType::Weapon", EditConditionHides))
-	FGameplayTag WeaponTag;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef",meta = (EditCondition = "ItemType == EItemType::Passive", EditConditionHides))
-	TArray<TSubclassOf<UGameplayEffect>> PassiveEffects;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDefault")
 	FGameplayTag ItemTag;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDefault")
 	EItemType ItemType;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDefault")
 	TObjectPtr<UImage> ItemIcon;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDefault")
 	FText DescriptionText;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (EditCondition = "ItemType == EItemType::Weapon", EditConditionHides))
+	TSubclassOf<APTWWeaponActor> WeaponClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon",meta = (EditCondition = "ItemType == EItemType::Weapon", EditConditionHides))
+	FGameplayTag WeaponTag;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Passive",meta = (EditCondition = "ItemType == EItemType::Passive", EditConditionHides))
+	TArray<TSubclassOf<UGameplayEffect>> PassiveEffects;
+	
+
 };

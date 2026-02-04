@@ -40,9 +40,18 @@ void APTWDisplayItem::TryPurchase(APlayerController* Player)
 {
 	if (!Player || !ParentShop) return;
 
+	int32 FinalPrice = 0;
+	if (UPTWShopSubsystem* Sys = GetWorld()->GetSubsystem<UPTWShopSubsystem>())
+	{
+		FinalPrice = Sys->GetItemPrice(ItemID);
+	}
+	else
+	{
+		return;
+	}
 	if (APTWPlayerState* PS = Player->GetPlayerState<APTWPlayerState>())
 	{
-
+		PS->ServerRequestPurchase(ParentShop, ItemID, FinalPrice);
 	}
 }
 

@@ -9,6 +9,7 @@
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffect.h"
 #include "GameplayAbilitySpec.h"
+#include "Gameplay/Shop/PTWShopNPC.h"
 
 APTWPlayerState::APTWPlayerState()
 {
@@ -196,4 +197,37 @@ void APTWPlayerState::OnRep_CurrentPlayerData()
 void APTWPlayerState::OnRep_PlayerRoundData()
 {
 	OnPlayerRoundDataUpdated.Broadcast(PlayerRoundData);
+}
+
+void APTWPlayerState::ServerRequestPurchase_Implementation(APTWShopNPC* ShopNPC, FName ItemID, int32 Cost)
+{
+	if (CurrentPlayerData.Gold >= Cost)
+	{
+		CurrentPlayerData.Gold -= Cost;
+
+		FString ItemIDStr = ItemID.ToString();
+		CurrentPlayerData.InventoryItemIDs.Add(ItemIDStr);
+
+		UE_LOG(LogTemp, Log, TEXT("[Purchase Success] Player: %s, Item: %s, Gold Left: %d"),
+			*GetPlayerName(), *ItemIDStr, CurrentPlayerData.Gold);
+
+		OnRep_CurrentPlayerData();
+
+		ForceNetUpdate();
+
+		ClientPurchaseSuccess(ShopNPC);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Purchase Failed] Not enough gold. Current: %d, Cost: %d"), CurrentPlayerData.Gold, Cost);
+	}
+}
+
+void APTWPlayerState::ClientPurchaseSuccess_Implementation(APTWShopNPC* ShopNPC)
+{
+	// 해당 상점 NPC를 찾아서 문 닫는 연출 실행
+	if (ShopNPC)
+	{
+		ShopNPC->CloseShop();
+	}
 }

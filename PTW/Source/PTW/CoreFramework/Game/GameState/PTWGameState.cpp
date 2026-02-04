@@ -20,6 +20,9 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(APTWGameState, CurrentRound);
 	DOREPLIFETIME(APTWGameState, CurrentGamePhase);
 	DOREPLIFETIME(APTWGameState, RankedPlayers);
+	DOREPLIFETIME(APTWGameState, RouletteData);
+	DOREPLIFETIME(APTWGameState, PortalCurrent);
+	DOREPLIFETIME(APTWGameState, PortalRequired);
 	DOREPLIFETIME(APTWGameState, bMiniGameCountdown);
 	DOREPLIFETIME(APTWGameState, MiniGameCountDown);
 
@@ -125,15 +128,12 @@ void APTWGameState::SetRouletteData(const FPTWRouletteData& NewData)
 	
 }
 
-void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& Message)
+void APTWGameState::SetPortalCount(int32 NewCurrent, int32 NewRequired)
 {
-	// 서버 전용
-	if (!HasAuthority())
-	{
-		return;
-	}
+	if (!HasAuthority()) return;
 
-	Multicast_BroadcastChatMessage(Sender, Message);
+	PortalCurrent = NewCurrent;
+	PortalRequired = NewRequired;
 }
 
 void APTWGameState::SetbMiniGameCountdown(bool bCountdown)
@@ -147,11 +147,6 @@ void APTWGameState::SetbMiniGameCountdown(bool bCountdown)
 	OnMiniGameCountdownChanged.Broadcast(bMiniGameCountdown);
 }
 
-void APTWGameState::OnRep_MiniGameCountdown()
-{
-	OnMiniGameCountdownChanged.Broadcast(bMiniGameCountdown);
-}
-
 void APTWGameState::SetMiniGameCountdown(int32 NewValue)
 {
 	if (!HasAuthority()) return;
@@ -160,9 +155,15 @@ void APTWGameState::SetMiniGameCountdown(int32 NewValue)
 	OnMiniGameCountdownValueChanged.Broadcast(MiniGameCountDown);
 }
 
-void APTWGameState::OnRep_MiniGameCountDownValue()
+void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& Message)
 {
-	OnMiniGameCountdownValueChanged.Broadcast(MiniGameCountDown);
+	// 서버 전용
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	Multicast_BroadcastChatMessage(Sender, Message);
 }
 
 void APTWGameState::Multicast_BroadcastKilllog_Implementation(AActor* DeadActor, AActor* KillerActor)
@@ -177,7 +178,6 @@ void APTWGameState::Multicast_BroadcastChatMessage_Implementation(const FString&
 {
 	OnChatMessageBroadcast.Broadcast(Sender, Message);
 }
-
 
 void APTWGameState::OnRep_RemainTime()
 {
@@ -202,4 +202,19 @@ void APTWGameState::OnRep_RankedPlayers()
 void APTWGameState::OnRep_RouletteData()
 {
 	OnRoulettePhaseChanged.Broadcast(RouletteData);
+}
+
+void APTWGameState::OnRep_PortalCount()
+{
+	OnPortalCountChanged.Broadcast(PortalCurrent, PortalRequired);
+}
+
+void APTWGameState::OnRep_MiniGameCountDownValue()
+{
+	OnMiniGameCountdownValueChanged.Broadcast(MiniGameCountDown);
+}
+
+void APTWGameState::OnRep_MiniGameCountdown()
+{
+	OnMiniGameCountdownChanged.Broadcast(bMiniGameCountdown);
 }

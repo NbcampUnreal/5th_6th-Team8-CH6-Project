@@ -51,7 +51,7 @@ class PTW_API APTWLobbyGameMode : public APTWGameMode
 	GENERATED_BODY()
 
 public:
-
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
 	FPTWGameFlowRule GameFlowRule;
 	

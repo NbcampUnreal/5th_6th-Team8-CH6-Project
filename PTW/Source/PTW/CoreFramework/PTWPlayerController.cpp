@@ -254,7 +254,7 @@ void APTWPlayerController::BeginPlay()
 		}
 	}
 
-	BindMiniGameDelegates();
+	BindGameStateDelegates();
 
 	/* UI 위젯 생성 */
 	CreateUI();
@@ -279,7 +279,7 @@ void APTWPlayerController::OnRep_PlayerState()
 		return;
 	}
 
-	BindMiniGameDelegates();
+	BindGameStateDelegates();
 
 	CreateUI();
 }
@@ -371,25 +371,24 @@ void APTWPlayerController::SetSetOnlyOwnerSeeRecursive(USceneComponent* InParent
 	}
 }
 
-void APTWPlayerController::BindMiniGameDelegates()
+void APTWPlayerController::BindGameStateDelegates()
 {
-	UE_LOG(LogTemp, Error, TEXT("PTWPlayerController : Try BindMiniGameDelegates"));
-
 	APTWGameState* GS = GetWorld() ? GetWorld()->GetGameState<APTWGameState>() : nullptr;
 	if (!GS) return;
 
-	UE_LOG(LogTemp, Error, TEXT("PTWPlayerController : Success BindMiniGameDelegates"));
-
 	// 중복 바인딩 방지
-	GS->OnMiniGameCountdownChanged.RemoveAll(this);
+	UnbindGameStateDelegates();
 
+	// 델리게이트 바인드
 	GS->OnMiniGameCountdownChanged.AddDynamic(this, &ThisClass::OnMiniGameCountdownChanged);
+	GS->OnRoulettePhaseChanged.AddDynamic(this, &ThisClass::HandleRoulettePhaseChanged);
 
 	// 현재상태 반영
 	OnMiniGameCountdownChanged(GS->IsMiniGameCountdown());
+	HandleRoulettePhaseChanged(GS->GetRouletteData());
 }
 
-void APTWPlayerController::UnbindMiniGameDelegates()
+void APTWPlayerController::UnbindGameStateDelegates()
 {
 	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
 	{
@@ -421,6 +420,44 @@ void APTWPlayerController::OnMiniGameCountdownChanged(bool bStarted)
 //{
 //	
 //}
+
+void APTWPlayerController::HandleRoulettePhaseChanged(FPTWRouletteData RouletteData)
+{
+	const UEnum* EnumPtr = StaticEnum<EPTWRoulettePhase>();
+	FString PhaseName = EnumPtr ? EnumPtr->GetNameStringByValue((int64)RouletteData.CurrentPhase) : TEXT("Invalid");
+
+	UE_LOG(LogTemp, Error, TEXT("PTWPlayerController : HandleRoulettePhaseChanged - %s"), *PhaseName);
+
+	if (!UISubsystem)
+	{
+		return;
+	}
+
+	switch (RouletteData.CurrentPhase)
+	{
+	case EPTWRoulettePhase::MapRoulette:
+		if (MapRouletteWidgetClass)
+		{
+			UISubsystem->ShowSystemWidget(MapRouletteWidgetClass, 85);
+		}
+		break;
+	case EPTWRoulettePhase::RoundEventRoulette:
+		if (MapRouletteWidgetClass)
+		{
+			UISubsystem->HideSystemWidget(MapRouletteWidgetClass);
+		}
+		break;
+	case EPTWRoulettePhase::Finished:
+		if (MapRouletteWidgetClass)
+		{
+			UISubsystem->HideSystemWidget(MapRouletteWidgetClass);
+		}
+		break;
+
+	default:
+		break;
+	}
+}
 
 void APTWPlayerController::SetupInputComponent()
 {

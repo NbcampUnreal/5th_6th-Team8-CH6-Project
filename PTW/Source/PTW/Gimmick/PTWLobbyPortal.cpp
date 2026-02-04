@@ -6,13 +6,18 @@
 #include "Components/SphereComponent.h"
 #include "CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "Net/UnrealNetwork.h"
 
 APTWLobbyPortal::APTWLobbyPortal()
 {
 	PrimaryActorTick.bCanEverTick = false;
-
+	bReplicates = true;
+	
 	SphereCollision = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
 	SphereCollision->SetupAttachment(RootComponent);
+	
+	SetHidden(true);
+	SetActorEnableCollision(false);
 }
 
 void APTWLobbyPortal::BeginPlay()
@@ -21,6 +26,24 @@ void APTWLobbyPortal::BeginPlay()
 
 	SphereCollision->OnComponentBeginOverlap.AddDynamic(this, &APTWLobbyPortal::OnComponentBeginOverlap);
 	SphereCollision->OnComponentEndOverlap.AddDynamic(this, &APTWLobbyPortal::OnComponentEndOverlap);
+	
+	APTWGameState* PTWGameState = Cast<APTWGameState>(GetWorld()->GetGameState());
+	if (!PTWGameState) return;
+
+	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
+	{
+		if (HasAuthority())
+		{
+			SetPortalEnabled(true);
+		}
+	}
+}
+
+void APTWLobbyPortal::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APTWLobbyPortal, bPortalEnabled);
 }
 
 void APTWLobbyPortal::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -78,6 +101,24 @@ void APTWLobbyPortal::UpdatePortalCount()
 
 		GameMode->EndTimer();
 	}
+}
+
+void APTWLobbyPortal::ApplyPortalEnabled(bool bEnable)
+{
+	SetActorHiddenInGame(!bEnable);
+	SetActorEnableCollision(bEnable);
+}
+
+void APTWLobbyPortal::SetPortalEnabled(bool bEnable)
+{
+	if (!HasAuthority()) return;
+	
+	bPortalEnabled = bEnable;
+}
+
+void APTWLobbyPortal::OnRep_PortalEnabled()
+{
+	ApplyPortalEnabled(bPortalEnabled);
 }
 
 

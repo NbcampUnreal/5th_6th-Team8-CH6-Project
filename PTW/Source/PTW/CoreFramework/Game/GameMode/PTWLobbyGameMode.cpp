@@ -82,6 +82,7 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		{
 			StartTimer(GameFlowRule.WaitingTime);
 		}
+		
 	}
 }
 

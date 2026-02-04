@@ -23,6 +23,9 @@ public:
 	
 	APTWGameMode();
 
+	/** 타이머 종료 시 호출(타이머 정리 및 종료 후 처리 트리거) */
+	UFUNCTION()
+	virtual void EndTimer();
 protected:
 	/** 게임 월드 시작 시 초기 설정 및 GameState 참조 캐싱 */
 	virtual void InitGameState() override;
@@ -44,11 +47,6 @@ protected:
 	void StartTimer(float TimeDuration);
 
 	void ClearTimer();
-	
-	/** 타이머 종료 시 호출(타이머 정리 및 종료 후 처리 트리거) */
-	UFUNCTION()
-	virtual void EndTimer();
-
 	/** 설정된 TravelLevelName으로 레벨 이동 처리 */
 	void TravelLevel();
 

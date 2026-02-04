@@ -9,6 +9,9 @@
 
 class APTWPlayerState;
 
+
+#pragma region Enum/Struct
+
 UENUM(BlueprintType)
 enum class EPTWGamePhase : uint8
 {
@@ -49,7 +52,9 @@ struct FPTWRouletteData
 	UPROPERTY(BlueprintReadOnly)
 	float RouletteDuration;
 };
+#pragma endregion
 
+#pragma region Delegate
 /**
  * 남은 시간 변경 이벤트
  * - RemainTime이 변경될 때 브로드캐스트
@@ -78,20 +83,28 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePhaseChanged, EPTWGamePhase, 
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundChanged, int32, CurrentRound);
 
+/**
+ * 랭킹 플레이어 목록 갱신 이벤트
+ * - 랭킹 순서가 변경되었을 때 브로드캐스트
+ * - UI 랭킹 표시 갱신에 사용
+ *
+ * @param RankedPlayers 현재 랭킹 순서대로 정렬된 플레이어 목록
+ */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpdateRankedPlayers, TArray<APTWPlayerState*>, RankedPlayers);
 
-/**
- * 게임 진행 상태(타이머 등)를 네트워크로 동기화하는 GameState
- * - 서버에서 RemainTime을 갱신하고 클라이언트로 복제
- * - RepNotify(OnRep_RemainTime)를 통해 변경 사항을 이벤트로 전달
- */
 
 /**
 * 킬로그 방송을 위한 델리게이트
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilllogBroadcastSignature, AActor*, DeadActor, AActor*, KillerActor);
 
-
+/**
+ * 룰렛 단계 변경 이벤트
+ * - 룰렛 진행 단계 또는 결과가 변경되었을 때 브로드캐스트
+ * - 룰렛 UI 연출 및 상태 전환에 사용
+ *
+ * @param RouletteData 현재 룰렛 단계 및 선택 결과 데이터
+ */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoulettePhaseChanged, FPTWRouletteData, RouletteData);
 
 /* 채팅 */
@@ -101,6 +114,16 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	const FString&, Message
 );
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPortalCountChanged, int32, Current, int32, Required);
+
+#pragma endregion
+
+
+/**
+ * 게임 진행 상태(타이머 등)를 네트워크로 동기화하는 GameState
+ * - 서버에서 RemainTime을 갱신하고 클라이언트로 복제
+ * - RepNotify(OnRep_RemainTime)를 통해 변경 사항을 이벤트로 전달
+ */
 
 UCLASS()
 class PTW_API APTWGameState : public AGameState
@@ -110,7 +133,15 @@ class PTW_API APTWGameState : public AGameState
 public:
 	/** 기본 생성자 */
 	APTWGameState();
+
+	/** 서버에서 호출하여 모든 클라이언트의 델리게이트를 실행시키는 RPC */
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_BroadcastKilllog(AActor* DeadActor, AActor* KillerActor);
+
+	/* 채팅 RPC */
+	void BroadcastChatMessage(const FString& Sender, const FString& Message);
 	
+#pragma region Setter
 	/** 남은 시간 설정 */
 	void SetRemainTime(int32 NewTime);
 	/** 현재 라운드 설정 */
@@ -119,14 +150,11 @@ public:
 	void SetCurrentPhase(EPTWGamePhase NewGamePhase);
 	/**  */
 	void SetRouletteData(const FPTWRouletteData& NewData);
-	
-	/** 서버에서 호출하여 모든 클라이언트의 델리게이트를 실행시키는 RPC */
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_BroadcastKilllog(AActor* DeadActor, AActor* KillerActor);
 
-	/* 채팅 RPC */
-	void BroadcastChatMessage(const FString& Sender, const FString& Message);
-	
+	void SetPortalCount(int32 NewCurrent, int32 NewRequired);
+#pragma endregion
+
+#pragma region Event
 	/** 남은 시간 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnRemainTimeChanged OnRemainTimeChanged;
@@ -158,12 +186,18 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
 	FOnRoulettePhaseChanged OnRoulettePhaseChanged;
 
+	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
+	FOnPortalCountChanged OnPortalCountChanged;
+#pragma endregion
 	
+#pragma region Getter
 	FORCEINLINE int32 GetRemainTime() const { return RemainTime; }
 	FORCEINLINE int32 GetCurrentRound() const {return CurrentRound;}
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
 	FORCEINLINE TArray<APTWPlayerState*> GetRankedPlayers() const {return RankedPlayers;}
 	FORCEINLINE FPTWRouletteData GetRouletteData() const {return RouletteData;}
+#pragma endregion
+	
 protected:
 	/** 복제 설정 */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -173,6 +207,8 @@ protected:
 	void Multicast_BroadcastChatMessage(const FString& Sender, const FString& Message);
 
 private:
+
+#pragma region Replication
 	/** 남은 시간(초) - 서버에서 갱신, 클라이언트로 복제 */
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_RemainTime, Category = "GameFlow|Timer")
 	int32 RemainTime = 0;
@@ -204,7 +240,17 @@ private:
 
 	UFUNCTION()
 	void OnRep_RouletteData();
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_PortalCount, Category = "Lobby")
+	int32 PortalCurrent = 0;
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_PortalCount, Category = "Lobby")
+	int32 PortalRequired = 0;
 	
+	UFUNCTION()
+	void OnRep_PortalCount();
+#pragma endregion
+
 public:
 	/** 서버에서 남은 시간을 감소 */
 	void DecreaseTimer();
@@ -220,5 +266,7 @@ public:
 	
 	/** 미니 게임 순위를 기준으로 승점 부여 */
 	void ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule);
+private:
+	/**  */
 	
 };

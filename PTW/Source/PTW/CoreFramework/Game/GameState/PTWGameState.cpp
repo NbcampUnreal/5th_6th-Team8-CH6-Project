@@ -21,6 +21,8 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(APTWGameState, CurrentGamePhase);
 	DOREPLIFETIME(APTWGameState, RankedPlayers);
 	DOREPLIFETIME(APTWGameState, RouletteData);
+	DOREPLIFETIME(APTWGameState, PortalCurrent);
+	DOREPLIFETIME(APTWGameState, PortalRequired);
 }
 
 void APTWGameState::UpdateRanking()
@@ -123,6 +125,14 @@ void APTWGameState::SetRouletteData(const FPTWRouletteData& NewData)
 	
 }
 
+void APTWGameState::SetPortalCount(int32 NewCurrent, int32 NewRequired)
+{
+	if (!HasAuthority()) return;
+
+	PortalCurrent = NewCurrent;
+	PortalRequired = NewRequired;
+}
+
 void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& Message)
 {
 	// 서버 전용
@@ -147,7 +157,6 @@ void APTWGameState::Multicast_BroadcastChatMessage_Implementation(const FString&
 	OnChatMessageBroadcast.Broadcast(Sender, Message);
 }
 
-
 void APTWGameState::OnRep_RemainTime()
 {
 	OnRemainTimeChanged.Broadcast(RemainTime);
@@ -171,4 +180,9 @@ void APTWGameState::OnRep_RankedPlayers()
 void APTWGameState::OnRep_RouletteData()
 {
 	OnRoulettePhaseChanged.Broadcast(RouletteData);
+}
+
+void APTWGameState::OnRep_PortalCount()
+{
+	OnPortalCountChanged.Broadcast(PortalCurrent, PortalRequired);
 }

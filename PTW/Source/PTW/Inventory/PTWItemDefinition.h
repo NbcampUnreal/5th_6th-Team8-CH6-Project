@@ -7,6 +7,8 @@
 #include "Engine/DataAsset.h"
 #include "PTWItemDefinition.generated.h"
 
+class UImage;
+
 UENUM(BlueprintType)
 enum class EItemType : uint8
 {
@@ -19,6 +21,7 @@ enum class EItemType : uint8
 struct FGameplayTag;
 class UPTWGameplayAbility;
 class APTWWeaponActor;
+class UGameplayEffect;
 /**
  * 
  */
@@ -40,6 +43,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef",meta = (EditCondition = "ItemType == EItemType::Weapon", EditConditionHides))
 	FGameplayTag WeaponTag;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef",meta = (EditCondition = "ItemType == EItemType::Passive", EditConditionHides))
+	TArray<TSubclassOf<UGameplayEffect>> PassiveEffects;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
+	FGameplayTag ItemTag;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
 	EItemType ItemType;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
+	TObjectPtr<UImage> ItemIcon;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDef")
+	FText DescriptionText;
 };

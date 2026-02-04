@@ -10,6 +10,7 @@
 #include "Engine/ActorChannel.h"
 #include "GAS/PTWGameplayAbility.h"
 #include "Instance/PTWActiveItemInstance.h"
+#include "Instance/PTWPassiveItemInstance.h"
 #include "Instance/PTWWeaponInstance.h"
 #include "Net/UnrealNetwork.h"
 
@@ -26,6 +27,8 @@ void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemInstance> ItemClass)
 {
 	if (!GetOwner()->HasAuthority()) return;
 	ItemArr.Add(ItemClass);
+	
+	OnItemInstanceCreated(ItemClass);
 }
 
 void UPTWInventoryComponent::SwapWeapon(int32 SlotIndex)
@@ -82,6 +85,65 @@ void UPTWInventoryComponent::WeaponVisibleSetting(const FGameplayTag& WeaponTag,
 		if (Weapon && Weapon->ItemDef && Weapon->ItemDef->WeaponTag == WeaponTag)
 		{
 			SetWeaponActorHidden(Weapon, bSetHidden);
+		}
+	}
+}
+
+void UPTWInventoryComponent::OnItemInstanceCreated(UPTWItemInstance* ItemInstance)
+{
+	if (!ItemInstance || !GetOwner()->HasAuthority()) return;
+	
+	if (ItemInstance->IsA(UPTWPassiveItemInstance::StaticClass()))
+	{
+		ApplyAllPassiveItems(ItemInstance);
+	}
+	
+	if (ItemInstance->IsA(UPTWActiveItemInstance::StaticClass()))
+	{
+		EquipActiveItem(ItemInstance);
+	}
+}
+
+void UPTWInventoryComponent::ApplyAllPassiveItems(UPTWItemInstance* ItemInstance)
+{
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+		
+	if (!ASC || !ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("GameState.MiniGame.Bomb")))) return;
+		
+	UPTWPassiveItemInstance* PassiveItemInstance = Cast<UPTWPassiveItemInstance>(ItemInstance);
+	UPTWItemDefinition* ItemDef = PassiveItemInstance->ItemDef;
+		
+	if (PassiveItemInstance && ItemDef &&ItemDef->PassiveEffects.Num() > 0)
+	{
+		for (auto GEClass : ItemDef->PassiveEffects)
+		{
+			FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+			FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(GEClass, 1.0f, Context);
+            
+			if (SpecHandle.IsValid())
+			{
+				FActiveGameplayEffectHandle ActiveHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+				PassiveItemInstance->AddPassiveSpecHandles(ActiveHandle);
+			}
+		}
+	}
+}
+
+void UPTWInventoryComponent::RemoveAllPassiveItems(UPTWItemInstance* ItemInstance)
+{
+	if (!GetOwner()->HasAuthority()) return;
+	
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+	if (ASC)
+	{
+		UPTWPassiveItemInstance* PassiveItemInstance = Cast<UPTWPassiveItemInstance>(ItemInstance);
+		for (const FActiveGameplayEffectHandle& Handle : PassiveItemInstance->GetPassiveSpecHandleArr())
+		{
+			if (Handle.IsValid())
+			{
+				PassiveItemInstance->RemovePassiveSpecHandles(Handle);
+				ASC->RemoveActiveGameplayEffect(Handle);
+			}
 		}
 	}
 }

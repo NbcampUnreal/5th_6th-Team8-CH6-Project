@@ -37,6 +37,7 @@ protected:
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	
 	void SpawnDefaultWeapon(AController* NewPlayer);
+
 	
 	/** 미니게임 진행 시간 (초) */
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
@@ -53,7 +54,17 @@ protected:
 	int32 StartCountDownTime = 10;
 	/** 본게임 라운드 진행 시간 */
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
-	float RoundPlayTime = 90.f;
+	float RoundPlayTime = 30.f;
+	
+	FTimerHandle CountDownTimerHandle;
+	int32 CurrentCountDown = 0;
+	/** 카운트 다운 시작 */
+	void StartCountDown();
+	/** 매초마다 카운트다운 감소 */
+	void TickCountDown();
+	
+	virtual void OnCountDownFinished();
+	
 	
 
 private:
@@ -76,13 +87,5 @@ private:
 	TSubclassOf<UGameplayEffect> MiniGameEffectClass;
 	
 	int32 PlayerStartCount = 0;
-	
-	FTimerHandle CountDownTimerHandle;
-	
-	int32 CurrentCountDown = 0;
-	/** 카운트 다운 시작 */
-	void StartCountDown();
-	/** 매초마다 카운트다운 감소 */
-	void TickCountDown();
-	
+
 };

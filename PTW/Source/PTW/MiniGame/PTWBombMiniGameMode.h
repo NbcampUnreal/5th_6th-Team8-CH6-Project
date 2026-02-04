@@ -1,0 +1,34 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "PTW/MiniGame/PTWMiniGameMode.h"
+#include "PTWBombMiniGameMode.generated.h"
+
+UCLASS()
+class PTW_API APTWBombMiniGameMode : public APTWMiniGameMode
+{
+	GENERATED_BODY()
+
+protected:
+	virtual void BeginPlay() override;
+	
+	virtual void OnCountDownFinished() override;
+
+	// 라운드 타이머 종료 시 호출
+	virtual void EndTimer() override;
+
+private:
+	
+	FTimerHandle RoundTimerHandle;
+	/** 폭탄 게임 총 라운드 횟수 */
+	UPROPERTY(EditDefaultsOnly, Category="Bomb|Round")
+	int32 MaxRoundCount = 3;
+
+	/** 현재 라운드  */
+	int32 CurrentRound = 0;
+
+	/** 라운드 시작 */
+	void StartRound();
+};

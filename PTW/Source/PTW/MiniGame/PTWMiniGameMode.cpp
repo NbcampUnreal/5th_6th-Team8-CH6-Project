@@ -58,11 +58,14 @@ void APTWMiniGameMode::BeginPlay()
 
 void APTWMiniGameMode::EndTimer()
 {
+	UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] EndTimer Enter"));
+
 	if (!PTWGameState) return;
 	
 	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
 	ResetPlayerRoundData();
 	
+	UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] EndTimer Before Super"));
 	Super::EndTimer();
 	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
 }
@@ -269,8 +272,14 @@ void APTWMiniGameMode::TickCountDown()
 	}
 	// 0이되면 카운트 다운 종료 -> 라운드 시작
 	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
-	UE_LOG(LogTemp, Warning, TEXT("Round Start"));
 	
+	OnCountDownFinished();
+}
+
+void APTWMiniGameMode::OnCountDownFinished()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Round Start"));
+
 	if (APTWGameState* GS = GetGameState<APTWGameState>())
 	{
 		GS->SetbMiniGameCountdown(false);
@@ -278,7 +287,6 @@ void APTWMiniGameMode::TickCountDown()
 
 	StartTimer(RoundPlayTime);
 }
-
 
 
 

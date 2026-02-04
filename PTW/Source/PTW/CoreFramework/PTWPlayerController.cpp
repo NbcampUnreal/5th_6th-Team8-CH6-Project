@@ -13,7 +13,6 @@
 #include "EngineUtils.h"
 #include "Components/WidgetComponent.h"
 
-#include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
@@ -21,10 +20,10 @@
 #include "UI/PTWHUD.h"
 #include "UI/PTWInGameHUD.h"
 #include "UI/RankBoard/PTWRankingBoard.h"
-#include "Inventory/Instance/PTWItemInstance.h"
 #include "UI/ChatWidget/PTWChatList.h"
 #include "UI/ChatWidget/PTWChatInput.h"
 #include "UI/InGameUI/PTWDamageIndicator.h"
+#include "UI/MiniGame/PTWGameStartTimer.h"
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 
@@ -255,6 +254,8 @@ void APTWPlayerController::BeginPlay()
 		}
 	}
 
+	BindMiniGameDelegates();
+
 	/* UI 위젯 생성 */
 	CreateUI();
 }
@@ -277,6 +278,8 @@ void APTWPlayerController::OnRep_PlayerState()
 	{
 		return;
 	}
+
+	BindMiniGameDelegates();
 
 	CreateUI();
 }
@@ -365,6 +368,47 @@ void APTWPlayerController::SetSetOnlyOwnerSeeRecursive(USceneComponent* InParent
 	for (USceneComponent* Child : _Children)
 	{
 		SetSetOnlyOwnerSeeRecursive(Child, bNewOnlyOwnerSee);
+	}
+}
+
+void APTWPlayerController::BindMiniGameDelegates()
+{
+	UE_LOG(LogTemp, Error, TEXT("PTWPlayerController : Try BindMiniGameDelegates"));
+
+	APTWGameState* GS = GetWorld() ? GetWorld()->GetGameState<APTWGameState>() : nullptr;
+	if (!GS) return;
+
+	UE_LOG(LogTemp, Error, TEXT("PTWPlayerController : Success BindMiniGameDelegates"));
+
+	// 중복 바인딩 방지
+	GS->OnMiniGameCountdownChanged.RemoveAll(this);
+
+	GS->OnMiniGameCountdownChanged.AddDynamic(this, &ThisClass::OnMiniGameCountdownChanged);
+
+	// 현재상태 반영
+	OnMiniGameCountdownChanged(GS->IsMiniGameCountdown());
+}
+
+void APTWPlayerController::UnbindMiniGameDelegates()
+{
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		GS->OnMiniGameCountdownChanged.RemoveAll(this);
+	}
+}
+
+void APTWPlayerController::OnMiniGameCountdownChanged(bool bStarted)
+{
+	if (!UISubsystem || !GameStartTimerClass)
+		return;
+
+	if (bStarted)
+	{
+		UISubsystem->ShowSystemWidget(GameStartTimerClass, 70);
+	}
+	else
+	{
+		UISubsystem->HideSystemWidget(GameStartTimerClass);
 	}
 }
 

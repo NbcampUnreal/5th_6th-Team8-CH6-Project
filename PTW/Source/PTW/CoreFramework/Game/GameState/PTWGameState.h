@@ -114,16 +114,13 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	const FString&, Message
 );
 
+/* 미니게임 카운트다운 시작 여부 */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMiniGameCountdownChanged, bool, bCountdown);
+/* 미니게임 카운트다운 숫자 */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMiniGameCountDownValueChanged, int32, CountDown);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPortalCountChanged, int32, Current, int32, Required);
 
 #pragma endregion
-
-
-/**
- * 게임 진행 상태(타이머 등)를 네트워크로 동기화하는 GameState
- * - 서버에서 RemainTime을 갱신하고 클라이언트로 복제
- * - RepNotify(OnRep_RemainTime)를 통해 변경 사항을 이벤트로 전달
- */
 
 UCLASS()
 class PTW_API APTWGameState : public AGameState
@@ -140,7 +137,9 @@ public:
 
 	/* 채팅 RPC */
 	void BroadcastChatMessage(const FString& Sender, const FString& Message);
-	
+
+	/* 미니게임 카운트다운 */
+	bool IsMiniGameCountdown() const { return bMiniGameCountdown; }
 #pragma region Setter
 	/** 남은 시간 설정 */
 	void SetRemainTime(int32 NewTime);
@@ -152,6 +151,9 @@ public:
 	void SetRouletteData(const FPTWRouletteData& NewData);
 
 	void SetPortalCount(int32 NewCurrent, int32 NewRequired);
+
+	void SetbMiniGameCountdown(bool bCountdown);
+	void SetMiniGameCountdown(int32 NewValue);
 #pragma endregion
 
 #pragma region Event
@@ -188,10 +190,16 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
 	FOnPortalCountChanged OnPortalCountChanged;
+	/* 미니게임 카운트다운 */
+	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
+	FOnMiniGameCountdownChanged OnMiniGameCountdownChanged;
+	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
+	FOnMiniGameCountDownValueChanged OnMiniGameCountdownValueChanged;
 #pragma endregion
-	
+
 #pragma region Getter
 	FORCEINLINE int32 GetRemainTime() const { return RemainTime; }
+	FORCEINLINE int32 GetMiniGameCountDown() const { return MiniGameCountDown; }
 	FORCEINLINE int32 GetCurrentRound() const {return CurrentRound;}
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
 	FORCEINLINE TArray<APTWPlayerState*> GetRankedPlayers() const {return RankedPlayers;}
@@ -205,6 +213,17 @@ protected:
 	/* 채팅 RPC */
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_BroadcastChatMessage(const FString& Sender, const FString& Message);
+
+	/* 미니게임 카운트다운 */
+	UFUNCTION()
+	void OnRep_MiniGameCountdown();
+	UFUNCTION()
+	void OnRep_MiniGameCountDownValue();
+
+	UPROPERTY(ReplicatedUsing = OnRep_MiniGameCountdown)
+	bool bMiniGameCountdown = false;
+	UPROPERTY(ReplicatedUsing = OnRep_MiniGameCountDownValue)
+	int32 MiniGameCountDown = 0;
 
 private:
 

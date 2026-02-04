@@ -23,6 +23,8 @@ protected:
 	/* 남은 시간 변경 콜백 */
 	UFUNCTION()
 	void HandleRemainTimeChanged(int32 NewRemainTime);
+	UFUNCTION()
+	void MiniGameCountdownChanged(bool iscountdown);
 
 	/* 시간 포맷 (mm:ss) */
 	FText FormatTime(int32 Seconds) const;

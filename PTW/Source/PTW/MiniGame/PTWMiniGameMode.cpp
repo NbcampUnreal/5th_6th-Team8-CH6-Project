@@ -47,6 +47,12 @@ void APTWMiniGameMode::BeginPlay()
 	//	PlayerStarts.Add(*It);
 	//}
 	
+	if (APTWGameState* GS = GetGameState<APTWGameState>())
+	{
+		// MiniGame 레벨 진입 → 카운트다운 시작
+		GS->SetbMiniGameCountdown(true);
+	}
+
 	StartCountDown();
 }
 
@@ -236,6 +242,11 @@ void APTWMiniGameMode::StartCountDown()
 	
 	UE_LOG(LogTemp, Warning, TEXT("StartCountDown : %d"), CurrentCountDown);
 	
+	if (APTWGameState* GS = GetGameState<APTWGameState>())
+	{
+		GS->SetMiniGameCountdown(CurrentCountDown);
+	}
+
 	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
 	
 	GetWorldTimerManager().SetTimer(CountDownTimerHandle, this, &APTWMiniGameMode::TickCountDown, 1.0f, true);
@@ -244,7 +255,12 @@ void APTWMiniGameMode::StartCountDown()
 void APTWMiniGameMode::TickCountDown()
 {
 	CurrentCountDown--;
-	
+
+	if (APTWGameState* GS = GetGameState<APTWGameState>())
+	{
+		GS->SetMiniGameCountdown(CurrentCountDown);
+	}
+
 	if (CurrentCountDown > 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CountDown : %d"), CurrentCountDown);
@@ -254,6 +270,11 @@ void APTWMiniGameMode::TickCountDown()
 	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
 	UE_LOG(LogTemp, Warning, TEXT("Round Start"));
 	
+	if (APTWGameState* GS = GetGameState<APTWGameState>())
+	{
+		GS->SetbMiniGameCountdown(false);
+	}
+
 	StartTimer(RoundPlayTime);
 }
 

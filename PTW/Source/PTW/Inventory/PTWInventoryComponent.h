@@ -63,6 +63,12 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void SetActiveItem(UPTWItemDefinition* ItemDef);
 	
+	void OnItemInstanceCreated(UPTWItemInstance* ItemInstance);
+	
+	void ApplyAllPassiveItems(UPTWItemInstance* ItemInstance);
+	
+	void RemoveAllPassiveItems(UPTWItemInstance* ItemInstance);
+	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

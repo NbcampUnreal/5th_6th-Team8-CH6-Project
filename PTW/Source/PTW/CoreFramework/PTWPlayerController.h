@@ -21,6 +21,7 @@ class UPTWUISubsystem;
 class UPTWDamageIndicator;
 class UPTWChatList;
 class UPTWChatInput;
+class UPTWGameStartTimer;
 /**
  * 
  */
@@ -75,6 +76,14 @@ protected:
 	/*  ASC Delegate 바인딩 */
 	//void BindASCDelegates();
 	//void UnbindASCDelegates();
+
+	/* GameState 델리게이트 바인딩 */
+	void BindMiniGameDelegates();
+	void UnbindMiniGameDelegates();
+
+	/* 카운트다운 델리게이트 호출 함수 */
+	UFUNCTION()
+	void OnMiniGameCountdownChanged(bool bStarted);
 
 	virtual void SetupInputComponent() override;
 	virtual void PostSeamlessTravel() override;
@@ -161,4 +170,8 @@ protected:
 	// 데미지 인디케이터
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UPTWDamageIndicator> DamageIndicatorClass;
+	// 카운트다운 타이머
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Timer")
+	TSubclassOf<UPTWGameStartTimer> GameStartTimerClass;
+
 };

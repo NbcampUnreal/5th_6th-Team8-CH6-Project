@@ -66,6 +66,10 @@ public:
 	/* 상시 존재 UI 생성 (랭킹보드) */
 	UUserWidget* CreatePersistentWidget(TSubclassOf<UUserWidget> WidgetClass, int32 ZOrder = 10);
 
+	/* 임의로 지울수 없는 1회성 UI들 */
+	UUserWidget* ShowSystemWidget(TSubclassOf<UUserWidget> WidgetClass, int32 ZOrder = 60);
+	void HideSystemWidget(TSubclassOf<UUserWidget> WidgetClass);
+
 	/* 위젯 가시성 조절 */
 	void SetWidgetVisibility(TSubclassOf<UUserWidget> WidgetClass, bool bVisible);
 

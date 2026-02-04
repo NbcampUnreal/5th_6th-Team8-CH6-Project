@@ -23,6 +23,9 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(APTWGameState, RouletteData);
 	DOREPLIFETIME(APTWGameState, PortalCurrent);
 	DOREPLIFETIME(APTWGameState, PortalRequired);
+	DOREPLIFETIME(APTWGameState, bMiniGameCountdown);
+	DOREPLIFETIME(APTWGameState, MiniGameCountDown);
+
 }
 
 void APTWGameState::UpdateRanking()
@@ -133,6 +136,25 @@ void APTWGameState::SetPortalCount(int32 NewCurrent, int32 NewRequired)
 	PortalRequired = NewRequired;
 }
 
+void APTWGameState::SetbMiniGameCountdown(bool bCountdown)
+{
+	if (!HasAuthority()) return;
+
+	// 값이 실제로 변할 때만 처리 (네트워크 트래픽 최적화)
+	if (bMiniGameCountdown == bCountdown) return;
+
+	bMiniGameCountdown = bCountdown;
+	OnMiniGameCountdownChanged.Broadcast(bMiniGameCountdown);
+}
+
+void APTWGameState::SetMiniGameCountdown(int32 NewValue)
+{
+	if (!HasAuthority()) return;
+
+	MiniGameCountDown = NewValue;
+	OnMiniGameCountdownValueChanged.Broadcast(MiniGameCountDown);
+}
+
 void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& Message)
 {
 	// 서버 전용
@@ -185,4 +207,14 @@ void APTWGameState::OnRep_RouletteData()
 void APTWGameState::OnRep_PortalCount()
 {
 	OnPortalCountChanged.Broadcast(PortalCurrent, PortalRequired);
+}
+
+void APTWGameState::OnRep_MiniGameCountDownValue()
+{
+	OnMiniGameCountdownValueChanged.Broadcast(MiniGameCountDown);
+}
+
+void APTWGameState::OnRep_MiniGameCountdown()
+{
+	OnMiniGameCountdownChanged.Broadcast(bMiniGameCountdown);
 }

@@ -34,13 +34,18 @@ public:
 protected:
 	void TraceInteractable();
 
+	void ToggleHighlight(AActor* TargetActor, bool bEnable);
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Config")
 	float InteractionDistance = 300.0f;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Config")
 	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
-
 	UPROPERTY(VisibleInstanceOnly, Category = "State")
 	TObjectPtr<AActor> CurrentInteractableActor;
+	UPROPERTY(EditDefaultsOnly, Category = "Config|Visual")
+	TObjectPtr<UMaterialInterface> OutlineOverlayMaterial;
+	UPROPERTY()
+	TObjectPtr<AActor> LastHighlightedActor;
+
+	const int32 StencilValue = 252;
 };

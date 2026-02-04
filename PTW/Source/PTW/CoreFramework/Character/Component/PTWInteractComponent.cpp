@@ -5,6 +5,8 @@
 #include "CoreFramework/Interface/PTWInteractInterface.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/Controller.h"
+#include "Components/PrimitiveComponent.h"
+#include "Components/MeshComponent.h"
 
 UPTWInteractComponent::UPTWInteractComponent()
 {
@@ -28,15 +30,12 @@ void UPTWInteractComponent::TraceInteractable()
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (!OwnerPawn) return;
 
-	AController* Controller = OwnerPawn->GetController();
-	if (!Controller) return;
+	APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController());
+	if (!PC || !PC->PlayerCameraManager) return;
 
-	FVector EyeLocation;
-	FRotator EyeRotation;
-	Controller->GetPlayerViewPoint(EyeLocation, EyeRotation);
-
-	FVector TraceStart = EyeLocation;
-	FVector TraceEnd = TraceStart + (EyeRotation.Vector() * InteractionDistance);
+	FVector TraceStart = PC->PlayerCameraManager->GetCameraLocation();
+	FVector CameraForward = PC->PlayerCameraManager->GetCameraRotation().Vector();
+	FVector TraceEnd = TraceStart + (CameraForward * InteractionDistance);
 
 	FHitResult HitResult;
 	FCollisionQueryParams QueryParams;
@@ -49,7 +48,13 @@ void UPTWInteractComponent::TraceInteractable()
 	{
 		if (HitActor != CurrentInteractableActor)
 		{
+			if (CurrentInteractableActor)
+			{
+				ToggleHighlight(CurrentInteractableActor, false);
+			}
 			CurrentInteractableActor = HitActor;
+			ToggleHighlight(CurrentInteractableActor, true);
+
 			FText ActionText = IPTWInteractInterface::Execute_GetInteractionKeyword(HitActor);
 			OnInteractableFound.Broadcast(ActionText);
 		}
@@ -58,6 +63,7 @@ void UPTWInteractComponent::TraceInteractable()
 	{
 		if (CurrentInteractableActor)
 		{
+			ToggleHighlight(CurrentInteractableActor, false);
 			CurrentInteractableActor = nullptr;
 			OnInteractableLost.Broadcast();
 		}
@@ -72,6 +78,29 @@ void UPTWInteractComponent::PerformInteraction()
 		{
 			APawn* Instigator = Cast<APawn>(GetOwner());
 			IPTWInteractInterface::Execute_OnInteract(CurrentInteractableActor, Instigator);
+		}
+	}
+}
+
+void UPTWInteractComponent::ToggleHighlight(AActor* TargetActor, bool bEnable)
+{
+	if (!TargetActor) return;
+
+	TArray<UMeshComponent*> Meshes;
+	TargetActor->GetComponents(Meshes);
+
+	for (UMeshComponent* Mesh : Meshes)
+	{
+		if (bEnable)
+		{
+			if (OutlineOverlayMaterial)
+			{
+				Mesh->SetOverlayMaterial(OutlineOverlayMaterial);
+			}
+		}
+		else
+		{
+			Mesh->SetOverlayMaterial(nullptr);
 		}
 	}
 }

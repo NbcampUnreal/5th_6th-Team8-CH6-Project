@@ -167,6 +167,9 @@ void APTWLobbyGameMode::AddGold(APlayerController* NewPlayer)
 
 		UE_LOG(LogTemp, Warning, TEXT("RandomGold: %d"), RandomGold);
 	}
+
+	// 나중에 preLobby가 아닌 postLobby일 때 한번에 모든 플레이어에게 골드 지급하는 식으로 변경해야함
+	// 하드 코딩 되있는 부분도 변수로 만들어서 bp에서 수정 가능하게 변경
 }
 
 void APTWLobbyGameMode::StartRoulette()

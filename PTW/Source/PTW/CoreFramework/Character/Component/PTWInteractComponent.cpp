@@ -7,6 +7,7 @@
 #include "GameFramework/Controller.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/MeshComponent.h"
+#include "Components/WidgetComponent.h"  // 3D 위젯 제어를 위해 필수
 
 UPTWInteractComponent::UPTWInteractComponent()
 {
@@ -102,6 +103,13 @@ void UPTWInteractComponent::ToggleHighlight(AActor* TargetActor, bool bEnable)
 		{
 			Mesh->SetOverlayMaterial(nullptr);
 		}
+	}
+
+	TArray<UWidgetComponent*> Widgets;
+	TargetActor->GetComponents(Widgets);
+	for (UWidgetComponent* Widget : Widgets)
+	{
+		Widget->SetVisibility(bEnable);
 	}
 }
 

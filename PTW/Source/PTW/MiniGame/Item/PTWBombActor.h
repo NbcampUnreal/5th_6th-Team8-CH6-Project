@@ -63,6 +63,12 @@ public:
 	
 	UFUNCTION(Server, Reliable)
 	void ServerRequestExplode(AActor* InstigatorActor);
+	
+	UFUNCTION(BlueprintCallable, Category= "Bomb")
+	void SetBombOwner(APawn* NewOwnerPawn);
+	
+	UFUNCTION(BlueprintPure, Category="Bomb")
+	APawn* GetBombOwner() const {return BombOwnerPawn;}
 
 private:
 	void HandleRemainingTimeChanged(const FOnAttributeChangeData& Data);
@@ -74,4 +80,18 @@ private:
 	void SendExplodeEvent(AActor* InstigatorActor);
 
 	bool bExplodeRequested = false;
+
+	UPROPERTY(ReplicatedUsing=OnRep_BombOwnerPawn)
+	TObjectPtr<APawn> BombOwnerPawn = nullptr;
+	
+	UFUNCTION()
+	void OnRep_BombOwnerPawn();
+	
+	void AttachToOwnerPawn();
+
+protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Bomb|Attach")
+	FName AttachSocketName = NAME_None;
 };

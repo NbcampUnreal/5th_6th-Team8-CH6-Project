@@ -6,6 +6,8 @@
 #include "PTW/MiniGame/PTWMiniGameMode.h"
 #include "PTWBombMiniGameMode.generated.h"
 
+class APTWBombActor;
+
 UCLASS()
 class PTW_API APTWBombMiniGameMode : public APTWMiniGameMode
 {
@@ -31,4 +33,19 @@ private:
 
 	/** 라운드 시작 */
 	void StartRound();
+	
+	UPROPERTY()
+	TObjectPtr<APTWPlayerState> BombOwnerPS = nullptr;
+	 
+	void AssignRandomBombOwner();
+	
+	void GetAlivePlayerStates(TArray<APTWPlayerState*>& OutAlive) const;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Bomb")
+	TSubclassOf<APTWBombActor> BombActorClass;
+	
+	UPROPERTY()
+	TObjectPtr<APTWBombActor> BombActor = nullptr;
+	
+	void CleanupBombActor();
 };

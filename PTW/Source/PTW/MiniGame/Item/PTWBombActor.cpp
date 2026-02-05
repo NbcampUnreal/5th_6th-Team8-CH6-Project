@@ -2,22 +2,29 @@
 
 #include "PTWBombActor.h"
 
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerState.h" 
+#include "Net/UnrealNetwork.h"
+
+#include "Components/StaticMeshComponent.h"
+#include "Components/SphereComponent.h"
+
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Abilities/GameplayAbility.h"
 #include "GameplayAbilitySpec.h"
 #include "GameplayEffect.h"
-
-#include "Components/StaticMeshComponent.h"
-#include "Components/SphereComponent.h"
+#include "GameplayTagContainer.h"
 
 #include "GAS/PTWBombAttributeSet.h"
-#include "GameplayTagContainer.h"
+
 
 APTWBombActor::APTWBombActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
+	
+	SetReplicateMovement(true);
 
 	// Collision
 	Collision = CreateDefaultSubobject<USphereComponent>(TEXT("Collision"));
@@ -39,6 +46,12 @@ APTWBombActor::APTWBombActor()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	BombAttributeSet = CreateDefaultSubobject<UPTWBombAttributeSet>(TEXT("BombAttributeSet"));
+}
+void APTWBombActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APTWBombActor, BombOwnerPawn);
 }
 
 UAbilitySystemComponent* APTWBombActor::GetAbilitySystemComponent() const
@@ -77,6 +90,11 @@ void APTWBombActor::BeginPlay()
 		// 1초마다 RemainingTime -1
 		ApplyEffectToSelf(CountdownEffectClass);
 	}
+	
+	if (BombOwnerPawn)
+	{
+		AttachToOwnerPawn();
+	}
 }
 
 void APTWBombActor::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> EffectClass)
@@ -99,6 +117,58 @@ void APTWBombActor::HandleRemainingTimeChanged(const FOnAttributeChangeData& Dat
 	
 }
 
+void APTWBombActor::SetBombOwner(APawn* NewOwnerPawn)
+{
+	if (!HasAuthority()) return;
+
+	BombOwnerPawn = NewOwnerPawn;
+	
+	OnRep_BombOwnerPawn();
+}
+
+void APTWBombActor::OnRep_BombOwnerPawn()
+{
+	if (BombOwnerPawn)
+	{
+		APlayerState* PS = BombOwnerPawn->GetPlayerState();
+		const FString Name = PS ? PS->GetPlayerName() : TEXT("Unknown");
+
+		UE_LOG(LogTemp, Warning, TEXT("[Bomb] Owner Changed -> PlayerState: %s"), *Name);
+	}
+
+	AttachToOwnerPawn();
+}
+
+
+void APTWBombActor::AttachToOwnerPawn()
+{
+	// 이전 Attach 정리
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+
+	if (!BombOwnerPawn) return;
+
+	USkeletalMeshComponent* SkelMesh =
+		BombOwnerPawn->FindComponentByClass<USkeletalMeshComponent>();
+
+	if (SkelMesh && SkelMesh->DoesSocketExist(TEXT("BombHeadSocket")))
+	{
+		AttachToComponent(
+			SkelMesh,
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+			TEXT("BombHeadSocket")
+		);
+	}
+	else
+	{
+		// 소켓 없을 때 안전장치
+		AttachToComponent(
+			BombOwnerPawn->GetRootComponent(),
+			FAttachmentTransformRules::KeepWorldTransform
+		);
+
+		SetActorRelativeLocation(FVector(0.f, 0.f, 120.f));
+	}
+}
 void APTWBombActor::RequestExplode(AActor* InstigatorActor)
 {
 	if (!HasAuthority())

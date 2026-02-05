@@ -7,6 +7,7 @@
 #include "CoreFramework/PTWPlayerState.h" 
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "UI/Shop/PTWItemInfoWidget.h"
 
 APTWDisplayItem::APTWDisplayItem()
 {
@@ -18,8 +19,12 @@ APTWDisplayItem::APTWDisplayItem()
 
 	InfoWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InfoWidget"));
 	InfoWidget->SetupAttachment(RootComponent);
-	InfoWidget->SetWidgetSpace(EWidgetSpace::World);
+	InfoWidget->SetWidgetSpace(EWidgetSpace::Screen);
 	InfoWidget->SetCollisionProfileName(TEXT("NoCollision"));
+
+	InfoWidget->SetupAttachment(RootComponent);
+	InfoWidget->SetDrawAtDesiredSize(true);
+	InfoWidget->SetVisibility(false);
 }
 
 void APTWDisplayItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -94,9 +99,14 @@ void APTWDisplayItem::UpdateItemVisuals()
 				ItemMesh->SetStaticMesh(Data->DisplayMesh.LoadSynchronous());
 
 			// TODO : 위젯 정보 갱신
-			if (InfoWidget)
+			if (InfoWidget && ItemInfoWidgetClass)
 			{
+				InfoWidget->SetWidgetClass(ItemInfoWidgetClass);
 
+				if (UPTWItemInfoWidget* UI = Cast<UPTWItemInfoWidget>(InfoWidget->GetUserWidgetObject()))
+				{
+					UI->SetItemID(ItemID);
+				}
 			}
 		}
 	}

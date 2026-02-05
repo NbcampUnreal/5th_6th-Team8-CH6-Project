@@ -53,4 +53,7 @@ protected:
 	TObjectPtr<APTWShopNPC> ParentShop;
 
 	int32 CachedPrice = 0;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> ItemInfoWidgetClass;
 };

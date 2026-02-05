@@ -393,6 +393,7 @@ void APTWPlayerController::UnbindGameStateDelegates()
 	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
 	{
 		GS->OnMiniGameCountdownChanged.RemoveAll(this);
+		GS->OnRoulettePhaseChanged.RemoveAll(this);
 	}
 }
 

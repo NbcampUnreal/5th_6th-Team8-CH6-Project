@@ -153,7 +153,7 @@ void APTWGameState::SetbMiniGameCountdown(bool bCountdown)
 	if (bMiniGameCountdown == bCountdown) return;
 
 	bMiniGameCountdown = bCountdown;
-	OnMiniGameCountdownChanged.Broadcast(bMiniGameCountdown);
+	OnRep_MiniGameCountdown();
 }
 
 void APTWGameState::SetMiniGameCountdown(int32 NewValue)
@@ -161,7 +161,7 @@ void APTWGameState::SetMiniGameCountdown(int32 NewValue)
 	if (!HasAuthority()) return;
 
 	MiniGameCountDown = NewValue;
-	OnMiniGameCountdownValueChanged.Broadcast(MiniGameCountDown);
+	OnRep_MiniGameCountDownValue();
 }
 
 void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& Message)

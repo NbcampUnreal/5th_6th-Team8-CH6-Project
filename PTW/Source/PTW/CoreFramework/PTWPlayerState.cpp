@@ -189,6 +189,14 @@ void APTWPlayerState::ResetRoundData()
 	}
 }
 
+void APTWPlayerState::ResetInventoryItemId()
+{
+	if (HasAuthority())
+	{
+		CurrentPlayerData.InventoryItemIDs.Empty();
+	}
+}
+
 void APTWPlayerState::OnRep_CurrentPlayerData()
 {
 	OnPlayerDataUpdated.Broadcast(CurrentPlayerData);

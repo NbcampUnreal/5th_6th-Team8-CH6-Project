@@ -100,4 +100,6 @@ public:
 	virtual void AddDeathCount(int32 AddDeathCount = 1) override;
 	virtual void AddScore(int32 AddScore) override;
 	virtual void ResetRoundData() override;
+
+	void ResetInventoryItemId();
 };

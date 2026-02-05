@@ -22,7 +22,7 @@ class PTW_API APTWMiniGameMode : public APTWGameMode
 public:
 	APTWMiniGameMode();
 
-	void AddWinPoint(APawn* Pawn, int32 Score);
+	void AddWinPoint(AActor* Actor, int32 AddPoint);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule")
 	FPTWMiniGameRule MiniGameRule;
@@ -75,9 +75,12 @@ private:
 	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
 	void UpdatePlayerRoundData(APlayerState* DeadPlayerState, APlayerState* KillPlayerState);
 	
-	/** 라운드 시작 시 플레이어의 라운드 전용 데이터 초기화*/
+	/** 라운드 종료 시 플레이어의 라운드 전용 데이터 초기화*/
 	void ResetPlayerRoundData();
 
+	/**라운드 종료 시 플레이어의 인벤토리 ID 초기화 */
+	void ResetPlayerInventoryID();
+	
 	void RespawnPlayer(APTWPlayerController* SpawnPlayerController);
 	
 	/** 리스폰 시 플레이어 체력 초기화 */

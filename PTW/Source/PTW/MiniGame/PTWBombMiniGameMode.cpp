@@ -34,7 +34,7 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 
 	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Play Start"), CurrentRound);
 
-	// 라운드(폭탄) 진행 타이머 시작 
+	// 라운드 진행 타이머 시작 
 	GetWorldTimerManager().SetTimer(
 	RoundTimerHandle,
 	this,

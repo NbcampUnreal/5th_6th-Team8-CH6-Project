@@ -58,14 +58,12 @@ void APTWMiniGameMode::BeginPlay()
 
 void APTWMiniGameMode::EndTimer()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] EndTimer Enter"));
 
 	if (!PTWGameState) return;
 	
 	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
 	ResetPlayerRoundData();
 	
-	UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] EndTimer Before Super"));
 	Super::EndTimer();
 	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
 }

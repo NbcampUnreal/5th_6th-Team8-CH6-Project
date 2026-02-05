@@ -221,6 +221,21 @@ void APTWPlayerState::ServerRequestPurchase_Implementation(APTWShopNPC* ShopNPC,
 
 		CurrentPlayerData.InventoryItemIDs.Add(NewItemIDStr);
 
+		FString DebugMsg = FString::Printf(TEXT("[Server] 구매 성공! 아이템: [%s] -> 지급 대상: [%s] (Obj: %s)"),
+			*NewItemIDStr,
+			*GetPlayerName(),  // 플레이어 이름 (예: Player1)
+			*GetName()         // 객체 고유 이름 (예: PTWPlayerState_C_1) - 이게 다르면 서로 다른 객체임
+		);
+
+		// 1. 화면(Viewport)에 띄우기 (초록색, 5초간 표시)
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, DebugMsg);
+		}
+
+		// 2. 출력 로그(Output Log)에 남기기
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *DebugMsg);
+
 		OnRep_CurrentPlayerData();
 		ForceNetUpdate();
 

@@ -35,7 +35,7 @@ protected:
 protected:
 	UPROPERTY(Replicated, VisibleInstanceOnly)
 	EShopCategory ShopCategory;
-	UPROPERTY()
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	TArray<TObjectPtr<APTWDisplayItem>> DisplayItems;
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<APTWDisplayItem> DisplayItemClass;

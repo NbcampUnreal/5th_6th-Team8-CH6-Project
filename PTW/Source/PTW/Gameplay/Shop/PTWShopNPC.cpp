@@ -42,6 +42,7 @@ void APTWShopNPC::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(APTWShopNPC, ShopCategory);
+	DOREPLIFETIME(APTWShopNPC, DisplayItems);
 }
 
 void APTWShopNPC::InitializeShop(EShopCategory InCategory, const TArray<FName>& InItemIDs, const TArray<FTransform>& DisplayLocs)
@@ -82,17 +83,38 @@ void APTWShopNPC::CheckShopAvailability()
 
 void APTWShopNPC::CloseShop()
 {
-	SetActorHiddenInGame(true);
-	SetActorEnableCollision(false);
-
-	for (APTWDisplayItem* Item : DisplayItems)
+	if (HasAuthority())
 	{
-		if (Item)
+		if (NPCMesh) NPCMesh->SetVisibility(false);
+		if (StandMesh) StandMesh->SetVisibility(false);
+		if (DecoMesh) DecoMesh->SetVisibility(false);
+
+		for (APTWDisplayItem* Item : DisplayItems)
 		{
-			Item->SetActorHiddenInGame(true);
-			Item->SetActorEnableCollision(false);
+			if (Item)
+			{
+				if (UStaticMeshComponent* Mesh = Item->FindComponentByClass<UStaticMeshComponent>())
+				{
+					Mesh->SetVisibility(false);
+				}
+			}
+		}
+	}
+	else
+	{
+		SetActorHiddenInGame(true);
+		SetActorEnableCollision(false);
+
+		for (APTWDisplayItem* Item : DisplayItems)
+		{
+			if (Item)
+			{
+				Item->SetActorHiddenInGame(true);
+				Item->SetActorEnableCollision(false);
+			}
 		}
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Shop Closed Visuals Executed."));
+	UE_LOG(LogTemp, Log, TEXT("Shop Closed Visuals Executed (Mode: %s)."),
+		HasAuthority() ? TEXT("Host/Server") : TEXT("Client"));
 }

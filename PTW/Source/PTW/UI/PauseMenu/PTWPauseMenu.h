@@ -18,6 +18,7 @@ class PTW_API UPTWPauseMenu : public UUserWidget
 	
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
 	/** Buttons (BindWidget) */
 	UPROPERTY(meta = (BindWidget))
@@ -33,6 +34,10 @@ protected:
 	TObjectPtr<UButton> Btn_QuitGame;
 
 private:
+	/* 바인딩 관리 함수 */
+	void BindUIEvents();
+	void UnbindUIEvents();
+
 	/** Button Callbacks */
 	UFUNCTION()
 	void OnClickedResume();

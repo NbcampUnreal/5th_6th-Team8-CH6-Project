@@ -104,6 +104,8 @@ void APTWGameState::SetRemainTime(int32 NewTime)
 	if (!HasAuthority()) return;
 
 	RemainTime = NewTime;
+	
+	OnRep_RemainTime();
 }
 
 void APTWGameState::SetCurrentRound(int32 NewRound)
@@ -111,6 +113,8 @@ void APTWGameState::SetCurrentRound(int32 NewRound)
 	if (!HasAuthority()) return;
 	
 	CurrentRound = NewRound;
+	
+	OnRep_CurrentRound();
 }
 
 void APTWGameState::SetCurrentPhase(EPTWGamePhase NewGamePhase)
@@ -118,6 +122,8 @@ void APTWGameState::SetCurrentPhase(EPTWGamePhase NewGamePhase)
 	if (!HasAuthority()) return;
 
 	CurrentGamePhase = NewGamePhase;
+
+	OnRep_CurrentGamePhase();
 }
 
 void APTWGameState::SetRouletteData(const FPTWRouletteData& NewData)
@@ -126,6 +132,7 @@ void APTWGameState::SetRouletteData(const FPTWRouletteData& NewData)
 
 	RouletteData = NewData;
 	
+	OnRep_RouletteData();
 }
 
 void APTWGameState::SetPortalCount(int32 NewCurrent, int32 NewRequired)
@@ -134,6 +141,8 @@ void APTWGameState::SetPortalCount(int32 NewCurrent, int32 NewRequired)
 
 	PortalCurrent = NewCurrent;
 	PortalRequired = NewRequired;
+
+	OnRep_PortalCount();
 }
 
 void APTWGameState::SetbMiniGameCountdown(bool bCountdown)

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "GameplayTagContainer.h"
+#include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "PTWPlayerController.generated.h"
 
 /* KillLog 델리게이트 */
@@ -78,12 +79,16 @@ protected:
 	//void UnbindASCDelegates();
 
 	/* GameState 델리게이트 바인딩 */
-	void BindMiniGameDelegates();
-	void UnbindMiniGameDelegates();
+	void BindGameStateDelegates();
+	void UnbindGameStateDelegates();
 
-	/* 카운트다운 델리게이트 호출 함수 */
+	/* 카운트다운 델리게이트 수신 함수 */
 	UFUNCTION()
 	void OnMiniGameCountdownChanged(bool bStarted);
+
+	/* GameState의 룰렛 상태 변경 델리게이트 수신 함수 */
+	UFUNCTION()
+	void HandleRoulettePhaseChanged(FPTWRouletteData RouletteData);
 
 	virtual void SetupInputComponent() override;
 	virtual void PostSeamlessTravel() override;
@@ -173,5 +178,8 @@ protected:
 	// 카운트다운 타이머
 	UPROPERTY(EditDefaultsOnly, Category = "UI|Timer")
 	TSubclassOf<UPTWGameStartTimer> GameStartTimerClass;
+	// 룰렛
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Roulette")
+	TSubclassOf<UUserWidget> MapRouletteWidgetClass;
 
 };

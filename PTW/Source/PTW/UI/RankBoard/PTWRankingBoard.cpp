@@ -143,7 +143,7 @@ void UPTWRankingBoard::UpdateRanking()
 			}
 		}
 
-		/* 정렬용 배열 */
+		/* 정렬용 배열에 플레이어 추가 */
 		for (APTWPlayerState* PS : CachedPlayerStates)
 		{
 			if (PS)
@@ -152,7 +152,7 @@ void UPTWRankingBoard::UpdateRanking()
 			}
 		}
 
-		/* 정렬: 1. 승점  2. 골드 */
+		/* 플레이어 정렬: 1. 승점  2. 골드 */
 		SortedPlayerStates.Sort(
 			[](const APTWPlayerState& A, const APTWPlayerState& B)
 			{

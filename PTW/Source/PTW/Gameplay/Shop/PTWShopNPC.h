@@ -22,6 +22,8 @@ public:
 	/* Subsystem에서 호출.카테고리와 판매할 아이템 ID 목록을 받음 */
 	void InitializeShop(EShopCategory InCategory, const TArray<FName>& InItemIDs, const TArray<FTransform>& DisplayLocs);
 
+	void CloseShop();
+
 protected:
 	virtual void BeginPlay() override;
 

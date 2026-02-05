@@ -13,8 +13,11 @@ void UPTWLobbyListRow::Setup(const FBlueprintSessionResult& SessionResult)
 	const FOnlineSessionSearchResult& NativeResult = SessionResult.OnlineResult;
 	const FSessionSettings& SessionSettings = NativeResult.Session.SessionSettings.Settings;
 	
-	FString LobbyNameStr = SessionSettings.Find("LobbyName")->ToString();
-	LobbyName->SetText(FText::FromString(LobbyNameStr));
+	if (SessionSettings.Find("LobbyName"))
+	{
+		FString LobbyNameStr = SessionSettings.Find("LobbyName")->ToString();
+		LobbyName->SetText(FText::FromString(LobbyNameStr));
+	}
 }
 
 void UPTWLobbyListRow::NativeConstruct()

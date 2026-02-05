@@ -40,6 +40,7 @@ protected:
 	/** 플레이어 로그아웃 시 호출(접속 인원/게임 진행 상태 갱신) */
 	virtual void Logout(AController* Exiting) override;
 
+	virtual void GetSeamlessTravelActorList(bool bToTransition, TArray<AActor*>& ActorList) override;;
 public:
 
 protected:

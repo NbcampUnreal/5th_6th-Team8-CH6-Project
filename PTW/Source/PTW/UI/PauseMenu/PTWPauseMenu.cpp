@@ -13,6 +13,20 @@ void UPTWPauseMenu::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	BindUIEvents();
+}
+
+void UPTWPauseMenu::NativeDestruct()
+{
+	UnbindUIEvents();
+
+	Super::NativeDestruct();
+}
+
+void UPTWPauseMenu::BindUIEvents()
+{
+	UnbindUIEvents();
+
 	if (Btn_Resume)
 	{
 		Btn_Resume->OnClicked.AddDynamic(this, &UPTWPauseMenu::OnClickedResume);
@@ -31,6 +45,29 @@ void UPTWPauseMenu::NativeConstruct()
 	if (Btn_QuitGame)
 	{
 		Btn_QuitGame->OnClicked.AddDynamic(this, &UPTWPauseMenu::OnClickedQuitGame);
+	}
+}
+
+void UPTWPauseMenu::UnbindUIEvents()
+{
+	if (Btn_Resume)
+	{
+		Btn_Resume->OnClicked.RemoveDynamic(this, &UPTWPauseMenu::OnClickedResume);
+	}
+
+	if (Btn_Options)
+	{
+		Btn_Options->OnClicked.RemoveDynamic(this, &UPTWPauseMenu::OnClickedOptions);
+	}
+
+	if (Btn_LeaveGame)
+	{
+		Btn_LeaveGame->OnClicked.RemoveDynamic(this, &UPTWPauseMenu::OnClickedLeaveGame);
+	}
+
+	if (Btn_QuitGame)
+	{
+		Btn_QuitGame->OnClicked.RemoveDynamic(this, &UPTWPauseMenu::OnClickedQuitGame);
 	}
 }
 

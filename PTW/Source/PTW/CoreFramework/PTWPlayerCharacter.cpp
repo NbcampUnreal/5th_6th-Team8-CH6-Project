@@ -23,6 +23,7 @@
 #include "UI/CharacterUI/PTWPlayerName.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "CoreFramework/Character/Component/PTWReactorComponent.h"
+#include "CoreFramework/Character/Component/PTWInteractComponent.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -57,6 +58,9 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 
 	WeaponComponent = CreateDefaultSubobject<UPTWWeaponComponent>(TEXT("WeaponComponent"));
 	WeaponComponent->SetIsReplicated(true);
+
+	InteractComponent = CreateDefaultSubobject<UPTWInteractComponent>(TEXT("InteractComponent"));
+	InteractComponent->SetIsReplicated(true);
 }
 
 void APTWPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -263,11 +267,6 @@ void APTWPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 	{
 		PTWASC->AbilityInputTagReleased(InputTag);
 	}
-}
-
-UWidgetComponent* APTWPlayerCharacter::GetNameTagWidget() const
-{
-	return NameTagWidget;
 }
 
 void APTWPlayerCharacter::UpdateNameTagText()

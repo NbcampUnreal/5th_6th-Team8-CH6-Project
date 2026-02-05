@@ -1,0 +1,80 @@
+﻿#include "GameplayTags.h"
+
+namespace GameplayTags
+{
+	namespace AbilityBlockTag
+	{
+		UE_DEFINE_GAMEPLAY_TAG(Fire, "Ability.Block.Fire");
+	}
+	
+	namespace Data
+	{
+		UE_DEFINE_GAMEPLAY_TAG(Damage, "Data.Damage");
+		UE_DEFINE_GAMEPLAY_TAG(Duration, "Data.Duration");
+	}
+	
+	namespace Event
+	{
+		UE_DEFINE_GAMEPLAY_TAG(Bomb_Explode, "Event.Bomb.Explode");
+		UE_DEFINE_GAMEPLAY_TAG(Gimmick_Collect, "Event.Gimmick.Collect");
+		UE_DEFINE_GAMEPLAY_TAG(Weapon_ReloadReFill, "Event.Weapon.ReloadReFill");
+		
+		namespace Round
+		{
+			UE_DEFINE_GAMEPLAY_TAG(Economy_Depression, "Event.Round.Economy.Depression");
+			UE_DEFINE_GAMEPLAY_TAG(Economy_Inflation, "Event.Round.Economy.Inflation");
+		}
+	}
+	
+	namespace MiniGame
+	{
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Bomb, "MiniGame.Bomb");
+	}
+	
+	namespace Input
+	{
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Crouch, "Input.Action.Crouch");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Equip, "Input.Action.Equip");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Fire, "Input.Action.Fire");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Jump, "Input.Action.Jump");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Reload, "Input.Action.Reload");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Sprint, "Input.Action.Sprint");
+	}
+	
+	namespace State
+	{
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(HitReaction_HeadShot, "State.HitReaction.HeadShot");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Posture_Crouching, "State.Posture.Crouching");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Status_Dead, "State.Dead");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Status_Bomb, "State.BombAttach");
+		
+		namespace Movement
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(InAir, "State.Movement.InAir");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Sprinting, "State.Movement.Sprinting");
+		}
+		
+	}
+	
+	namespace Weapon
+	{
+		namespace Anim
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Fire, "Weapon.Anim.Fire");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Reload, "Weapon.Anim.Reload");
+		}
+		namespace Gun
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Rifle, "Weapon.Gun.Rifle");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Rocket, "Weapon.Gun.Rocket");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(BombPistol, "Weapon.Gun.BombPistol");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Pistol, "Weapon.Gun.Pistol");
+		}
+		namespace State
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Equip, "Weapon.State.Equip");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Reload, "Weapon.State.Reload");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(UnEquip, "Weapon.State.UnEquip");
+		}
+	}
+}

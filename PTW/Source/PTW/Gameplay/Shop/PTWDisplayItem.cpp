@@ -5,6 +5,7 @@
 #include "Components/WidgetComponent.h"
 #include "System/Shop/PTWShopSubsystem.h"
 #include "CoreFramework/PTWPlayerState.h" 
+#include "Kismet/GameplayStatics.h"
 
 APTWDisplayItem::APTWDisplayItem()
 {
@@ -15,6 +16,7 @@ APTWDisplayItem::APTWDisplayItem()
 	InfoWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InfoWidget"));
 	InfoWidget->SetupAttachment(RootComponent);
 	InfoWidget->SetWidgetSpace(EWidgetSpace::World);
+	InfoWidget->SetCollisionProfileName(TEXT("NoCollision"));
 }
 
 void APTWDisplayItem::InitDisplay(FName NewItemID)
@@ -22,6 +24,8 @@ void APTWDisplayItem::InitDisplay(FName NewItemID)
 	ItemID = NewItemID;
 	if (UPTWShopSubsystem* Sys = GetWorld()->GetSubsystem<UPTWShopSubsystem>())
 	{
+		CachedPrice = Sys->GetItemPrice(ItemID);
+		
 		if (const FShopItemRow* Data = Sys->GetShopItemData(ItemID))
 		{
 			if (!Data->DisplayMesh.IsNull())
@@ -36,8 +40,39 @@ void APTWDisplayItem::TryPurchase(APlayerController* Player)
 {
 	if (!Player || !ParentShop) return;
 
+	int32 FinalPrice = 0;
+	if (UPTWShopSubsystem* Sys = GetWorld()->GetSubsystem<UPTWShopSubsystem>())
+	{
+		FinalPrice = Sys->GetItemPrice(ItemID);
+	}
+	else
+	{
+		return;
+	}
 	if (APTWPlayerState* PS = Player->GetPlayerState<APTWPlayerState>())
 	{
-
+		PS->ServerRequestPurchase(ParentShop, ItemID, FinalPrice);
 	}
 }
+
+void APTWDisplayItem::OnInteract_Implementation(APawn* InstigatorPawn)
+{
+	if (!InstigatorPawn) return;
+
+	if (APlayerController* PC = Cast<APlayerController>(InstigatorPawn->GetController()))
+	{
+		TryPurchase(PC);
+	}
+}
+
+FText APTWDisplayItem::GetInteractionKeyword_Implementation()
+{
+	FString ActionStr = FString::Printf(TEXT("구매하기 (%d G)"), CachedPrice);
+	return FText::FromString(ActionStr);
+}
+
+bool APTWDisplayItem::IsInteractable_Implementation()
+{
+	return !ItemID.IsNone() && ParentShop != nullptr;
+}
+

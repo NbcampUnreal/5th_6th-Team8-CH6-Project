@@ -201,25 +201,36 @@ void APTWPlayerState::OnRep_PlayerRoundData()
 
 void APTWPlayerState::ServerRequestPurchase_Implementation(APTWShopNPC* ShopNPC, FName ItemID, int32 Cost)
 {
+	FString NewItemIDStr = ItemID.ToString();
+
+	if (NewItemIDStr.StartsWith(TEXT("Active_"), ESearchCase::IgnoreCase))
+	{
+		for (const FString& OwnedID : CurrentPlayerData.InventoryItemIDs)
+		{
+			if (OwnedID.StartsWith(TEXT("Active_"), ESearchCase::IgnoreCase))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[Purchase Blocked] Player already has an Active Item: %s"), *OwnedID);
+
+				return;
+			}
+		}
+	}
 	if (CurrentPlayerData.Gold >= Cost)
 	{
 		CurrentPlayerData.Gold -= Cost;
 
-		FString ItemIDStr = ItemID.ToString();
-		CurrentPlayerData.InventoryItemIDs.Add(ItemIDStr);
-
-		UE_LOG(LogTemp, Log, TEXT("[Purchase Success] Player: %s, Item: %s, Gold Left: %d"),
-			*GetPlayerName(), *ItemIDStr, CurrentPlayerData.Gold);
+		CurrentPlayerData.InventoryItemIDs.Add(NewItemIDStr);
 
 		OnRep_CurrentPlayerData();
-
 		ForceNetUpdate();
+
+		UE_LOG(LogTemp, Log, TEXT("[Success] Bought %s"), *NewItemIDStr);
 
 		ClientPurchaseSuccess(ShopNPC);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Purchase Failed] Not enough gold. Current: %d, Cost: %d"), CurrentPlayerData.Gold, Cost);
+		UE_LOG(LogTemp, Warning, TEXT("[Purchase Failed] Not enough gold."));
 	}
 }
 

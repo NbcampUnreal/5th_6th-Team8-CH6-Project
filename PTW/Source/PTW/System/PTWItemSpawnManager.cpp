@@ -6,12 +6,30 @@
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "Inventory/Instance/PTWItemInstance.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
+#include "Inventory/Instance/PTWActiveItemInstance.h"
+#include "Inventory/Instance/PTWPassiveItemInstance.h"
 #include "Inventory/PTWWeaponActor.h"
 #include "Inventory/PTWWeaponData.h"
-#include "Inventory/Instance/PTWWeaponInstance.h"
 #include "PTW/CoreFramework/PTWPlayerCharacter.h"
 #include "PTW/CoreFramework/Character/Component/PTWWeaponComponent.h"
+#include "System/Shop/PTWItemSpawnData.h"
+#include "CoreFramework/PTWPlayerState.h"
 
+
+void UPTWItemSpawnManager::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+const TCHAR* DTPath = TEXT("/Game/_PTW/Data/DT_ItemSpawnData.DT_ItemSpawnData");
+	
+	ItemSpawnTable = LoadObject<UDataTable>(nullptr, DTPath);
+
+	if (!ItemSpawnTable)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[PTWItemSpawnSubsystem] Failed to load DataTable at: %s"), DTPath);
+	}
+}
 
 void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, UPTWItemDefinition* ItemDefinition, FGameplayTag WeaponTag)
 {
@@ -67,4 +85,88 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 
 	Inventory->AddItem(WeaponItemInst);
 	TargetPlayer->GetWeaponComponent()->AttachWeaponToSocket(SpawnedWeapon1P, SpawnedWeapon3P, WeaponTag);
+}
+
+void UPTWItemSpawnManager::SpawnAndGiveItems(APTWPlayerState* PS)
+{
+	if (!PS || !ItemSpawnTable) return;
+
+	APawn* PlayerPawn = PS->GetPawn();
+	if (!PlayerPawn)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SpawnSystem] PlayerPawn is NULL for PlayerState: %s (Too early?)"), *PS->GetPlayerName());
+		return;
+	}
+	UPTWInventoryComponent* InventoryComp = PlayerPawn->FindComponentByClass<UPTWInventoryComponent>();
+	if (!InventoryComp)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[SpawnSystem] Inventory Component Not Found on Character: %s"), *PlayerPawn->GetName());
+		return;
+	}
+
+	TArray<FString> IDsToSpawn = PS->GetPlayerData().InventoryItemIDs;
+
+	UE_LOG(LogTemp, Log, TEXT("[SpawnSystem] Start Spawning %d Items for %s"), IDsToSpawn.Num(), *PS->GetPlayerName());
+
+	for (const FString& IDStr : IDsToSpawn)
+	{
+		FName RowName = FName(*IDStr);
+		static const FString ContextString(TEXT("ItemSpawn"));
+
+		FPTWItemSpawnRow* Row = ItemSpawnTable->FindRow<FPTWItemSpawnRow>(RowName, ContextString);
+
+		if (Row && !Row->ItemDefinition.IsNull())
+		{
+			UPTWItemDefinition* LoadedDef = Row->ItemDefinition.LoadSynchronous();
+
+			if (LoadedDef)
+			{
+				UClass* InstanceClassToSpawn = nullptr;
+
+				switch (LoadedDef->ItemType)
+				{
+				case EItemType::Weapon:
+					InstanceClassToSpawn = UPTWWeaponInstance::StaticClass();
+					break;
+
+				case EItemType::Active:
+					InstanceClassToSpawn = UPTWActiveItemInstance::StaticClass();
+					break;
+
+				case EItemType::Passive:
+					InstanceClassToSpawn = UPTWPassiveItemInstance::StaticClass();
+					break;
+
+				default:
+					InstanceClassToSpawn = UPTWItemInstance::StaticClass();
+					break;
+				}
+
+				if (InstanceClassToSpawn)
+				{
+					UPTWItemInstance* NewItem = NewObject<UPTWItemInstance>(InventoryComp, InstanceClassToSpawn);
+
+					if (NewItem)
+					{
+						NewItem->ItemDef = LoadedDef;
+
+						InventoryComp->AddItem(NewItem);
+
+						UE_LOG(LogTemp, Log, TEXT("   -> Spawned: %s (Type: %s, Class: %s)"),
+							*IDStr,
+							*UEnum::GetValueAsString(LoadedDef->ItemType),
+							*InstanceClassToSpawn->GetName());
+					}
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("   -> Failed to load ItemDefinition for ID: %s"), *IDStr);
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("   -> ItemID not found in DT: %s"), *IDStr);
+		}
+	}
 }

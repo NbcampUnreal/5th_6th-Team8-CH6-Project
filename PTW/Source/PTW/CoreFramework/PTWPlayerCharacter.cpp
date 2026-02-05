@@ -95,54 +95,23 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	if (AbilitySystemComponent)
-	{
-		InitAbilityActorInfo();
-
-		if (HasAuthority())
-		{
-			AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
-		}
-		FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
-
-		if (AbilitySystemComponent->HasMatchingGameplayTag(EquipTag))
-		{
-			AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
-
-			AbilitySystemComponent->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
-
-			UE_LOG(LogTemp, Warning, TEXT("PossessedBy: Force Removed Equip Tag"));
-		}
-	}
-
-	GiveDefaultAbilities();
-	ApplyDefaultEffects();
-	UpdateNameTagText();
+	InitCharacterState();
 }
 
 void APTWPlayerCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	InitAbilityActorInfo();
+	InitCharacterState();
+}
 
-	UpdateNameTagText(); // PlayerNameTag
+void APTWPlayerCharacter::OnPlayerStateChanged(APlayerState* NewPlayerState, APlayerState* OldPlayerState)
+{
+	Super::OnPlayerStateChanged(NewPlayerState, OldPlayerState);
 
-	if (IsLocallyControlled())
+	if (NewPlayerState)
 	{
-		if (InventoryComponent)
-		{
-			InventoryComponent->SetCurrentWeaponInst(nullptr);
-		}
-		if (AbilitySystemComponent)
-		{
-			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
-			AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
-			if (HasAuthority())
-			{
-				AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
-			}
-		}
+		InitCharacterState();
 	}
 }
 
@@ -156,11 +125,9 @@ void APTWPlayerCharacter::InitAbilityActorInfo()
 		PS->GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
 		AbilitySystemComponent = PS->GetAbilitySystemComponent();
 		AttributeSet = PS->GetAttributeSet();
-	
-		UE_LOG(LogTemp, Warning, TEXT("[%s] InitAbility - PS: %s, Avatar: %s"), 
-			HasAuthority() ? TEXT("SERVER") : TEXT("CLIENT"),
-			*PS->GetName(), 
-			*GetName());
+
+		UE_LOG(LogTemp, Log, TEXT("[%s] InitAbilityActorInfo Success - Owner: %s"),
+			HasAuthority() ? TEXT("SERVER") : TEXT("CLIENT"), *GetName());
 	}
 	else 
 	{
@@ -267,6 +234,42 @@ void APTWPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 	{
 		PTWASC->AbilityInputTagReleased(InputTag);
 	}
+}
+
+void APTWPlayerCharacter::InitCharacterState()
+{
+	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
+	if (!PS || bIsAbilitiesInitialized) return;
+
+	InitAbilityActorInfo();
+
+	if (HasAuthority())
+	{
+		if (AbilitySystemComponent)
+		{
+			AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
+
+			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+			if (AbilitySystemComponent->HasMatchingGameplayTag(EquipTag))
+			{
+				AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
+				AbilitySystemComponent->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
+				UE_LOG(LogTemp, Warning, TEXT("InitCharacterState: Force Removed Equip Tag"));
+			}
+		}
+
+		if (UPTWItemSpawnManager* SpawnSys = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+		{
+			SpawnSys->SpawnAndGiveItems(PS);
+			UE_LOG(LogTemp, Log, TEXT("[Init] Items Spawned for Player: %s"), *PS->GetPlayerName());
+		}
+	}
+
+	GiveDefaultAbilities();
+	ApplyDefaultEffects();
+	UpdateNameTagText();
+
+	bIsAbilitiesInitialized = true;
 }
 
 void APTWPlayerCharacter::UpdateNameTagText()

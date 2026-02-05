@@ -56,11 +56,9 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 			true
 		);
 	}
-
-	// 5. SFX 재생 (총구 위치에서 재생하여 입체감 부여)
+	
 	if (FireSFX)
 	{
-		// 소리는 총구 위치에서 나는 것이 더 자연스럽습니다.
 		UGameplayStatics::PlaySoundAtLocation(
 			GetWorld(), 
 			FireSFX, 

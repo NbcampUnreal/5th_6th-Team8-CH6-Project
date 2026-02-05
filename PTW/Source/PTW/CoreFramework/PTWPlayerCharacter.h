@@ -48,6 +48,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
+	virtual void OnPlayerStateChanged(APlayerState* NewPlayerState, APlayerState* OldPlayerState) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void InitAbilityActorInfo() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -58,6 +59,8 @@ protected:
 	void Look(const FInputActionValue& Value);
 	void Input_AbilityInputTagPressed(FGameplayTag InputTag);
 	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
+
+	void InitCharacterState();
 	
 	/*인벤토리 관련 인풋 바인딩 함수(현정석(26.02.03))*/
 	void EquipWeapon(const FInputActionValue& Value);
@@ -105,6 +108,8 @@ protected:
 	TObjectPtr<UWidgetComponent> NameTagWidget;
 
 	FTimerHandle NameTagRetryTimer;
+
+	bool bIsAbilitiesInitialized = false;
 
 
 	// 9. [Protected] 컴포넌트 (Components)

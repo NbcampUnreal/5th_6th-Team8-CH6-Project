@@ -6,6 +6,7 @@
 #include "System/Shop/PTWShopSubsystem.h"
 #include "CoreFramework/PTWPlayerState.h" 
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 APTWDisplayItem::APTWDisplayItem()
 {
@@ -13,27 +14,26 @@ APTWDisplayItem::APTWDisplayItem()
 	ItemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ItemMesh"));
 	RootComponent = ItemMesh;
 
+	bReplicates = true;
+
 	InfoWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("InfoWidget"));
 	InfoWidget->SetupAttachment(RootComponent);
 	InfoWidget->SetWidgetSpace(EWidgetSpace::World);
 	InfoWidget->SetCollisionProfileName(TEXT("NoCollision"));
 }
 
+void APTWDisplayItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APTWDisplayItem, ItemID);
+}
+
 void APTWDisplayItem::InitDisplay(FName NewItemID)
 {
 	ItemID = NewItemID;
-	if (UPTWShopSubsystem* Sys = GetWorld()->GetSubsystem<UPTWShopSubsystem>())
-	{
-		CachedPrice = Sys->GetItemPrice(ItemID);
-		
-		if (const FShopItemRow* Data = Sys->GetShopItemData(ItemID))
-		{
-			if (!Data->DisplayMesh.IsNull())
-				ItemMesh->SetStaticMesh(Data->DisplayMesh.LoadSynchronous());
 
-			// TODO : 3D Widget 업데이트 호출
-		}
-	}
+	UpdateItemVisuals();
 }
 
 void APTWDisplayItem::TryPurchase(APlayerController* Player)
@@ -76,3 +76,28 @@ bool APTWDisplayItem::IsInteractable_Implementation()
 	return !ItemID.IsNone() && ParentShop != nullptr;
 }
 
+void APTWDisplayItem::OnRep_ItemID()
+{
+	UpdateItemVisuals();
+}
+
+void APTWDisplayItem::UpdateItemVisuals()
+{
+	if (UPTWShopSubsystem* Sys = GetWorld()->GetSubsystem<UPTWShopSubsystem>())
+	{
+		CachedPrice = Sys->GetItemPrice(ItemID);
+		const FShopItemRow* Data = Sys->GetShopItemData(ItemID);
+
+		if (Data)
+		{
+			if (!Data->DisplayMesh.IsNull())
+				ItemMesh->SetStaticMesh(Data->DisplayMesh.LoadSynchronous());
+
+			// TODO : 위젯 정보 갱신
+			if (InfoWidget)
+			{
+
+			}
+		}
+	}
+}

@@ -104,3 +104,35 @@ void UPTWInteractComponent::ToggleHighlight(AActor* TargetActor, bool bEnable)
 		}
 	}
 }
+
+AActor* UPTWInteractComponent::GetInteractTargetUnsafe()
+{
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	if (!OwnerPawn) return nullptr;
+
+	AController* Controller = OwnerPawn->GetController();
+	if (!Controller) return nullptr;
+
+	FVector TraceStart;
+	FRotator TraceRot;
+	Controller->GetPlayerViewPoint(TraceStart, TraceRot);
+
+	FVector TraceEnd = TraceStart + (TraceRot.Vector() * InteractionDistance);
+
+	FHitResult HitResult;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(OwnerPawn);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, TraceChannel, QueryParams);
+
+	if (bHit)
+	{
+		AActor* HitActor = HitResult.GetActor();
+		if (HitActor && HitActor->Implements<UPTWInteractInterface>())
+		{
+			return HitActor;
+		}
+	}
+
+	return nullptr;
+}

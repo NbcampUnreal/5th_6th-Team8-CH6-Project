@@ -62,8 +62,13 @@ protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
+
+	//* PreGameLobby 상태에서 타이머가 종료되면 게임 시작 / 
+	void StartGame();
+
+	virtual void EndTimer() override;
 private:
-	void AddRandomGold(APlayerController* NewPlayer);
+	void AddGold(APlayerController* NewPlayer);
 	void SelectedRandomMap();
 	void SelectedRandomEvent();
 

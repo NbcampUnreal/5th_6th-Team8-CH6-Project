@@ -10,12 +10,12 @@
 
 APTWLobbyPortal::APTWLobbyPortal()
 {
-	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
+	PrimaryActorTick.bCanEverTick = false;
 	
 	SphereCollision = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
-	SphereCollision->SetupAttachment(RootComponent);
-	
+	RootComponent = SphereCollision;
+
 	SetHidden(true);
 	SetActorEnableCollision(false);
 }
@@ -30,56 +30,39 @@ void APTWLobbyPortal::BeginPlay()
 	APTWGameState* PTWGameState = Cast<APTWGameState>(GetWorld()->GetGameState());
 	if (!PTWGameState) return;
 
-	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
-	{
-		if (HasAuthority())
-		{
-			SetPortalEnabled(true);
-		}
-	}
+	PTWGameState->OnGamePhaseChanged.AddDynamic(this, &APTWLobbyPortal::PortalEnable);
+
+	// 임시로 처음 로비에도 포탈 생성
+	// if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PostGameLobby)
+	// {
+	// 	if (!HasAuthority()) return;
+	//
+	// 	SetPortalEnabled(true);
+	// }
+
+	if (!HasAuthority()) return;
+	
+	SetPortalEnabled(true);
+	
 }
 
 void APTWLobbyPortal::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(APTWLobbyPortal, bPortalEnabled);
+	DOREPLIFETIME(ThisClass, bPortalEnabled);
 }
 
 void APTWLobbyPortal::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!HasAuthority()) return;
-	
-	APTWGameState* PTWGameState = Cast<APTWGameState>(GetWorld()->GetGameState());
-	if (!PTWGameState) return;
-
-	APawn* Pawn = Cast<APawn>(OtherActor);
-	if (!Pawn) return;
-
-	APlayerState* PlayerState = Pawn->GetPlayerState();
-	if (!PlayerState) return;
-	
-	PlayerInPortal.Add(PlayerState);
-	UpdatePortalCount();
+	PortalOverlap(OtherActor, true);
 }
 
 void APTWLobbyPortal::OnComponentEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!HasAuthority()) return;
-	
-	APTWGameState* PTWGameState = Cast<APTWGameState>(GetWorld()->GetGameState());
-	if (!PTWGameState) return;
-
-	APawn* Pawn = Cast<APawn>(OtherActor);
-	if (!Pawn) return;
-
-	APlayerState* PlayerState = Pawn->GetPlayerState();
-	if (!PlayerState) return;
-
-	PlayerInPortal.Remove(PlayerState);
-	UpdatePortalCount();
+	PortalOverlap(OtherActor, false);
 }
 
 void APTWLobbyPortal::UpdatePortalCount()
@@ -90,8 +73,7 @@ void APTWLobbyPortal::UpdatePortalCount()
 	if (!PTWGameState) return;
 
 	const int32 InPortal = PlayerInPortal.Num();
-	//const int32 Required = FMath::Clamp(PTWGameState->PlayerArray.Num() / 2 + 1, 2, 16); 
-	const int32 Required = PTWGameState->PlayerArray.Num() / 2 + 1;
+	const int32 Required = PTWGameState->PlayerArray.Num();
 	
 	PTWGameState->SetPortalCount(InPortal, Required);
 
@@ -101,6 +83,49 @@ void APTWLobbyPortal::UpdatePortalCount()
 		if (!GameMode) return;
 
 		GameMode->EndTimer();
+	}
+}
+
+bool APTWLobbyPortal::GetOverlappingPlayerState(AActor* OtherActor, APlayerState*& OutPlayerState) const
+{
+	OutPlayerState = nullptr;
+
+	if (!HasAuthority() || !OtherActor) return false;
+	
+	const APawn* Pawn = Cast<APawn>(OtherActor);
+	if (!Pawn) return false;
+	
+	APlayerState* PS = Pawn->GetPlayerState();
+	if (!PS) return false;
+
+	OutPlayerState = PS;
+	return true;
+}
+
+void APTWLobbyPortal::PortalOverlap(AActor* OtherActor, bool bEnter)
+{
+	APlayerState* PlayerState = nullptr;
+	if (!GetOverlappingPlayerState(OtherActor, PlayerState)) return;
+
+	if (bEnter)
+	{
+		PlayerInPortal.Add(PlayerState);  
+	}
+	else
+	{
+		PlayerInPortal.Remove(PlayerState);
+	}
+
+	UpdatePortalCount();
+}
+
+void APTWLobbyPortal::PortalEnable(EPTWGamePhase GamePhase)
+{
+	if (!HasAuthority()) return;
+	
+	if (GamePhase == EPTWGamePhase::PostGameLobby)
+	{
+		SetPortalEnabled(true);
 	}
 }
 
@@ -116,7 +141,9 @@ void APTWLobbyPortal::SetPortalEnabled(bool bEnable)
 	
 	bPortalEnabled = bEnable;
 
-	ApplyPortalEnabled(bPortalEnabled);
+	OnRep_PortalEnabled();
+
+	//ForceNetUpdate();
 }
 
 void APTWLobbyPortal::OnRep_PortalEnabled()

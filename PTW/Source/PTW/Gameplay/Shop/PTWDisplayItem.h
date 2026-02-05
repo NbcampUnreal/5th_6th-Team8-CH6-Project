@@ -20,6 +20,8 @@ class PTW_API APTWDisplayItem : public AActor, public IPTWInteractInterface
 public:
 	APTWDisplayItem();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	void InitDisplay(FName NewItemID);
 	void SetParentShop(APTWShopNPC* Shop) { ParentShop = Shop; }
 
@@ -32,13 +34,19 @@ public:
 	virtual bool IsInteractable_Implementation() override;
 
 protected:
+	UFUNCTION()
+	void OnRep_ItemID();
+
+	void UpdateItemVisuals();
+
+protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStaticMeshComponent> ItemMesh;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UWidgetComponent> InfoWidget;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(ReplicatedUsing = OnRep_ItemID, EditAnywhere, BlueprintReadOnly, Category = "Shop")
 	FName ItemID;
 
 	UPROPERTY()

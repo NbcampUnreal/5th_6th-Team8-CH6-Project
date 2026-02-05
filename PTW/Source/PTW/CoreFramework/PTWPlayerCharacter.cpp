@@ -24,6 +24,7 @@
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "CoreFramework/Character/Component/PTWReactorComponent.h"
 #include "CoreFramework/Character/Component/PTWInteractComponent.h"
+#include "System/PTWItemSpawnManager.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -112,6 +113,19 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 			AbilitySystemComponent->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
 
 			UE_LOG(LogTemp, Warning, TEXT("PossessedBy: Force Removed Equip Tag"));
+		}
+	}
+
+	if (HasAuthority())
+	{
+		APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
+
+		if (PS)
+		{
+			if (UPTWItemSpawnManager* SpawnSys = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+			{
+				SpawnSys->SpawnAndGiveItems(PS);
+			}
 		}
 	}
 

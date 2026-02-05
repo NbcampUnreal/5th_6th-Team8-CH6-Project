@@ -4,6 +4,7 @@
 #include "GAS/Abilities/PTWGA_Interact.h"
 #include "CoreFramework/Character/Component/PTWInteractComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "CoreFramework/Interface/PTWInteractInterface.h"
 
 UPTWGA_Interact::UPTWGA_Interact()
 {
@@ -16,13 +17,21 @@ bool UPTWGA_Interact::CanActivateAbility(const FGameplayAbilitySpecHandle Handle
 	{
 		return false;
 	}
-	if (APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(ActorInfo->AvatarActor.Get()))
+	if (ActorInfo->AvatarActor->HasAuthority())
 	{
-		if (UPTWInteractComponent* InteractComp = Character->GetInteractComponent())
+		return true;
+	}
+	else
+	{
+		if (APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(ActorInfo->AvatarActor.Get()))
 		{
-			return InteractComp->HasValidTarget();
+			if (UPTWInteractComponent* InteractComp = Character->GetInteractComponent())
+			{
+				return InteractComp->HasValidTarget();
+			}
 		}
 	}
+
 	return false;
 }
 
@@ -33,12 +42,32 @@ void UPTWGA_Interact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
-	if (APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(ActorInfo->AvatarActor.Get()))
+	if (ActorInfo->AvatarActor->HasAuthority())
 	{
-		if (UPTWInteractComponent* InteractComp = Character->GetInteractComponent())
+		if (APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(ActorInfo->AvatarActor.Get()))
 		{
-			InteractComp->PerformInteraction();
+			if (UPTWInteractComponent* InteractComp = Character->GetInteractComponent())
+			{
+				AActor* TargetActor = InteractComp->GetInteractTargetUnsafe();
+
+				if (TargetActor)
+				{
+					if (TargetActor->Implements<UPTWInteractInterface>())
+					{
+						IPTWInteractInterface::Execute_OnInteract(TargetActor, Character);
+						UE_LOG(LogTemp, Log, TEXT("[GA_Interact] Interaction Success: %s"), *TargetActor->GetName());
+					}
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("[GA_Interact] Server Trace Failed - No Target"));
+				}
+			}
 		}
+	}
+	else
+	{
+		// TODO : (클라이언트) 비주얼 효과나 사운드 재생 등
 	}
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

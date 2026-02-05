@@ -24,6 +24,9 @@ public:
 	/* 상호작용 가능 여부 반환 함수 */
 	bool HasValidTarget() const { return CurrentInteractableActor != nullptr; }
 
+	/* [Server] 현재 시점을 기준으로 상호작용 가능한 액터를 즉시 찾아서 반환합니다.*/
+	AActor* GetInteractTargetUnsafe();
+
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Interaction")
 	FOnInteractableFound OnInteractableFound;

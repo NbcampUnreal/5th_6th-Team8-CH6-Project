@@ -20,12 +20,14 @@
 #include "Inventory/PTWWeaponData.h"
 #include "Inventory/Instance/PTWWeaponInstance.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 UPTWGA_Fire::UPTWGA_Fire()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-	ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Reload")));
-	ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("State.Movement.Sprinting")));
+	// ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Reload")));
+	// ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("State.Movement.Sprinting")));
+	ActivationBlockedTags.AddTag(GameplayTags::AbilityBlockTag::Fire);
 }
 
 void UPTWGA_Fire::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,

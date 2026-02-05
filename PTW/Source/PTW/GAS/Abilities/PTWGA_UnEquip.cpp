@@ -5,8 +5,11 @@
 #include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
+#include "GAS/PTWWeaponAttributeSet.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "Inventory/Instance/PTWItemInstance.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 UPTWGA_UnEquip::UPTWGA_UnEquip()
 {
@@ -18,10 +21,12 @@ void UPTWGA_UnEquip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	
-	const UPTWItemInstance* WeaponItemInstance = Cast<UPTWItemInstance>(TriggerEventData->OptionalObject);
+	const UPTWWeaponInstance* WeaponItemInstance = Cast<UPTWWeaponInstance>(TriggerEventData->OptionalObject);
 	
 	if (WeaponItemInstance)
 	{
+		SaveCurrentAmmo(const_cast<UPTWWeaponInstance*>(WeaponItemInstance));
+		
 		FGameplayTag CurrentWeaponTag = WeaponItemInstance->ItemDef->WeaponTag;
 		APTWPlayerCharacter* Character = GetPTWPlayerCharacterFromActorInfo();
 		
@@ -34,9 +39,22 @@ void UPTWGA_UnEquip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	
 		if (!ASC) return;
 	
-		FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+		FGameplayTag EquipTag = GameplayTags::Weapon::State::Equip;
 		ASC->RemoveLooseGameplayTag(EquipTag);
 		
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 	}
 }
+
+void UPTWGA_UnEquip::SaveCurrentAmmo(UPTWWeaponInstance* WeaponInstance)
+{
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (!ASC) return;
+	
+	const UPTWWeaponAttributeSet* WeaponAttributes = Cast<UPTWWeaponAttributeSet>(ASC->GetAttributeSet(UPTWWeaponAttributeSet::StaticClass()));
+	if (WeaponAttributes)
+	{
+		WeaponInstance->SetCurrentAmmo(WeaponAttributes->GetCurrentAmmo());
+	}
+}
+

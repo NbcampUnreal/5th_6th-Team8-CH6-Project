@@ -9,6 +9,7 @@ void UPTWWeaponInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME(UPTWWeaponInstance, CurrentAmmo);
 	DOREPLIFETIME(UPTWWeaponInstance, SpawnedWeapon1P);
 	DOREPLIFETIME(UPTWWeaponInstance, SpawnedWeapon3P);
+	DOREPLIFETIME(UPTWWeaponInstance, bAlreadyUsing);
 }
 
 void UPTWWeaponInstance::OnRep_CurrentAmmo()

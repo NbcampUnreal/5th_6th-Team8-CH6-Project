@@ -13,6 +13,7 @@
 #include "Inventory/PTWWeaponData.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Inventory/Instance/PTWWeaponInstance.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 UPTWGA_Equip::UPTWGA_Equip()
 {
@@ -41,7 +42,7 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		
 		SetCharacterWeaponAttribute(Cast<UPTWWeaponInstance>(WeaponItemInstance), Character);
 		
-		FGameplayTag StatTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+		FGameplayTag StatTag = GameplayTags::Weapon::State::Equip;
 		
 		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 		
@@ -69,9 +70,18 @@ void UPTWGA_Equip::SetCharacterWeaponAttribute(const UPTWWeaponInstance* WeaponI
 			if (!WeaponmData) return;
 			
 			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetMaxAmmoAttribute(), WeaponmData->MaxAmmo);
-			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetCurrentAmmoAttribute(), WeaponmData->MaxAmmo);
 			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetDamageAttribute(), WeaponmData->BaseDamage);
 			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetFireRateAttribute(), WeaponmData->FireRate);
+			
+			if (!WeaponItemInstance->bAlreadyUsing) // 처음 사용하는 경우
+			{
+				ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetCurrentAmmoAttribute(), WeaponmData->MaxAmmo);
+				const_cast<UPTWWeaponInstance*>(WeaponItemInstance)->bAlreadyUsing = true;
+			}
+			else // 해제했다가 다시 사용하는 경우
+			{
+				ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetCurrentAmmoAttribute(), WeaponItemInstance->CurrentAmmo);
+			}
 			
 			ASC->ForceReplication();
 		}

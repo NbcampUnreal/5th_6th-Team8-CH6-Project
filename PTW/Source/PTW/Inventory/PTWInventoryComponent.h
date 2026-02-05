@@ -73,6 +73,10 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	
+	void SendGameplayEvent(UPTWItemInstance* ItemInstance, FGameplayTag SendTag, int32 SlotIndex);
+	
+protected:
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Replicated)
 	TArray<TObjectPtr<UPTWItemInstance>> ItemArr; // 아이템 전체를 저장하는 배열
 	
@@ -83,4 +87,10 @@ protected:
 	TObjectPtr<UPTWItemInstance> CurrentActiveItemSlot;
 	
 	FGameplayAbilitySpecHandle ActiveItemAbilityHandle;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
+	int32 CurSelectingWeaponSlot = -1;
+	
+private:
+	TArray<TObjectPtr<UPTWItemInstance>> WeaponArr;
 };

@@ -6,6 +6,7 @@
 #include "GAS/PTWGameplayAbility.h"
 #include "PTWGA_UnEquip.generated.h"
 
+class UPTWWeaponInstance;
 /**
  * 
  */
@@ -21,4 +22,7 @@ public:
 		const FGameplayAbilityActorInfo* ActorInfo, 
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
+	
+protected:
+	void SaveCurrentAmmo(UPTWWeaponInstance* WeaponInstance);
 };

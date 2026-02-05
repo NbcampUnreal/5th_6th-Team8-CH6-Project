@@ -13,6 +13,7 @@
 #include "Instance/PTWPassiveItemInstance.h"
 #include "Instance/PTWWeaponInstance.h"
 #include "Net/UnrealNetwork.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 
 UPTWInventoryComponent::UPTWInventoryComponent()
@@ -55,6 +56,7 @@ void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimePr
 	DOREPLIFETIME(UPTWInventoryComponent, ItemArr);
 	DOREPLIFETIME(UPTWInventoryComponent, CurrentWeapon);
 	DOREPLIFETIME(UPTWInventoryComponent, CurrentActiveItemSlot);
+	DOREPLIFETIME(UPTWInventoryComponent, CurSelectingWeaponSlot);
 }
 
  bool UPTWInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch,
@@ -101,6 +103,11 @@ void UPTWInventoryComponent::OnItemInstanceCreated(UPTWItemInstance* ItemInstanc
 	if (ItemInstance->IsA(UPTWActiveItemInstance::StaticClass()))
 	{
 		EquipActiveItem(ItemInstance);
+	}
+	
+	if (ItemInstance->IsA(UPTWWeaponInstance::StaticClass()))
+	{
+		WeaponArr.Add(ItemInstance);
 	}
 }
 
@@ -156,6 +163,16 @@ void UPTWInventoryComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
+void UPTWInventoryComponent::SendGameplayEvent(UPTWItemInstance* ItemInstance, FGameplayTag SendTag, int32 SlotIndex)
+{
+	FGameplayEventData Payload;
+	Payload.OptionalObject = ItemInstance;
+	Payload.EventMagnitude = static_cast<float>(SlotIndex);
+	Payload.Instigator = GetOwner();
+	
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), SendTag, Payload);
+}
+
 
 void UPTWInventoryComponent::ClearAndDestroyInventory()
 {
@@ -176,23 +193,33 @@ void UPTWInventoryComponent::ClearAndDestroyInventory()
 
 void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex, UAbilitySystemComponent* ASC)
 {
-	if (!ItemArr.IsValidIndex(SlotIndex) || !ItemArr[SlotIndex]) return;
-	UPTWItemInstance* TargetInstance = ItemArr[SlotIndex];
-	CurrentWeapon = TargetInstance;
+	if (!WeaponArr.IsValidIndex(SlotIndex) || !WeaponArr[SlotIndex]) return;
 	
-	bool bHasEquip = ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
+	UPTWItemInstance* TargetInstance = nullptr;
+	FGameplayTag SendTag;
 	
-	FGameplayTag EquipTag = bHasEquip ? FGameplayTag::RequestGameplayTag(FName("Weapon.State.UnEquip")) : 
-	FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+	if (CurSelectingWeaponSlot != SlotIndex) // 이전에 선택한 슬롯 인덱스와 다른 슬롯 인덱스인 경우 장착 해제 후 장착
+	{
+		if (WeaponArr.IsValidIndex(CurSelectingWeaponSlot))
+		{
+			SendTag = GameplayTags::Weapon::State::UnEquip;
+			SendGameplayEvent(CurrentWeapon, SendTag, SlotIndex);
+		}
+		
+		TargetInstance = WeaponArr[SlotIndex];
+		CurrentWeapon = TargetInstance;
+		SendTag = GameplayTags::Weapon::State::Equip;
+		CurSelectingWeaponSlot = SlotIndex;
+	}
+	else // 같은 슬롯 인덱스인 경우 장착 해제
+	{
+		TargetInstance = CurrentWeapon;
+		SendTag = GameplayTags::Weapon::State::UnEquip;
+		CurrentWeapon = nullptr;
+		CurSelectingWeaponSlot = -1;
+	}
 	
-	FGameplayEventData Payload;
-	Payload.OptionalObject = TargetInstance;
-	Payload.EventMagnitude = static_cast<float>(SlotIndex);
-	Payload.Instigator = GetOwner();
-	
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EquipTag, Payload);
-	
-	//ASC->HandleGameplayEvent(EquipTag, &Payload);
+	SendGameplayEvent(TargetInstance, SendTag, SlotIndex);
 }
 
 void UPTWInventoryComponent::SetWeaponActorHidden(UPTWItemInstance* Weapon, bool bInHidden)

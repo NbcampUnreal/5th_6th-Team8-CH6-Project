@@ -33,6 +33,12 @@ public:
 	
 	void DestroySpawnedActors();
 	
+	/* UI 연동 */
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SetCurrentAmmo(int32 NewAmmo);
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	int32 GetMaxAmmo();
+	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentAmmo)
 	int32 CurrentAmmo;
@@ -46,10 +52,6 @@ public:
 	// UI 연동, PlayerController 에서 바인딩할 델리게이트
 	FOnAmmoChangedSignature OnAmmoChanged;
 	
-	/* UI 연동 */
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void SetCurrentAmmo(int32 NewAmmo);
-	UFUNCTION(BlueprintPure, Category = "Weapon")
-	int32 GetMaxAmmo();
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
+	bool bAlreadyUsing = false;
 };

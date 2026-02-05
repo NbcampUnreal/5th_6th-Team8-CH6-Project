@@ -66,7 +66,7 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
 	{
-		AddRandomGold(NewPlayer);
+		AddGold(NewPlayer);
 		
 		// PreGameLobby 상태에서 최소 인원 충족 되면 WaitingTimer 시작
 		// if (PTWGameState->PlayerArray.Num() >= GameFlowRule.MinPlayersToStart)
@@ -100,13 +100,7 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 			// 플레이 중인 모든 플레이어 접속 중이면 로딩 UI 해제
 		}
 
-		if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
-		{
-			StartTimer(GameFlowRule.NextMiniGameWaitTime);
-
-			FTimerHandle RouletteDelayTimerHandle;
-			GetWorldTimerManager().SetTimer(RouletteDelayTimerHandle, this, &APTWLobbyGameMode::StartRoulette, GameFlowRule.RouletteDelay);
-		}
+		StartGame();
 	}
 }
 
@@ -131,9 +125,39 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 	// 로그 아웃하면 gamestate portal 부분 수정
 }
 
-void APTWLobbyGameMode::AddRandomGold(APlayerController* NewPlayer)
+void APTWLobbyGameMode::StartGame()
 {
-	int32 RandomGold = FMath::RandRange(1, 100);
+	if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
+	{
+		StartTimer(GameFlowRule.NextMiniGameWaitTime);
+
+		FTimerHandle RouletteDelayTimerHandle;
+		GetWorldTimerManager().SetTimer(RouletteDelayTimerHandle, this, &APTWLobbyGameMode::StartRoulette, GameFlowRule.RouletteDelay);
+	}
+}
+
+void APTWLobbyGameMode::EndTimer()
+{
+	if (!PTWGameState) return;
+
+	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
+	{
+		ClearTimer();
+		
+		PTWGameState->AdvanceRound();
+		PTWGameState->SetCurrentPhase(EPTWGamePhase::PostGameLobby);
+		
+		StartGame();
+		
+		return;
+	}
+
+	Super::EndTimer();
+}
+
+void APTWLobbyGameMode::AddGold(APlayerController* NewPlayer)
+{
+	int32 RandomGold = 500;
 
 	if (APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>())
 	{

@@ -142,7 +142,6 @@ void APTWBombActor::OnRep_BombOwnerPawn()
 
 void APTWBombActor::AttachToOwnerPawn()
 {
-	// 이전 Attach 정리
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 
 	if (!BombOwnerPawn) return;
@@ -158,16 +157,7 @@ void APTWBombActor::AttachToOwnerPawn()
 			TEXT("BombHeadSocket")
 		);
 	}
-	else
-	{
-		// 소켓 없을 때 안전장치
-		AttachToComponent(
-			BombOwnerPawn->GetRootComponent(),
-			FAttachmentTransformRules::KeepWorldTransform
-		);
 
-		SetActorRelativeLocation(FVector(0.f, 0.f, 120.f));
-	}
 }
 void APTWBombActor::RequestExplode(AActor* InstigatorActor)
 {

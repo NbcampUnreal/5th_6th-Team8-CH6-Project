@@ -93,5 +93,5 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Bomb|Attach")
-	FName AttachSocketName = NAME_None;
+	FName AttachSocketName = TEXT("BombHeadSocket");
 };

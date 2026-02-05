@@ -21,7 +21,7 @@ APTWMiniGameMode::APTWMiniGameMode()
 	
 }
 
-void APTWMiniGameMode::AddWinPoint(APawn* Pawn, int32 Score)
+void APTWMiniGameMode::AddWinPoint(AActor* Actor, int32 AddPoint)
 {
 	
 }
@@ -63,6 +63,8 @@ void APTWMiniGameMode::EndTimer()
 	
 	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
 	ResetPlayerRoundData();
+	ResetPlayerInventoryID();
+
 	
 	Super::EndTimer();
 	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
@@ -204,6 +206,19 @@ void APTWMiniGameMode::ResetPlayerRoundData()
 		{
 			RoundDataInterface->ResetRoundData();
 		}
+	}
+}
+
+void APTWMiniGameMode::ResetPlayerInventoryID()
+{
+	if (!PTWGameState) return;
+	
+	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (!PTWPlayerState) return;
+
+		PTWPlayerState->ResetInventoryItemId();
 	}
 }
 

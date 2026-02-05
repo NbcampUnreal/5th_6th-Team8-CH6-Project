@@ -92,6 +92,12 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 
 	if (!IsValid(PTWGameState)) return;
 
+	// 미니 게임 끝나면 인벤토리 비워주지만 로비 이동 후에 한번더 초기화
+	APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
+	if (!PTWPlayerState) return;
+
+	PTWPlayerState->ResetInventoryItemId();
+	
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PostGameLobby)
 	{
 		// 로딩 UI 
@@ -102,6 +108,9 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 
 		StartGame();
 	}
+
+	
+	// 여기서 playerdata item id 초기화
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)

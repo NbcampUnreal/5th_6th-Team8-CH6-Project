@@ -8,6 +8,30 @@
 /**
  * 
  */
+
+
+USTRUCT(BlueprintType)
+struct FPTWTimerRule
+{
+	GENERATED_BODY()
+
+	/** 타이머 사용 여부*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
+	bool bUserTimer = true;
+	
+	/** 라운드 진행 횟수 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
+	int32 Round = 1;
+
+	/** 라운드 당 시간 (타이머 사용 안하면 상관 X) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
+	float Timer = 90;
+	
+	/** 매 라운드 시작 대기 시간 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
+	float CountDown = 10;
+};
+
 USTRUCT(BlueprintType)
 struct FPTWKillRule
 {

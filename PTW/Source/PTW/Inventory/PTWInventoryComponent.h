@@ -58,10 +58,6 @@ public:
 	bool EquipActiveItem(UPTWItemInstance* ActiveItemInstance);
 	
 	void ConsumeActiveItem();
-   
-	//FIXME : TestCode
-	UFUNCTION(Server, Reliable, BlueprintCallable)
-	void SetActiveItem(UPTWItemDefinition* ItemDef);
 	
 	void OnItemInstanceCreated(UPTWItemInstance* ItemInstance);
 	

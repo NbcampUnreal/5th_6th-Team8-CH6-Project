@@ -65,10 +65,13 @@ namespace GameplayTags
 		}
 		namespace Gun
 		{
+			namespace Pistol
+			{
+				PTW_API UE_DEFINE_GAMEPLAY_TAG(Pistol, "Weapon.Gun.Pistol");
+				PTW_API UE_DEFINE_GAMEPLAY_TAG(BombPistol, "Weapon.Gun.Pistol.BombPistol");
+			}
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Rifle, "Weapon.Gun.Rifle");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Rocket, "Weapon.Gun.Rocket");
-			PTW_API UE_DEFINE_GAMEPLAY_TAG(BombPistol, "Weapon.Gun.BombPistol");
-			PTW_API UE_DEFINE_GAMEPLAY_TAG(Pistol, "Weapon.Gun.Pistol");
 		}
 		namespace State
 		{

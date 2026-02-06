@@ -24,6 +24,8 @@ protected:
 	virtual void EndTimer() override;
 	
 	virtual void RestartPlayer(AController* NewPlayer) override;
+	
+	void GiveItemAndEquipWeapon();
 
 private:
 	

@@ -7,8 +7,10 @@
 #include "PTW/MiniGame/Item/PTWBombActor.h"
 
 #include "CoreFramework/PTWBaseCharacter.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerState.h"
+#include "Inventory/PTWInventoryComponent.h"
 #include "System/PTWItemSpawnManager.h"
 
 class UPTWItemSpawnManager;
@@ -134,11 +136,8 @@ void APTWBombMiniGameMode::AssignRandomBombOwner()
 	const int32 PickIndex = FMath::RandRange(0, AlivePlayers.Num() - 1);
 	BombOwnerPS = AlivePlayers[PickIndex];
 	
-	if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
-	{
-		SpawnManager->SpawnSingleItem(BombOwnerPS, BombWeaponDef);
-	}
-
+	GiveItemAndEquipWeapon();
+	
 	const FString OwnerName = BombOwnerPS ? BombOwnerPS->GetPlayerName() : TEXT("None");
 	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - BombOwner = %s"), CurrentRound, *OwnerName);
 }
@@ -160,6 +159,24 @@ void APTWBombMiniGameMode::RestartPlayer(AController* NewPlayer)
 		if (EliminatedPlayers.Contains(PS))
 		{
 			SetSpectator(NewPlayer);
+		}
+	}
+}
+
+void APTWBombMiniGameMode::GiveItemAndEquipWeapon()
+{
+	if (!BombOwnerPS) return;
+	
+	if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(BombOwnerPS->GetPawn()))
+	{
+		if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+		{
+			SpawnManager->SpawnSingleItem(BombOwnerPS, BombWeaponDef);
+			
+			if (UPTWInventoryComponent* Inven = PC->GetInventoryComponent())
+			{
+				Inven->EquipWeapon(0);
+			}
 		}
 	}
 }

@@ -4,6 +4,7 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "PTW/MiniGame/Item/PTWBombActor.h"
+#include "System/PTWItemSpawnManager.h"
 
 void APTWBombMiniGameMode::BeginPlay()
 {
@@ -118,6 +119,12 @@ void APTWBombMiniGameMode::AssignRandomBombOwner()
 
 	const int32 PickIndex = FMath::RandRange(0, AlivePlayers.Num() - 1);
 	BombOwnerPS = AlivePlayers[PickIndex];
+	
+	if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+	{
+		SpawnManager->SpawnSingleItem(BombOwnerPS, BombItemDefinition);
+	}
+	
 
 	const FString OwnerName = BombOwnerPS ? BombOwnerPS->GetPlayerName() : TEXT("None");
 	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - BombOwner = %s"), CurrentRound, *OwnerName);

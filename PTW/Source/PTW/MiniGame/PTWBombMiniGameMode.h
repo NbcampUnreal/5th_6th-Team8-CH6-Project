@@ -21,6 +21,10 @@ protected:
 	// 라운드 타이머 종료 시 호출
 	virtual void EndTimer() override;
 
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bomb Weapon Def")
+	TObjectPtr<UPTWItemDefinition> BombItemDefinition;
+
 private:
 	
 	FTimerHandle RoundTimerHandle;

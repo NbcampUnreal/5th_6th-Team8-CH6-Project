@@ -5,10 +5,11 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWCombatInterface.h"
+#include "MiniGame/Item/PTWBombActor.h"
 
 void UPTWGA_BombPistol::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData)
+                                        const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                                        const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	
@@ -29,25 +30,53 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 	 {
 	 	const FHitResult* HitResult = Data->GetHitResult();
 	 	AActor* HitActor = HitResult ? HitResult->GetActor() : nullptr;
+	 	AActor* MyActor = GetAvatarActorFromActorInfo();
 	 	
-	 	if (!HitActor) continue;
+	 	if (!HitActor && !MyActor) continue;
 	
 	 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
 	 	if (!TargetASC) continue;
 	 	
-	 	
 	 	// 맞춘 상대의 머리에 내 머리에 있는 폭탄 Attach 
+	 	TArray<AActor*> AttachedActors;
+	 	MyActor->GetAttachedActors(AttachedActors);
 	 	
-	 	IPTWCombatInterface* TargetCombatInt = Cast<IPTWCombatInterface>(HitActor);
-	 	IPTWCombatInterface* CombatIntMine = Cast<IPTWCombatInterface>(CurrentActorInfo->AvatarActor.Get()); 
+	 	AActor* AttachingActor = nullptr;
 	 	
-	 	if (TargetCombatInt && CombatIntMine)
+	 	for (AActor* AttachedActor : AttachedActors)
 	 	{
-	 		FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
-	 		TargetCombatInt->ApplyGameplayEffectToSelf(BombPistolEffect, 1.0f,ContextHandle); // 타겟에게 Effect 부여
-	 		CombatIntMine->RemoveEffectWithTag(BombTag);
-	 		break;
+	 		if (AttachedActor->IsA(APTWBombActor::StaticClass()))
+	 		{
+	 			AttachingActor = AttachedActor;
+	 			break;
+	 		}
 	 	}
+	 	
+	 	if (AttachingActor && HitActor)
+	 	{
+	 		USceneComponent* TargetMesh = HitActor->FindComponentByClass<USkeletalMeshComponent>();
+    
+	 		if (TargetMesh)
+	 		{
+	 			AttachingActor->AttachToComponent(
+					 TargetMesh, 
+					 FAttachmentTransformRules::SnapToTargetNotIncludingScale, 
+					 FName(TEXT("BombHeadSocket"))
+				 );
+	 			AttachingActor->SetOwner(HitActor);
+	 		}
+	 	}}
+	 	
+	 	// IPTWCombatInterface* TargetCombatInt = Cast<IPTWCombatInterface>(HitActor);
+	 	// IPTWCombatInterface* CombatIntMine = Cast<IPTWCombatInterface>(CurrentActorInfo->AvatarActor.Get()); 
+	 	//
+	 	// if (TargetCombatInt && CombatIntMine)
+	 	// {
+	 	// 	FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
+	 	// 	TargetCombatInt->ApplyGameplayEffectToSelf(BombPistolEffect, 1.0f,ContextHandle); // 타겟에게 Effect 부여
+	 	// 	CombatIntMine->RemoveEffectWithTag(BombTag);
+	 	// 	break;
+	 	// }
 	 	
 	 }
 

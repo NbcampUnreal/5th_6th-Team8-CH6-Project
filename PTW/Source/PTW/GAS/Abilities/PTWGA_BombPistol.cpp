@@ -58,11 +58,9 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
 		if (!TargetASC) continue;
-
-		// 4. 폭탄 부착 로직 실행
+		
 		AttachBombToTarget(AttachingActor, HitActor);
-
-		// 5. 아이템 스폰 및 인벤토리 정리 (서브 시스템 및 컴포넌트 활용)
+		
 		ProcessItemTransfer(MyActor, HitActor);
         
 		// 폭탄은 하나만 옮기면 되므로 루프 탈출 (필요 시)
@@ -86,23 +84,43 @@ void UPTWGA_BombPistol::AttachBombToTarget(AActor* Bomb, AActor* Target)
 
 void UPTWGA_BombPistol::ProcessItemTransfer(AActor* Source, AActor* Target)
 {
-	if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+	if (APTWPlayerCharacter* TargetPC = Cast<APTWPlayerCharacter>(Target))
 	{
-		if (APTWPlayerCharacter* TargetPC = Cast<APTWPlayerCharacter>(Target))
-		{
-			if (APTWPlayerState* PS = TargetPC->GetPlayerState<APTWPlayerState>())
-			{
-				SpawnManager->SpawnSingleItem(PS, ItemDef);
-			}
-		}
+		GiveItemAndEquip(TargetPC);
 	}
 	
 	if (APTWPlayerCharacter* SourcePC = Cast<APTWPlayerCharacter>(Source))
 	{
-		if (UPTWInventoryComponent* Inven = SourcePC->GetInventoryComponent())
+		RemoveSourceWeapon(SourcePC);
+	}
+}
+
+void UPTWGA_BombPistol::GiveItemAndEquip(APTWPlayerCharacter* TargetPC)
+{
+	if (!TargetPC) return;
+	
+	if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+	{
+		if (APTWPlayerState* PS = TargetPC->GetPlayerState<APTWPlayerState>())
 		{
-			Inven->RemoveWeaponItem();
+			SpawnManager->SpawnSingleItem(PS, ItemDef);
 		}
+	}
+	
+	if (UPTWInventoryComponent* Inven = TargetPC->GetInventoryComponent())
+	{
+		if (TargetPC->HasAuthority())
+		{
+			Inven->EquipWeapon(0);
+		}
+	}
+}
+
+void UPTWGA_BombPistol::RemoveSourceWeapon(APTWPlayerCharacter* SourcePC)
+{
+	if (UPTWInventoryComponent* Inven = SourcePC->GetInventoryComponent())
+	{
+		Inven->RemoveWeaponItem();
 	}
 }
 

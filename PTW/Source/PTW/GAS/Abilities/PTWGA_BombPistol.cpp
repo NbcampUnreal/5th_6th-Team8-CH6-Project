@@ -78,11 +78,9 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 	 	// 	break;
 	 	// }
 	 	
-	 }
-
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-	
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
+
 
 
 

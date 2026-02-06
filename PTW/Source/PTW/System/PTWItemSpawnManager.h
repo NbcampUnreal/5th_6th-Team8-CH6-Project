@@ -32,6 +32,11 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable)
 	void SpawnAndGiveItems(APTWPlayerState* PS);
+
+
+	/* 특정 ItemDefinition을 기반으로 아이템을 생성하여 플레이어에게 지급 */
+	UFUNCTION(BlueprintCallable, Category = "ItemSpawn")
+	void SpawnSingleItem(APTWPlayerState* PS, UPTWItemDefinition* ItemDef);
 protected:
 	/** 스폰 데이터 테이블 (RowName: ItemID, Value: ItemDefinition) */
 	UPROPERTY()

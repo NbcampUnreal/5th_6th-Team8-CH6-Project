@@ -60,10 +60,7 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 		if (!TargetASC) continue;
 		
 		AttachBombToTarget(AttachingActor, HitActor);
-		
 		ProcessItemTransfer(MyActor, HitActor);
-        
-		// 폭탄은 하나만 옮기면 되므로 루프 탈출 (필요 시)
 		break; 
 	}
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);

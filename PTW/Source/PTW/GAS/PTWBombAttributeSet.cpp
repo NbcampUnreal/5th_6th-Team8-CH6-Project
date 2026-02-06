@@ -32,4 +32,19 @@ void UPTWBombAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribut
 	}
 }
 
+void UPTWBombAttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue,
+	float NewValue) const
+{
+	Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
+	
+	if (GetRemainingTime() == 0.f)
+	{
+		// 폭탄 터짐 로직
+		AActor* Owner = GetOwningActor();
+		
+		// 폭탄 액터 -> Explode
+		// 폭탄 액터 클래스로 캐스팅 후 함수 호출 
+	}
+}
+
 

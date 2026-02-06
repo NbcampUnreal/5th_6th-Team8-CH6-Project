@@ -35,6 +35,9 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 	 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
 	 	if (!TargetASC) continue;
 	 	
+	 	
+	 	// 맞춘 상대의 머리에 내 머리에 있는 폭탄 Attach 
+	 	
 	 	IPTWCombatInterface* TargetCombatInt = Cast<IPTWCombatInterface>(HitActor);
 	 	IPTWCombatInterface* CombatIntMine = Cast<IPTWCombatInterface>(CurrentActorInfo->AvatarActor.Get()); 
 	 	
@@ -45,6 +48,7 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 	 		CombatIntMine->RemoveEffectWithTag(BombTag);
 	 		break;
 	 	}
+	 	
 	 }
 
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);

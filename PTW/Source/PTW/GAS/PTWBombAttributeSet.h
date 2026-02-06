@@ -2,12 +2,12 @@
 
 #pragma once
 
-#pragma once
-
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
 #include "AbilitySystemComponent.h"
 #include "PTWBombAttributeSet.generated.h"
+
+class APTWBombActor;
 
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
 GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \

@@ -29,4 +29,7 @@ public:
 protected:
 	
 	void SetCharacterWeaponAttribute(const UPTWWeaponInstance* WeaponItemInstance, APTWPlayerCharacter* Character);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects")
+	TSubclassOf<UGameplayEffect> EquipEffect;
 };

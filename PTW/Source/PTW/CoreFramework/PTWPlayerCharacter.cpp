@@ -212,7 +212,11 @@ void APTWPlayerCharacter::Look(const FInputActionValue& Value)
 
 void APTWPlayerCharacter::EquipWeapon(const FInputActionValue& Value)
 {
-	ServerRPCEquipWeapon();
+	if (IsLocallyControlled())
+	{
+
+		ServerRPCEquipWeapon();
+	}
 }
 
 void APTWPlayerCharacter::UseActiveItem(const FInputActionValue& Value)

@@ -40,7 +40,17 @@ void UPTWGA_UnEquip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		if (!ASC) return;
 	
 		FGameplayTag EquipTag = GameplayTags::Weapon::State::Equip;
-		ASC->RemoveLooseGameplayTag(EquipTag);
+		
+		if (IPTWCombatInterface* CombInt = Cast<IPTWCombatInterface>(Character))
+		{
+			if (ASC->HasMatchingGameplayTag(EquipTag))
+			{
+				CombInt->RemoveEffectWithTag(EquipTag);
+			}
+			
+			FGameplayEffectContextHandle Context;
+			CombInt->ApplyGameplayEffectToSelf(UnEquipEffect, 1.0f, Context);
+		}
 		
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 	}

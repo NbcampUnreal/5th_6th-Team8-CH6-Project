@@ -25,4 +25,7 @@ public:
 	
 protected:
 	void SaveCurrentAmmo(UPTWWeaponInstance* WeaponInstance);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects")
+	TSubclassOf<UGameplayEffect> UnEquipEffect;
 };

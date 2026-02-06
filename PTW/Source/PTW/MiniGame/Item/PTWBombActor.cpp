@@ -195,7 +195,6 @@ bool APTWBombActor::ExplosionOverlapSetter(TArray<FOverlapResult>& OverlapResult
 
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
-	if (BombOwnerPawn) CollisionParams.AddIgnoredActor(BombOwnerPawn);
 
 	const bool bHasOverlap = GetWorld()->OverlapMultiByChannel(
 		OverlapResults,
@@ -241,8 +240,7 @@ void APTWBombActor::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults,
 		AActor* HitActor = Result.GetActor();
 		if (!HitActor || ProcessedActors.Contains(HitActor)) continue;
 
-		// 자기 자신 / 소유자 제외
-		if (HitActor == this || HitActor == BombOwnerPawn) continue;
+		if (HitActor == this) continue;
 
 		ProcessedActors.Add(HitActor);
 

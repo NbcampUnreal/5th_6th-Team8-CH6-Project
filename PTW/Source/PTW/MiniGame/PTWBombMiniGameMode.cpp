@@ -1,16 +1,23 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PTWBombMiniGameMode.h"
+
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "PTW/MiniGame/Item/PTWBombActor.h"
-#include "System/PTWItemSpawnManager.h"
+
+#include "CoreFramework/PTWBaseCharacter.h"
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 
 void APTWBombMiniGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	CurrentRound = 0;
+	
+	EliminatedPlayers.Empty();
+
 	StartRound();
 }
 
@@ -19,12 +26,12 @@ void APTWBombMiniGameMode::StartRound()
 	CurrentRound++;
 
 	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d / %d - Countdown Start"), CurrentRound, MaxRoundCount);
-	
+
 	if (APTWGameState* GS = GetGameState<APTWGameState>())
 	{
 		GS->SetbMiniGameCountdown(true);
 	}
-	
+
 	StartCountDown();
 }
 
@@ -34,9 +41,9 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 	{
 		GS->SetbMiniGameCountdown(false);
 	}
-	
+
 	AssignRandomBombOwner();
-	
+
 	if (!BombActor && BombActorClass)
 	{
 		BombActor = GetWorld()->SpawnActor<APTWBombActor>(
@@ -45,7 +52,7 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 			FRotator::ZeroRotator
 		);
 	}
-	
+
 	if (BombActor && BombOwnerPS)
 	{
 		APawn* OwnerPawn = BombOwnerPS->GetPawn();
@@ -54,14 +61,14 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 
 	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Play Start"), CurrentRound);
 
-	// 라운드 진행 타이머 시작 
-	GetWorldTimerManager().SetTimer(RoundTimerHandle,this,&APTWBombMiniGameMode::EndTimer,RoundPlayTime,false);
+	// 라운드 진행 타이머 시작
+	GetWorldTimerManager().SetTimer(RoundTimerHandle, this, &APTWBombMiniGameMode::EndTimer, RoundPlayTime, false);
 }
 
 void APTWBombMiniGameMode::EndTimer()
 {
 	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Explosion Timing"), CurrentRound);
-	
+
 	CleanupBombActor();
 
 	// 3회 다 돌면 미니게임 종료
@@ -69,6 +76,8 @@ void APTWBombMiniGameMode::EndTimer()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[BombMode] Finished"));
 		
+		EliminatedPlayers.Empty();
+
 		Super::EndTimer();
 		return;
 	}
@@ -92,12 +101,14 @@ void APTWBombMiniGameMode::GetAlivePlayerStates(TArray<APTWPlayerState*>& OutAli
 
 	const AGameStateBase* GSBase = GetGameState<AGameStateBase>();
 	if (!GSBase) return;
-	
+
 	for (APlayerState* PS : GSBase->PlayerArray)
 	{
 		APTWPlayerState* PTWPS = Cast<APTWPlayerState>(PS);
 		if (!PTWPS) continue;
-
+		
+		if (EliminatedPlayers.Contains(PTWPS)) continue;
+		
 		if (PTWPS->IsOnlyASpectator()) continue;
 		if (PTWPS->IsInactive()) continue;
 
@@ -119,13 +130,59 @@ void APTWBombMiniGameMode::AssignRandomBombOwner()
 
 	const int32 PickIndex = FMath::RandRange(0, AlivePlayers.Num() - 1);
 	BombOwnerPS = AlivePlayers[PickIndex];
-	
-	if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
-	{
-		SpawnManager->SpawnSingleItem(BombOwnerPS, BombItemDefinition);
-	}
-	
 
 	const FString OwnerName = BombOwnerPS ? BombOwnerPS->GetPlayerName() : TEXT("None");
 	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - BombOwner = %s"), CurrentRound, *OwnerName);
+}
+
+void APTWBombMiniGameMode::RestartPlayer(AController* NewPlayer)
+{
+	Super::RestartPlayer(NewPlayer);
+
+	// 스폰된 캐릭터 가져오기
+	APTWBaseCharacter* BaseChar = Cast<APTWBaseCharacter>(NewPlayer ? NewPlayer->GetPawn() : nullptr);
+	if (!BaseChar) return;
+	
+	BaseChar->OnCharacterDied.RemoveAll(this);
+	BaseChar->OnCharacterDied.AddDynamic(this, &APTWBombMiniGameMode::HandleBombPlayerDeath);
+
+	// 이미 탈락한 플레이어는 라운드가 바뀌어도 계속 관전 상태 유지
+	if (APlayerState* PS = NewPlayer->PlayerState)
+	{
+		if (EliminatedPlayers.Contains(PS))
+		{
+			SetSpectator(NewPlayer);
+		}
+	}
+}
+
+void APTWBombMiniGameMode::HandleBombPlayerDeath(AActor* Victim, AActor* Attacker)
+{
+	if (!HasAuthority() || !Victim) return;
+
+	APTWBaseCharacter* VictimChar = Cast<APTWBaseCharacter>(Victim);
+	if (!VictimChar) return;
+
+	AController* DeadController = VictimChar->GetController();
+	APlayerState* DeadPS = VictimChar->GetPlayerState();
+
+	if (DeadPS)
+	{
+		EliminatedPlayers.Add(DeadPS);
+	}
+
+	if (DeadController)
+	{
+		SetSpectator(DeadController);
+	}
+}
+
+
+void APTWBombMiniGameMode::SetSpectator(AController* DeadController)
+{
+	APlayerController* PC = Cast<APlayerController>(DeadController);
+	if (!PC) return;
+
+	PC->ChangeState(NAME_Spectating);
+	PC->StartSpectatingOnly();
 }

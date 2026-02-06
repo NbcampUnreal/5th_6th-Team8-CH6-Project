@@ -46,7 +46,6 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 	if (!AttachingActor) return;
 	
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	AActor* HitActor = nullptr;
 	
 	for (const TSharedPtr<FGameplayAbilityTargetData>& Data : TargetData.Data)
 	{

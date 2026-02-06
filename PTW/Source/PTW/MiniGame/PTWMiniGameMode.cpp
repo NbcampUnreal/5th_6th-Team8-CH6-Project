@@ -58,7 +58,6 @@ void APTWMiniGameMode::BeginPlay()
 
 void APTWMiniGameMode::EndTimer()
 {
-
 	if (!PTWGameState) return;
 	
 	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
@@ -70,30 +69,36 @@ void APTWMiniGameMode::EndTimer()
 	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
 }
 
-void APTWMiniGameMode::PostLogin(APlayerController* NewPlayer)
+void APTWMiniGameMode::Logout(AController* Exiting)
 {
-	Super::PostLogin(NewPlayer);
+	APlayerState* PlayerState = Exiting->GetPlayerState<APlayerState>();
+	Super::Logout(Exiting);
 
-	//SpawnDefaultWeapon(NewPlayer);
+	if (!PTWGameState || !PlayerState) return;
+	
+	PTWGameState->AlivePlayers.Remove(PlayerState);
 }
 
 void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
-
+	
 	if (!IsValid(PTWGameState)) return;
 
 	APTWPlayerState* PlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
 	if (!IsValid(PlayerState)) return;
 
 	PTWGameState->AddRankedPlayer(PlayerState);
+	
 }
 
 void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
 	if (!NewPlayer) return;
-
+	
 	Super::RestartPlayer(NewPlayer);
+
+	if (!IsValid(PTWGameState)) return;
 	
 	// if (PlayerStarts.Num() == 0)
 	// {
@@ -108,18 +113,12 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	// 	RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[PlayerStartCount++]);
 	// }
 
-	if (!MiniGameEffectClass) return;
+	APlayerState* PlayerState = NewPlayer->GetPlayerState<APlayerState>();
+	if (!PlayerState) return;
+
+	PTWGameState->AlivePlayers.Add(PlayerState);
 	
-	if (APTWBaseCharacter* PTWBaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
-	{
-		UAbilitySystemComponent* AbilitySystemComponent = PTWBaseCharacter->GetAbilitySystemComponent();
-		if (!AbilitySystemComponent) return;
-	
-		FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
-		
-		PTWBaseCharacter->ApplyGameplayEffectToSelf(MiniGameEffectClass, 1, Context);
-	}
-	
+	ApplyMiniGameTag(NewPlayer);
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);
 	
@@ -132,6 +131,8 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 
 void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 {
+	if(!ItemDefinition) return;
+
 	if (UPTWItemSpawnManager* ItemSpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
 	{
 		if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
@@ -173,6 +174,7 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	
 	if (!PTWGameState) return;
 	PTWGameState->UpdateRanking();
+	PTWGameState->AlivePlayers.Remove(DeadPlayerState);
 	
 	RespawnPlayer(DeadPlayerController);
 }
@@ -197,6 +199,21 @@ void APTWMiniGameMode::UpdatePlayerRoundData(APlayerState* DeadPlayerState, APla
 	}
 }
 
+void APTWMiniGameMode::ApplyMiniGameTag(AController* NewPlayer)
+{
+	if (!MiniGameEffectClass) return;
+	
+	if (APTWBaseCharacter* PTWBaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
+	{
+		UAbilitySystemComponent* AbilitySystemComponent = PTWBaseCharacter->GetAbilitySystemComponent();
+		if (!AbilitySystemComponent) return;
+	
+		FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
+		
+		PTWBaseCharacter->ApplyGameplayEffectToSelf(MiniGameEffectClass, 1, Context);
+	}
+}
+
 void APTWMiniGameMode::ResetPlayerRoundData()
 {
 	if (!PTWGameState) return;
@@ -216,7 +233,7 @@ void APTWMiniGameMode::ResetPlayerInventoryID()
 	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 	{
 		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
-		if (!PTWPlayerState) return;
+		if (!PTWPlayerState) continue;
 
 		PTWPlayerState->ResetInventoryItemId();
 	}
@@ -224,6 +241,8 @@ void APTWMiniGameMode::ResetPlayerInventoryID()
 
 void APTWMiniGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController)
 {
+	if (MiniGameRule.SpawnRule.bUseRespawn == false) return;
+	
 	if (IsValid(SpawnPlayerController))
 	{
 		GetWorldTimerManager().ClearTimer(SpawnPlayerController->RespawnTimerHandle);		// 방어 코드

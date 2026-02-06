@@ -30,8 +30,8 @@ protected:
 	virtual void InitGameState() override;
 	virtual void BeginPlay() override;
 	virtual void EndTimer() override;
-
-	virtual void PostLogin(APlayerController* NewPlayer) override;
+	
+	virtual void Logout(AController* Exiting) override;
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 	
 	virtual void RestartPlayer(AController* NewPlayer) override;
@@ -64,8 +64,6 @@ protected:
 	void TickCountDown();
 	
 	virtual void OnCountDownFinished();
-	
-	
 
 private:
 	/** 플레이어 사망 처리 */
@@ -74,13 +72,17 @@ private:
 
 	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
 	void UpdatePlayerRoundData(APlayerState* DeadPlayerState, APlayerState* KillPlayerState);
+
+	/** 플레이어에게 미니 게임 태그 적용 */
+	void ApplyMiniGameTag(AController* NewPlayer);
 	
 	/** 라운드 종료 시 플레이어의 라운드 전용 데이터 초기화*/
 	void ResetPlayerRoundData();
 
 	/**라운드 종료 시 플레이어의 인벤토리 ID 초기화 */
 	void ResetPlayerInventoryID();
-	
+
+	/** 플레이어 리스폰 */
 	void RespawnPlayer(APTWPlayerController* SpawnPlayerController);
 	
 	/** 리스폰 시 플레이어 체력 초기화 */

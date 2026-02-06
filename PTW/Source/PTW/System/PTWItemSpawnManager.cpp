@@ -87,12 +87,15 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	TargetPlayer->GetWeaponComponent()->AttachWeaponToSocket(SpawnedWeapon1P, SpawnedWeapon3P, WeaponTag);
 }
 
+//TODO : 무기 및 액티브 중복체크, 리팩토링
 void UPTWItemSpawnManager::SpawnAndGiveItems(APTWPlayerState* PS)
 {
 	if (!PS || !ItemSpawnTable) return;
 
 	APawn* PlayerPawn = PS->GetPawn();
-	if (!PlayerPawn)
+	APTWPlayerCharacter* PlayerChar = Cast<APTWPlayerCharacter>(PlayerPawn);
+
+	if (!PlayerChar)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[SpawnSystem] PlayerPawn is NULL for PlayerState: %s (Too early?)"), *PS->GetPlayerName());
 		return;
@@ -100,7 +103,7 @@ void UPTWItemSpawnManager::SpawnAndGiveItems(APTWPlayerState* PS)
 	UPTWInventoryComponent* InventoryComp = PlayerPawn->FindComponentByClass<UPTWInventoryComponent>();
 	if (!InventoryComp)
 	{
-		UE_LOG(LogTemp, Error, TEXT("[SpawnSystem] Inventory Component Not Found on Character: %s"), *PlayerPawn->GetName());
+		UE_LOG(LogTemp, Error, TEXT("[SpawnSystem] Inventory Component Not Found on Character: %s"), *PlayerChar->GetName());
 		return;
 	}
 
@@ -121,43 +124,48 @@ void UPTWItemSpawnManager::SpawnAndGiveItems(APTWPlayerState* PS)
 
 			if (LoadedDef)
 			{
-				UClass* InstanceClassToSpawn = nullptr;
-
-				switch (LoadedDef->ItemType)
+				if (LoadedDef->ItemType == EItemType::Weapon)
 				{
-				case EItemType::Weapon:
-					InstanceClassToSpawn = UPTWWeaponInstance::StaticClass();
-					break;
+					SpawnWeaponActor(PlayerChar, LoadedDef, LoadedDef->WeaponTag);
 
-				case EItemType::Active:
-					InstanceClassToSpawn = UPTWActiveItemInstance::StaticClass();
-					break;
-
-				case EItemType::Passive:
-					InstanceClassToSpawn = UPTWPassiveItemInstance::StaticClass();
-					break;
-
-				default:
-					InstanceClassToSpawn = UPTWItemInstance::StaticClass();
-					break;
+					UE_LOG(LogTemp, Log, TEXT("   -> Spawned Weapon Actor & Instance: %s (Tag: %s)"),
+						*IDStr, *LoadedDef->WeaponTag.ToString());
 				}
-
-				if (InstanceClassToSpawn)
+				else
 				{
-					UPTWItemInstance* NewItem = NewObject<UPTWItemInstance>(InventoryComp, InstanceClassToSpawn);
+					UClass* InstanceClassToSpawn = nullptr;
 
-					if (NewItem)
+					switch (LoadedDef->ItemType)
 					{
-						NewItem->ItemDef = LoadedDef;
+					case EItemType::Active:
+						InstanceClassToSpawn = UPTWActiveItemInstance::StaticClass();
+						break;
 
-						InventoryComp->AddItem(NewItem);
+					case EItemType::Passive:
+						InstanceClassToSpawn = UPTWPassiveItemInstance::StaticClass();
+						break;
 
-						UE_LOG(LogTemp, Log, TEXT("   -> Spawned: %s (Type: %s, Class: %s)"),
-							*IDStr,
-							*UEnum::GetValueAsString(LoadedDef->ItemType),
-							*InstanceClassToSpawn->GetName());
+					default:
+						InstanceClassToSpawn = UPTWItemInstance::StaticClass();
+						break;
 					}
-				}
+					if (InstanceClassToSpawn)
+					{
+						UPTWItemInstance* NewItem = NewObject<UPTWItemInstance>(InventoryComp, InstanceClassToSpawn);
+
+						if (NewItem)
+						{
+							NewItem->ItemDef = LoadedDef;
+
+							InventoryComp->AddItem(NewItem);
+
+							UE_LOG(LogTemp, Log, TEXT("   -> Spawned: %s (Type: %s, Class: %s)"),
+								*IDStr,
+								*UEnum::GetValueAsString(LoadedDef->ItemType),
+								*InstanceClassToSpawn->GetName());
+						}
+					}
+				} 
 			}
 			else
 			{
@@ -167,6 +175,64 @@ void UPTWItemSpawnManager::SpawnAndGiveItems(APTWPlayerState* PS)
 		else
 		{
 			UE_LOG(LogTemp, Warning, TEXT("   -> ItemID not found in DT: %s"), *IDStr);
+		}
+	}
+}
+
+
+void UPTWItemSpawnManager::SpawnSingleItem(APTWPlayerState* PS, UPTWItemDefinition* ItemDef)
+{
+	if (!PS || !ItemDef) return;
+
+	APawn* PlayerPawn = PS->GetPawn();
+	APTWPlayerCharacter* PlayerChar = Cast<APTWPlayerCharacter>(PlayerPawn);
+	if (!PlayerChar)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SpawnSingleItem] Character is Invalid for Player: %s"), *PS->GetPlayerName());
+		return;
+	}
+
+	UPTWInventoryComponent* InventoryComp = PlayerChar->GetInventoryComponent();
+	if (!InventoryComp)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[SpawnSingleItem] Inventory Component Missing!"));
+		return;
+	}
+
+	if (ItemDef->ItemType == EItemType::Weapon)
+	{
+		SpawnWeaponActor(PlayerChar, ItemDef, ItemDef->WeaponTag);
+
+		UE_LOG(LogTemp, Log, TEXT("[SpawnSingleItem] Spawned Weapon: %s"), *ItemDef->GetName());
+	}
+	else
+	{
+		UClass* InstanceClassToSpawn = nullptr;
+
+		switch (ItemDef->ItemType)
+		{
+		case EItemType::Active:
+			InstanceClassToSpawn = UPTWActiveItemInstance::StaticClass();
+			break;
+		case EItemType::Passive:
+			InstanceClassToSpawn = UPTWPassiveItemInstance::StaticClass();
+			break;
+		default:
+			InstanceClassToSpawn = UPTWItemInstance::StaticClass();
+			break;
+		}
+
+		if (InstanceClassToSpawn)
+		{
+			UPTWItemInstance* NewItem = NewObject<UPTWItemInstance>(InventoryComp, InstanceClassToSpawn);
+			if (NewItem)
+			{
+				NewItem->ItemDef = ItemDef;
+				InventoryComp->AddItem(NewItem);
+
+				UE_LOG(LogTemp, Log, TEXT("[SpawnSingleItem] Spawned Instance: %s (Type: %s)"),
+					*ItemDef->GetName(), *UEnum::GetValueAsString(ItemDef->ItemType));
+			}
 		}
 	}
 }

@@ -51,6 +51,9 @@ private:
 	UPROPERTY()
 	TObjectPtr<APTWBombActor> BombActor = nullptr;
 	
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UPTWItemDefinition> BombWeaponDef;
+	
 	void CleanupBombActor();
 	
 	UPROPERTY()

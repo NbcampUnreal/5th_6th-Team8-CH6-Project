@@ -132,6 +132,12 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 
 void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 {
+	if (!ItemDefinition)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] SpawnDefaultWeapon Failed: ItemDefinition is NULL. Please set Default Weapon in Blueprint."));
+		return;
+	}
+	
 	if (UPTWItemSpawnManager* ItemSpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
 	{
 		if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))

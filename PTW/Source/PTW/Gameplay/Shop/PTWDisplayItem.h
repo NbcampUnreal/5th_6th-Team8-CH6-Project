@@ -34,6 +34,8 @@ public:
 	virtual bool IsInteractable_Implementation() override;
 
 protected:
+	virtual void BeginPlay() override;
+
 	UFUNCTION()
 	void OnRep_ItemID();
 

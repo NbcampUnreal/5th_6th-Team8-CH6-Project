@@ -111,3 +111,13 @@ void APTWDisplayItem::UpdateItemVisuals()
 		}
 	}
 }
+
+void APTWDisplayItem::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (!ItemID.IsNone())
+	{
+		UpdateItemVisuals();
+	}
+}

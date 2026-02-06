@@ -5,7 +5,11 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWCombatInterface.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
+#include "CoreFramework/PTWPlayerState.h"
+#include "Inventory/PTWInventoryComponent.h"
 #include "MiniGame/Item/PTWBombActor.h"
+#include "System/PTWItemSpawnManager.h"
 
 void UPTWGA_BombPistol::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
                                         const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
@@ -21,16 +25,18 @@ void UPTWGA_BombPistol::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHandle& TargetData, float BaseDamage)
 {
-	 if (!HasAuthority(&CurrentActivationInfo) || !DamageGEClass) return;
+	if (!HasAuthority(&CurrentActivationInfo) || !DamageGEClass) return;
 	
-	 FGameplayTag BombTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Bomb"));
-	 UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	FGameplayTag BombTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Bomb"));
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	AActor* HitActor = nullptr;
+	AActor* MyActor = nullptr;
 	
-	 for (auto Data : TargetData.Data)
-	 {
+	for (auto Data : TargetData.Data)
+	{
 	 	const FHitResult* HitResult = Data->GetHitResult();
-	 	AActor* HitActor = HitResult ? HitResult->GetActor() : nullptr;
-	 	AActor* MyActor = GetAvatarActorFromActorInfo();
+	 	HitActor = HitResult ? HitResult->GetActor() : nullptr;
+	 	MyActor = GetAvatarActorFromActorInfo();
 	 	
 	 	if (!HitActor && !MyActor) continue;
 	
@@ -65,7 +71,31 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 				 );
 	 			AttachingActor->SetOwner(HitActor);
 	 		}
-	 	}}
+	 	}
+	}
+	
+	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
+	
+	if (SpawnManager && HitActor)
+	{
+		if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(HitActor))
+		{
+			APTWPlayerState* PS = Cast<APTWPlayerState>(PC->GetPlayerState());
+			SpawnManager->SpawnSingleItem(PS, ItemDef);
+		}
+	}
+	
+	if (MyActor)
+	{
+		if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(MyActor))
+		{
+			if (UPTWInventoryComponent* Inven = PC->GetInventoryComponent())
+			{
+				Inven->RemoveWeaponItem();
+			}
+		}
+	}
+	
 	 	
 	 	// IPTWCombatInterface* TargetCombatInt = Cast<IPTWCombatInterface>(HitActor);
 	 	// IPTWCombatInterface* CombatIntMine = Cast<IPTWCombatInterface>(CurrentActorInfo->AvatarActor.Get()); 

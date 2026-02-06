@@ -24,6 +24,7 @@
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "CoreFramework/Character/Component/PTWReactorComponent.h"
 #include "CoreFramework/Character/Component/PTWInteractComponent.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -251,7 +252,7 @@ void APTWPlayerCharacter::InitCharacterState()
 	{
 		if (AbilitySystemComponent)
 		{
-			AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
+			AbilitySystemComponent->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
 
 			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 			if (AbilitySystemComponent->HasMatchingGameplayTag(EquipTag))

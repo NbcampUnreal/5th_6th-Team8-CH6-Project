@@ -69,7 +69,6 @@ private:
 
 public:
 	// 7. [Public] 멤버 변수 (대부분의 설정값)
-	FGameplayTag DeadTag;
 
 protected:
 	// 8. [Protected] 멤버 변수 (내부 상태값)

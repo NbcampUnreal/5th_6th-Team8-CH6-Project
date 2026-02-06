@@ -144,7 +144,21 @@ void UPTWAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 		}
 		else
 		{
-			WeaponPoseIndex = 0;
+			bool bFound = false;
+
+			for (const auto& Pair : WeaponTagToPoseIndex)
+			{
+				if (CurrentTag.MatchesTag(Pair.Key))
+				{
+					WeaponPoseIndex = Pair.Value;
+					bFound = true;
+					break;
+				}
+			}
+			if (!bFound)
+			{
+				WeaponPoseIndex = 0;
+			}
 		}
 	}
 }

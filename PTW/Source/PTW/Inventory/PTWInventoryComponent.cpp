@@ -107,7 +107,7 @@ void UPTWInventoryComponent::OnItemInstanceCreated(UPTWItemInstance* ItemInstanc
 	
 	if (ItemInstance->IsA(UPTWWeaponInstance::StaticClass()))
 	{
-		WeaponArr.Add(ItemInstance);
+		WeaponArr.Add(Cast<UPTWWeaponInstance>(ItemInstance));
 	}
 }
 
@@ -157,6 +157,17 @@ void UPTWInventoryComponent::RemoveAllPassiveItems(UPTWItemInstance* ItemInstanc
 	}
 }
 
+void UPTWInventoryComponent::RemoveWeaponItem()
+{
+ 	if (WeaponArr[CurSelectingWeaponSlot])
+	{
+ 		int32 tempIndex = CurSelectingWeaponSlot;
+		WeaponArr[CurSelectingWeaponSlot]->DestroySpawnedActors();
+		SendEquipEventToASC(CurSelectingWeaponSlot, UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()));
+		WeaponArr.RemoveAt(tempIndex);
+	}
+}
+
 // Called when the game starts
 void UPTWInventoryComponent::BeginPlay()
 {
@@ -165,10 +176,14 @@ void UPTWInventoryComponent::BeginPlay()
 
 void UPTWInventoryComponent::SendGameplayEvent(UPTWItemInstance* ItemInstance, FGameplayTag SendTag, int32 SlotIndex)
 {
+	if (!GetOwner()->HasAuthority()) return;
+	
 	FGameplayEventData Payload;
 	Payload.OptionalObject = ItemInstance;
 	Payload.EventMagnitude = static_cast<float>(SlotIndex);
 	Payload.Instigator = GetOwner();
+	
+	UE_LOG(LogTemp, Warning, TEXT("Ability Activated: %s"), *SendTag.ToString());
 	
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), SendTag, Payload);
 }
@@ -194,6 +209,7 @@ void UPTWInventoryComponent::ClearAndDestroyInventory()
 void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex, UAbilitySystemComponent* ASC)
 {
 	if (!WeaponArr.IsValidIndex(SlotIndex) || !WeaponArr[SlotIndex]) return;
+	if (!GetOwner()->HasAuthority()) return;
 	
 	UPTWItemInstance* TargetInstance = nullptr;
 	FGameplayTag SendTag;

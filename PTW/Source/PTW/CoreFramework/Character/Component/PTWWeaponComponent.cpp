@@ -78,10 +78,16 @@ void UPTWWeaponComponent::AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APT
 	Weaponpair.Weapon1P = NewWeapon1P;
 	Weaponpair.Weapon3P = NewWeapon3P;
 	SpawnedWeapons.Add(WeaponTag, Weaponpair);
+	
+	FName TargetSocketName = TEXT("WeaponSocket"); // 기본값 (Rifle 등)
 
-	// [이동] Character Mesh에 부착
-	NewWeapon1P->AttachToComponent(PlayerChar->GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
-	NewWeapon3P->AttachToComponent(PlayerChar->GetMesh3P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+	if (WeaponTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Weapon.Gun.Pistol"))))
+	{
+		TargetSocketName = TEXT("PistolSocket");
+	}
+
+	NewWeapon1P->AttachToComponent(PlayerChar->GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetSocketName);
+	NewWeapon3P->AttachToComponent(PlayerChar->GetMesh3P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetSocketName);
 
 	NewWeapon1P->ApplyVisualPerspective();
 	NewWeapon3P->ApplyVisualPerspective();

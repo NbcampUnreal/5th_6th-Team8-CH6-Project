@@ -6,6 +6,7 @@
 #include "PTWGA_Fire.h"
 #include "PTWGA_BombPistol.generated.h"
 
+class UPTWItemDefinition;
 /**
  * 
  */
@@ -24,5 +25,7 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Special Effects")
 	TSubclassOf<UGameplayEffect> BombPistolEffect;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Special Effects")
+	TObjectPtr<UPTWItemDefinition> ItemDef;
 };

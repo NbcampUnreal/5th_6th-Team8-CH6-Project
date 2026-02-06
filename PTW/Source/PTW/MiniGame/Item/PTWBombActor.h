@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "AbilitySystemInterface.h"
-#include "AbilitySystemComponent.h"
 #include "GameplayTagContainer.h"
 #include "PTWBombActor.generated.h"
 
@@ -15,6 +14,7 @@ class USphereComponent;
 class UGameplayEffect;
 class UPTWBombAttributeSet;
 class UGameplayAbility;
+class APawn;
 
 UCLASS()
 class PTW_API APTWBombActor : public AActor, public IAbilitySystemInterface
@@ -24,10 +24,21 @@ class PTW_API APTWBombActor : public AActor, public IAbilitySystemInterface
 public:
 	APTWBombActor();
 
+	// IAbilitySystemInterface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	// Replication
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	virtual void BeginPlay() override;
+
+	/** Components */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	TObjectPtr<USphereComponent> Collision;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	TObjectPtr<UStaticMeshComponent> BombMesh;
 
 	/** GAS */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="GAS")
@@ -36,14 +47,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UPTWBombAttributeSet> BombAttributeSet;
 
-	/** Components */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	TObjectPtr<UStaticMeshComponent> BombMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	TObjectPtr<USphereComponent> Collision;
-
-	/** 폭탄 상태 태그  */
+	/** 폭탄 상태 태그 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GAS")
 	FGameplayTag BombStateTag;
 
@@ -53,45 +57,70 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Bomb|GAS")
 	TSubclassOf<UGameplayEffect> CountdownEffectClass;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Bomb|GAS")
-	TSubclassOf<UGameplayAbility> ExplodeAbilityClass;
+
 
 public:
+	/** 폭발 요청 */
 	UFUNCTION(BlueprintCallable, Category="Bomb")
 	void RequestExplode(AActor* InstigatorActor);
-	
+
 	UFUNCTION(Server, Reliable)
 	void ServerRequestExplode(AActor* InstigatorActor);
 	
-	UFUNCTION(BlueprintCallable, Category= "Bomb")
+	UFUNCTION(BlueprintCallable, Category="Bomb")
 	void SetBombOwner(APawn* NewOwnerPawn);
-	
+
 	UFUNCTION(BlueprintPure, Category="Bomb")
-	APawn* GetBombOwner() const {return BombOwnerPawn;}
+	APawn* GetBombOwner() const { return BombOwnerPawn; }
 
-private:
-	void HandleRemainingTimeChanged(const FOnAttributeChangeData& Data);
-
-	FDelegateHandle RemainingTimeChangedHandle;
-
-	void ApplyEffectToSelf(TSubclassOf<UGameplayEffect> EffectClass);
-
-	void SendExplodeEvent(AActor* InstigatorActor);
-
-	bool bExplodeRequested = false;
-
-	UPROPERTY(ReplicatedUsing=OnRep_BombOwnerPawn)
-	TObjectPtr<APawn> BombOwnerPawn = nullptr;
-	
-	UFUNCTION()
-	void OnRep_BombOwnerPawn();
-	
-	void AttachToOwnerPawn();
+	FORCEINLINE APawn* GetBombOwnerPawn() const { return BombOwnerPawn; }
 
 protected:
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	UFUNCTION()
+	void OnRep_BombOwnerPawn();
+
+	void AttachToOwnerPawn();
 	
-	UPROPERTY(EditDefaultsOnly, Category="Bomb|Attach")
-	FName AttachSocketName = TEXT("BombHeadSocket");
+	void ApplyEffectToSelf(TSubclassOf<UGameplayEffect> EffectClass);
+
+	/** RemainingTime 변화 로그 */
+	void HandleRemainingTimeChanged(const struct FOnAttributeChangeData& Data);
+	
+	bool ExplosionOverlapSetter(TArray<FOverlapResult>& OverlapResults);
+	bool CheckingBlock(FHitResult& OutHit, const FVector ExplosionLocation, AActor* HitActor);
+	void ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults, float FinalDamage, AActor* InstigatorActor);
+
+protected:
+	/** 소유자 */
+	UPROPERTY(ReplicatedUsing=OnRep_BombOwnerPawn)
+	TObjectPtr<APawn> BombOwnerPawn;
+
+	/** 중복 폭발 방지 */
+	UPROPERTY()
+	bool bExplodeRequested = false;
+
+	/** 폭발 반경 */
+	UPROPERTY(EditDefaultsOnly, Category="Bomb|Explosion")
+	float ExplosionRad = 350.f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Bomb|Explosion")
+	TEnumAsByte<ECollisionChannel> ExplosionChannel;
+
+	/** 데미지 적용용 GE */
+	UPROPERTY(EditDefaultsOnly, Category="Bomb|Explosion")
+	TSubclassOf<UGameplayEffect> DamageEffectClass;
+
+	UPROPERTY(EditDefaultsOnly, Category="Bomb|Explosion")
+	FGameplayTag DamageSetByCallerTag;
+
+	/** 폭발/피격 큐 */
+	UPROPERTY(EditDefaultsOnly, Category="Bomb|Cue")
+	FGameplayTag ExplosionCueTag;
+
+	UPROPERTY(EditDefaultsOnly, Category="Bomb|Cue")
+	FGameplayTag HitImpactCueTag;
+
+	/** 폭탄 기본 데미지 */
+	UPROPERTY(EditDefaultsOnly, Category="Bomb|Explosion")
+	float BaseBombDamage = 999.f;
 };

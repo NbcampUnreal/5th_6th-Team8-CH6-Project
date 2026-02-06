@@ -3,6 +3,8 @@
 
 #include "PTWBombAttributeSet.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/Actor.h"
+#include "MiniGame/Item/PTWBombActor.h"
 
 UPTWBombAttributeSet::UPTWBombAttributeSet()
 {
@@ -32,19 +34,37 @@ void UPTWBombAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribut
 	}
 }
 
-void UPTWBombAttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue,
-	float NewValue) const
+void UPTWBombAttributeSet::PostAttributeBaseChange(
+	const FGameplayAttribute& Attribute,
+	float OldValue,
+	float NewValue
+) const
 {
 	Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
 	
-	if (GetRemainingTime() == 0.f)
+	if (Attribute != GetRemainingTimeAttribute())
 	{
-		// 폭탄 터짐 로직
-		AActor* Owner = GetOwningActor();
-		
-		// 폭탄 액터 -> Explode
-		// 폭탄 액터 클래스로 캐스팅 후 함수 호출 
+		return;
 	}
-}
 
+	//  0 이하로 떨어졌을 때만 발동
+	if (NewValue > 0.f)
+	{
+		return;
+	}
+
+	AActor* Owner = GetOwningActor();
+	if (!Owner) return;
+	
+	if (!Owner->HasAuthority())
+	{
+		return;
+	}
+	
+	if (APTWBombActor* BombActor = Cast<APTWBombActor>(Owner))
+	{
+		AActor* InstigatorActor = BombActor->GetBombOwnerPawn() ? Cast<AActor>(BombActor->GetBombOwnerPawn()) : BombActor; BombActor->RequestExplode(InstigatorActor);
+	}
+
+}
 

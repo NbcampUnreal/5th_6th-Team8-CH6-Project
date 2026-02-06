@@ -20,6 +20,7 @@ UPTWGA_Equip::UPTWGA_Equip()
 	//AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
 }
 
+#pragma optimize("", off)
 void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
                                 const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -43,15 +44,24 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		SetCharacterWeaponAttribute(Cast<UPTWWeaponInstance>(WeaponItemInstance), Character);
 		
 		FGameplayTag StatTag = GameplayTags::Weapon::State::Equip;
-		
 		UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-		
 		if (!ASC) return;
-		ASC->AddLooseGameplayTag(StatTag);
+		
+		if (IPTWCombatInterface* CombInt = Cast<IPTWCombatInterface>(Character))
+		{
+			if (ASC->HasMatchingGameplayTag(GameplayTags::Weapon::State::UnEquip))
+			{
+				CombInt->RemoveEffectWithTag(GameplayTags::Weapon::State::UnEquip);
+			}
+			
+			FGameplayEffectContextHandle Context;
+			CombInt->ApplyGameplayEffectToSelf(EquipEffect, 1.0f, Context);
+		}
 	}
 	
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
+#pragma optimize("", on)
 
 void UPTWGA_Equip::SetCharacterWeaponAttribute(const UPTWWeaponInstance* WeaponItemInstance,
 	APTWPlayerCharacter* Character)

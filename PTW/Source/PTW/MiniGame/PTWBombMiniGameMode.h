@@ -7,6 +7,8 @@
 #include "PTWBombMiniGameMode.generated.h"
 
 class APTWBombActor;
+class APTWBaseCharacter;
+class APTWPlayerState;
 
 UCLASS()
 class PTW_API APTWBombMiniGameMode : public APTWMiniGameMode
@@ -20,6 +22,8 @@ protected:
 
 	// 라운드 타이머 종료 시 호출
 	virtual void EndTimer() override;
+	
+	virtual void RestartPlayer(AController* NewPlayer) override;
 
 private:
 	
@@ -47,5 +51,16 @@ private:
 	UPROPERTY()
 	TObjectPtr<APTWBombActor> BombActor = nullptr;
 	
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UPTWItemDefinition> BombWeaponDef;
+	
 	void CleanupBombActor();
+	
+	UPROPERTY()
+	TSet<TObjectPtr<APlayerState>> EliminatedPlayers;
+	
+	UFUNCTION()
+	void HandleBombPlayerDeath(AActor* Victim, AActor* Attacker);
+	
+	void SetSpectator(AController* DeadController);
 };

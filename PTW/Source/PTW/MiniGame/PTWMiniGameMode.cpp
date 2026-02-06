@@ -58,6 +58,7 @@ void APTWMiniGameMode::BeginPlay()
 
 void APTWMiniGameMode::EndTimer()
 {
+
 	if (!PTWGameState) return;
 	
 	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
@@ -151,6 +152,12 @@ void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 {
 	if(!ItemDefinition) return;
 
+	if (!ItemDefinition)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] SpawnDefaultWeapon Failed: ItemDefinition is NULL. Please set Default Weapon in Blueprint."));
+		return;
+	}
+	
 	if (UPTWItemSpawnManager* ItemSpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
 	{
 		if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))

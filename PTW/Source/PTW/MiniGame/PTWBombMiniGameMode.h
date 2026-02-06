@@ -22,7 +22,7 @@ protected:
 	virtual void EndTimer() override;
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bomb Weapon Def")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bomb Weapon Def")
 	TObjectPtr<UPTWItemDefinition> BombItemDefinition;
 
 private:

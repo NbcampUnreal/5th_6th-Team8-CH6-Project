@@ -63,8 +63,7 @@ void UPTWBombAttributeSet::PostAttributeBaseChange(
 	
 	if (APTWBombActor* BombActor = Cast<APTWBombActor>(Owner))
 	{
-		AActor* InstigatorActor = BombActor->GetBombOwnerPawn() ? BombActor->GetBombOwnerPawn() : BombActor;
-		BombActor->RequestExplode(InstigatorActor);
+		AActor* InstigatorActor = BombActor->GetBombOwnerPawn() ? Cast<AActor>(BombActor->GetBombOwnerPawn()) : BombActor; BombActor->RequestExplode(InstigatorActor);
 	}
 
 }

@@ -159,12 +159,12 @@ void UPTWInventoryComponent::RemoveAllPassiveItems(UPTWItemInstance* ItemInstanc
 
 void UPTWInventoryComponent::RemoveWeaponItem()
 {
-	if (WeaponArr[CurSelectingWeaponSlot])
+ 	if (WeaponArr[CurSelectingWeaponSlot])
 	{
+ 		int32 tempIndex = CurSelectingWeaponSlot;
 		WeaponArr[CurSelectingWeaponSlot]->DestroySpawnedActors();
-		WeaponArr.RemoveAt(CurSelectingWeaponSlot);
-		CurrentWeapon = nullptr;
-		CurSelectingWeaponSlot = -1;
+		SendEquipEventToASC(CurSelectingWeaponSlot, UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()));
+		WeaponArr.RemoveAt(tempIndex);
 	}
 }
 

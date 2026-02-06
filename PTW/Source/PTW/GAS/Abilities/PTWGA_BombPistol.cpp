@@ -71,30 +71,32 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 				 );
 	 			AttachingActor->SetOwner(HitActor);
 	 		}
+	 		
+	 		UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
+	
+	 		if (SpawnManager && HitActor)
+	 		{
+	 			if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(HitActor))
+	 			{
+	 				APTWPlayerState* PS = Cast<APTWPlayerState>(PC->GetPlayerState());
+	 				SpawnManager->SpawnSingleItem(PS, ItemDef);
+	 			}
+	 		}
+	
+	 		if (MyActor)
+	 		{
+	 			if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(MyActor))
+	 			{
+	 				if (UPTWInventoryComponent* Inven = PC->GetInventoryComponent())
+	 				{
+	 					Inven->RemoveWeaponItem();
+	 				}
+	 			}
+	 		}
 	 	}
 	}
 	
-	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
 	
-	if (SpawnManager && HitActor)
-	{
-		if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(HitActor))
-		{
-			APTWPlayerState* PS = Cast<APTWPlayerState>(PC->GetPlayerState());
-			SpawnManager->SpawnSingleItem(PS, ItemDef);
-		}
-	}
-	
-	if (MyActor)
-	{
-		if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(MyActor))
-		{
-			if (UPTWInventoryComponent* Inven = PC->GetInventoryComponent())
-			{
-				Inven->RemoveWeaponItem();
-			}
-		}
-	}
 	
 	 	
 	 	// IPTWCombatInterface* TargetCombatInt = Cast<IPTWCombatInterface>(HitActor);

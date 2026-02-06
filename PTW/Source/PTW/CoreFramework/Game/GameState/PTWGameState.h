@@ -285,6 +285,10 @@ public:
 	
 	/** 미니 게임 순위를 기준으로 승점 부여 */
 	void ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule);
+
+	/** 생존 플레이어들 */
+	UPROPERTY()
+	TSet<TObjectPtr<APlayerState>> AlivePlayers;
 private:
 	/**  */
 	

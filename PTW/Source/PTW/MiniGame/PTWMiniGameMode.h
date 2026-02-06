@@ -38,6 +38,8 @@ protected:
 	
 	void SpawnDefaultWeapon(AController* NewPlayer);
 
+	virtual void StartGame();
+	
 	
 	/** 미니게임 진행 시간 (초) */
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")

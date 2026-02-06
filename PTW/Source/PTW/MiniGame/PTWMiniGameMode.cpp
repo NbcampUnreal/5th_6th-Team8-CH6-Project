@@ -92,6 +92,24 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	
 }
 
+void APTWMiniGameMode::StartGame()
+{
+	if (!PTWGameState) return;
+
+	PTWGameState->AdvanceMiniGameRound();
+
+	StartCountDown();
+	
+	
+	if (MiniGameRule.TimeRule.bUserTimer)
+	{
+		
+		
+		//StartTimer()
+		
+	}
+}
+
 void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
 	if (!NewPlayer) return;
@@ -143,6 +161,8 @@ void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 		}
 	}
 }
+
+
 
 void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {

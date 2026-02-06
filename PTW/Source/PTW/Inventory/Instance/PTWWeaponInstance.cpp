@@ -19,7 +19,10 @@ void UPTWWeaponInstance::OnRep_CurrentAmmo()
 
 void UPTWWeaponInstance::OnRep_SpawnedWeapon()
 {
-	CurrentAmmo = SpawnedWeapon1P->GetWeaponData()->MaxAmmo;
+	if (SpawnedWeapon1P && SpawnedWeapon1P->GetWeaponData())
+	{
+		CurrentAmmo = SpawnedWeapon1P->GetWeaponData()->MaxAmmo;
+	}
 }
 
 void UPTWWeaponInstance::OnRep_SpawnedWeapon3P()

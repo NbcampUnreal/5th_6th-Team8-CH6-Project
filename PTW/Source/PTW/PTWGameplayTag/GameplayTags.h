@@ -66,10 +66,13 @@ namespace GameplayTags
 		}
 		namespace Gun
 		{
+			namespace Pistol
+			{
+				PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Pistol);
+				PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BombPistol);
+			}
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Rifle);
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Rocket);
-			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BombPistol);
-			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Pistol);
 		}
 		namespace State
 		{

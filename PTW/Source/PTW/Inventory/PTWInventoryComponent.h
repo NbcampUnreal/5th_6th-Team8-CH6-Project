@@ -65,6 +65,8 @@ public:
 	
 	void RemoveAllPassiveItems(UPTWItemInstance* ItemInstance);
 	
+	void RemoveWeaponItem();
+	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -88,5 +90,5 @@ protected:
 	int32 CurSelectingWeaponSlot = -1;
 	
 private:
-	TArray<TObjectPtr<UPTWItemInstance>> WeaponArr;
+	TArray<TObjectPtr<UPTWWeaponInstance>> WeaponArr;
 };

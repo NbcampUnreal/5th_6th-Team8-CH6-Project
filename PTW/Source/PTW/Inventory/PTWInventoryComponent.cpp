@@ -107,7 +107,7 @@ void UPTWInventoryComponent::OnItemInstanceCreated(UPTWItemInstance* ItemInstanc
 	
 	if (ItemInstance->IsA(UPTWWeaponInstance::StaticClass()))
 	{
-		WeaponArr.Add(ItemInstance);
+		WeaponArr.Add(Cast<UPTWWeaponInstance>(ItemInstance));
 	}
 }
 
@@ -154,6 +154,17 @@ void UPTWInventoryComponent::RemoveAllPassiveItems(UPTWItemInstance* ItemInstanc
 				ASC->RemoveActiveGameplayEffect(Handle);
 			}
 		}
+	}
+}
+
+void UPTWInventoryComponent::RemoveWeaponItem()
+{
+	if (WeaponArr[CurSelectingWeaponSlot])
+	{
+		WeaponArr[CurSelectingWeaponSlot]->DestroySpawnedActors();
+		WeaponArr.RemoveAt(CurSelectingWeaponSlot);
+		CurrentWeapon = nullptr;
+		CurSelectingWeaponSlot = -1;
 	}
 }
 

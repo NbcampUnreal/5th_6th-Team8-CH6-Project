@@ -27,7 +27,6 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 {
 	if (!HasAuthority(&CurrentActivationInfo) || !DamageGEClass) return;
 	
-	FGameplayTag BombTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Bomb"));
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	AActor* HitActor = nullptr;
 	AActor* MyActor = nullptr;
@@ -96,21 +95,7 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 	 	}
 	}
 	
-	
-	
-	 	
-	 	// IPTWCombatInterface* TargetCombatInt = Cast<IPTWCombatInterface>(HitActor);
-	 	// IPTWCombatInterface* CombatIntMine = Cast<IPTWCombatInterface>(CurrentActorInfo->AvatarActor.Get()); 
-	 	//
-	 	// if (TargetCombatInt && CombatIntMine)
-	 	// {
-	 	// 	FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
-	 	// 	TargetCombatInt->ApplyGameplayEffectToSelf(BombPistolEffect, 1.0f,ContextHandle); // 타겟에게 Effect 부여
-	 	// 	CombatIntMine->RemoveEffectWithTag(BombTag);
-	 	// 	break;
-	 	// }
-	 	
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 

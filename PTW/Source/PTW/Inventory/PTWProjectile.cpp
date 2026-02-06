@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Engine/OverlapResult.h"
 #include "GAS/PTWWeaponAttributeSet.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 APTWProjectile::APTWProjectile()
 {
@@ -58,7 +59,7 @@ void APTWProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPr
 	FGameplayCueParameters CueParams;
 	CueParams.Location = GetActorLocation();
 	CueParams.Instigator = Shooter;
-	InstigatorASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Explosion")), CueParams);
+	InstigatorASC->ExecuteGameplayCue(GameplayTags::GameplayCue::Weapon::Explosion, CueParams);
 	
 	Destroy();
 }
@@ -116,7 +117,7 @@ void APTWProjectile::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults
 			
 			if (NewHandle.IsValid())
 			{
-				NewHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName("Data.Damage")), -FinalDamage);
+				NewHandle.Data->SetSetByCallerMagnitude(GameplayTags::Data::Damage, -FinalDamage);
 				TargetASC->ApplyGameplayEffectSpecToSelf(*NewHandle.Data.Get());
 				
 				FGameplayCueParameters TargetCueParams;

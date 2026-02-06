@@ -17,10 +17,9 @@
 
 UPTWGA_Equip::UPTWGA_Equip()
 {
-	//AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
+
 }
 
-#pragma optimize("", off)
 void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
                                 const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -61,7 +60,7 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
-#pragma optimize("", on)
+
 
 void UPTWGA_Equip::SetCharacterWeaponAttribute(const UPTWWeaponInstance* WeaponItemInstance,
 	APTWPlayerCharacter* Character)

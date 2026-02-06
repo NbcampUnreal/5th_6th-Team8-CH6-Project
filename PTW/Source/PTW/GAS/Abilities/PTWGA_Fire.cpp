@@ -25,8 +25,6 @@
 UPTWGA_Fire::UPTWGA_Fire()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-	// ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Reload")));
-	// ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("State.Movement.Sprinting")));
 	ActivationBlockedTags.AddTag(GameplayTags::AbilityBlockTag::Fire);
 }
 
@@ -106,7 +104,7 @@ void UPTWGA_Fire::MakeGameplayCue(FPTWGameplayCueMakingInfo Infos)
 	Params.SourceObject = Infos.Weapon1P; 
 	
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(
-		FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Fire")), 
+		GameplayTags::GameplayCue::Weapon::Fire, 
 		Params
 	);
 }
@@ -190,7 +188,7 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilityTargetDataHandle& Ta
 {
 	if (!HasAuthority(&CurrentActivationInfo) || !DamageGEClass) return;
 	
-	const FGameplayTag Tag_Damage = FGameplayTag::RequestGameplayTag(FName("Data.Damage"));
+	const FGameplayTag Tag_Damage =  GameplayTags::Data::Damage;
 	
 	for (auto Data : TargetData.Data)
 	{
@@ -311,7 +309,7 @@ void UPTWGA_Fire::ExecuteHitImpactCue(const FHitResult& HitResult)
 			CueParams.Normal = HitResult.ImpactNormal;
 			CueParams.Instigator = GetAvatarActorFromActorInfo();
 				 		
-			TargetASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.HitImpact")), CueParams);
+			TargetASC->ExecuteGameplayCue(GameplayTags::GameplayCue::Weapon::HitImpact, CueParams);
 		}
 	}
 }

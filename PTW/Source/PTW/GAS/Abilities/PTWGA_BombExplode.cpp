@@ -9,6 +9,7 @@
 #include "CollisionShape.h"
 #include "GameFramework/Pawn.h"
 #include "GameplayTagContainer.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 UPTWGA_BombExplode::UPTWGA_BombExplode()
 {
@@ -16,7 +17,7 @@ UPTWGA_BombExplode::UPTWGA_BombExplode()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
 	FAbilityTriggerData TriggerData;
-	TriggerData.TriggerTag = FGameplayTag::RequestGameplayTag(TEXT("Event.Bomb.Explode"));
+	TriggerData.TriggerTag = GameplayTags::Event::Bomb_Explode;
 	TriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
 	AbilityTriggers.Add(TriggerData);
 }

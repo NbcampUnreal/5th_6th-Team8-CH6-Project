@@ -77,8 +77,6 @@ void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
 	}
 }
 
-
-
 void APTWGameState::DecreaseTimer()
 {
 	if (!HasAuthority()) return;
@@ -110,7 +108,7 @@ void APTWGameState::DecreaseCoundDown()
 		MiniGameCountDown--;
 		if (GetNetMode() != NM_DedicatedServer)
 		{
-			OnMiniGameCountdownValueChanged.Broadcast(RemainTime);
+			OnMiniGameCountdownValueChanged.Broadcast(MiniGameCountDown);
 		}
 	}
 }

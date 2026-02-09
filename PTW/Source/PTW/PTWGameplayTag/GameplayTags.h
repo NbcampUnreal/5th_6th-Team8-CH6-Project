@@ -95,6 +95,11 @@ namespace GameplayTags
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Invisibility);
 		}
+		
+		namespace Hit
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Wall);
+		}
 	}
 	
 }

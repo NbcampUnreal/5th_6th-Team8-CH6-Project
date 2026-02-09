@@ -20,7 +20,10 @@ public:
 	
 protected:
 	UPROPERTY(EditAnywhere, Category = "Effects")
-	TObjectPtr<UNiagaraSystem> ImpactFX;
+	TObjectPtr<UNiagaraSystem> PlayerHitImpactFX;
+	
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	TObjectPtr<UNiagaraSystem> WallHitImpactFX;
 
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	TObjectPtr<USoundBase> ImpactSound;

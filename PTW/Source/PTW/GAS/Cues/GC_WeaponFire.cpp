@@ -10,6 +10,7 @@
 #include "Weapon/PTWWeaponActor.h"
 #include "Inventory/Instance/PTWWeaponInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "Weapon/PTWWeaponActor_HitScan.h"
 
 
 class UPTWWeaponInstance;
@@ -65,6 +66,16 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 			MuzzleComp->GetComponentLocation()
 		);
 	}
+	
+	SpawnCasing(TargetWeapon);
 
 	return true;
+}
+
+void UGC_WeaponFire::SpawnCasing(const APTWWeaponActor* TargetWeapon) const
+{
+	if (const APTWWeaponActor_HitScan* HitScanWeapon = Cast<APTWWeaponActor_HitScan>(TargetWeapon))
+	{
+		HitScanWeapon->SpawnCastingActor();
+	}
 }

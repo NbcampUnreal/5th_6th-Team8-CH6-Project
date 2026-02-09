@@ -83,38 +83,26 @@ void APTWShopNPC::CheckShopAvailability()
 
 void APTWShopNPC::CloseShop()
 {
-	if (HasAuthority())
+	for (APTWDisplayItem* Item : DisplayItems)
 	{
-		if (NPCMesh) NPCMesh->SetVisibility(false);
-		if (StandMesh) StandMesh->SetVisibility(false);
-		if (DecoMesh) DecoMesh->SetVisibility(false);
-
-		for (APTWDisplayItem* Item : DisplayItems)
+		if (Item)
 		{
-			if (Item)
+			if (USceneComponent* RootComp = Item->GetRootComponent())
 			{
-				if (UStaticMeshComponent* Mesh = Item->FindComponentByClass<UStaticMeshComponent>())
+				RootComp->SetVisibility(false, true);
+			}
+
+			if (HasAuthority())
+			{
+
+			}
+			else
+			{
+				if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Item->GetRootComponent()))
 				{
-					Mesh->SetVisibility(false);
+					PrimComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 				}
 			}
 		}
 	}
-	else
-	{
-		SetActorHiddenInGame(true);
-		SetActorEnableCollision(false);
-
-		for (APTWDisplayItem* Item : DisplayItems)
-		{
-			if (Item)
-			{
-				Item->SetActorHiddenInGame(true);
-				Item->SetActorEnableCollision(false);
-			}
-		}
-	}
-
-	UE_LOG(LogTemp, Log, TEXT("Shop Closed Visuals Executed (Mode: %s)."),
-		HasAuthority() ? TEXT("Host/Server") : TEXT("Client"));
 }

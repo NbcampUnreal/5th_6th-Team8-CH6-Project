@@ -94,6 +94,11 @@ namespace GameplayTags
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Invisibility, "GameplayCue.Item.Invisibility");
 		}
+		
+		namespace Hit
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Wall, "GameplayCue.Hit.Wall");
+		}
 	}
 	
 	

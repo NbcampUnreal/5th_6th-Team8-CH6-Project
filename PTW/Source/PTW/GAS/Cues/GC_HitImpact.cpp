@@ -5,33 +5,47 @@
 
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 bool UGC_HitImpact::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
 {
 	const FVector Location = Parameters.Location;
 	const FRotator Rotation = Parameters.Normal.Rotation();
 	
-	if (ImpactFX)
+	APawn* TargetPawn = Cast<APawn>(MyTarget);
+	
+	if (Parameters.AggregatedSourceTags.HasTag(GameplayTags::GameplayCue::Hit::Wall))
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
-			ImpactFX,
+			WallHitImpactFX,
 			Location,
 			Rotation
 		);
+	}
+	else
+	{
+		if (TargetPawn && PlayerHitImpactFX)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				PlayerHitImpactFX,
+				Location,
+				Rotation
+			);
+		}
 	}
 	
 	if (ImpactSound)
 	{
 		APawn* InstPawn = Cast<APawn>(Parameters.Instigator.Get());
-		APawn* TargetPawn = Cast<APawn>(MyTarget);
 		
 		bool bIsInstigator = false;
 		bool bIsTarget = false;
 		
 		if (InstPawn && InstPawn->IsLocallyControlled())
 		{
-			bIsTarget = true;
+			bIsInstigator = true;
 		}
 		
 		if (TargetPawn && TargetPawn->IsLocallyControlled())

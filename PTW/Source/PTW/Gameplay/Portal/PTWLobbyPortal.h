@@ -6,9 +6,10 @@
 #include "GameFramework/Actor.h"
 #include "PTWLobbyPortal.generated.h"
 
+class UBoxComponent;
 enum class EPTWGamePhase : uint8;
 class APTWGameState;
-class USphereComponent;
+
 /**
  * 로비에서 플레이어의 포탈 진입/이탈을 감지하는 액터
  * - 오버랩된 플레이어를 추적하여 현재 포탈 진입 인원 집계
@@ -63,7 +64,7 @@ protected:
 	void PortalEnable(EPTWGamePhase GamePhase);
 	
 	UPROPERTY(VisibleAnywhere, Category = "Component");
-	TObjectPtr<USphereComponent> SphereCollision;
+	TObjectPtr<UBoxComponent> BoxComponent;
 	
 	// 현재 포탈 영역에 들어와 있는 플레이어들
 	TSet<TObjectPtr<APlayerState>> PlayerInPortal;

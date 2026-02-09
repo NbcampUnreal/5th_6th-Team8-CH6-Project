@@ -3,14 +3,15 @@
 
 #include "UI/InGameUI/PTWCrosshair.h"
 #include "AbilitySystemComponent.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 void UPTWCrosshair::InitWithASC(UAbilitySystemComponent* InASC)
 {
 	if (!InASC) return;
 	CachedASC = InASC;
 
-	EquipTag = FGameplayTag::RequestGameplayTag(TEXT("Weapon.State.Equip"));
-	SprintTag = FGameplayTag::RequestGameplayTag(TEXT("State.Movement.Sprinting"));
+	EquipTag = GameplayTags::Weapon::State::Equip;
+	SprintTag = GameplayTags::State::Movement::Sprinting;
 
 	// 델리게이트 등록
 	EquipTagHandle = CachedASC->RegisterGameplayTagEvent(EquipTag, EGameplayTagEventType::NewOrRemoved)

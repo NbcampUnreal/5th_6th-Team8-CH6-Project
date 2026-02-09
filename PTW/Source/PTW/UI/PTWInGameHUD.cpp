@@ -9,6 +9,7 @@
 #include "InGameUI/PTWTimer.h"
 #include "InGameUI/PTWAmmoWidget.h"
 #include "InGameUI/PTWCrosshair.h"
+#include "InGameUI/PTWInventoryWidget.h"
 
 void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 {
@@ -25,6 +26,8 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 	if (AmmoWidget) AmmoWidget->InitWithASC(ASC);
 	/* 크로스헤어 초기화 */
 	if (CrosshairWidget) CrosshairWidget->InitWithASC(ASC);
+	/* 인벤토리 위젯 초기화 */
+	if (InventoryWidget) InventoryWidget->InitPS();
 }
 
 bool UPTWInGameHUD::Initialize()

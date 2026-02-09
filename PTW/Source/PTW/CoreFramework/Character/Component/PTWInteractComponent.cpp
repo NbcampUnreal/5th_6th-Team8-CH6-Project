@@ -45,7 +45,17 @@ void UPTWInteractComponent::TraceInteractable()
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, TraceChannel, QueryParams);
 	AActor* HitActor = bHit ? HitResult.GetActor() : nullptr;
 
+	bool bIsValidTarget = false;
+
 	if (HitActor && HitActor->Implements<UPTWInteractInterface>())
+	{
+		if (IPTWInteractInterface::Execute_IsInteractable(HitActor))
+		{
+			bIsValidTarget = true;
+		}
+	}
+
+	if (bIsValidTarget)
 	{
 		if (HitActor != CurrentInteractableActor)
 		{
@@ -53,6 +63,7 @@ void UPTWInteractComponent::TraceInteractable()
 			{
 				ToggleHighlight(CurrentInteractableActor, false);
 			}
+
 			CurrentInteractableActor = HitActor;
 			ToggleHighlight(CurrentInteractableActor, true);
 

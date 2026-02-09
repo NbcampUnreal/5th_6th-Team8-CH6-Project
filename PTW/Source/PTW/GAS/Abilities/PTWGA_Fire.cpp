@@ -292,8 +292,8 @@ void UPTWGA_Fire::HandleHitScan(const FPTWFireConext Context)
 		}
 		
 		ApplyDamageToTarget(TargetData, Damage);
-		ExecuteHitImpactCue(HitResult);
 	}
+	ExecuteHitImpactCue(HitResult);
 }
 
 void UPTWGA_Fire::ExecuteHitImpactCue(const FHitResult& HitResult)
@@ -302,14 +302,23 @@ void UPTWGA_Fire::ExecuteHitImpactCue(const FHitResult& HitResult)
 	{
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor());
 				 	
+		FGameplayCueParameters CueParams;
+		CueParams.Location = HitResult.ImpactPoint;
+		CueParams.Normal = HitResult.ImpactNormal;
+		CueParams.Instigator = GetAvatarActorFromActorInfo();
+		
 		if (TargetASC && HitResult.Component->GetCollisionProfileName() == FName("Hit"))
 		{
-			FGameplayCueParameters CueParams;
-			CueParams.Location = HitResult.ImpactPoint;
-			CueParams.Normal = HitResult.ImpactNormal;
-			CueParams.Instigator = GetAvatarActorFromActorInfo();
-				 		
 			TargetASC->ExecuteGameplayCue(GameplayTags::GameplayCue::Weapon::HitImpact, CueParams);
+		}
+		else
+		{
+			UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
+			if (ASC)
+			{
+				CueParams.AggregatedSourceTags.AddTag(GameplayTags::GameplayCue::Hit::Wall);
+				ASC->ExecuteGameplayCue(GameplayTags::GameplayCue::Weapon::HitImpact, CueParams);
+			}
 		}
 	}
 }

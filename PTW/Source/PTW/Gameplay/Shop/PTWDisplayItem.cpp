@@ -41,6 +41,7 @@ void APTWDisplayItem::InitDisplay(FName NewItemID)
 	UpdateItemVisuals();
 }
 
+
 void APTWDisplayItem::TryPurchase(APlayerController* Player)
 {
 	if (!Player || !ParentShop) return;
@@ -78,7 +79,14 @@ FText APTWDisplayItem::GetInteractionKeyword_Implementation()
 
 bool APTWDisplayItem::IsInteractable_Implementation()
 {
-	return !ItemID.IsNone() && ParentShop != nullptr;
+	if (!GetRootComponent()) return false;
+
+	if (!GetRootComponent()->IsVisible())
+	{
+		return false;
+	}
+
+	return true;
 }
 
 void APTWDisplayItem::OnRep_ItemID()

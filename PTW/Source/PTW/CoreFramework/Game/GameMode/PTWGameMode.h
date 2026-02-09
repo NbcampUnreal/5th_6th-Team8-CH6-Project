@@ -48,6 +48,7 @@ protected:
 	void StartTimer(float TimeDuration);
 
 	void ClearTimer();
+	
 	/** 설정된 TravelLevelName으로 레벨 이동 처리 */
 	void TravelLevel();
 

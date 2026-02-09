@@ -51,8 +51,18 @@ protected:
 	//* 미니 게임 라운드 시작 대기 */
 	virtual void WaitingToStartRound();
 	
+	/** 카운트 다운 시작 */
+	void StartCountDown();
+	/** 매초마다 카운트다운 감소 */
+	void TickCountDown();
+
+	UFUNCTION()
+	virtual void OnCountDownFinished();
+	
 	//* 미니 게임 시작 */
 	virtual void StartGame();
+
+	virtual void CheckEndGameCondition();
 	
 	/** 미니게임 진행 시간 (초) */
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
@@ -64,22 +74,7 @@ protected:
 	//UPROPERTY()
 	//TArray<TObjectPtr<APlayerStart>> PlayerStarts;
 	
-	/** 라운드 시작 전 카운트 다운 10초 */
-	UPROPERTY(EditDefaultsOnly, Category="Game|Timer")
-	int32 StartCountDownTime = 10;
-	/** 본게임 라운드 진행 시간 */
-	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
-	float RoundPlayTime = 30.f;
-	
 	FTimerHandle CountDownTimerHandle;
-	int32 CurrentCountDown = 0;
-	/** 카운트 다운 시작 */
-	void StartCountDown();
-	/** 매초마다 카운트다운 감소 */
-	void TickCountDown();
-
-	UFUNCTION()
-	virtual void OnCountDownFinished();
 
 private:
 	

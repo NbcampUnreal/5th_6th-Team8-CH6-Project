@@ -58,36 +58,6 @@ void APTWMiniGameMode::BeginPlay()
 	// StartCountDown();
 }
 
-void APTWMiniGameMode::EndTimer()
-{
-	if (!PTWGameState) return;
-
-	if (PTWGameState->GetCurrentMiniGameRound() >= PTWGameState->GetMaxMiniGameRound())
-	{
-		EndGame();
-		
-		Super::EndTimer();
-		return;
-	}
-	EndRound();
-	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
-}
-
-void APTWMiniGameMode::EndRound()
-{
-	ClearTimer();
-	WaitingToStartRound();
-}
-
-void APTWMiniGameMode::EndGame()
-{
-	if (!PTWGameState) return;
-	
-	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
-	ResetPlayerRoundData();
-	ResetPlayerInventoryID();
-}
-
 void APTWMiniGameMode::Logout(AController* Exiting)
 {
 	APlayerState* PlayerState = Exiting->GetPlayerState<APlayerState>();
@@ -111,6 +81,99 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	
 }
 
+void APTWMiniGameMode::StartCountDown()
+{
+	// CurrentCountDown = StartCountDownTime;
+	//
+	// UE_LOG(LogTemp, Warning, TEXT("StartCountDown : %d"), CurrentCountDown);
+	//
+	// if (APTWGameState* GS = GetGameState<APTWGameState>())
+	// {
+	// 	GS->SetMiniGameCountdown(CurrentCountDown);
+	// }
+
+	if (!PTWGameState) return;
+	
+	PTWGameState->SetMiniGameCountdown(MiniGameRule.TimeRule.CountDown);
+	PTWGameState->SetbMiniGameCountdown(true);
+	
+	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
+	GetWorldTimerManager().SetTimer(CountDownTimerHandle, this, &APTWMiniGameMode::TickCountDown, 1.0f, true, 1.f);
+}
+
+void APTWMiniGameMode::TickCountDown()
+{
+	// CurrentCountDown--;
+	//
+	// if (APTWGameState* GS = GetGameState<APTWGameState>())
+	// {
+	// 	GS->SetMiniGameCountdown(CurrentCountDown);
+	// }
+
+	if (!PTWGameState) return;
+
+	PTWGameState->DecreaseCoundDown();
+	
+	// if (CurrentCountDown > 0)
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("CountDown : %d"), CurrentCountDown);
+	// 	return;
+	// }
+	// // 0이되면 카운트 다운 종료 -> 라운드 시작
+	// GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
+	//
+	// OnCountDownFinished();
+}
+
+void APTWMiniGameMode::OnCountDownFinished()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Round Start"));
+
+	if (!PTWGameState) return;
+	
+	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
+	
+	PTWGameState->SetbMiniGameCountdown(false);
+	
+	StartGame();
+}
+
+void APTWMiniGameMode::EndTimer()
+{
+	Super::EndTimer();
+	
+	EndRound();
+	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
+}
+
+void APTWMiniGameMode::EndRound()
+{
+	//ClearTimer();
+
+	if (!PTWGameState) return;
+	
+	if (PTWGameState->GetCurrentMiniGameRound() >= PTWGameState->GetMaxMiniGameRound())
+	{
+		EndGame();
+		
+		return;
+	}
+	
+	WaitingToStartRound();
+}
+
+void APTWMiniGameMode::EndGame()
+{
+	if (!PTWGameState) return;
+	
+	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
+	ResetPlayerRoundData();
+	ResetPlayerInventoryID();
+	TravelLevel();
+}
+
+
+
 void APTWMiniGameMode::WaitingToStartRound()
 {
 	if (!PTWGameState) return;
@@ -131,6 +194,19 @@ void APTWMiniGameMode::StartGame()
 	if (MiniGameRule.TimeRule.bUserTimer)
 	{
 		StartTimer(MiniGameRule.TimeRule.Timer);
+	}
+}
+
+void APTWMiniGameMode::CheckEndGameCondition()
+{
+	if (!IsValid(PTWGameState)) return;
+	
+	if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Survival)
+	{
+		if (PTWGameState->AlivePlayers.Num() <= 1)
+		{
+			EndGame();
+		}
 	}
 }
 
@@ -221,7 +297,8 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	if (!PTWGameState) return;
 	PTWGameState->UpdateRanking();
 	PTWGameState->AlivePlayers.Remove(DeadPlayerState);
-	
+
+	CheckEndGameCondition();
 	RespawnPlayer(DeadPlayerController);
 }
 
@@ -318,62 +395,6 @@ void APTWMiniGameMode::InitPlayerHealth(AController* Controller)
 	AttributeSet->SetHealth(AttributeSet->GetMaxHealth());
 }
 
-void APTWMiniGameMode::StartCountDown()
-{
-	// CurrentCountDown = StartCountDownTime;
-	//
-	// UE_LOG(LogTemp, Warning, TEXT("StartCountDown : %d"), CurrentCountDown);
-	//
-	// if (APTWGameState* GS = GetGameState<APTWGameState>())
-	// {
-	// 	GS->SetMiniGameCountdown(CurrentCountDown);
-	// }
-
-	if (!PTWGameState) return;
-	
-	PTWGameState->SetbMiniGameCountdown(true);
-	PTWGameState->SetMiniGameCountdown(MiniGameRule.TimeRule.CountDown);
-	
-	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
-	GetWorldTimerManager().SetTimer(CountDownTimerHandle, this, &APTWMiniGameMode::TickCountDown, 1.0f, true);
-}
-
-void APTWMiniGameMode::TickCountDown()
-{
-	// CurrentCountDown--;
-	//
-	// if (APTWGameState* GS = GetGameState<APTWGameState>())
-	// {
-	// 	GS->SetMiniGameCountdown(CurrentCountDown);
-	// }
-
-	if (!PTWGameState) return;
-
-	PTWGameState->DecreaseCoundDown();
-	
-	// if (CurrentCountDown > 0)
-	// {
-	// 	UE_LOG(LogTemp, Warning, TEXT("CountDown : %d"), CurrentCountDown);
-	// 	return;
-	// }
-	// // 0이되면 카운트 다운 종료 -> 라운드 시작
-	// GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
-	//
-	// OnCountDownFinished();
-}
-
-void APTWMiniGameMode::OnCountDownFinished()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Round Start"));
-
-	if (!PTWGameState) return;
-	
-	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
-	
-	PTWGameState->SetbMiniGameCountdown(false);
-	
-	StartGame();
-}
 
 
 

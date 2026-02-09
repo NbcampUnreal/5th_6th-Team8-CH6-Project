@@ -98,3 +98,53 @@ void UPTWSessionSubsystem::CreateListenLevel(FName MapName)
 {
 	UGameplayStatics::OpenLevel(this, MapName, true, TEXT("listen"));
 }
+
+void UPTWSessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+	
+	if (GEngine)
+	{
+		GEngine->OnNetworkFailure().AddUObject(this, &ThisClass::HandleNetworkFailure);
+	}
+}
+
+void UPTWSessionSubsystem::Deinitialize()
+{
+	if (GEngine)
+	{
+		GEngine->OnNetworkFailure().RemoveAll(this);
+	}
+	Super::Deinitialize();
+}
+
+void UPTWSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, 
+	ENetworkFailure::Type FailureType, const FString& ErrorString)
+{
+	if (IOnlineSubsystem* OnlineSubsystem = Online::GetSubsystem(GetWorld()))
+	{
+		IOnlineSessionPtr SessionInterface = OnlineSubsystem->GetSessionInterface();
+		if (SessionInterface.IsValid())
+		{
+			DestroySessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(
+				FOnDestroySessionCompleteDelegate::CreateUObject(this, &ThisClass::OnDestroySessionComplete));
+			
+			SessionInterface->DestroySession(FName("GameSession"));
+			return;
+		}
+	}
+	OnDestroySessionComplete(FName("GameSession"), true);
+}
+
+void UPTWSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
+{
+	if (IOnlineSubsystem* OnlineSubsystem = Online::GetSubsystem(GetWorld()))
+	{
+		IOnlineSessionPtr SessionInterface = OnlineSubsystem->GetSessionInterface();
+		if (SessionInterface.IsValid())
+		{
+			SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionDelegateHandle);
+		}
+	}
+	UGameplayStatics::OpenLevel(this, FName("MainMenu"), true);
+}

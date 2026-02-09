@@ -91,16 +91,17 @@ void APTWGameMode::EndTimer()
 {
 	ClearTimer();
 	
-	SaveGameDataToSubsystem();
-
-	// 잠깐 딜레이 후 ServerTravel 실행
-	FTimerHandle DelayTimerHandle;
-	GetWorldTimerManager().SetTimer(DelayTimerHandle, this, &APTWGameMode::TravelLevel, 2.f);
+	if (PTWGameState->GetCurrentGamePhase() != EPTWGamePhase::MiniGame)
+	{
+		// 잠깐 딜레이 후 ServerTravel 실행
+		FTimerHandle DelayTimerHandle;
+		GetWorldTimerManager().SetTimer(DelayTimerHandle, this, &APTWGameMode::TravelLevel, 2.f);
+	}
 }
 
 void APTWGameMode::TravelLevel()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Travel Level"));
+	SaveGameDataToSubsystem();
 	GetWorld()->ServerTravel(TravelLevelName);
 }
 

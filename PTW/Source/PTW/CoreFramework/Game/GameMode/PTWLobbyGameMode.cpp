@@ -108,9 +108,8 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 
 		StartGame();
 	}
-
 	
-	// 여기서 playerdata item id 초기화
+	RestartPlayer(NewPlayer);
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)

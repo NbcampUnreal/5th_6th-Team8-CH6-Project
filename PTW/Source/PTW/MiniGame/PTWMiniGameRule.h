@@ -384,6 +384,10 @@ USTRUCT(BlueprintType)
 struct FPTWMiniGameRule
 {
 	GENERATED_BODY()
+
+	/** 킬/점수/처치 관련 규칙 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Time")
+	FPTWTimerRule TimeRule;
 	
 	/** 킬/점수/처치 관련 규칙 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Kill")

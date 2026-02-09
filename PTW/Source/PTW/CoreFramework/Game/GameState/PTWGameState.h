@@ -68,7 +68,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRemainTimeChanged, int32, RemainT
  * - 다음 페이즈 전환(예: TravelLevel) 등의 트리거로 사용
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimerFinished);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCountDownFinished);
 /**
  * 게임 페이즈 변경 이벤트
  * - 현재 게임 페이즈가 변경될 때 브로드캐스트
@@ -107,6 +107,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilllogBroadcastSignature, AActo
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoulettePhaseChanged, FPTWRouletteData, RouletteData);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMiniGameRoundChanged, int32, CurrentRound, int32, MaxRound);
+
 /* 채팅 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	FOnChatMessageBroadcast,
@@ -118,6 +120,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMiniGameCountdownChanged, bool, bCountdown);
 /* 미니게임 카운트다운 숫자 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMiniGameCountDownValueChanged, int32, CountDown);
+/** */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPortalCountChanged, int32, Current, int32, Required);
 
 #pragma endregion
@@ -154,6 +157,8 @@ public:
 
 	void SetbMiniGameCountdown(bool bCountdown);
 	void SetMiniGameCountdown(int32 NewValue);
+
+	void SetMaxMiniGameRound(int32 NewMaxRound);
 #pragma endregion
 
 #pragma region Event
@@ -164,6 +169,10 @@ public:
 	/** 타이머 종료 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnTimerFinished OnTimerFinished;
+	
+	/** 카운트 다운 종료 이벤트 */
+	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
+	FOnCountDownFinished OnCountDownFinished;
 	
 	/** 라운드 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
@@ -184,23 +193,31 @@ public:
 	/* 채팅 */
 	UPROPERTY(BlueprintAssignable, Category = "Chat")
 	FOnChatMessageBroadcast OnChatMessageBroadcast;
-
+	
+	/** 룰렛 페이즈 변경 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
 	FOnRoulettePhaseChanged OnRoulettePhaseChanged;
-
+	
+	/** 포탈  */
 	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
 	FOnPortalCountChanged OnPortalCountChanged;
+	
 	/* 미니게임 카운트다운 */
 	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
 	FOnMiniGameCountdownChanged OnMiniGameCountdownChanged;
 	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
 	FOnMiniGameCountDownValueChanged OnMiniGameCountdownValueChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
+	FOnMiniGameRoundChanged OnMiniGameRoundChanged;
 #pragma endregion
 
 #pragma region Getter
 	FORCEINLINE int32 GetRemainTime() const { return RemainTime; }
 	FORCEINLINE int32 GetMiniGameCountDown() const { return MiniGameCountDown; }
 	FORCEINLINE int32 GetCurrentRound() const {return CurrentRound;}
+	FORCEINLINE int32 GetCurrentMiniGameRound() const {return CurrentMiniGameRound;}
+	FORCEINLINE int32 GetMaxMiniGameRound() const {return MaxMiniGameRound;}
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
 	FORCEINLINE TArray<APTWPlayerState*> GetRankedPlayers() const {return RankedPlayers;}
 	FORCEINLINE FPTWRouletteData GetRouletteData() const {return RouletteData;}
@@ -224,8 +241,6 @@ protected:
 	bool bMiniGameCountdown = false;
 	UPROPERTY(ReplicatedUsing = OnRep_MiniGameCountDownValue)
 	int32 MiniGameCountDown = 0;
-
-private:
 
 #pragma region Replication
 	/** 남은 시간(초) - 서버에서 갱신, 클라이언트로 복제 */
@@ -268,15 +283,33 @@ private:
 	
 	UFUNCTION()
 	void OnRep_PortalCount();
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_CurrentMiniGameRound, Category = "MiniGame|Round")
+	int32 CurrentMiniGameRound = 0;
+
+	UFUNCTION()
+	void OnRep_CurrentMiniGameRound();
+	
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing=OnRep_MaxMiniGameRound, Category = "MiniGame|Round")
+	int32 MaxMiniGameRound = 0;
+	
+	UFUNCTION()
+	void OnRep_MaxMiniGameRound();
 #pragma endregion
 
 public:
 	/** 서버에서 남은 시간을 감소 */
 	void DecreaseTimer();
+
+	/** 카운트 다운 시간을 감소 */
+	void DecreaseCoundDown();
 	
 	/** 라운드 증가 */
 	void AdvanceRound();
 
+	/** 미니 게임 라운드 증가 */
+	void AdvanceMiniGameRound();
+	
 	/** 현재 상태 기준으로 랭킹 갱신 */
 	void UpdateRanking();
 	

@@ -25,7 +25,7 @@
 #include "UI/InGameUI/PTWDamageIndicator.h"
 #include "UI/MiniGame/PTWGameStartTimer.h"
 #include "Inventory/Instance/PTWItemInstance.h"
-#include "Inventory/PTWWeaponActor.h"
+#include "Weapon/PTWWeaponActor.h"
 
 void APTWPlayerController::StartSpectating()
 {

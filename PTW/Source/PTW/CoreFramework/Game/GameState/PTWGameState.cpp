@@ -25,6 +25,8 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(APTWGameState, PortalRequired);
 	DOREPLIFETIME(APTWGameState, bMiniGameCountdown);
 	DOREPLIFETIME(APTWGameState, MiniGameCountDown);
+	DOREPLIFETIME(APTWGameState, CurrentMiniGameRound);
+	DOREPLIFETIME(APTWGameState, MaxMiniGameRound);
 
 }
 
@@ -93,10 +95,33 @@ void APTWGameState::DecreaseTimer()
 	}
 }
 
+void APTWGameState::DecreaseCoundDown()
+{
+	if (!HasAuthority()) return;
+
+	if (MiniGameCountDown <= 0)
+	{
+		OnCountDownFinished.Broadcast();
+	}
+	else
+	{
+		MiniGameCountDown--;
+		if (GetNetMode() != NM_DedicatedServer)
+		{
+			OnMiniGameCountdownValueChanged.Broadcast(MiniGameCountDown);
+		}
+	}
+}
+
 void APTWGameState::AdvanceRound()
 {
 	CurrentRound++;
 	UE_LOG(LogTemp, Warning, TEXT("Current Round: %d"), CurrentRound);
+}
+
+void APTWGameState::AdvanceMiniGameRound()
+{
+	CurrentMiniGameRound++;
 }
 
 void APTWGameState::SetRemainTime(int32 NewTime)
@@ -164,6 +189,14 @@ void APTWGameState::SetMiniGameCountdown(int32 NewValue)
 	OnRep_MiniGameCountDownValue();
 }
 
+void APTWGameState::SetMaxMiniGameRound(int32 NewMaxRound)
+{
+	if (!HasAuthority()) return;
+
+	MaxMiniGameRound = NewMaxRound;
+	OnRep_MaxMiniGameRound();
+}
+
 void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& Message)
 {
 	// 서버 전용
@@ -226,4 +259,13 @@ void APTWGameState::OnRep_MiniGameCountDownValue()
 void APTWGameState::OnRep_MiniGameCountdown()
 {
 	OnMiniGameCountdownChanged.Broadcast(bMiniGameCountdown);
+}
+void APTWGameState::OnRep_CurrentMiniGameRound()
+{
+	OnMiniGameRoundChanged.Broadcast(CurrentMiniGameRound, MaxMiniGameRound);
+}
+
+void APTWGameState::OnRep_MaxMiniGameRound()
+{
+	
 }

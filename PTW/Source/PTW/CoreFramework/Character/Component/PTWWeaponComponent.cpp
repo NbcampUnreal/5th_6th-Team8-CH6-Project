@@ -3,8 +3,8 @@
 
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "Inventory/PTWWeaponActor.h"
-#include "Inventory/PTWWeaponData.h"
+#include "Weapon/PTWWeaponActor.h"
+#include "Weapon/PTWWeaponData.h"
 #include "GameFramework/Character.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"

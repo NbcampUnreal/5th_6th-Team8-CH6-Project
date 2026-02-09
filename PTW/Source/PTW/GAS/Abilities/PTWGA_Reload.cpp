@@ -12,7 +12,7 @@
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/Instance/PTWItemInstance.h"
-#include "Inventory/PTWWeaponData.h"
+#include "Weapon/PTWWeaponData.h"
 #include "Inventory/Instance/PTWWeaponInstance.h"
 #include "PTWGameplayTag/GameplayTags.h"
 

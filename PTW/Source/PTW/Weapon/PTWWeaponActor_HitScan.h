@@ -6,6 +6,8 @@
 #include "../Weapon/PTWWeaponActor.h"
 #include "PTWWeaponActor_HitScan.generated.h"
 
+class APTWWeaponCasting;
+
 UCLASS()
 class PTW_API APTWWeaponActor_HitScan : public APTWWeaponActor
 {
@@ -14,7 +16,16 @@ class PTW_API APTWWeaponActor_HitScan : public APTWWeaponActor
 public:
 	APTWWeaponActor_HitScan();
 
+	FORCEINLINE USceneComponent* GetCasingMuzzle() const {return CastingSocket;}
+	
+	void SpawnCastingActor() const;
 protected:
 	virtual void BeginPlay() override;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<USceneComponent> CastingSocket;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<APTWWeaponCasting> CastingClass;
 };

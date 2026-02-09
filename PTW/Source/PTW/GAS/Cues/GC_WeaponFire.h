@@ -6,6 +6,7 @@
 #include "GameplayCueNotify_Static.h"
 #include "GC_WeaponFire.generated.h"
 
+class APTWWeaponActor;
 class UNiagaraSystem;
 /**
  * 
@@ -19,6 +20,9 @@ public:
 	virtual bool OnExecute_Implementation(AActor* MyTarget, 
 		const FGameplayCueParameters& Parameters) const override;
 	
+	void SpawnCasing(const APTWWeaponActor* TargetWeapon) const;
+	
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VFX")
 	TObjectPtr<UNiagaraSystem> FireVFX;
 	

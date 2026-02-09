@@ -29,17 +29,30 @@ public:
 protected:
 	virtual void InitGameState() override;
 	virtual void BeginPlay() override;
-	virtual void EndTimer() override;
-	
 	virtual void Logout(AController* Exiting) override;
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
-	
 	virtual void RestartPlayer(AController* NewPlayer) override;
+	
+	//* 타이머기 종료되면 호출되는 함수 */
+	virtual void EndTimer() override;
+	
+	//* 라운드가 종료됐을 때 호출하는 함수 */
+	virtual void EndRound();
+	
+	//* 미니 게임이 완전히 끝났을 때 호출하는 함수 */
+	virtual void EndGame();
+	
+	/** 플레이어 사망할 때 호출되는 함수 */
+	UFUNCTION()
+	void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor);
 	
 	void SpawnDefaultWeapon(AController* NewPlayer);
 
-	virtual void StartGame();
+	//* 미니 게임 라운드 시작 대기 */
+	virtual void WaitingToStartRound();
 	
+	//* 미니 게임 시작 */
+	virtual void StartGame();
 	
 	/** 미니게임 진행 시간 (초) */
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
@@ -64,14 +77,12 @@ protected:
 	void StartCountDown();
 	/** 매초마다 카운트다운 감소 */
 	void TickCountDown();
-	
+
+	UFUNCTION()
 	virtual void OnCountDownFinished();
 
 private:
-	/** 플레이어 사망 처리 */
-	UFUNCTION()
-	void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor);
-
+	
 	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
 	void UpdatePlayerRoundData(APlayerState* DeadPlayerState, APlayerState* KillPlayerState);
 

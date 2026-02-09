@@ -191,6 +191,14 @@ void APTWGameState::SetMiniGameCountdown(int32 NewValue)
 	OnRep_MiniGameCountDownValue();
 }
 
+void APTWGameState::SetMaxMiniGameRound(int32 NewMaxRound)
+{
+	if (!HasAuthority()) return;
+
+	MaxMiniGameRound = NewMaxRound;
+	OnRep_MaxMiniGameRound();
+}
+
 void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& Message)
 {
 	// 서버 전용

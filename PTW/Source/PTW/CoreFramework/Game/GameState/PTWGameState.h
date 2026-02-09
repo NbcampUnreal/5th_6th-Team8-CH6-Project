@@ -157,6 +157,8 @@ public:
 
 	void SetbMiniGameCountdown(bool bCountdown);
 	void SetMiniGameCountdown(int32 NewValue);
+
+	void SetMaxMiniGameRound(int32 NewMaxRound);
 #pragma endregion
 
 #pragma region Event

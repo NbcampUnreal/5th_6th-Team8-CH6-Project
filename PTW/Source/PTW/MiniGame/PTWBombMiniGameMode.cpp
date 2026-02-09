@@ -40,6 +40,8 @@ void APTWBombMiniGameMode::StartRound()
 
 void APTWBombMiniGameMode::OnCountDownFinished()
 {
+	Super::OnCountDownFinished();
+	
 	if (APTWGameState* GS = GetGameState<APTWGameState>())
 	{
 		GS->SetbMiniGameCountdown(false);
@@ -65,28 +67,30 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Play Start"), CurrentRound);
 
 	// 라운드 진행 타이머 시작
-	GetWorldTimerManager().SetTimer(RoundTimerHandle, this, &APTWBombMiniGameMode::EndTimer, RoundPlayTime, false);
+	//GetWorldTimerManager().SetTimer(RoundTimerHandle, this, &APTWBombMiniGameMode::EndTimer, RoundPlayTime, false);
 }
 
 void APTWBombMiniGameMode::EndTimer()
 {
 	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Explosion Timing"), CurrentRound);
 
+	Super::EndTimer();
+	
 	CleanupBombActor();
 
 	// 3회 다 돌면 미니게임 종료
-	if (CurrentRound >= MaxRoundCount)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[BombMode] Finished"));
-		
-		EliminatedPlayers.Empty();
-
-		Super::EndTimer();
-		return;
-	}
+	// if (CurrentRound >= MaxRoundCount)
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Finished"));
+	// 	
+	// 	EliminatedPlayers.Empty();
+	//
+	// 	Super::EndTimer();
+	// 	return;
+	// }
 
 	// 다음 라운드 진행
-	StartRound();
+	//StartRound();
 }
 
 void APTWBombMiniGameMode::CleanupBombActor()

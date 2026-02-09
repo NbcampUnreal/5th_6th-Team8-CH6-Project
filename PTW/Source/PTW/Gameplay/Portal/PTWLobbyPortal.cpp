@@ -3,7 +3,8 @@
 
 #include "Gameplay/Portal/PTWLobbyPortal.h"
 
-#include "Components/SphereComponent.h"
+
+#include "Components/BoxComponent.h"
 #include "CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "Net/UnrealNetwork.h"
@@ -13,8 +14,8 @@ APTWLobbyPortal::APTWLobbyPortal()
 	bReplicates = true;
 	PrimaryActorTick.bCanEverTick = false;
 	
-	SphereCollision = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
-	RootComponent = SphereCollision;
+	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Sphere"));
+	RootComponent = BoxComponent;
 
 	SetHidden(true);
 	SetActorEnableCollision(false);
@@ -24,8 +25,8 @@ void APTWLobbyPortal::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SphereCollision->OnComponentBeginOverlap.AddDynamic(this, &APTWLobbyPortal::OnComponentBeginOverlap);
-	SphereCollision->OnComponentEndOverlap.AddDynamic(this, &APTWLobbyPortal::OnComponentEndOverlap);
+	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &APTWLobbyPortal::OnComponentBeginOverlap);
+	BoxComponent->OnComponentEndOverlap.AddDynamic(this, &APTWLobbyPortal::OnComponentEndOverlap);
 	
 	APTWGameState* PTWGameState = Cast<APTWGameState>(GetWorld()->GetGameState());
 	if (!PTWGameState) return;

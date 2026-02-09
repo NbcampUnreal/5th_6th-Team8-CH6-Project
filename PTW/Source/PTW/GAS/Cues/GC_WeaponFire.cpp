@@ -7,7 +7,7 @@
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/Instance/PTWItemInstance.h"
-#include "Inventory/PTWWeaponActor.h"
+#include "Weapon/PTWWeaponActor.h"
 #include "Inventory/Instance/PTWWeaponInstance.h"
 #include "Kismet/GameplayStatics.h"
 

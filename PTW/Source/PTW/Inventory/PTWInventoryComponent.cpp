@@ -6,7 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "PTWItemDefinition.h"
 #include "Instance/PTWItemInstance.h"
-#include "PTWWeaponActor.h"
+#include "../Weapon/PTWWeaponActor.h"
 #include "Engine/ActorChannel.h"
 #include "GAS/PTWGameplayAbility.h"
 #include "Instance/PTWActiveItemInstance.h"

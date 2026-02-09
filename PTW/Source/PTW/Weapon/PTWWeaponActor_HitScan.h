@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PTWWeaponActor.h"
+#include "../Weapon/PTWWeaponActor.h"
 #include "PTWWeaponActor_HitScan.generated.h"
 
 UCLASS()

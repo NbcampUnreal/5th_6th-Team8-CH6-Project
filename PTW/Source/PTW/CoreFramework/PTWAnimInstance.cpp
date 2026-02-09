@@ -7,7 +7,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Inventory/PTWWeaponActor.h"
+#include "Weapon/PTWWeaponActor.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"

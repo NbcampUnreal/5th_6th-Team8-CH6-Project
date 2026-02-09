@@ -39,7 +39,19 @@ public:
 	// 리슨서버로 레벨 생성하는 함수
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void CreateListenLevel(FName MapName);
+
+protected:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
 	
+	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, 
+		ENetworkFailure::Type FailureType, const FString& ErrorString);
+	
+	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
+	
+	FDelegateHandle DestroySessionDelegateHandle;
+	
+public:
 	// 로비세션 탐색결과를 송신할 델리게이트
 	UPROPERTY(BlueprintAssignable, Category = "Session")
 	FBlueprintFindSessionsResultDelegate OnFindLobbiesCompleteDelegate;

@@ -82,5 +82,20 @@ namespace GameplayTags
 		}
 	}
 	
+	namespace GameplayCue
+	{
+		namespace Weapon
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Explosion);
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Fire);
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(HitImpact);
+		}
+		
+		namespace Item
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Invisibility);
+		}
+	}
+	
 }
 

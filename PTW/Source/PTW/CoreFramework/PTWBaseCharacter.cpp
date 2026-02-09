@@ -15,7 +15,7 @@
 #include "GAS/PTWGameplayAbility.h"
 #include "Game/GameState/PTWGameState.h"
 #include "CoreFramework/Character/Component/PTWReactorComponent.h"
-
+#include "PTWGameplayTag/GameplayTags.h"
 
 APTWBaseCharacter::APTWBaseCharacter()
 {
@@ -26,13 +26,11 @@ APTWBaseCharacter::APTWBaseCharacter()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	ReactorComponent = CreateDefaultSubobject<UPTWReactorComponent>(TEXT("ReactorComponent"));
-	
-	DeadTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Dead"));
 }
 
 bool APTWBaseCharacter::IsDead() const
 {
-	return AbilitySystemComponent->HasMatchingGameplayTag(DeadTag);
+	return AbilitySystemComponent->HasMatchingGameplayTag(GameplayTags::State::Status_Dead);
 }
 
 UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const
@@ -55,7 +53,7 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 		ReactorComponent->ProcessDeath();
 	}
 
-	AbilitySystemComponent->AddLooseGameplayTag(DeadTag);
+	AbilitySystemComponent->AddLooseGameplayTag(GameplayTags::State::Status_Dead);
 
 	if (OnCharacterDied.IsBound())
 	{
@@ -126,7 +124,7 @@ void APTWBaseCharacter::BeginPlay()
 	
 	if (HasAuthority())
 	{
-		AbilitySystemComponent->RemoveLooseGameplayTag(DeadTag);
+		AbilitySystemComponent->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
 	}
 }
 

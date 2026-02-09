@@ -12,13 +12,13 @@
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/Instance/PTWItemInstance.h"
-#include "Inventory/PTWWeaponActor.h"
-#include "Inventory/PTWWeaponData.h"
+#include "Weapon/PTWWeaponData.h"
 #include "Inventory/Instance/PTWWeaponInstance.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 UPTWGA_Reload::UPTWGA_Reload()
 {
-	ActivationOwnedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Reload")));
+	ActivationOwnedTags.AddTag(GameplayTags::Weapon::State::Reload);
 }
 
 void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -61,7 +61,7 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 
-	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag(FName("Event.Weapon.ReloadRefill"));
+	FGameplayTag EventTag = GameplayTags::Event::Weapon_ReloadReFill;
 	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, EventTag);
 
 	if (WaitEventTask)

@@ -21,6 +21,11 @@ protected:
 	virtual void ApplyDamageToTarget(
 		const FGameplayAbilityTargetDataHandle& TargetData,
 		float BaseDamage) override;
+	
+	void AttachBombToTarget(AActor* Bomb, AActor* Target);
+	void ProcessItemTransfer(AActor* Source, AActor* Target);
+	void GiveItemAndEquip(APTWPlayerCharacter* TargetPC);
+	void RemoveSourceWeapon(APTWPlayerCharacter* SourcePC);
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Special Effects")

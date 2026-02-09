@@ -9,18 +9,17 @@
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "Inventory/Instance/PTWItemInstance.h"
-#include "Inventory/PTWWeaponActor.h"
-#include "Inventory/PTWWeaponData.h"
+#include "Weapon/PTWWeaponActor.h"
+#include "Weapon/PTWWeaponData.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Inventory/Instance/PTWWeaponInstance.h"
 #include "PTWGameplayTag/GameplayTags.h"
 
 UPTWGA_Equip::UPTWGA_Equip()
 {
-	//AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip")));
+
 }
 
-#pragma optimize("", off)
 void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
                                 const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -61,7 +60,7 @@ void UPTWGA_Equip::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
-#pragma optimize("", on)
+
 
 void UPTWGA_Equip::SetCharacterWeaponAttribute(const UPTWWeaponInstance* WeaponItemInstance,
 	APTWPlayerCharacter* Character)

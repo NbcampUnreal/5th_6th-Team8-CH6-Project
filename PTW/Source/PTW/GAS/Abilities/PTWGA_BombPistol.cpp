@@ -27,91 +27,100 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 {
 	if (!HasAuthority(&CurrentActivationInfo) || !DamageGEClass) return;
 	
-	FGameplayTag BombTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Bomb"));
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	AActor* HitActor = nullptr;
-	AActor* MyActor = nullptr;
+	AActor* MyActor = GetAvatarActorFromActorInfo();
+	if (!MyActor) return;
 	
-	for (auto Data : TargetData.Data)
+	AActor* AttachingActor = nullptr;
+	TArray<AActor*> AttachedActors;
+	MyActor->GetAttachedActors(AttachedActors);
+
+	for (AActor* Attached : AttachedActors)
 	{
-	 	const FHitResult* HitResult = Data->GetHitResult();
-	 	HitActor = HitResult ? HitResult->GetActor() : nullptr;
-	 	MyActor = GetAvatarActorFromActorInfo();
-	 	
-	 	if (!HitActor && !MyActor) continue;
-	
-	 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
-	 	if (!TargetASC) continue;
-	 	
-	 	// 맞춘 상대의 머리에 내 머리에 있는 폭탄 Attach 
-	 	TArray<AActor*> AttachedActors;
-	 	MyActor->GetAttachedActors(AttachedActors);
-	 	
-	 	AActor* AttachingActor = nullptr;
-	 	
-	 	for (AActor* AttachedActor : AttachedActors)
-	 	{
-	 		if (AttachedActor->IsA(APTWBombActor::StaticClass()))
-	 		{
-	 			AttachingActor = AttachedActor;
-	 			break;
-	 		}
-	 	}
-	 	
-	 	if (AttachingActor && HitActor)
-	 	{
-	 		USceneComponent* TargetMesh = HitActor->FindComponentByClass<USkeletalMeshComponent>();
-    
-	 		if (TargetMesh)
-	 		{
-	 			AttachingActor->AttachToComponent(
-					 TargetMesh, 
-					 FAttachmentTransformRules::SnapToTargetNotIncludingScale, 
-					 FName(TEXT("BombHeadSocket"))
-				 );
-	 			AttachingActor->SetOwner(HitActor);
-	 		}
-	 		
-	 		UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
-	
-	 		if (SpawnManager && HitActor)
-	 		{
-	 			if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(HitActor))
-	 			{
-	 				APTWPlayerState* PS = Cast<APTWPlayerState>(PC->GetPlayerState());
-	 				SpawnManager->SpawnSingleItem(PS, ItemDef);
-	 			}
-	 		}
-	
-	 		if (MyActor)
-	 		{
-	 			if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(MyActor))
-	 			{
-	 				if (UPTWInventoryComponent* Inven = PC->GetInventoryComponent())
-	 				{
-	 					Inven->RemoveWeaponItem();
-	 				}
-	 			}
-	 		}
-	 	}
+		if (Attached && Attached->IsA(APTWBombActor::StaticClass()))
+		{
+			AttachingActor = Attached;
+			break;
+		}
 	}
 	
+	if (!AttachingActor) return;
 	
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	
-	 	
-	 	// IPTWCombatInterface* TargetCombatInt = Cast<IPTWCombatInterface>(HitActor);
-	 	// IPTWCombatInterface* CombatIntMine = Cast<IPTWCombatInterface>(CurrentActorInfo->AvatarActor.Get()); 
-	 	//
-	 	// if (TargetCombatInt && CombatIntMine)
-	 	// {
-	 	// 	FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
-	 	// 	TargetCombatInt->ApplyGameplayEffectToSelf(BombPistolEffect, 1.0f,ContextHandle); // 타겟에게 Effect 부여
-	 	// 	CombatIntMine->RemoveEffectWithTag(BombTag);
-	 	// 	break;
-	 	// }
-	 	
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	for (const TSharedPtr<FGameplayAbilityTargetData>& Data : TargetData.Data)
+	{
+		if (!Data.IsValid()) continue;
+
+		const FHitResult* HitResult = Data->GetHitResult();
+		AActor* HitActor = HitResult ? HitResult->GetActor() : nullptr;
+        
+		if (!HitActor) continue;
+
+		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
+		if (!TargetASC) continue;
+		
+		AttachBombToTarget(AttachingActor, HitActor);
+		ProcessItemTransfer(MyActor, HitActor);
+		break; 
+	}
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
+
+void UPTWGA_BombPistol::AttachBombToTarget(AActor* Bomb, AActor* Target)
+{
+	if (USceneComponent* TargetMesh = Target->FindComponentByClass<USkeletalMeshComponent>())
+	{
+		Bomb->AttachToComponent(
+			TargetMesh, 
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale, 
+			FName(TEXT("BombHeadSocket"))
+		);
+		Bomb->SetOwner(Target);
+	}
+}
+
+void UPTWGA_BombPistol::ProcessItemTransfer(AActor* Source, AActor* Target)
+{
+	if (APTWPlayerCharacter* TargetPC = Cast<APTWPlayerCharacter>(Target))
+	{
+		GiveItemAndEquip(TargetPC);
+	}
+	
+	if (APTWPlayerCharacter* SourcePC = Cast<APTWPlayerCharacter>(Source))
+	{
+		RemoveSourceWeapon(SourcePC);
+	}
+}
+
+void UPTWGA_BombPistol::GiveItemAndEquip(APTWPlayerCharacter* TargetPC)
+{
+	if (!TargetPC) return;
+	
+	if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+	{
+		if (APTWPlayerState* PS = TargetPC->GetPlayerState<APTWPlayerState>())
+		{
+			SpawnManager->SpawnSingleItem(PS, ItemDef);
+		}
+	}
+	
+	if (UPTWInventoryComponent* Inven = TargetPC->GetInventoryComponent())
+	{
+		if (TargetPC->HasAuthority())
+		{
+			Inven->EquipWeapon(0);
+		}
+	}
+}
+
+void UPTWGA_BombPistol::RemoveSourceWeapon(APTWPlayerCharacter* SourcePC)
+{
+	if (UPTWInventoryComponent* Inven = SourcePC->GetInventoryComponent())
+	{
+		Inven->RemoveWeaponItem();
+	}
+}
+
 
 
 

@@ -80,4 +80,21 @@ namespace GameplayTags
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(UnEquip, "Weapon.State.UnEquip");
 		}
 	}
+	
+	namespace GameplayCue
+	{
+		namespace Weapon
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Explosion, "GameplayCue.Weapon.Explosion");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Fire, "GameplayCue.Weapon.Fire");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(HitImpact, "GameplayCue.Weapon.HitImpact");
+		}
+		
+		namespace Item
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Invisibility, "GameplayCue.Item.Invisibility");
+		}
+	}
+	
+	
 }

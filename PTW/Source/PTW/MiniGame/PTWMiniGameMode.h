@@ -32,6 +32,10 @@ protected:
 	virtual void Logout(AController* Exiting) override;
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 	virtual void RestartPlayer(AController* NewPlayer) override;
+
+	//* 미니 게임 시작 */
+	virtual void StartGame();
+	virtual void StartRound();
 	
 	//* 타이머기 종료되면 호출되는 함수 */
 	virtual void EndTimer() override;
@@ -59,9 +63,6 @@ protected:
 	UFUNCTION()
 	virtual void OnCountDownFinished();
 	
-	//* 미니 게임 시작 */
-	virtual void StartGame();
-
 	virtual void CheckEndGameCondition();
 	
 	/** 미니게임 진행 시간 (초) */

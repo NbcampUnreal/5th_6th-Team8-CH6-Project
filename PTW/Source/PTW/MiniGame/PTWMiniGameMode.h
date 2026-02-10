@@ -8,6 +8,7 @@
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWMiniGameMode.generated.h"
 
+class UPTWChaosEventManager;
 class UGameplayEffect;
 class APTWPlayerController;
 class APTWPlayerState;
@@ -99,6 +100,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> MiniGameEffectClass;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPTWChaosEventManager> ChaosEventManager;
 	
 	int32 PlayerStartCount = 0;
 

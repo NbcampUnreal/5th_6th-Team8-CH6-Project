@@ -7,22 +7,26 @@
 #include "PTWChaosEventManager.generated.h"
 
 
+class APTWGameState;
+class UPTWChaosEventDefinition;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PTW_API UPTWChaosEventManager : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
-	UPTWChaosEventManager();
+public:
+	void ApplyChaosEvent();
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+	void InitGameState(APTWGameState* InGameState);
+private:
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	UPTWChaosEventDefinition* SelectRandomChaosEvent();
+	
+	UPROPERTY(EditDefaultsOnly)
+	TArray<TObjectPtr<UPTWChaosEventDefinition>> ChaosEventDefinitions;
 
-		
+	UPROPERTY()
+	TObjectPtr<APTWGameState> PTWGameState;
+	
 };

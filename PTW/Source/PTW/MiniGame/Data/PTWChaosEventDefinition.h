@@ -34,6 +34,6 @@ public:
 
 	//* 지속 시간이 설정되어 있으면 카오스 이벤트 지속 시간 보다 우선적으로 적용 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Event")
-	float DurationSeconds = 10.f;
+	float Duration = -1.f;
 	
 };

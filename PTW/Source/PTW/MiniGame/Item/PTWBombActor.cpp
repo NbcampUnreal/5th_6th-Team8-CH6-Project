@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PTWBombActor.h"
 
@@ -21,6 +21,9 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 #include "Engine/OverlapResult.h"
+
+#include "Components/AudioComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 APTWBombActor::APTWBombActor()
 {
@@ -49,6 +52,14 @@ APTWBombActor::APTWBombActor()
 	BombAttributeSet = CreateDefaultSubobject<UPTWBombAttributeSet>(TEXT("BombAttributeSet"));
 	
 	ExplosionChannel = ECC_WeaponAttack;
+
+	//Audio
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->SetupAttachment(RootComponent);
+	AudioComponent->bAutoActivate = false;
+	AudioLoopComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FuseLoopComponent"));
+	AudioLoopComponent->SetupAttachment(RootComponent);
+	AudioLoopComponent->bAutoActivate = false;
 
 	DamageSetByCallerTag = FGameplayTag::RequestGameplayTag(FName("Data.Damage"));
 	ExplosionCueTag      = FGameplayTag::RequestGameplayTag(FName("GameplayCue.Weapon.Explosion"));
@@ -94,6 +105,17 @@ void APTWBombActor::BeginPlay()
 	{
 		AttachToOwnerPawn();
 	}
+
+	// 머티리얼 인스턴스 생성 (시각 효과용)
+	if (BombMesh)
+	{
+		BombDynamicMat = BombMesh->CreateAndSetMaterialInstanceDynamic(0);
+	}
+	if (AudioLoopSound)
+	{
+		AudioLoopComponent->SetSound(AudioLoopSound);
+		AudioLoopComponent->Play();
+	}
 }
 
 void APTWBombActor::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> EffectClass)
@@ -113,6 +135,8 @@ void APTWBombActor::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> EffectClass)
 void APTWBombActor::HandleRemainingTimeChanged(const FOnAttributeChangeData& Data)
 {
 	UE_LOG(LogTemp, Warning, TEXT("[Bomb] RemainingTime: %.0f"), Data.NewValue);
+
+	UpdateBombEffects(Data.NewValue);
 }
 
 void APTWBombActor::SetBombOwner(APawn* NewOwnerPawn)
@@ -274,4 +298,58 @@ void APTWBombActor::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults,
 			TargetASC->ExecuteGameplayCue(HitImpactCueTag, TargetCueParams);
 		}
 	}
+}
+
+void APTWBombActor::UpdateBombEffects(float NewTime)
+{
+	if (NewTime <= 0.0f)
+	{
+		if (AudioComponent->IsPlaying()) AudioComponent->Stop();
+		if (AudioLoopComponent->IsPlaying()) AudioLoopComponent->Stop();
+		return;
+	}
+
+	const float MaxTime = 10.0f;
+	const float Interval = 2.0f;
+
+	int32 NewPhaseIndex = FMath::FloorToInt((MaxTime - NewTime) / Interval);
+
+	if (!CountdownSounds.IsValidIndex(NewPhaseIndex)) return;
+
+	bool bNeedUpdate = (NewPhaseIndex != CurrentSoundPhaseIndex);
+
+	if (!bNeedUpdate && AudioComponent->IsPlaying())
+	{
+		float SegmentStartTime = MaxTime - (NewPhaseIndex * Interval);
+		float ExpectedPlaybackTime = SegmentStartTime - NewTime;
+	}
+
+	if (bNeedUpdate || !AudioComponent->IsPlaying())
+	{
+		USoundBase* TargetSound = CountdownSounds[NewPhaseIndex];
+
+		if (AudioComponent->Sound != TargetSound)
+		{
+			AudioComponent->SetSound(TargetSound);
+		}
+
+		float PhaseStartTime = MaxTime - (NewPhaseIndex * Interval);
+
+		float StartOffset = FMath::Max(0.0f, PhaseStartTime - NewTime);
+
+		AudioComponent->Play(StartOffset);
+
+		CurrentSoundPhaseIndex = NewPhaseIndex;
+	}
+
+	// 폭탄 메시 적용후 입힐코드
+	//if (BombDynamicMat)
+	//{
+	//	float BlinkSpeed = FMath::GetMappedRangeValueClamped(FVector2D(10.f, 0.f), FVector2D(1.f, 20.f), NewTime);
+
+	//	BombDynamicMat->SetScalarParameterValue(FName("BlinkSpeed"), BlinkSpeed);
+
+	//	FLinearColor Color = FMath::Lerp(FLinearColor::Red, FLinearColor::Black, NewTime / 10.0f);
+	//	BombDynamicMat->SetVectorParameterValue(FName("Color"), Color);
+	//}
 }

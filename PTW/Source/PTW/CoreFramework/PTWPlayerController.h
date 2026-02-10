@@ -60,6 +60,9 @@ public:
 	/* 채팅창 종료 시 호출될 콜백 (ChatInput 위젯에서 호출) */
 	void OnChatInputFinished();
 
+	/* 게임설정 */
+	void ApplyMouseSensitivity(float NewValue);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -116,7 +119,10 @@ public:
 	
 	/* 리스폰 타이머 핸들*/
 	FTimerHandle RespawnTimerHandle;
-	
+
+	/* 게임설정 */
+	float CurrentMouseSensitivity = 1.0f;
+
 protected:
 	/* 캐싱된 Ability System Component */
 	UPROPERTY()

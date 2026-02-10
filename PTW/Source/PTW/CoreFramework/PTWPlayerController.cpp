@@ -13,6 +13,7 @@
 #include "EngineUtils.h"
 #include "Components/WidgetComponent.h"
 
+#include "CoreFramework/PTWGameUserSettings.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
@@ -258,6 +259,12 @@ void APTWPlayerController::BeginPlay()
 
 	/* UI 위젯 생성 */
 	CreateUI();
+
+	/* 게임설정 */
+	if (UPTWGameUserSettings* Settings = Cast<UPTWGameUserSettings>(UGameUserSettings::GetGameUserSettings()))
+	{
+		CurrentMouseSensitivity = Settings->MouseSensitivity;
+	}
 }
 
 void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -700,6 +707,11 @@ void APTWPlayerController::UpdateNameTagsVisibility()
 			WidgetComp->SetVisibility(false);
 		}
 	}
+}
+
+void APTWPlayerController::ApplyMouseSensitivity(float NewValue)
+{
+	CurrentMouseSensitivity = NewValue;
 }
 
 void APTWPlayerController::Client_SetInputRestricted_Implementation(bool bRestricted)

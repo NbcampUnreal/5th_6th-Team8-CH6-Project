@@ -88,8 +88,14 @@ void UPTWPauseMenu::OnClickedOptions()
 	{
 		if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
 		{
-			// 나중에 연결
-			// UISubsystem->PushWidget(OptionsMenuClass);
+			// 현재 위젯(PauseMenu)을 스택에서 제거
+			UISubsystem->PopWidget();
+
+			// 설정된 OptionsMenuClass가 유효한지 확인 후 Push
+			if (OptionsMenuClass)
+			{
+				UISubsystem->PushWidget(OptionsMenuClass, EUIInputPolicy::UIOnly);
+			}
 		}
 	}
 }

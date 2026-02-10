@@ -33,6 +33,9 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> Btn_QuitGame;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> OptionsMenuClass;
+
 private:
 	/* 바인딩 관리 함수 */
 	void BindUIEvents();

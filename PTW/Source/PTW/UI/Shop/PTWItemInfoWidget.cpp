@@ -46,6 +46,7 @@ void UPTWItemInfoWidget::Refresh()
 			else if (FinalPrice < BasePrice)
 			{
 				Text_PriceDelta->SetText(FText::FromString(TEXT("⬇")));
+				// Text_PriceDelta->SetText(FText::Format(NSLOCTEXT("Shop", "PriceDown", "Down")));
 				Text_PriceDelta->SetColorAndOpacity(FSlateColor(FLinearColor::Green));
 				Text_PriceDelta->SetVisibility(ESlateVisibility::Visible);
 			}

@@ -13,6 +13,7 @@ class UPTWKillLogUI;
 class UPTWTimer;
 class UPTWAmmoWidget;
 class UPTWCrosshair;
+class UPTWInventoryWidget;
 /**
  * 
  */
@@ -41,6 +42,9 @@ public:
 	/* 크로스헤어 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWCrosshair> CrosshairWidget;
+	/* 인벤토리 위젯 */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWInventoryWidget> InventoryWidget;
 
 protected:
 	virtual bool Initialize() override;

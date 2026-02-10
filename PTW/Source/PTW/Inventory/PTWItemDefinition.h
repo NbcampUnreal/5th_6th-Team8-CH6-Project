@@ -22,6 +22,7 @@ struct FGameplayTag;
 class UPTWGameplayAbility;
 class APTWWeaponActor;
 class UGameplayEffect;
+class UTexture2D;
 /**
  * 
  */
@@ -44,7 +45,7 @@ public:
 	EItemType ItemType;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDefault")
-	TObjectPtr<UImage> ItemIcon;
+	TSoftObjectPtr<UTexture2D> ItemIcon;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemDefault")
 	FText DescriptionText;

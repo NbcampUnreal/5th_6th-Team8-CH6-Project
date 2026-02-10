@@ -175,7 +175,7 @@ void APTWMiniGameMode::WaitingToStartRound()
 	PTWGameState->AdvanceMiniGameRound();
 	
 	// 카운트 다운 사용 안하면 바로 라운드 시작
-	if (MiniGameRule.TimeRule.bUseCountDown)
+	if (!MiniGameRule.TimeRule.bUseCountDown)
 	{
 		StartRound();
 

@@ -38,7 +38,7 @@ private:
 	int32 CurrentRound = 0;
 
 	/** 라운드 시작 */
-	void StartRound();
+	//void StartRound();
 	
 	UPROPERTY()
 	TObjectPtr<APTWPlayerState> BombOwnerPS = nullptr;

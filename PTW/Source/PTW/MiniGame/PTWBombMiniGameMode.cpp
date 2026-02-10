@@ -23,22 +23,22 @@ void APTWBombMiniGameMode::BeginPlay()
 	
 	EliminatedPlayers.Empty();
 
-	StartRound();
+	//StartRound();
 }
 
-void APTWBombMiniGameMode::StartRound()
-{
-	CurrentRound++;
-
-	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d / %d - Countdown Start"), CurrentRound, MaxRoundCount);
-
-	if (APTWGameState* GS = GetGameState<APTWGameState>())
-	{
-		GS->SetbMiniGameCountdown(true);
-	}
-
-	StartCountDown();
-}
+// void APTWBombMiniGameMode::StartRound()
+// {
+// 	CurrentRound++;
+//
+// 	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d / %d - Countdown Start"), CurrentRound, MaxRoundCount);
+//
+// 	if (APTWGameState* GS = GetGameState<APTWGameState>())
+// 	{
+// 		GS->SetbMiniGameCountdown(true);
+// 	}
+//
+// 	StartCountDown();
+// }
 
 void APTWBombMiniGameMode::OnCountDownFinished()
 {

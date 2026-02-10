@@ -97,14 +97,14 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 				{
 					if (CurrentItem->SpawnedWeapon1P)
 					{
-						TargetWeaponMesh = CurrentItem->SpawnedWeapon1P->GetStaticMeshComponent();
+						TargetWeaponMesh = CurrentItem->SpawnedWeapon1P->GetWeaponMesh();
 					}
 				}
 				else
 				{
 					if (CurrentItem->SpawnedWeapon3P)
 					{
-						TargetWeaponMesh = CurrentItem->SpawnedWeapon3P->GetStaticMeshComponent();
+						TargetWeaponMesh = CurrentItem->SpawnedWeapon3P->GetWeaponMesh();
 					}
 				}
 

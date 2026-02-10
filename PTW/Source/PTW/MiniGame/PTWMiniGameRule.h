@@ -26,6 +26,10 @@ struct FPTWTimerRule
 	/** 라운드 당 시간 (타이머 사용 안하면 상관 X) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
 	float Timer = 90;
+
+	/** 카운트 다운 사용 여부 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
+	bool bUseCountDown = true;
 	
 	/** 매 라운드 시작 대기 시간 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
@@ -385,7 +389,7 @@ struct FPTWMiniGameRule
 {
 	GENERATED_BODY()
 
-	/** 킬/점수/처치 관련 규칙 */
+	/** 시간/라운드 관련 규칙 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Time")
 	FPTWTimerRule TimeRule;
 	

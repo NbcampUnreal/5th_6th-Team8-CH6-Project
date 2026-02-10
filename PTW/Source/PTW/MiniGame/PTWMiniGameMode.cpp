@@ -46,16 +46,9 @@ void APTWMiniGameMode::BeginPlay()
 	//{
 	//	PlayerStarts.Add(*It);
 	//}
+	StartGame();
 	
-	WaitingToStartRound();
 	
-	// if (APTWGameState* GS = GetGameState<APTWGameState>())
-	// {
-	// 	// MiniGame 레벨 진입 → 카운트다운 시작
-	// 	GS->SetbMiniGameCountdown(true);
-	// }
-	//
-	// StartCountDown();
 }
 
 void APTWMiniGameMode::Logout(AController* Exiting)
@@ -135,7 +128,7 @@ void APTWMiniGameMode::OnCountDownFinished()
 	
 	PTWGameState->SetbMiniGameCountdown(false);
 	
-	StartGame();
+	StartRound();
 }
 
 void APTWMiniGameMode::EndTimer()
@@ -178,18 +171,31 @@ void APTWMiniGameMode::WaitingToStartRound()
 {
 	if (!PTWGameState) return;
 
+	// MiniGame 레벨 진입 → 카운트다운 시작
+	PTWGameState->AdvanceMiniGameRound();
+	
+	// 카운트 다운 사용 안하면 바로 라운드 시작
+	if (!MiniGameRule.TimeRule.bUseCountDown)
+	{
+		StartRound();
+
+		return;
+	}
+	
 	if (!PTWGameState->OnCountDownFinished.IsAlreadyBound(this, &APTWMiniGameMode::OnCountDownFinished))
 	{
 		PTWGameState->OnCountDownFinished.AddDynamic(this, &APTWMiniGameMode::OnCountDownFinished);
 	}
 	
-	// MiniGame 레벨 진입 → 카운트다운 시작
-	PTWGameState->AdvanceMiniGameRound();
-	
 	StartCountDown();
 }
 
 void APTWMiniGameMode::StartGame()
+{
+	WaitingToStartRound();
+}
+
+void APTWMiniGameMode::StartRound()
 {
 	if (MiniGameRule.TimeRule.bUserTimer)
 	{

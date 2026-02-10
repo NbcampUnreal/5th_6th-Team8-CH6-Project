@@ -10,6 +10,7 @@
 #include "Components/EditableText.h"
 #include "PTW/UI/MainMenu/PTWLobbyListRow.h"
 #include "PTW/System/PTWSessionSubsystem.h"
+#include "System/Session/SessionConfig.h"
 
 void UPTWLobbyBrowser::NativeConstruct()
 {
@@ -46,7 +47,7 @@ void UPTWLobbyBrowser::NativeConstruct()
 		UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
 		if (IsValid(SessionSubsystem))
 		{
-			SessionSubsystem->OnFindLobbiesCompleteDelegate.AddDynamic(this, &ThisClass::OnFindLobbiesComplete);
+			SessionSubsystem->OnSessionSearchComplete.AddDynamic(this, &ThisClass::OnFindSessionsComplete);
 		}
 	}
 	
@@ -81,10 +82,7 @@ void UPTWLobbyBrowser::OnClickedBackButton()
 
 void UPTWLobbyBrowser::OnClickedLobbyMenuButton()
 {
-	if (!IsValid(LobbyMenuBorder))
-	{
-		return;
-	}
+	if (!IsValid(LobbyMenuBorder)) return;
 	
 	if (LobbyMenuBorder->GetVisibility() == ESlateVisibility::Collapsed)
 	{
@@ -100,61 +98,45 @@ void UPTWLobbyBrowser::OnClickedLobbyMenuButton()
 
 void UPTWLobbyBrowser::OnClickedCreateLobbyButton()
 {
-	TArray<FSessionPropertyKeyPair> LobbySettings;
+	FSessionConfig SessionConfig;
 	if (IsValid(LobbyNameEditableText))
 	{
-		LobbySettings.Add({ TEXT("LobbyName"), LobbyNameEditableText->GetText().ToString() });
+		SessionConfig.ServerName = LobbyNameEditableText->GetText().ToString();
 	}
 	
 	UGameInstance* GameInstance = GetGameInstance();
-	if (!IsValid(GameInstance))
-	{
-		return;
-	}
+	if (!IsValid(GameInstance)) return;
 	
 	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
-	if (!IsValid(SessionSubsystem))
-	{
-		return;
-	}
+	if (!IsValid(SessionSubsystem)) return;
 	
-	SessionSubsystem->CreateLobbySession(LobbySettings, 16, false);
+	SessionSubsystem->CreateGameSession(SessionConfig);
 	// SessionSubsystem->LaunchDedicatedServer(LobbySettings, 16, false);
 }
 
 void UPTWLobbyBrowser::OnClickedFindLobbyButton()
 {
-	if (!IsValid(LobbyNameEditableText))
-	{
-		return;
-	}
 	LobbyListVerticalBox->ClearChildren();
 	
+	if (!IsValid(LobbyNameEditableText)) return;
+	
 	UGameInstance* GameInstance = GetGameInstance();
-	if (!IsValid(GameInstance))
-	{
-		return;
-	}
+	if (!IsValid(GameInstance)) return;
 	
 	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
-	if (!IsValid(SessionSubsystem))
-	{
-		return;
-	}
+	if (!IsValid(SessionSubsystem)) return;
 	
-	SessionSubsystem->FindLobbySession();
+	SessionSubsystem->FindGameSession();
 }
 
-void UPTWLobbyBrowser::OnFindLobbiesComplete(const TArray<FBlueprintSessionResult>& SessionResults)
+void UPTWLobbyBrowser::OnFindSessionsComplete(const TArray<FBlueprintSessionResult>& SearchResults)
 {
-	if (SessionResults.Num() <= 0)
-	{
-		return;
-	}
-	for (const FBlueprintSessionResult& SessionResult : SessionResults)
+	if (SearchResults.IsEmpty()) return;
+	
+	for (const FBlueprintSessionResult& SearchResult : SearchResults)
 	{
 		UPTWLobbyListRow* LobbyListRow = CreateWidget<UPTWLobbyListRow>(this, LobbyListRowClass);
-		LobbyListRow->Setup(SessionResult);
+		LobbyListRow->Setup(SearchResult);
 		LobbyListVerticalBox->AddChildToVerticalBox(LobbyListRow);
 	}
 }

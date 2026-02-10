@@ -10,6 +10,7 @@
 #include "CoreFramework/PTWCombatInterface.h"
 #include "Engine/ActorChannel.h"
 #include "GAS/PTWGameplayAbility.h"
+#include "GAS/Abilities/PTWGA_Fire.h"
 #include "Instance/PTWActiveItemInstance.h"
 #include "Instance/PTWPassiveItemInstance.h"
 #include "Instance/PTWWeaponInstance.h"
@@ -112,7 +113,7 @@ void UPTWInventoryComponent::OnItemInstanceCreated(UPTWItemInstance* ItemInstanc
 	}
 }
 
-#pragma optimize("", off)
+
 void UPTWInventoryComponent::ApplyAllPassiveItems(UPTWItemInstance* ItemInstance)
 {
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
@@ -137,7 +138,7 @@ void UPTWInventoryComponent::ApplyAllPassiveItems(UPTWItemInstance* ItemInstance
 		}
 	}
 }
-#pragma optimize("", on)
+
 
 void UPTWInventoryComponent::RemoveAllPassiveItems(UPTWItemInstance* ItemInstance)
 {
@@ -174,18 +175,24 @@ void UPTWInventoryComponent::ApplyWeaponData()
 {
 	UPTWItemInstance* Inst = CurrentWeapon;
 	
-	// if (Inst || Inst->ItemDef->AbilityToGrant)
-	// {
-	// 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
-	// 	if (!ASC) return;
-	// 	
-	// 	FGameplayAbilitySpec Spec = FGameplayAbilitySpec(Inst->ItemDef->AbilityToGrant, 1, INDEX_NONE, GetOwner());
-	// 	
-	// 	FGameplayAbilitySpecHandle SpecHandle = ASC->GiveAbility(Spec);
-	// 	WeaponAbilitySpec.Add(Inst->ItemDef->WeaponTag, SpecHandle);
-	// 	
-	// 	
-	// }
+	if (Inst || Inst->ItemDef->AbilityToGrant)
+	{
+		UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+		if (!ASC) return;
+		
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(Inst->ItemDef->AbilityToGrant, 1, INDEX_NONE, GetOwner());
+		
+		if (const UPTWGameplayAbility* WeaponAbility = Cast<UPTWGameplayAbility>(Inst->ItemDef->AbilityToGrant->GetDefaultObject()))
+		{
+			if (WeaponAbility->StartupInputTag.IsValid())
+			{
+				Spec.DynamicAbilityTags.AddTag(WeaponAbility->StartupInputTag);
+			}
+		}
+		
+		FGameplayAbilitySpecHandle SpecHandle = ASC->GiveAbility(Spec);
+		CurrentWeaponAbilitySpec = SpecHandle;
+	}
 	
 	if (Inst->ItemDef->EffectToGrant)
 	{
@@ -195,7 +202,6 @@ void UPTWInventoryComponent::ApplyWeaponData()
 			CombatInt->ApplyGameplayEffectToSelf(Inst->ItemDef->EffectToGrant, 1.0f, FGameplayEffectContextHandle());
 		}
 	}
-	
 }
 
 // 제거
@@ -210,25 +216,10 @@ void UPTWInventoryComponent::RemoveWeaponData()
 		{
 			CombatInt->RemoveEffectWithTag(Tags);
 		}
+		
+		ASC->ClearAbility(CurrentWeaponAbilitySpec);
+		CurrentWeaponAbilitySpec = FGameplayAbilitySpecHandle();
 	}
-	
-	// if (Tags.IsValid())
-	// {
-	// 	// FGameplayAbilitySpecHandle ApplySpecHandle = WeaponAbilitySpec[Tags];
-	// 	//
-	// 	// if (ApplySpecHandle.IsValid()) // Ability 제거
-	// 	// {
-	// 	// 	if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()))
-	// 	// 	{
-	// 	// 		ASC->ClearAbility(ApplySpecHandle);
-	// 	// 		WeaponAbilitySpec.Remove(Tags);
-	// 	// 	}
-	// 	// }
-	// 	
-	// 	
-	// 	
-	// 	
-	// }
 }
 
 
@@ -246,8 +237,6 @@ void UPTWInventoryComponent::SendGameplayEvent(UPTWItemInstance* ItemInstance, F
 	Payload.OptionalObject = ItemInstance;
 	Payload.EventMagnitude = static_cast<float>(SlotIndex);
 	Payload.Instigator = GetOwner();
-	
-	UE_LOG(LogTemp, Warning, TEXT("Ability Activated: %s"), *SendTag.ToString());
 	
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), SendTag, Payload);
 }

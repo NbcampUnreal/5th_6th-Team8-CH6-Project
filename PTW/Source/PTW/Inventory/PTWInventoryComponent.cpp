@@ -7,6 +7,7 @@
 #include "PTWItemDefinition.h"
 #include "Instance/PTWItemInstance.h"
 #include "../Weapon/PTWWeaponActor.h"
+#include "CoreFramework/PTWCombatInterface.h"
 #include "Engine/ActorChannel.h"
 #include "GAS/PTWGameplayAbility.h"
 #include "Instance/PTWActiveItemInstance.h"
@@ -168,6 +169,69 @@ void UPTWInventoryComponent::RemoveWeaponItem()
 	}
 }
 
+// 해당 무기 전용 어빌리티 및 태그 적용
+void UPTWInventoryComponent::ApplyWeaponData()
+{
+	UPTWItemInstance* Inst = CurrentWeapon;
+	
+	// if (Inst || Inst->ItemDef->AbilityToGrant)
+	// {
+	// 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+	// 	if (!ASC) return;
+	// 	
+	// 	FGameplayAbilitySpec Spec = FGameplayAbilitySpec(Inst->ItemDef->AbilityToGrant, 1, INDEX_NONE, GetOwner());
+	// 	
+	// 	FGameplayAbilitySpecHandle SpecHandle = ASC->GiveAbility(Spec);
+	// 	WeaponAbilitySpec.Add(Inst->ItemDef->WeaponTag, SpecHandle);
+	// 	
+	// 	
+	// }
+	
+	if (Inst->ItemDef->EffectToGrant)
+	{
+		IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(GetOwner());
+		if (CombatInt)
+		{
+			CombatInt->ApplyGameplayEffectToSelf(Inst->ItemDef->EffectToGrant, 1.0f, FGameplayEffectContextHandle());
+		}
+	}
+	
+}
+
+// 제거
+void UPTWInventoryComponent::RemoveWeaponData()
+{
+	if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()))
+	{
+		FGameplayTag Tags = ASC->HasMatchingGameplayTag(GameplayTags::Weapon::EquipType::Basic) ?GameplayTags::Weapon::EquipType::Basic
+		: GameplayTags::Weapon::EquipType::Special;
+		
+		if (IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(GetOwner()))
+		{
+			CombatInt->RemoveEffectWithTag(Tags);
+		}
+	}
+	
+	// if (Tags.IsValid())
+	// {
+	// 	// FGameplayAbilitySpecHandle ApplySpecHandle = WeaponAbilitySpec[Tags];
+	// 	//
+	// 	// if (ApplySpecHandle.IsValid()) // Ability 제거
+	// 	// {
+	// 	// 	if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()))
+	// 	// 	{
+	// 	// 		ASC->ClearAbility(ApplySpecHandle);
+	// 	// 		WeaponAbilitySpec.Remove(Tags);
+	// 	// 	}
+	// 	// }
+	// 	
+	// 	
+	// 	
+	// 	
+	// }
+}
+
+
 // Called when the game starts
 void UPTWInventoryComponent::BeginPlay()
 {
@@ -218,6 +282,7 @@ void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex, UAbilitySystem
 	{
 		if (WeaponArr.IsValidIndex(CurSelectingWeaponSlot))
 		{
+			RemoveWeaponData();
 			SendTag = GameplayTags::Weapon::State::UnEquip;
 			SendGameplayEvent(CurrentWeapon, SendTag, SlotIndex);
 		}
@@ -226,9 +291,11 @@ void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex, UAbilitySystem
 		CurrentWeapon = TargetInstance;
 		SendTag = GameplayTags::Weapon::State::Equip;
 		CurSelectingWeaponSlot = SlotIndex;
+		ApplyWeaponData();
 	}
 	else // 같은 슬롯 인덱스인 경우 장착 해제
 	{
+		RemoveWeaponData();
 		TargetInstance = CurrentWeapon;
 		SendTag = GameplayTags::Weapon::State::UnEquip;
 		CurrentWeapon = nullptr;

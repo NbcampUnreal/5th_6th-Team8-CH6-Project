@@ -100,6 +100,19 @@ namespace GameplayTags
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Wall, "GameplayCue.Hit.Wall");
 		}
 	}
-	
+
+	namespace ChaosEvent
+	{
+		namespace Buff
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(MoveSpeed, "ChaosEvent.Buff.MoveSpeed");
+		}
+		
+		namespace Debuff
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(MoveSpeed, "ChaosEvent.Debuff.MoveSpeed");
+		}
+		
+	}
 	
 }

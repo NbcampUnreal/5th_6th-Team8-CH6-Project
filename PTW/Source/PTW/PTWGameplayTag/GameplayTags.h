@@ -101,6 +101,18 @@ namespace GameplayTags
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Wall);
 		}
 	}
+
+	namespace ChaosEvent
+	{
+		namespace Buff
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(MoveSpeed);
+		}
+		namespace Debuff
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(MoveSpeed);
+		}
+	}
 	
 }
 

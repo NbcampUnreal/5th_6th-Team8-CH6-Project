@@ -43,7 +43,7 @@ protected:
 	void OnClickedFindLobbyButton();	// 로비 찾기
 	
 	UFUNCTION()
-	void OnFindLobbiesComplete(const TArray<FBlueprintSessionResult>& SessionResults);
+	void OnFindSessionsComplete(const TArray<FBlueprintSessionResult>& SearchResults);
 	
 protected:
 	UPROPERTY(meta=(BindWidget))

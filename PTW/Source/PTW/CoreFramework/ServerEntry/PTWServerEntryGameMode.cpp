@@ -31,7 +31,7 @@ void APTWServerEntryGameMode::BeginPlay()
 				// 	ReconstructedSettings.Add(NewSetting);
 				// }
 				
-				SessionSubsystem->CreateLobbySession(ReconstructedSettings, MaxPlayers, bIsPrivate);
+				// SessionSubsystem->CreateGameSession(ReconstructedSettings, MaxPlayers, bIsPrivate);
 			}
 		}
 	}

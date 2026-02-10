@@ -19,7 +19,7 @@ class PTW_API UPTWLobbyListRow : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void Setup(const FBlueprintSessionResult& SessionResult);
+	void Setup(const FBlueprintSessionResult& SearchResult);
 	
 protected:
 	virtual void NativeConstruct() override;
@@ -38,6 +38,5 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> JoinButton;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Session")
-	FBlueprintSessionResult SessionData;
+	FOnlineSessionSearchResult SessionData;
 };

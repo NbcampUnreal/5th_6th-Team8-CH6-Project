@@ -5,17 +5,16 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "PTW/System/PTWSessionSubsystem.h"
+#include "System/Session/SessionConfig.h"
 
-void UPTWLobbyListRow::Setup(const FBlueprintSessionResult& SessionResult)
+void UPTWLobbyListRow::Setup(const FBlueprintSessionResult& SearchResult)
 {
-	SessionData = SessionResult;
+	SessionData = SearchResult.OnlineResult;
+	const FSessionSettings& SessionSettings = SessionData.Session.SessionSettings.Settings;
 	
-	const FOnlineSessionSearchResult& NativeResult = SessionResult.OnlineResult;
-	const FSessionSettings& SessionSettings = NativeResult.Session.SessionSettings.Settings;
-	
-	if (SessionSettings.Find("LobbyName"))
+	if (SessionSettings.Find(SessionKey::ServerName))
 	{
-		FString LobbyNameStr = SessionSettings.Find("LobbyName")->ToString();
+		FString LobbyNameStr = SessionSettings.Find(SessionKey::ServerName)->ToString();
 		LobbyName->SetText(FText::FromString(LobbyNameStr));
 	}
 }
@@ -43,16 +42,10 @@ void UPTWLobbyListRow::NativeDestruct()
 void UPTWLobbyListRow::OnClickedJoinButton()
 {
 	UGameInstance* GameInstance = GetGameInstance();
-	if (!IsValid(GameInstance))
-	{
-		return;
-	}
+	if (!IsValid(GameInstance)) return;
 	
 	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
-	if (!IsValid(SessionSubsystem))
-	{
-		return;
-	}
+	if (!IsValid(SessionSubsystem)) return;
 	
-	SessionSubsystem->JoinLobbySession(SessionData);
+	SessionSubsystem->JoinGameSession(FBlueprintSessionResult(SessionData));
 }

@@ -39,7 +39,8 @@ public class PTW : ModuleRules
         // 4. Networking & Online Subsystem (스팀/세션 연동용)
         PublicDependencyModuleNames.AddRange(new string[] {
             "OnlineSubsystem",
-            "OnlineSubsystemUtils"
+            "OnlineSubsystemUtils",
+			"OnlineSubsystemSteam"
         });
         
         // 5. Niagara 이펙트 모듈

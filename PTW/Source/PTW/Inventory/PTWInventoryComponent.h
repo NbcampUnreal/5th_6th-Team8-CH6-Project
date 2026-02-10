@@ -8,6 +8,7 @@
 #include "PTWInventoryComponent.generated.h"
 
 
+class UGameplayAbility;
 struct FGameplayTag;
 class UPTWItemInstance;
 class APTWWeaponActor;
@@ -93,6 +94,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
 	int32 CurSelectingWeaponSlot = -1;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<UGameplayAbility> Test;
+	
 private:
 	TArray<TObjectPtr<UPTWWeaponInstance>> WeaponArr;
+	
+	FGameplayAbilitySpecHandle CurrentWeaponAbilitySpec;
 };

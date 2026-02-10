@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Abilities/PTWGA_Fire.h"
+#include "PTWGA_Fire.h"
 #include "PTWGA_WaterFire.generated.h"
 
 /**

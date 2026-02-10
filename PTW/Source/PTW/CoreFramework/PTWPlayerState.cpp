@@ -157,6 +157,14 @@ void APTWPlayerState::ApplyAdditionalEffects()
 	}
 }
 
+void APTWPlayerState::SetDeathOrder(int32 Order)
+{
+	if (HasAuthority())
+	{
+		PlayerRoundData.DeathOrder = Order;
+	}
+}
+
 void APTWPlayerState::AddKillCount(int32 KillCount)
 {
 	if (HasAuthority())

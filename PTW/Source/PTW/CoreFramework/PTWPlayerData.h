@@ -54,4 +54,7 @@ struct FPTWPlayerRoundData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Score = 0;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 DeathOrder = 0;
+
 };

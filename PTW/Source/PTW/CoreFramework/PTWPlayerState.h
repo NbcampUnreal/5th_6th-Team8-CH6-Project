@@ -96,6 +96,9 @@ protected:
 	TArray<TSubclassOf<UGameplayEffect>> AdditionalEffects;
 
 public:
+	virtual void SetDeathOrder(int32 Order) override;
+	virtual int32 GetDeathOrder() const override {return PlayerRoundData.DeathOrder;} 
+	
 	virtual void AddKillCount(int32 AddKillCount = 1) override;
 	virtual void AddDeathCount(int32 AddDeathCount = 1) override;
 	virtual void AddScore(int32 AddScore) override;

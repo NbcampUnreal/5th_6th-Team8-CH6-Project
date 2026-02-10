@@ -22,6 +22,9 @@ class PTW_API IPTWPlayerRoundDataInterface
 
 	
 public:
+	virtual void SetDeathOrder(int32 Order)=0;
+	virtual int32 GetDeathOrder() const =0;
+	
 	/** 라운드 킬 증가 */
 	virtual void AddKillCount(int32 Amount = 1) =0;
 	

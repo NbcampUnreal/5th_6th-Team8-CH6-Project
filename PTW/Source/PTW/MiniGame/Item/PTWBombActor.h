@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -90,6 +90,8 @@ protected:
 	bool CheckingBlock(FHitResult& OutHit, const FVector ExplosionLocation, AActor* HitActor);
 	void ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults, float FinalDamage, AActor* InstigatorActor);
 
+	//연출효과 변수
+	void UpdateBombEffects(float NewTime);
 protected:
 	/** 소유자 */
 	UPROPERTY(ReplicatedUsing=OnRep_BombOwnerPawn)
@@ -123,4 +125,18 @@ protected:
 	/** 폭탄 기본 데미지 */
 	UPROPERTY(EditDefaultsOnly, Category="Bomb|Explosion")
 	float BaseBombDamage = 999.f;
+
+	//연출효과
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UAudioComponent> AudioComponent;
+	UPROPERTY(EditDefaultsOnly, Category = "Bomb|Audio")
+	TArray<USoundBase*> CountdownSounds;
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> BombDynamicMat;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UAudioComponent> AudioLoopComponent;
+	UPROPERTY(EditDefaultsOnly, Category = "Bomb|Audio")
+	TObjectPtr<USoundBase> AudioLoopSound;
+
+	int32 CurrentSoundPhaseIndex = -1;
 };

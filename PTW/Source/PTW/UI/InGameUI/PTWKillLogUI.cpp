@@ -6,6 +6,7 @@
 #include "PTWKillLogEntry.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "MiniGame/Item/PTWBombActor.h"
 
 void UPTWKillLogUI::NativeConstruct()
 {
@@ -26,6 +27,8 @@ void UPTWKillLogUI::BindGameStates()
 	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
 	{
 		GS->OnKilllogBroadcast.AddDynamic(this, &UPTWKillLogUI::OnKilllogReceived);
+		
+		GS->OnKilllogBroadcastEx.AddDynamic(this, &UPTWKillLogUI::OnKilllogReceivedEx);
 	}
 }
 
@@ -34,6 +37,8 @@ void UPTWKillLogUI::UnbindGameStates()
 	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
 	{
 		GS->OnKilllogBroadcast.RemoveAll(this);
+		
+		GS->OnKilllogBroadcastEx.RemoveAll(this);
 	}
 }
 
@@ -55,8 +60,34 @@ void UPTWKillLogUI::OnKilllogReceived(AActor* DeadActor, AActor* KillerActor)
 		if (!VictimData.PlayerName.IsEmpty()) VictimName = VictimData.PlayerName;
 		else VictimName = VPS->GetPlayerName();
 	}
+	
+	// 확장 킬로그 추가
+	if (KillerActor && KillerActor->IsA(APTWBombActor::StaticClass()))
+	{
+		AddKillLogWithCause(KillerName, VictimName, TEXT("BOMB")); 
+		return; // 
+	}
 
 	AddKillLog(KillerName, VictimName);
+}
+
+void UPTWKillLogUI::OnKilllogReceivedEx(AActor* DeadActor, AActor* KillerActor, FName CauseId)
+{
+	FString KillerName = TEXT("Unknown");
+	if (APTWPlayerState* KPS = Cast<APTWPlayerState>(KillerActor))
+	{
+		const FPTWPlayerData KillerData = KPS->GetPlayerData();
+		KillerName = !KillerData.PlayerName.IsEmpty() ? KillerData.PlayerName : KPS->GetPlayerName();
+	}
+
+	FString VictimName = TEXT("Unknown");
+	if (APTWPlayerState* VPS = Cast<APTWPlayerState>(DeadActor))
+	{
+		const FPTWPlayerData VictimData = VPS->GetPlayerData();
+		VictimName = !VictimData.PlayerName.IsEmpty() ? VictimData.PlayerName : VPS->GetPlayerName();
+	}
+	
+	AddKillLogWithCause(KillerName, VictimName, CauseId.ToString());
 }
 
 void UPTWKillLogUI::AddKillLog(const FString& Killer, const FString& Victim)
@@ -79,6 +110,30 @@ void UPTWKillLogUI::AddKillLog(const FString& Killer, const FString& Victim)
 	ActiveEntries.Insert(NewEntry, 0);
 
 	/* 개수 초과 시 가장 오래된 로그 제거 */
+	if (ActiveEntries.Num() > MaxLogCount)
+	{
+		RemoveOldest();
+	}
+}
+
+void UPTWKillLogUI::AddKillLogWithCause(const FString& Killer, const FString& Victim, const FString& CauseText)
+{
+	if (!KillLogEntryClass || !LogList)
+		return;
+
+	UPTWKillLogEntry* NewEntry = CreateWidget<UPTWKillLogEntry>(GetWorld(), KillLogEntryClass);
+	if (!NewEntry)
+		return;
+
+	/* 만료 델리게이트 바인딩 */
+	NewEntry->OnExpired.AddUObject(this, &UPTWKillLogUI::HandleEntryExpired);
+
+	// 무기 표시 버전
+	NewEntry->InitWithCause(Killer, Victim, CauseText, LogLifeTime);
+	
+	LogList->InsertChildAt(0, NewEntry);
+	ActiveEntries.Insert(NewEntry, 0);
+	
 	if (ActiveEntries.Num() > MaxLogCount)
 	{
 		RemoveOldest();

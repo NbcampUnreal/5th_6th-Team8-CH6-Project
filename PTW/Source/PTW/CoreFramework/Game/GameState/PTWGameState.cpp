@@ -216,6 +216,14 @@ void APTWGameState::Multicast_BroadcastKilllog_Implementation(AActor* DeadActor,
 	}
 }
 
+void APTWGameState::Multicast_BroadcastKilllogEx_Implementation(AActor* DeadActor, AActor* KillerActor, FName CauseId)
+{
+	if (OnKilllogBroadcastEx.IsBound())
+	{
+		OnKilllogBroadcastEx.Broadcast(DeadActor, KillerActor, CauseId);
+	}
+}
+
 void APTWGameState::Multicast_BroadcastChatMessage_Implementation(const FString& Sender, const FString& Message)
 {
 	OnChatMessageBroadcast.Broadcast(Sender, Message);

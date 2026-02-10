@@ -31,11 +31,21 @@ protected:
 	/* 델리게이트와 연결될 함수 */
 	UFUNCTION()
 	void OnKilllogReceived(AActor* DeadActor, AActor* KillerActor);
+	
+	UFUNCTION()
+	void OnKilllogReceivedEx(AActor* DeadActor, AActor* KillerActor, FName CauseId);
 
 	/* 킬로그 엔트리 추가 */
 	UFUNCTION(BlueprintCallable)
 	void AddKillLog(const FString& Killer, const FString& Victim); // 인자에 무기 종류 추가해야함
 
+	UFUNCTION(BlueprintCallable)
+	void AddKillLogWithCause(
+		const FString& Killer,
+		const FString& Victim,
+		const FString& CauseText
+	);
+	
 	/* 로그가 쌓일 컨테이너 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UVerticalBox> LogList;

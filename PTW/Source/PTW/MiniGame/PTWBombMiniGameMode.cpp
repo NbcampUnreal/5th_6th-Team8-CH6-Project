@@ -194,6 +194,18 @@ void APTWBombMiniGameMode::HandleBombPlayerDeath(AActor* Victim, AActor* Attacke
 
 	AController* DeadController = VictimChar->GetController();
 	APlayerState* DeadPS = VictimChar->GetPlayerState();
+	
+	if (APTWGameState* GS = GetGameState<APTWGameState>())
+	{
+		if (DeadPS && BombOwnerPS)
+		{
+			GS->Multicast_BroadcastKilllogEx(
+				Cast<AActor>(DeadPS),          // Victim
+				Cast<AActor>(BombOwnerPS),    // Killer 
+				FName(TEXT("BOMB"))            // 원인
+			);
+		}
+	}
 
 	if (DeadPS)
 	{

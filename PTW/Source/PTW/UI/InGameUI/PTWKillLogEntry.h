@@ -23,10 +23,18 @@ public:
 		const FString& Killer,
 		const FString& Victim,
 		float LifeTime); // 인자에 무기 종류 추가해야함
-
+	
+	// 추가 확장한 킬로그 init
+	void InitWithCause(
+		const FString& Killer,
+		const FString& Victim,
+		const FString& CauseText,
+		float LifeTime);
+	
 	/* 만료 이벤트 */
 	FOnKillLogExpired OnExpired;
 
+	
 protected:
 	void HandleExpired();
 

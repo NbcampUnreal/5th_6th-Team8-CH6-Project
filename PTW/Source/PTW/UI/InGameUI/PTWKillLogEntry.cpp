@@ -23,7 +23,7 @@ void UPTWKillLogEntry::Init(const FString& Killer, const FString& Victim, float 
 				KillerText->SetColorAndOpacity(FLinearColor(0.1f, 0.1f, 0.8f, 1.0f));
 			}
 		}
-
+		
 		if (VictimText)
 		{
 			VictimText->SetText(FText::FromString(FString::Printf(TEXT(" %s"), *Victim)));
@@ -51,3 +51,50 @@ void UPTWKillLogEntry::HandleExpired()
 	/* 제거는 PTWKillLogUI가 담당 */
 	OnExpired.Broadcast(this);
 }
+
+void UPTWKillLogEntry::InitWithCause(
+	const FString& Killer,
+	const FString& Victim,
+	const FString& CauseText,
+	float LifeTime)
+{
+	APlayerController* PC = GetOwningPlayer();
+
+	if (PC && PC->PlayerState)
+	{
+		FString MyName = PC->PlayerState->GetPlayerName();
+
+		if (KillerText)
+		{
+			KillerText->SetText(FText::FromString(FString::Printf(TEXT("%s "), *Killer)));
+			if (Killer == MyName)
+			{
+				KillerText->SetColorAndOpacity(FLinearColor(0.1f, 0.1f, 0.8f, 1.0f));
+			}
+		}
+
+		// 무기 표시
+		if (KillText)
+		{
+			KillText->SetText(FText::FromString(FString::Printf(TEXT(" %s "), *CauseText)));
+		}
+
+		if (VictimText)
+		{
+			VictimText->SetText(FText::FromString(FString::Printf(TEXT(" %s"), *Victim)));
+			if (Victim == MyName)
+			{
+				VictimText->SetColorAndOpacity(FLinearColor(0.8f, 0.1f, 0.1f, 1.0f));
+			}
+		}
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(
+		LifeTimerHandle,
+		this,
+		&UPTWKillLogEntry::HandleExpired,
+		LifeTime,
+		false
+	);
+}
+

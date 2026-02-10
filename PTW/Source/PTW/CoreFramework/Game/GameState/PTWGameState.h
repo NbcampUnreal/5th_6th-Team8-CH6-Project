@@ -98,6 +98,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpdateRankedPlayers, TArray<APTWP
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnKilllogBroadcastSignature, AActor*, DeadActor, AActor*, KillerActor);
 
+//원인, 무기 포함 킬로그 추가
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnKilllogBroadcastExSignature,AActor*, DeadActor,AActor*, KillerActor,FName, CauseId);
 /**
  * 룰렛 단계 변경 이벤트
  * - 룰렛 진행 단계 또는 결과가 변경되었을 때 브로드캐스트
@@ -137,6 +139,10 @@ public:
 	/** 서버에서 호출하여 모든 클라이언트의 델리게이트를 실행시키는 RPC */
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_BroadcastKilllog(AActor* DeadActor, AActor* KillerActor);
+	
+	//확장한 킬로그 RPC
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_BroadcastKilllogEx(AActor* DeadActor, AActor* KillerActor, FName CauseId);
 
 	/* 채팅 RPC */
 	void BroadcastChatMessage(const FString& Sender, const FString& Message);
@@ -189,6 +195,10 @@ public:
 	/** 킬로그 이벤트: UI가 이 이벤트를 구독합니다. */
 	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
 	FOnKilllogBroadcastSignature OnKilllogBroadcast;
+	
+	//확장 킬로그 이벤트
+	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
+	FOnKilllogBroadcastExSignature OnKilllogBroadcastEx;
 	
 	/* 채팅 */
 	UPROPERTY(BlueprintAssignable, Category = "Chat")

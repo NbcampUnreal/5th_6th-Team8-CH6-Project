@@ -40,4 +40,7 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TMap<FGameplayTag, UAnimMontage*> AnimMap;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TMap<FGameplayTag, UAnimMontage*> WeaponAnimMap;
 };

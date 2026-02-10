@@ -10,13 +10,14 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "GAS/PTWAttributeSet.h"
 #include "EngineUtils.h"
+#include "Manager/PTWChaosEventManager.h"
 #include "PTW/Inventory/PTWItemDefinition.h"
 
 class UPTWScoreSubsystem;
 
 APTWMiniGameMode::APTWMiniGameMode()
 {
-	
+	ChaosEventManager = CreateDefaultSubobject<UPTWChaosEventManager>(TEXT("ChaosEventManager"));
 }
 
 void APTWMiniGameMode::AddWinPoint(AActor* Actor, int32 AddPoint)
@@ -48,7 +49,10 @@ void APTWMiniGameMode::BeginPlay()
 	//}
 	StartGame();
 	
-	
+	// 카오스 이벤트 태그 적용 테스트
+	if (!PTWGameState) return;
+	ChaosEventManager->InitGameState(PTWGameState);
+	ChaosEventManager->ApplyChaosEvent();
 }
 
 void APTWMiniGameMode::Logout(AController* Exiting)

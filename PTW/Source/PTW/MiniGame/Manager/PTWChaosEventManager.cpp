@@ -3,32 +3,35 @@
 
 #include "MiniGame/Manager/PTWChaosEventManager.h"
 
+#include "PTWChaosEventApply.h"
+
 // Sets default values for this component's properties
-UPTWChaosEventManager::UPTWChaosEventManager()
+void UPTWChaosEventManager::InitGameState(APTWGameState* InGameState)
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+	PTWGameState = InGameState;
 }
 
-
-// Called when the game starts
-void UPTWChaosEventManager::BeginPlay()
+UPTWChaosEventDefinition* UPTWChaosEventManager::SelectRandomChaosEvent()
 {
-	Super::BeginPlay();
-
-	// ...
+	if (ChaosEventDefinitions.Num() ==0 ) return nullptr;
 	
+	const int32 RandInt = FMath::RandRange(0, ChaosEventDefinitions.Num());
+	
+	return ChaosEventDefinitions[RandInt]; 
 }
 
-
-// Called every frame
-void UPTWChaosEventManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UPTWChaosEventManager::ApplyChaosEvent()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	UPTWChaosEventDefinition* ChaosEventDefinition = SelectRandomChaosEvent();
+	if (!ChaosEventDefinition) return;
 
-	// ...
+	UPTWChaosEventApply* ApplyEvent = NewObject<UPTWChaosEventApply>(this);
+	if (!IsValid(ApplyEvent)) return;
+
+	ApplyEvent->InitDefinition(ChaosEventDefinition);
+
+	if (!PTWGameState) return;
+	ApplyEvent->ChaosEventApply(PTWGameState);
 }
+
 

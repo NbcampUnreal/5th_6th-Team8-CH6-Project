@@ -69,6 +69,11 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		WaitEventTask->EventReceived.AddDynamic(this, &ThisClass::OnGameplayEventReceived);
 		WaitEventTask->ReadyForActivation();
 	}
+
+	if (UPTWWeaponComponent* WeaponComp = PC->GetWeaponComponent())
+	{
+		WeaponComp->PlayWeaponMontageByTag(ReloadAnimTag);
+	}
 }
 
 UAnimMontage* UPTWGA_Reload::GetReloadMontage(APTWPlayerCharacter* PC) const

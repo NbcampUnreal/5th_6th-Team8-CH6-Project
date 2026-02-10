@@ -53,6 +53,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (EditCondition = "ItemType == EItemType::Weapon", EditConditionHides))
 	TSubclassOf<APTWWeaponActor> WeaponClass;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (EditCondition = "ItemType == EItemType::Weapon", EditConditionHides))
+	TSubclassOf<UGameplayEffect> EffectToGrant;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon",meta = (EditCondition = "ItemType == EItemType::Weapon", EditConditionHides))
 	FGameplayTag WeaponTag;
 	

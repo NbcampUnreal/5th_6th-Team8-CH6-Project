@@ -72,12 +72,19 @@ namespace GameplayTags
 			}
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Rifle, "Weapon.Gun.Rifle");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Rocket, "Weapon.Gun.Rocket");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(WaterGun, "Weapon.Gun.WaterGun");
 		}
 		namespace State
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Equip, "Weapon.State.Equip");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Reload, "Weapon.State.Reload");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(UnEquip, "Weapon.State.UnEquip");
+		}
+		
+		namespace EquipType
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Basic, "Weapon.EquipType.Basic");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Special, "Weapon.EquipType.Special");
 		}
 	}
 	
@@ -88,6 +95,7 @@ namespace GameplayTags
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Explosion, "GameplayCue.Weapon.Explosion");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Fire, "GameplayCue.Weapon.Fire");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(HitImpact, "GameplayCue.Weapon.HitImpact");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Water, "GameplayCue.Weapon.Water");
 		}
 		
 		namespace Item

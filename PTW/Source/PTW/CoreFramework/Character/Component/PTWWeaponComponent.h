@@ -39,6 +39,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	float PlayMontage1P(UAnimMontage* MontageToPlay);
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void PlayWeaponMontageByTag(FGameplayTag AnimTag);
 
 protected:
 	UFUNCTION()

@@ -132,6 +132,23 @@ float UPTWWeaponComponent::PlayMontage1P(UAnimMontage* MontageToPlay)
 	return 0.0f;
 }
 
+void UPTWWeaponComponent::PlayWeaponMontageByTag(FGameplayTag AnimTag)
+{
+	if (!CurrentWeapon) return;
+
+	const UPTWWeaponData* Data = CurrentWeapon->GetWeaponData();
+	if (!Data) return;
+
+	if (Data->WeaponAnimMap.Contains(AnimTag))
+	{
+		UAnimMontage* WeaponMontage = *Data->WeaponAnimMap.Find(AnimTag);
+		if (WeaponMontage)
+		{
+			CurrentWeapon->PlayWeaponMontage(WeaponMontage);
+		}
+	}
+}
+
 void UPTWWeaponComponent::OnRep_CurrentWeaponTag(const FGameplayTag& OldTag)
 {
 	APTWPlayerCharacter* PlayerChar = Cast<APTWPlayerCharacter>(GetOwner());

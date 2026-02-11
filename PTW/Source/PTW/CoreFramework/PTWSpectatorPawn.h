@@ -1,10 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/SpectatorPawn.h"
-#include "APTWSpectatorPawn.generated.h"
+#include "PTWSpectatorPawn.generated.h"
 
 /**
  * 
@@ -16,12 +15,12 @@ class UInputAction;
 struct FInputActionValue;
 
 UCLASS()
-class PTW_API AAPTWSpectatorPawn : public ASpectatorPawn
+class PTW_API APTWSpectatorPawn : public ASpectatorPawn
 {
 	GENERATED_BODY()
 	
 public:
-	AAPTWSpectatorPawn();
+	APTWSpectatorPawn();
 	
 	void SetSpectateTarget();
 	

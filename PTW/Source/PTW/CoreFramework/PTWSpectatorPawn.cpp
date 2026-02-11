@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CoreFramework/APTWSpectatorPawn.h"
+#include "CoreFramework/PTWSpectatorPawn.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "PTWPlayerController.h"
@@ -10,7 +10,7 @@
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/SpringArmComponent.h"
 
-AAPTWSpectatorPawn::AAPTWSpectatorPawn()
+APTWSpectatorPawn::APTWSpectatorPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -38,7 +38,7 @@ AAPTWSpectatorPawn::AAPTWSpectatorPawn()
 	CurrentZoomDistance = MinZoom;
 }
 
-void AAPTWSpectatorPawn::SetSpectateTarget()
+void APTWSpectatorPawn::SetSpectateTarget()
 {
 	if (bIsFirstPerson)
 	{
@@ -50,17 +50,17 @@ void AAPTWSpectatorPawn::SetSpectateTarget()
 	}
 }
 
-void AAPTWSpectatorPawn::SetFirstPersonCamera()
+void APTWSpectatorPawn::SetFirstPersonCamera()
 {
 	CurrentZoomDistance = 0.0f;
 }
 
-void AAPTWSpectatorPawn::SetThirdPersonCamera()
+void APTWSpectatorPawn::SetThirdPersonCamera()
 {
 	CurrentZoomDistance = MaxZoom;
 }
 
-void AAPTWSpectatorPawn::Move(const FInputActionValue& Value)
+void APTWSpectatorPawn::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
@@ -78,7 +78,7 @@ void AAPTWSpectatorPawn::Move(const FInputActionValue& Value)
 	}
 }
 
-void AAPTWSpectatorPawn::Look(const FInputActionValue& Value)
+void APTWSpectatorPawn::Look(const FInputActionValue& Value)
 {
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 	
@@ -89,7 +89,7 @@ void AAPTWSpectatorPawn::Look(const FInputActionValue& Value)
 	}
 }
 
-void AAPTWSpectatorPawn::Zoom(const FInputActionValue& Value)
+void APTWSpectatorPawn::Zoom(const FInputActionValue& Value)
 {
 	float InputValue = Value.Get<float>();
 	if (FMath::IsNearlyZero(InputValue)) return;
@@ -98,7 +98,7 @@ void AAPTWSpectatorPawn::Zoom(const FInputActionValue& Value)
 	CurrentZoomDistance = FMath::Clamp(CurrentZoomDistance, MinZoom, MaxZoom);
 }
 
-void AAPTWSpectatorPawn::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn)
+void APTWSpectatorPawn::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn)
 {
 	// OnPossessedPawnChanged.RemoveDynamic(this, &ThisClass::SpectateNextPlayer);
 
@@ -110,7 +110,7 @@ void AAPTWSpectatorPawn::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn)
 	}
 }
 
-APawn* AAPTWSpectatorPawn::FindNextSpectatorTarget(APawn* InNewPawn)
+APawn* APTWSpectatorPawn::FindNextSpectatorTarget(APawn* InNewPawn)
 {
 	/*
 	if (IsValid(InNewPawn)) return nullptr;
@@ -186,7 +186,7 @@ APawn* AAPTWSpectatorPawn::FindNextSpectatorTarget(APawn* InNewPawn)
 	return nullptr;
 }
 
-void AAPTWSpectatorPawn::SetSpectatorTarget(APawn* NewViewTarget)
+void APTWSpectatorPawn::SetSpectatorTarget(APawn* NewViewTarget)
 {
 	TWeakObjectPtr<ThisClass> WeakThis = this;
 	TWeakObjectPtr<APawn> WeakViewTarget = NewViewTarget;
@@ -206,7 +206,7 @@ void AAPTWSpectatorPawn::SetSpectatorTarget(APawn* NewViewTarget)
 	// 	}, false);
 }
 
-void AAPTWSpectatorPawn::OnInputSpectateNext()
+void APTWSpectatorPawn::OnInputSpectateNext()
 {
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (PC->GetStateName() == NAME_Spectating)
@@ -215,7 +215,7 @@ void AAPTWSpectatorPawn::OnInputSpectateNext()
 	}
 }
 
-void AAPTWSpectatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void APTWSpectatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
@@ -248,7 +248,7 @@ void AAPTWSpectatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	}
 }
 
-void AAPTWSpectatorPawn::Tick(float DeltaTime)
+void APTWSpectatorPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	

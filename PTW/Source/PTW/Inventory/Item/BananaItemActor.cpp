@@ -6,6 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Components/BoxComponent.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 
@@ -37,8 +38,6 @@ void ABananaItemActor::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, U
 		ProjectileMovementComponent->StopMovementImmediately();
 		ProjectileMovementComponent->Deactivate();
 		SetActorRotation(Hit.Normal.Rotation());
-		
-		UE_LOG(LogTemp, Warning, TEXT("BananaItemActor::OnHit"));
 	}
 }
 
@@ -55,19 +54,14 @@ void ABananaItemActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 		return;
 	}
 	
-	if (APawn* Pawn = Cast<APawn>(OtherActor))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Get Owner : %s"), *GetOwner()->GetName());
-		
-		// TODO : 미끄러짐 효과 적용
+	if (APTWPlayerCharacter* Pawn = Cast<APTWPlayerCharacter>(OtherActor))
+	{	
+
 		UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn);
 		if (ASC)
 		{
 			FGameplayAbilitySpec AbilitySpec(SlippingAbilityClass);
 			ASC->GiveAbilityAndActivateOnce(AbilitySpec);
-			
-			
-			UE_LOG(LogTemp, Warning, TEXT("BananaItemActor::OnOverlap"));
 			Destroy();
 		}
 	}

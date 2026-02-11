@@ -34,13 +34,13 @@ public:
 	
 	// 리슨서버로 레벨 생성하는 함수
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void CreateListenLevel(FName MapName);
+	void CreateListenLevel(FName MapName, FSessionConfig SessionConfig);
 	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	
-	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
+	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FSessionConfig SessionConfig);
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	

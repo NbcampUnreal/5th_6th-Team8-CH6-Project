@@ -10,7 +10,6 @@
 #include "CoreFramework/PTWCombatInterface.h"
 #include "Engine/ActorChannel.h"
 #include "GAS/PTWGameplayAbility.h"
-#include "GAS/Abilities/PTWGA_Fire.h"
 #include "Instance/PTWActiveItemInstance.h"
 #include "Instance/PTWPassiveItemInstance.h"
 #include "Instance/PTWWeaponInstance.h"
@@ -222,6 +221,13 @@ void UPTWInventoryComponent::RemoveWeaponData()
 	}
 }
 
+void UPTWInventoryComponent::TestFunction_GiveActiveItem_Implementation(UPTWItemDefinition* Def)
+{
+	UPTWActiveItemInstance* Active = NewObject<UPTWActiveItemInstance>(GetOwner());
+	Active->ItemDef = Def;
+	EquipActiveItem(Active);
+}
+
 
 // Called when the game starts
 void UPTWInventoryComponent::BeginPlay()
@@ -320,8 +326,12 @@ bool UPTWInventoryComponent::EquipActiveItem(UPTWItemInstance* ActiveItemInstanc
 	if (CurrentActiveItemSlot) return false; // 이미 장착된 아이템이 있다면
 	if (!ActiveItemInstance || !ActiveItemInstance->ItemDef->AbilityToGrant) return false; 
 	
-	CurrentActiveItemSlot = ActiveItemInstance;
-
+	if (UPTWActiveItemInstance* Active = Cast<UPTWActiveItemInstance>(ActiveItemInstance))
+	{
+		Active->SetCurrentCount();
+		CurrentActiveItemSlot = Active;
+	}
+	
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
 	if (ASC)
 	{
@@ -337,15 +347,17 @@ bool UPTWInventoryComponent::EquipActiveItem(UPTWItemInstance* ActiveItemInstanc
 
 void UPTWInventoryComponent::ConsumeActiveItem()
 {
-	if (ActiveItemAbilityHandle.IsValid())
+	if (!CurrentActiveItemSlot->UsingActiveItem())
 	{
-		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()))
+		if (ActiveItemAbilityHandle.IsValid())
 		{
-			ASC->ClearAbility(ActiveItemAbilityHandle);
-			ActiveItemAbilityHandle = FGameplayAbilitySpecHandle();
+			if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()))
+			{
+				ASC->ClearAbility(ActiveItemAbilityHandle);
+				ActiveItemAbilityHandle = FGameplayAbilitySpecHandle();
+			}
 		}
+		CurrentActiveItemSlot = nullptr;
 	}
-	
-	CurrentActiveItemSlot = nullptr;
 }
 

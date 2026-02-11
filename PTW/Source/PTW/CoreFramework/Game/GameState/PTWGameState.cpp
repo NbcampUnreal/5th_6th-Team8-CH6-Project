@@ -53,8 +53,6 @@ void APTWGameState::UpdateRanking()
 
 		   const auto& APD = A.GetPlayerRoundData();
 		   const auto& BPD = B.GetPlayerRoundData();
-
-		
 		
 		   return APD.Score > BPD.Score;
 	});

@@ -18,14 +18,15 @@ void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options,
 	
 	if (UPTWGameInstance* PTWGameInstance = Cast<UPTWGameInstance>(GetGameInstance()))
 	{
-		if (PTWGameInstance->bIsFirstLobby == true)
+		if (PTWGameInstance->bIsFirstLobby == true && bSkipFirstLobby == false)
 		{
 			bIsFirstLobby = true;	
 			PTWGameInstance->bIsFirstLobby = false;
 		}
 		else
 		{
-			bIsFirstLobby = false;	
+			bIsFirstLobby = false;
+			PTWGameInstance->bIsFirstLobby = false;
 		}
 	}
 	
@@ -67,22 +68,25 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
 	{
 		AddGold(NewPlayer);
-		
-		// PreGameLobby 상태에서 최소 인원 충족 되면 WaitingTimer 시작
-		// if (PTWGameState->PlayerArray.Num() >= GameFlowRule.MinPlayersToStart)
-		// {
-		// 	if (bWaitingTimerStarted == false)
-		// 	{
-		// 		StartTimer(GameFlowRule.WaitingTime);
-		// 		bWaitingTimerStarted = true;
-		// 	}
-		// }
 
+		if (GameFlowRule.MinPlayersToStart <= PTWGameState->PlayerArray.Num() &&
+			GameFlowRule.bAutoStartWhenMinPlayersMet)
+		{
+			// gameinstance 에 현재 로비에 있는 플레이어 수 저장
+			if (UPTWGameInstance* PTWGameInstance = Cast<UPTWGameInstance>(GetGameInstance()))
+			{
+				PTWGameInstance->CurrentPlayerCount = PTWGameState->PlayerArray.Num();
+			}
+			
+			StartGameLobby();
+
+			return;
+		}
+		
 		if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
 		{
 			StartTimer(GameFlowRule.WaitingTime);
 		}
-		
 	}
 }
 
@@ -97,7 +101,7 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 	if (!PTWPlayerState) return;
 
 	PTWPlayerState->ResetInventoryItemId();
-	
+	RestartPlayer(NewPlayer);
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PostGameLobby)
 	{
 		// 로딩 UI 
@@ -106,10 +110,10 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 			// 플레이 중인 모든 플레이어 접속 중이면 로딩 UI 해제
 		}
 
-		StartGame();
+		StartGameLobby();
 	}
 	
-	RestartPlayer(NewPlayer);
+	
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)
@@ -118,23 +122,42 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 	
 	if (!IsValid(PTWGameState)) return;
 
-	// if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
-	// {
-	// 	if (PTWGameState->PlayerArray.Num() < GameFlowRule.MinPlayersToStart)
-	// 	{
-	// 		if (bWaitingTimerStarted == true)
-	// 		{
-	// 			ClearTimer();
-	// 			bWaitingTimerStarted = false;
-	// 		}
-	// 	}
-	// }
+	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PostGameLobby)
+	{
+		if (UPTWGameInstance* PTWGameInstance = Cast<UPTWGameInstance>(GetGameInstance()))
+		{
+			PTWGameInstance->CurrentPlayerCount = PTWGameState->PlayerArray.Num();
+		}
+	}
 
 	// 로그 아웃하면 gamestate portal 부분 수정
 }
 
-void APTWLobbyGameMode::StartGame()
+void APTWLobbyGameMode::StartGameLobby()
 {
+	ClearTimer();
+
+	if (!IsValid(PTWGameState)) return;
+
+	// 대기 로비에서 게임 로비로 이동 했을 때 모든 플레이어 시작 위치로 이동
+	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
+	{
+		
+		for (APlayerState* PlayerState : PTWGameState->PlayerArray)
+		{
+			if (!PlayerState) continue;
+			
+			AController* Controller = PlayerState->GetOwningController();
+			if (!Controller) continue;
+			
+			MovePlayerToStart(Controller);
+		}
+	}
+	
+	PTWGameState->AdvanceRound();
+	PTWGameState->SetCurrentPhase(EPTWGamePhase::PostGameLobby);
+	
+	// 게임 로비 진입 5초 후 룰렛 시작
 	if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
 	{
 		StartTimer(GameFlowRule.NextMiniGameWaitTime);
@@ -142,6 +165,8 @@ void APTWLobbyGameMode::StartGame()
 		FTimerHandle RouletteDelayTimerHandle;
 		GetWorldTimerManager().SetTimer(RouletteDelayTimerHandle, this, &APTWLobbyGameMode::StartRoulette, GameFlowRule.RouletteDelay);
 	}
+
+	
 }
 
 void APTWLobbyGameMode::EndTimer()
@@ -150,12 +175,7 @@ void APTWLobbyGameMode::EndTimer()
 
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
 	{
-		ClearTimer();
-		
-		PTWGameState->AdvanceRound();
-		PTWGameState->SetCurrentPhase(EPTWGamePhase::PostGameLobby);
-		
-		StartGame();
+		StartGameLobby();
 		
 		return;
 	}

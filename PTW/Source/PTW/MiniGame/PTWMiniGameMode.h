@@ -60,16 +60,14 @@ protected:
 	void StartCountDown();
 	/** 매초마다 카운트다운 감소 */
 	void TickCountDown();
-
+	
+	/** 카운트 다운 종료 시 호출 */
 	UFUNCTION()
 	virtual void OnCountDownFinished();
 	
+	/** 승리 조건 체크 */
 	virtual void CheckEndGameCondition();
 	
-	/** 미니게임 진행 시간 (초) */
-	UPROPERTY(EditDefaultsOnly, Category = "Game|Timer")
-	float MiniGameTime = 90;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")
 	TObjectPtr<UPTWItemDefinition> ItemDefinition;
 
@@ -79,7 +77,6 @@ protected:
 	FTimerHandle CountDownTimerHandle;
 
 private:
-	
 	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
 	void UpdatePlayerRoundData(APlayerState* DeadPlayerState, APlayerState* KillPlayerState);
 
@@ -106,4 +103,5 @@ private:
 	
 	int32 PlayerStartCount = 0;
 
+	int32 CurrentDeathOrder = 1;
 };

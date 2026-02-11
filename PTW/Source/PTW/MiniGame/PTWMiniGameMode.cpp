@@ -70,11 +70,17 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	
 	if (!IsValid(PTWGameState)) return;
-
+	if (!NewPlayer) return;
+	
 	APTWPlayerState* PlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
 	if (!IsValid(PlayerState)) return;
 
 	PTWGameState->AddRankedPlayer(PlayerState);
+
+	APawn* Pawn = NewPlayer->GetPawn();
+	if (!Pawn) return;
+
+	Pawn->DisableInput(NewPlayer);
 	
 }
 

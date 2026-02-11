@@ -8,6 +8,7 @@
 #include "PTWInventoryComponent.generated.h"
 
 
+class UPTWActiveItemInstance;
 class UGameplayAbility;
 struct FGameplayTag;
 class UPTWItemInstance;
@@ -72,6 +73,10 @@ public:
 	
 	void RemoveWeaponData();
 	
+	// FIXME : 테스트 코드
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void TestFunction_GiveActiveItem(UPTWItemDefinition* Def);
+	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -87,7 +92,7 @@ protected:
 	TObjectPtr<UPTWItemInstance> CurrentWeapon;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
-	TObjectPtr<UPTWItemInstance> CurrentActiveItemSlot;
+	TObjectPtr<UPTWActiveItemInstance> CurrentActiveItemSlot;
 	
 	FGameplayAbilitySpecHandle ActiveItemAbilityHandle;
 	

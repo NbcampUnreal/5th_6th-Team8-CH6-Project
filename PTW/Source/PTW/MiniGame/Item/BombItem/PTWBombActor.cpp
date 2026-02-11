@@ -306,6 +306,7 @@ void APTWBombActor::UpdateBombEffects(float NewTime)
 	{
 		if (AudioComponent->IsPlaying()) AudioComponent->Stop();
 		if (AudioLoopComponent->IsPlaying()) AudioLoopComponent->Stop();
+		if (BombDynamicMat) BombDynamicMat->SetScalarParameterValue(FName("BlinkSpeed"), 0.0f);
 		return;
 	}
 
@@ -342,14 +343,9 @@ void APTWBombActor::UpdateBombEffects(float NewTime)
 		CurrentSoundPhaseIndex = NewPhaseIndex;
 	}
 
-	// 폭탄 메시 적용후 입힐코드
-	//if (BombDynamicMat)
-	//{
-	//	float BlinkSpeed = FMath::GetMappedRangeValueClamped(FVector2D(10.f, 0.f), FVector2D(1.f, 20.f), NewTime);
-
-	//	BombDynamicMat->SetScalarParameterValue(FName("BlinkSpeed"), BlinkSpeed);
-
-	//	FLinearColor Color = FMath::Lerp(FLinearColor::Red, FLinearColor::Black, NewTime / 10.0f);
-	//	BombDynamicMat->SetVectorParameterValue(FName("Color"), Color);
-	//}
+	if (BombDynamicMat)
+	{
+		float BlinkSpeed = FMath::GetMappedRangeValueClamped(FVector2D(10.f, 0.f), FVector2D(2.0f, 16.0f), NewTime);
+		BombDynamicMat->SetScalarParameterValue(FName("BlinkSpeed"), BlinkSpeed);
+	}
 }

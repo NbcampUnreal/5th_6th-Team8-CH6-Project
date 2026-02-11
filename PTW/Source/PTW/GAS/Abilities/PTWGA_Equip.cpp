@@ -82,9 +82,10 @@ void UPTWGA_Equip::SetCharacterWeaponAttribute(const UPTWWeaponInstance* WeaponI
 			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetDamageAttribute(), WeaponmData->BaseDamage);
 			ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetFireRateAttribute(), WeaponmData->FireRate);
 			
+			float FinalMaxAmmo = ASC->GetNumericAttribute(UPTWWeaponAttributeSet::GetMaxAmmoAttribute());
 			if (!WeaponItemInstance->bAlreadyUsing) // 처음 사용하는 경우
 			{
-				ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetCurrentAmmoAttribute(), WeaponmData->MaxAmmo);
+				ASC->SetNumericAttributeBase(UPTWWeaponAttributeSet::GetCurrentAmmoAttribute(), FinalMaxAmmo);
 				const_cast<UPTWWeaponInstance*>(WeaponItemInstance)->bAlreadyUsing = true;
 			}
 			else // 해제했다가 다시 사용하는 경우

@@ -7,6 +7,7 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "MiniGame/Item/BombItem/PTWBombActor.h"
+#include "MiniGame/GameMode/PTWBombMiniGameMode.h"
 
 void UPTWKillLogUI::NativeConstruct()
 {
@@ -44,6 +45,11 @@ void UPTWKillLogUI::UnbindGameStates()
 
 void UPTWKillLogUI::OnKilllogReceived(AActor* DeadActor, AActor* KillerActor)
 {
+	//폭탄 게임 모드에서는 원인 포함하는 킬로그만
+	if (GetWorld() && GetWorld()->GetAuthGameMode<APTWBombMiniGameMode>())
+	{
+		return;
+	}
 	// Actor가 유효한지 확인 후 이름 추출
 	FString KillerName = TEXT("Unknown");
 	if (APTWPlayerState* KPS = Cast<APTWPlayerState>(KillerActor))
@@ -59,13 +65,6 @@ void UPTWKillLogUI::OnKilllogReceived(AActor* DeadActor, AActor* KillerActor)
 		FPTWPlayerData VictimData = VPS->GetPlayerData();
 		if (!VictimData.PlayerName.IsEmpty()) VictimName = VictimData.PlayerName;
 		else VictimName = VPS->GetPlayerName();
-	}
-	
-	// 확장 킬로그 추가
-	if (KillerActor && KillerActor->IsA(APTWBombActor::StaticClass()))
-	{
-		AddKillLogWithCause(KillerName, VictimName, TEXT("BOMB")); 
-		return; // 
 	}
 
 	AddKillLog(KillerName, VictimName);

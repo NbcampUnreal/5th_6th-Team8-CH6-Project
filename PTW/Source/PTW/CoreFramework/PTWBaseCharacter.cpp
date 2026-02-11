@@ -15,6 +15,7 @@
 #include "GAS/PTWGameplayAbility.h"
 #include "Game/GameState/PTWGameState.h"
 #include "CoreFramework/Character/Component/PTWReactorComponent.h"
+#include "MiniGame/GameMode/PTWBombMiniGameMode.h"
 #include "PTWGameplayTag/GameplayTags.h"
 
 APTWBaseCharacter::APTWBaseCharacter()
@@ -63,6 +64,12 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
 	{
 		AActor* MyPS = GetPlayerState();
+		
+		if (GetWorld() && GetWorld()->GetAuthGameMode<APTWBombMiniGameMode>())
+		{
+			return;
+		}
+		
 		GS->Multicast_BroadcastKilllog(MyPS, Attacker);
 	}
 }

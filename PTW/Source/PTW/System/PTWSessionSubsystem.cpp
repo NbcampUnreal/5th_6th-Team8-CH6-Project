@@ -21,7 +21,7 @@ void UPTWSessionSubsystem::CreateGameSession(FSessionConfig SessionConfig)
     }
     
     CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(
-        FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete));
+        FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete, SessionConfig));
     
     TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
     SessionSettings->bIsLANMatch = false;							// Lan 연결 사용 여부
@@ -224,9 +224,13 @@ void UPTWSessionSubsystem::LaunchDedicatedServer(const TArray<FSessionPropertyKe
 	// }, 15.0f, false);
 }
 
-void UPTWSessionSubsystem::CreateListenLevel(FName MapName)
+void UPTWSessionSubsystem::CreateListenLevel(FName MapName, FSessionConfig SessionConfig)
 {
-	UGameplayStatics::OpenLevel(this, MapName, true, TEXT("listen"));
+	FString Options;
+	Options += FString::Printf(TEXT("?listen"));
+	Options += FString::Printf(TEXT("?%s=%d"), *SessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
+	Options += FString::Printf(TEXT("?%s=%d"), *SessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
+	UGameplayStatics::OpenLevel(this, MapName, true, Options);
 }
 
 void UPTWSessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -256,7 +260,7 @@ void UPTWSessionSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
+void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FSessionConfig SessionConfig)
 {
 	if(!SessionInterface.IsValid()) return;
 	
@@ -264,7 +268,7 @@ void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasS
 	if (bWasSuccessful)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Steam Session Created Successfully!"));
-		CreateListenLevel("Lobby");
+		CreateListenLevel("Lobby", SessionConfig);
 	}
 	else
 	{
@@ -280,11 +284,11 @@ void UPTWSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* NetDr
 		DestroySessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(
 			FOnDestroySessionCompleteDelegate::CreateUObject(this, &ThisClass::OnDestroySessionComplete));
 		
-		SessionInterface->DestroySession(FName("GameSession"));
+		SessionInterface->DestroySession(NAME_GameSession);
 		return;
 	}
 	
-	OnDestroySessionComplete(FName("GameSession"), true);
+	OnDestroySessionComplete(NAME_GameSession, true);
 }
 
 void UPTWSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)

@@ -5,7 +5,7 @@
 #include "GameplayEffectTypes.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "CoreFramework/PTWPlayerState.h"
-#include "PTW/MiniGame/Item/PTWBombActor.h"
+#include "PTW/MiniGame/Item/BombItem/PTWBombActor.h"
 
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"

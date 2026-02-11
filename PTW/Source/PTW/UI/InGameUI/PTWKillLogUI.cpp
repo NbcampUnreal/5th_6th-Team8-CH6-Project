@@ -6,7 +6,7 @@
 #include "PTWKillLogEntry.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "CoreFramework/PTWPlayerState.h"
-#include "MiniGame/Item/PTWBombActor.h"
+#include "MiniGame/Item/BombItem/PTWBombActor.h"
 
 void UPTWKillLogUI::NativeConstruct()
 {

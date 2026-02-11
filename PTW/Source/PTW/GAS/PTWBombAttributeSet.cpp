@@ -4,7 +4,7 @@
 #include "PTWBombAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Actor.h"
-#include "MiniGame/Item/PTWBombActor.h"
+#include "MiniGame/Item/BombItem/PTWBombActor.h"
 
 UPTWBombAttributeSet::UPTWBombAttributeSet()
 {

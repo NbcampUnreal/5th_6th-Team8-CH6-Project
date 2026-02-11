@@ -16,6 +16,11 @@ void UPTWGA_Booster::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 void UPTWGA_Booster::ApplyItemEffect()
 {
+	if (!CommitAbilityCooldown(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true))
+	{
+		return;
+	}
+	
 	if (!PlayerCharacter) return;
 	
 	IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(PlayerCharacter);

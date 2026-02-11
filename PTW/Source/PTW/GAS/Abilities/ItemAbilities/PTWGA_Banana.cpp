@@ -16,5 +16,10 @@ void UPTWGA_Banana::InitializeVariable()
 
 void UPTWGA_Banana::ApplyItemEffect()
 {
+	if (!CommitAbilityCooldown(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true))
+	{
+		return;
+	}
+	
 	UE_LOG(LogTemp, Warning, TEXT("Banana 사용"));
 }

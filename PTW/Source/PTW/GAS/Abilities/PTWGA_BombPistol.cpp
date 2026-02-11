@@ -8,7 +8,7 @@
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "Inventory/PTWInventoryComponent.h"
-#include "MiniGame/Item/PTWBombActor.h"
+#include "MiniGame/Item/BombItem/PTWBombActor.h"
 #include "PTWGameplayTag/GameplayTags.h"
 #include "System/PTWItemSpawnManager.h"
 

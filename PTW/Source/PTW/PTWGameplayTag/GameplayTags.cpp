@@ -6,6 +6,14 @@ namespace GameplayTags
 	{
 		UE_DEFINE_GAMEPLAY_TAG(Fire, "Ability.Block.Fire");
 	}
+
+	namespace Ability
+	{
+		namespace CoolDown
+		{
+			UE_DEFINE_GAMEPLAY_TAG(Banana, "Ability.CoolDown.Banana");
+		}
+	}
 	
 	namespace Data
 	{

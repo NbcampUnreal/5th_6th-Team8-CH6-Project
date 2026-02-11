@@ -8,6 +8,15 @@ namespace GameplayTags
 	{
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Fire);
 	}
+	
+	namespace Ability
+	{
+		namespace CoolDown
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Banana);
+		}
+	}
+	
 
 	namespace Data
 	{

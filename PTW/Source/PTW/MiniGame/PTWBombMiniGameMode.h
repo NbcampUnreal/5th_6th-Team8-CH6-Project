@@ -9,6 +9,7 @@
 class APTWBombActor;
 class APTWBaseCharacter;
 class APTWPlayerState;
+class UGameplayEffect;
 
 UCLASS()
 class PTW_API APTWBombMiniGameMode : public APTWMiniGameMode
@@ -65,4 +66,7 @@ private:
 	void HandleBombPlayerDeath(AActor* Victim, AActor* Attacker);
 	
 	void SetSpectator(AController* DeadController);
+	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> BombAttachEffect;
 };

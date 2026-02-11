@@ -2,6 +2,7 @@
 
 #include "PTWBombMiniGameMode.h"
 
+#include "GameplayEffectTypes.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "PTW/MiniGame/Item/PTWBombActor.h"
@@ -175,6 +176,11 @@ void APTWBombMiniGameMode::GiveItemAndEquipWeapon()
 	{
 		if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
 		{
+			if (IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(PC))
+			{
+				CombatInt->ApplyGameplayEffectToSelf(BombAttachEffect, 1.0f, FGameplayEffectContextHandle());
+			}
+			
 			SpawnManager->SpawnSingleItem(BombOwnerPS, BombWeaponDef);
 			
 			if (UPTWInventoryComponent* Inven = PC->GetInventoryComponent())

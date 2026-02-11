@@ -9,6 +9,7 @@
 #include "CoreFramework/PTWPlayerState.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "MiniGame/Item/PTWBombActor.h"
+#include "PTWGameplayTag/GameplayTags.h"
 #include "System/PTWItemSpawnManager.h"
 
 void UPTWGA_BombPistol::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -91,6 +92,11 @@ void UPTWGA_BombPistol::GiveItemAndEquip(APTWPlayerCharacter* TargetPC)
 {
 	if (!TargetPC) return;
 	
+	if (IPTWCombatInterface* TargetCombatInt = Cast<IPTWCombatInterface>(TargetPC))
+	{
+		TargetCombatInt->ApplyGameplayEffectToSelf(BombPistolEffect, 1.0f, FGameplayEffectContextHandle());
+	}
+	
 	if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
 	{
 		if (APTWPlayerState* PS = TargetPC->GetPlayerState<APTWPlayerState>())
@@ -110,10 +116,17 @@ void UPTWGA_BombPistol::GiveItemAndEquip(APTWPlayerCharacter* TargetPC)
 
 void UPTWGA_BombPistol::RemoveSourceWeapon(APTWPlayerCharacter* SourcePC)
 {
+	if (IPTWCombatInterface* TargetCombatInt = Cast<IPTWCombatInterface>(SourcePC))
+	{
+		TargetCombatInt->RemoveEffectWithTag(GameplayTags::State::Slowing);
+	}
+	
+	
 	if (UPTWInventoryComponent* Inven = SourcePC->GetInventoryComponent())
 	{
 		Inven->RemoveWeaponItem();
 	}
+	
 }
 
 

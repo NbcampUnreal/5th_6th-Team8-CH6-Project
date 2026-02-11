@@ -47,6 +47,7 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Posture_Crouching, "State.Posture.Crouching");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Status_Dead, "State.Dead");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Status_Bomb, "State.BombAttach");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Slowing, "State.DebuffSlow");
 		
 		namespace Movement
 		{

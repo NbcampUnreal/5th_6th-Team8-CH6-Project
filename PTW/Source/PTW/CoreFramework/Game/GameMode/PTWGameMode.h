@@ -65,6 +65,8 @@ protected:
 
 	// 내부 타이머 핸들(StartTimer/UpdateTimer에서 사용)
 	FTimerHandle TimerHandle;
+
+	bool bIsGameStart = false;
 private:
 	// 현재 라운드/플레이어 데이터를 Subsystem으로 저장
 	void SaveGameDataToSubsystem();

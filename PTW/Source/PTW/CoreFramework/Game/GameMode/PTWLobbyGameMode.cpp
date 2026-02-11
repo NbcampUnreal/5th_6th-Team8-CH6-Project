@@ -45,7 +45,7 @@ void APTWLobbyGameMode::InitGameState()
 		}
 		else
 		{
-			PTWGameState->SetCurrentPhase(EPTWGamePhase::PostGameLobby);
+			PTWGameState->SetCurrentPhase(EPTWGamePhase::Loading);
 			TravelLevelName = TEXT("/Game/_PTW/Maps/MiniGame_Bomb");
 			PTWGameState->AdvanceRound(); // 라운드 증가
 		}
@@ -72,6 +72,8 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		if (GameFlowRule.MinPlayersToStart <= PTWGameState->PlayerArray.Num() &&
 			GameFlowRule.bAutoStartWhenMinPlayersMet)
 		{
+			if (bIsGameStart) return;
+			
 			// gameinstance 에 현재 로비에 있는 플레이어 수 저장
 			if (UPTWGameInstance* PTWGameInstance = Cast<UPTWGameInstance>(GetGameInstance()))
 			{
@@ -112,8 +114,6 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 
 		StartGameLobby();
 	}
-	
-	
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)
@@ -137,6 +137,8 @@ void APTWLobbyGameMode::StartGameLobby()
 {
 	ClearTimer();
 
+	bIsGameStart = true;
+	
 	if (!IsValid(PTWGameState)) return;
 
 	// 대기 로비에서 게임 로비로 이동 했을 때 모든 플레이어 시작 위치로 이동
@@ -165,8 +167,6 @@ void APTWLobbyGameMode::StartGameLobby()
 		FTimerHandle RouletteDelayTimerHandle;
 		GetWorldTimerManager().SetTimer(RouletteDelayTimerHandle, this, &APTWLobbyGameMode::StartRoulette, GameFlowRule.RouletteDelay);
 	}
-
-	
 }
 
 void APTWLobbyGameMode::EndTimer()

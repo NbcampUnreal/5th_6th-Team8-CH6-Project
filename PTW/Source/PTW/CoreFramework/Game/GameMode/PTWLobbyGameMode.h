@@ -90,8 +90,6 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Test")
 	bool bSkipFirstLobby = false;
-
-	
 	
 	bool bIsFirstLobby;
 	bool bWaitingTimerStarted = false;

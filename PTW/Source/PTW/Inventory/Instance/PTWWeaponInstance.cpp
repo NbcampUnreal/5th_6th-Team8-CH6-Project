@@ -1,5 +1,10 @@
 ﻿#include "PTWWeaponInstance.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
+#include "GAS/PTWWeaponAttributeSet.h"
+#include "Inventory/PTWInventoryComponent.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -54,9 +59,29 @@ void UPTWWeaponInstance::SetCurrentAmmo(int32 NewAmmo)
 
 int32 UPTWWeaponInstance::GetMaxAmmo()
 {
-	if (SpawnedWeapon1P && SpawnedWeapon1P->GetWeaponData())
+	// if (SpawnedWeapon1P && SpawnedWeapon1P->GetWeaponData())
+	// {
+	// 	return SpawnedWeapon1P->GetWeaponData()->MaxAmmo;
+	// }
+
+	if (APTWPlayerCharacter* PlayerCharacter = GetItemInstanceOwner())
 	{
-		return SpawnedWeapon1P->GetWeaponData()->MaxAmmo;
+		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PlayerCharacter))
+		{
+			return ASC->GetNumericAttribute(UPTWWeaponAttributeSet::GetMaxAmmoAttribute());
+		}
 	}
 	return 0;
+}
+
+APTWPlayerCharacter* UPTWWeaponInstance::GetItemInstanceOwner()
+{
+	UPTWInventoryComponent* OwnerComp = Cast<UPTWInventoryComponent>(GetOuter());
+	
+	if (OwnerComp)
+	{
+		return Cast<APTWPlayerCharacter>(OwnerComp->GetOwner());
+	}
+	
+	return nullptr;
 }

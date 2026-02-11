@@ -6,6 +6,7 @@
 #include "PTWItemInstance.h"
 #include "PTWWeaponInstance.generated.h"
 
+class APTWPlayerCharacter;
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAmmoChangedSignature, int32 /*CurrentAmmo*/, int32 /*MaxAmmo*/);
 
 /**
@@ -38,6 +39,8 @@ public:
 	void SetCurrentAmmo(int32 NewAmmo);
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	int32 GetMaxAmmo();
+	
+	APTWPlayerCharacter* GetItemInstanceOwner();
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentAmmo)

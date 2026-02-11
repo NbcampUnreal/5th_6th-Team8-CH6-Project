@@ -43,6 +43,8 @@ void UPTWGA_Banana::ApplyItemEffect()
 	FVector TargetLocation = ScreenHit.bBlockingHit ? ScreenHit.ImpactPoint : TraceEnd;
 	FVector SpawnLocation = PC->GetActorLocation() + PC->GetActorForwardVector() * 50.f + PC->GetActorUpVector() * 50.f;
 	FVector LaunchDirection = (TargetLocation - SpawnLocation).GetSafeNormal();
+	LaunchDirection.Z += 0.2f;
+	LaunchDirection.Normalize();
 	
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = PC;

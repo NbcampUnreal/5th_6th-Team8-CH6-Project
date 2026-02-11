@@ -4,6 +4,26 @@
 #include "CoreMinimal.h"
 #include "SessionConfig.generated.h"
 
+UENUM(BlueprintType)
+enum class EPTWRoundLimit : uint8
+{
+	Short	UMETA(DisplayName = "ShortRound"),
+	Long	UMETA(DisplayName = "LongRound")
+};
+
+static int32 GetMaxRoundsByLimit(EPTWRoundLimit Limit)
+{
+	switch (Limit)
+	{
+	case EPTWRoundLimit::Short:
+		return 5;
+	case EPTWRoundLimit::Long:
+		return 10;
+	default:
+		return 0;
+	}
+}
+
 namespace SessionKey
 {
 	inline const FName ServerName = FName(TEXT("SERVER_NAME"));

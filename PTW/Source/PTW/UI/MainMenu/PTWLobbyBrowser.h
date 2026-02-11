@@ -17,6 +17,8 @@ class UPTWLobbyListRow;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLobbyBackAction);
 
+enum class EPTWRoundLimit : uint8;
+
 UCLASS()
 class PTW_API UPTWLobbyBrowser : public UUserWidget
 {
@@ -43,6 +45,12 @@ protected:
 	void OnClickedFindLobbyButton();	// 로비 찾기
 	
 	UFUNCTION()
+	void OnClickedShortRoundButton();
+	
+	UFUNCTION()
+	void OnClickedLongRoundButton();
+	
+	UFUNCTION()
 	void OnFindSessionsComplete(const TArray<FBlueprintSessionResult>& SearchResults);
 	
 protected:
@@ -62,6 +70,12 @@ protected:
 	TObjectPtr<UEditableText> LobbyMaxPlayerEditableText;
 	
 	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UButton> ShortRoundButton;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UButton> LongRoundButton;
+	
+	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> CreateLobbyButton;
 	
 	UPROPERTY(meta=(BindWidget))
@@ -72,4 +86,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Widgets")
 	TSubclassOf<UPTWLobbyListRow> LobbyListRowClass;
+	
+private:
+	EPTWRoundLimit RoundLimit;
 };

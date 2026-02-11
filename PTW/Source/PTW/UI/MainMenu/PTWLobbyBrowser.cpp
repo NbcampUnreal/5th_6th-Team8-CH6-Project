@@ -12,9 +12,12 @@
 #include "PTW/System/PTWSessionSubsystem.h"
 #include "System/Session/SessionConfig.h"
 
+#define LOCTEXT_NAMESPACE "LobbyBrowser"
 void UPTWLobbyBrowser::NativeConstruct()
 {
 	Super::NativeConstruct();
+	
+	RoundLimit = EPTWRoundLimit::Short;
 	
 	if (!IsValid(LobbyListRowClass))
 	{
@@ -41,6 +44,17 @@ void UPTWLobbyBrowser::NativeConstruct()
 		FindLobbyButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedFindLobbyButton);
 	}
 	
+	if (IsValid(ShortRoundButton))
+	{
+		ShortRoundButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedShortRoundButton);
+		OnClickedShortRoundButton();
+	}
+	
+	if (IsValid(LongRoundButton))
+	{
+		LongRoundButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedLongRoundButton);
+	}
+	
 	UGameInstance* GameInstance = GetGameInstance();
 	if (IsValid(GameInstance))
 	{
@@ -56,9 +70,15 @@ void UPTWLobbyBrowser::NativeConstruct()
 		APlayerState* PS = GetOwningPlayerState();
 		if (IsValid(PS))
 		{
-			FText NewLobbyName = FText::FromString(FString::Printf(TEXT("%s의 서버"), *PS->GetPlayerName()));
+		
+			FText NewLobbyName = FText::Format(LOCTEXT("sServer", "{0}'s Server"), FText::FromString(PS->GetPlayerName()));
 			LobbyNameEditableText->SetText(NewLobbyName);
 		}
+	}
+	
+	if (IsValid(LobbyMaxPlayerEditableText))
+	{
+		LobbyMaxPlayerEditableText->SetText(FText::FromString(TEXT("16")));
 	}
 }
 
@@ -102,6 +122,17 @@ void UPTWLobbyBrowser::OnClickedCreateLobbyButton()
 	if (IsValid(LobbyNameEditableText))
 	{
 		SessionConfig.ServerName = LobbyNameEditableText->GetText().ToString();
+		
+	}
+	
+	if (IsValid(LobbyMaxPlayerEditableText))
+	{
+		SessionConfig.MaxPlayers = FCString::Atoi(*LobbyMaxPlayerEditableText->GetText().ToString());
+	}
+	
+	if (IsValid(LobbyMaxPlayerEditableText))
+	{
+		SessionConfig.MaxRounds = GetMaxRoundsByLimit(RoundLimit);
 	}
 	
 	UGameInstance* GameInstance = GetGameInstance();
@@ -129,6 +160,22 @@ void UPTWLobbyBrowser::OnClickedFindLobbyButton()
 	SessionSubsystem->FindGameSession();
 }
 
+void UPTWLobbyBrowser::OnClickedShortRoundButton()
+{
+	RoundLimit = EPTWRoundLimit::Short;
+	
+	ShortRoundButton->SetBackgroundColor(FLinearColor::Green);
+	LongRoundButton->SetBackgroundColor(FLinearColor::White);
+}
+
+void UPTWLobbyBrowser::OnClickedLongRoundButton()
+{
+	RoundLimit = EPTWRoundLimit::Long;
+	
+	LongRoundButton->SetBackgroundColor(FLinearColor::Green);
+	ShortRoundButton->SetBackgroundColor(FLinearColor::White);
+}
+
 void UPTWLobbyBrowser::OnFindSessionsComplete(const TArray<FBlueprintSessionResult>& SearchResults)
 {
 	if (SearchResults.IsEmpty()) return;
@@ -140,3 +187,4 @@ void UPTWLobbyBrowser::OnFindSessionsComplete(const TArray<FBlueprintSessionResu
 		LobbyListVerticalBox->AddChildToVerticalBox(LobbyListRow);
 	}
 }
+#undef LOCTEXT_NAMESPACE

@@ -296,6 +296,9 @@ void APTWLobbyGameMode::EndRoulette()
 	{
 		ShopSubsystem->InitializeShopsForRound(MapTag, EventTag);
 	}
+
+	FName SelectedMapName = PTWGameState->GetRouletteData().MapRowName;
+	PrepareAllPlayersLoadingScreen(ELoadingScreenType::MiniGame, SelectedMapName);
 }
 
 TArray<FName> APTWLobbyGameMode::GetSelectableMapRowNames()

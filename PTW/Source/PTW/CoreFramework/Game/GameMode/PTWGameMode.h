@@ -1,9 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "PTWGameMode.generated.h"
 
 
@@ -41,7 +42,19 @@ protected:
 	virtual void Logout(AController* Exiting) override;
 
 	virtual void GetSeamlessTravelActorList(bool bToTransition, TArray<AActor*>& ActorList) override;;
+
+	virtual void PostSeamlessTravel() override;
+
+	/* 트래블 직전에 모든 클라에 로딩 정보 전달 */
+	void PrepareAllPlayersLoadingScreen(ELoadingScreenType Type, FName MapRowName);
+
 public:
+	/** 모든 플레이어가 로딩되었는지 확인 */
+	void CheckAllPlayersLoaded();
+
+	/** 모든 클라이언트의 로딩 화면을 끄라는 RPC */
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_CloseLoadingScreen();
 
 protected:
 	/** 지정한 시간(초) 기준으로 타이머를 시작 */

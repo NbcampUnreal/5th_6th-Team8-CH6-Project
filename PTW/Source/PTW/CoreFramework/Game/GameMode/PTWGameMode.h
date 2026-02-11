@@ -47,11 +47,15 @@ protected:
 	/** 지정한 시간(초) 기준으로 타이머를 시작 */
 	void StartTimer(float TimeDuration);
 
+	/** 기본 게임 타이머 초기화 */
 	void ClearTimer();
 	
 	/** 설정된 TravelLevelName으로 레벨 이동 처리 */
 	void TravelLevel();
 
+	/** 플레이어를 시작 위치로 이동시키는 함수 */
+	void MovePlayerToStart(AController* Controller);
+	
 	// 이동할 레벨 이름(TravelLevel에서 사용)
 	FString TravelLevelName;
 	

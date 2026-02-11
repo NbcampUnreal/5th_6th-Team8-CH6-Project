@@ -35,11 +35,11 @@ struct FPTWGameFlowRule
 
 	/** 게임을 시작하기 위한 최소 플레이어 수 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
-	int32 MinPlayersToStart = 2;
-
-	/** 게임에 동시에 참여할 수 있는 최대 플레이어 수 */
+	int32 MinPlayersToStart = 4;
+	
+	/** 최소 인원이 충족되면 자동으로 게임을 시작 할 지 여부 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
-	int32 MaxPlayer = 16;
+	bool bAutoStartWhenMinPlayersMet = true;
 };
 
 /**
@@ -64,11 +64,12 @@ protected:
 	virtual void Logout(AController* Exiting) override;
 
 	//* PreGameLobby 상태에서 타이머가 종료되면 게임 시작 / 
-	void StartGame();
+	void StartGameLobby();
 
 	virtual void EndTimer() override;
 private:
 	void AddGold(APlayerController* NewPlayer);
+	
 	void SelectedRandomMap();
 	void SelectedRandomEvent();
 
@@ -76,7 +77,6 @@ private:
 	void StartRoundEventRoulette();
 
 	void EndRoulette();
-	
 	void StartRoulette();
 	
 	TArray<FName> GetSelectableMapRowNames();
@@ -87,6 +87,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Roulette")
 	TObjectPtr<UDataTable> LobbyRoundEventTable;
 	/**  */	
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Test")
+	bool bSkipFirstLobby = false;
+
+	
+	
 	bool bIsFirstLobby;
 	bool bWaitingTimerStarted = false;
 
@@ -94,5 +100,7 @@ private:
 
 	FGameplayTag MapTag;
 	FGameplayTag EventTag;
+
+	
 	
 };

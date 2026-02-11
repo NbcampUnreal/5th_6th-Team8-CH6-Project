@@ -17,6 +17,6 @@ class PTW_API UPTWGameInstance : public UAdvancedFriendsGameInstance
 
 public:
 	bool bIsFirstLobby = true;
-	
+	int32 CurrentPlayerCount =0;
 	
 };

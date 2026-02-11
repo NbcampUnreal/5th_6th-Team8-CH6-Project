@@ -4,6 +4,7 @@
 #include "PTWGameMode.h"
 
 #include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
 
@@ -101,8 +102,28 @@ void APTWGameMode::EndTimer()
 
 void APTWGameMode::TravelLevel()
 {
+	// 레벨 이동 할 때 마다 현재 인원 갱신
+	if (UPTWGameInstance* PTWGameInstance = Cast<UPTWGameInstance>(GetGameInstance()))
+	{
+		PTWGameInstance->CurrentPlayerCount = PTWGameState->PlayerArray.Num();
+	}
+	
 	SaveGameDataToSubsystem();
 	GetWorld()->ServerTravel(TravelLevelName);
+}
+
+void APTWGameMode::MovePlayerToStart(AController* Controller)
+{
+	if (!Controller) return;
+
+	AActor* PlayerStart = ChoosePlayerStart(Controller);
+	if (!PlayerStart) return;
+
+	APawn* Pawn= Controller->GetPawn();
+	if (!Pawn) return;
+
+	Pawn->SetActorLocation(PlayerStart->GetActorLocation());
+	Pawn->SetActorRotation(PlayerStart->GetActorRotation());
 }
 
 void APTWGameMode::SaveGameDataToSubsystem()

@@ -33,17 +33,18 @@ void APTWLobbyPortal::BeginPlay()
 
 	PTWGameState->OnGamePhaseChanged.AddDynamic(this, &APTWLobbyPortal::PortalEnable);
 
-	// 임시로 처음 로비에도 포탈 생성
-	// if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PostGameLobby)
-	// {
-	// 	if (!HasAuthority()) return;
-	//
-	// 	SetPortalEnabled(true);
-	// }
-
-	if (!HasAuthority()) return;
 	
-	SetPortalEnabled(true);
+	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PostGameLobby)
+	{
+		if (!HasAuthority()) return;
+	
+		SetPortalEnabled(true);
+	}
+	
+	// 임시로 처음 로비에도 포탈 생성
+	// if (!HasAuthority()) return;
+	//
+	// SetPortalEnabled(true);
 	
 }
 

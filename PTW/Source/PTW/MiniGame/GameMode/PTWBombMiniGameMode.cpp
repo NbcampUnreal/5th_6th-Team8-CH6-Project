@@ -149,23 +149,25 @@ void APTWBombMiniGameMode::AssignRandomBombOwner()
 
 void APTWBombMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
+	if (!NewPlayer) return;
+	
+	if (APlayerState* PS = NewPlayer->PlayerState)
+	{
+		if (EliminatedPlayers.Contains(PS))
+		{
+			SetSpectator(NewPlayer);
+			return;
+		}
+	}
 	Super::RestartPlayer(NewPlayer);
 
 	// 스폰된 캐릭터 가져오기
 	APTWBaseCharacter* BaseChar = Cast<APTWBaseCharacter>(NewPlayer ? NewPlayer->GetPawn() : nullptr);
 	if (!BaseChar) return;
 	
-	BaseChar->OnCharacterDied.RemoveAll(this);
+	BaseChar->OnCharacterDied.RemoveDynamic(this, &APTWBombMiniGameMode::HandleBombPlayerDeath);
 	BaseChar->OnCharacterDied.AddDynamic(this, &APTWBombMiniGameMode::HandleBombPlayerDeath);
 
-	// 이미 탈락한 플레이어는 라운드가 바뀌어도 계속 관전 상태 유지
-	if (APlayerState* PS = NewPlayer->PlayerState)
-	{
-		if (EliminatedPlayers.Contains(PS))
-		{
-			SetSpectator(NewPlayer);
-		}
-	}
 }
 
 void APTWBombMiniGameMode::GiveItemAndEquipWeapon()

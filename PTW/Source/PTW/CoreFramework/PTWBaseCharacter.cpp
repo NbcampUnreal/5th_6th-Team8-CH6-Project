@@ -15,7 +15,7 @@
 #include "GAS/PTWGameplayAbility.h"
 #include "Game/GameState/PTWGameState.h"
 #include "CoreFramework/Character/Component/PTWReactorComponent.h"
-#include "MiniGame/GameMode/BombMiniGameMode/PTWBombMiniGameMode.h"
+#include "MiniGame/GameMode/PTWBombMiniGameMode.h"
 #include "PTWGameplayTag/GameplayTags.h"
 
 APTWBaseCharacter::APTWBaseCharacter()

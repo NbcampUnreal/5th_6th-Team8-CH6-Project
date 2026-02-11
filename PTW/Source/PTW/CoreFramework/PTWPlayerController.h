@@ -36,12 +36,6 @@ public:
 	void StartSpectating();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_StartSpectating();
-	UFUNCTION()
-	void SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn);
-	APawn* FindNextSpectatorTarget(APawn* InNewPawn);
-	void SetSpectatorTarget(APawn* NewViewTarget);
-	UFUNCTION()
-	void OnInputSpectateNext();
 	
 	/* 데미지 인디케이터 */
 	UFUNCTION(Client, Reliable)
@@ -151,9 +145,6 @@ protected:
 	UInputMappingContext* DefaultMappingContext;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* ShowRankingAction;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	UInputAction* SpectateNextAction;
 
 	// PauseMenu (ESC)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")

@@ -12,6 +12,11 @@
 #include "EngineUtils.h"
 #include "Manager/PTWChaosEventManager.h"
 #include "PTW/Inventory/PTWItemDefinition.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerStart.h"
+#include "Camera/CameraActor.h"
+#include "Engine/TargetPoint.h"
+#include "Gameplay/Actor/PTWResultCharacter.h"
 
 class UPTWScoreSubsystem;
 
@@ -178,9 +183,11 @@ void APTWMiniGameMode::EndGame()
 	if (!PTWGameState) return;
 	
 	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
-	ResetPlayerRoundData();
-	ResetPlayerInventoryID();
-	TravelLevel();
+
+	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
+	GetWorldTimerManager().ClearTimer(CoinSpawnTimerHandle);
+
+	StartResultSequence();
 }
 
 
@@ -453,5 +460,97 @@ void APTWMiniGameMode::OnCoinSpawnTimerElapsed()
 	}
 }
 
+//연출 단계 구현
+void APTWMiniGameMode::StartResultSequence()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
 
+	AActor* ResultCamera = nullptr;
+	TArray<AActor*> FoundActors;
+
+	UGameplayStatics::GetAllActorsWithTag(World, FName("ResultCamera"), FoundActors);
+	if (FoundActors.Num() > 0) ResultCamera = FoundActors[0];
+
+	AActor* WinSpot = nullptr;
+	UGameplayStatics::GetAllActorsWithTag(World, FName("WinSpot"), FoundActors);
+	if (FoundActors.Num() > 0) WinSpot = FoundActors[0];
+
+	AActor* LoseSpot = nullptr;
+	UGameplayStatics::GetAllActorsWithTag(World, FName("LoseSpot"), FoundActors);
+	if (FoundActors.Num() > 0) LoseSpot = FoundActors[0];
+
+	int32 WinnerCount = 0;
+	int32 LoserCount = 0;
+
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
+		if (!PC) continue;
+
+		APTWPlayerState* PS = PC->GetPlayerState<APTWPlayerState>();
+		if (!PS) continue;
+
+		PC->Client_SetInputRestricted(true);
+
+		if (APawn* OriginalPawn = PC->GetPawn())
+		{
+			OriginalPawn->SetActorHiddenInGame(true);
+			OriginalPawn->SetActorEnableCollision(false);
+		}
+
+		if (ResultCamera)
+		{
+			if (PC->IsLocalController())
+			{
+				PC->SetViewTargetWithBlend(ResultCamera, 1.0f);
+			}
+			else
+			{
+				PC->SetViewTargetWithBlend(ResultCamera, 1.0f);
+			}
+		}
+
+		if (ResultCharacterClass)
+		{
+
+			bool bIsWinner = (PS->GetDeathOrder() == 0);
+
+			FVector SpawnLoc = FVector::ZeroVector;
+			FRotator SpawnRot = FRotator::ZeroRotator;
+
+			if (bIsWinner && WinSpot)
+			{
+				SpawnLoc = WinSpot->GetActorLocation() + (WinSpot->GetActorRightVector() * 100.0f * WinnerCount++);
+				SpawnRot = WinSpot->GetActorRotation();
+			}
+			else if (!bIsWinner && LoseSpot)
+			{
+				SpawnLoc = LoseSpot->GetActorLocation() + (LoseSpot->GetActorRightVector() * 100.0f * LoserCount++);
+				SpawnRot = LoseSpot->GetActorRotation();
+			}
+			if (!SpawnLoc.IsZero())
+			{
+				FActorSpawnParameters Params;
+				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				APTWResultCharacter* ResultChar = World->SpawnActor<APTWResultCharacter>(ResultCharacterClass, SpawnLoc, SpawnRot, Params);
+
+				if (ResultChar)
+				{
+					ResultChar->InitializeResult(bIsWinner);
+				}
+			}
+		}
+	}
+
+	GetWorldTimerManager().SetTimer(ResultTimerHandle, this, &APTWMiniGameMode::FinishEndGameSequence, ResultSequenceDuration, false);
+}
+
+void APTWMiniGameMode::FinishEndGameSequence()
+{
+	ResetPlayerRoundData();
+	ResetPlayerInventoryID();
+	TravelLevel();
+}
 

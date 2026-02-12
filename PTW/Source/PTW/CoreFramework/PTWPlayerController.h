@@ -51,6 +51,8 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_SetInputRestricted(bool bRestricted);
 
+	void ApplyInputRestricted(bool bRestricted);
+	
 	/* 클라이언트가 서버에 메시지 전송을 요청하는 RPC */
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendChatMessage(const FString& Message);

@@ -67,11 +67,6 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 
 	AddGold(NewPlayer);
 	
-	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
-	{
-		PTWScoreSubsystem->IncreasePlayerCount();
-	}
-	
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
 	{
 		if (GameFlowRule.MinPlayersToStart <= PTWGameState->PlayerArray.Num() &&
@@ -103,25 +98,20 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 
 	PTWPlayerState->ResetInventoryItemId();
 	//RestartPlayer(NewPlayer);
-
+	
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::Loading)
 	{
-		if (CurrentPlayer <= PTWGameState->PlayerArray.Num())
+		SetInputBlock(true);
+		
+		if (AllPlayer <= PTWGameState->PlayerArray.Num())
 		{
 			if (bIsGameStart) return;
-			
-			StartGameLobby();
+			bIsGameStart = true;
+			FTimerHandle LoadingDealyTimer;
+			GetWorldTimerManager().SetTimer(LoadingDealyTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
 		}
 	}
 }
-
-void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
-{
-	Super::HandleSeamlessTravelPlayer(C);
-
-	//SetInputBlock(C, true);
-}
-
 
 void APTWLobbyGameMode::Logout(AController* Exiting)
 {
@@ -140,27 +130,14 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 void APTWLobbyGameMode::RestartPlayer(AController* NewPlayer)
 {
 	Super::RestartPlayer(NewPlayer);
-
-	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::Loading)
-	{
-		SetInputBlock(NewPlayer, true);
-		
-		if (CurrentPlayer <= PTWGameState->PlayerArray.Num())
-		{
-			if (bIsGameStart) return;
-
-			
-			//StartGameLobby();
-		}
-		
-	}
+	
+	
 }
 
 void APTWLobbyGameMode::StartGameLobby()
 {
 	ClearTimer();
 
-	bIsGameStart = true;
 	
 	if (!IsValid(PTWGameState)) return;
 
@@ -169,6 +146,8 @@ void APTWLobbyGameMode::StartGameLobby()
 	{
 		for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 		{
+			PTWGameState->AdvanceRound();
+			
 			if (!PlayerState) continue;
 			
 			AController* Controller = PlayerState->GetOwningController();
@@ -178,8 +157,16 @@ void APTWLobbyGameMode::StartGameLobby()
 		}
 	}
 	
-	PTWGameState->AdvanceRound();
+	
 	PTWGameState->SetCurrentPhase(EPTWGamePhase::PostGameLobby);
+
+	for (APlayerState* PS : PTWGameState->PlayerArray)
+	{
+		AController* PC = PS->GetPlayerController();
+		if (!PC) continue;
+		
+		SetInputBlock(false);
+	}
 	
 	// 게임 로비 진입 5초 후 룰렛 시작
 	if (!GetWorldTimerManager().IsTimerActive(TimerHandle))

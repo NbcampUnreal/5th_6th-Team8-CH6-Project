@@ -64,21 +64,20 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	//접속하면 무적 상태로 변경 해야 함
 	
 	if (!IsValid(PTWGameState)) return;
+
+	AddGold(NewPlayer);
+	
+	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+	{
+		PTWScoreSubsystem->IncreasePlayerCount();
+	}
 	
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
 	{
-		AddGold(NewPlayer);
-
 		if (GameFlowRule.MinPlayersToStart <= PTWGameState->PlayerArray.Num() &&
 			GameFlowRule.bAutoStartWhenMinPlayersMet)
 		{
 			if (bIsGameStart) return;
-			
-			// gameinstance 에 현재 로비에 있는 플레이어 수 저장
-			if (UPTWGameInstance* PTWGameInstance = Cast<UPTWGameInstance>(GetGameInstance()))
-			{
-				PTWGameInstance->CurrentPlayerCount = PTWGameState->PlayerArray.Num();
-			}
 			
 			StartGameLobby();
 
@@ -103,18 +102,9 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 	if (!PTWPlayerState) return;
 
 	PTWPlayerState->ResetInventoryItemId();
-	RestartPlayer(NewPlayer);
-	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PostGameLobby)
-	{
-		// 로딩 UI 
-		if (PTWGameState->PlayerArray.Num() == 1) // 임시 설정
-		{
-			// 플레이 중인 모든 플레이어 접속 중이면 로딩 UI 해제
-		}
-
-		StartGameLobby();
-	}
+	//RestartPlayer(NewPlayer);
 }
+
 
 void APTWLobbyGameMode::Logout(AController* Exiting)
 {
@@ -122,15 +112,31 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 	
 	if (!IsValid(PTWGameState)) return;
 
-	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PostGameLobby)
+	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
-		if (UPTWGameInstance* PTWGameInstance = Cast<UPTWGameInstance>(GetGameInstance()))
-		{
-			PTWGameInstance->CurrentPlayerCount = PTWGameState->PlayerArray.Num();
-		}
+		PTWScoreSubsystem->DecreasePlayerCount();
 	}
 
 	// 로그 아웃하면 gamestate portal 부분 수정
+}
+
+void APTWLobbyGameMode::RestartPlayer(AController* NewPlayer)
+{
+	Super::RestartPlayer(NewPlayer);
+
+	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::Loading)
+	{
+		SetInputBlock(NewPlayer, true);
+		
+		if (CurrentPlayer <= PTWGameState->PlayerArray.Num())
+		{
+			if (bIsGameStart) return;
+
+			
+			//StartGameLobby();
+		}
+		
+	}
 }
 
 void APTWLobbyGameMode::StartGameLobby()
@@ -144,7 +150,6 @@ void APTWLobbyGameMode::StartGameLobby()
 	// 대기 로비에서 게임 로비로 이동 했을 때 모든 플레이어 시작 위치로 이동
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
 	{
-		
 		for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 		{
 			if (!PlayerState) continue;

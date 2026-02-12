@@ -55,7 +55,8 @@ protected:
 
 	/** 플레이어를 시작 위치로 이동시키는 함수 */
 	void MovePlayerToStart(AController* Controller);
-	
+
+	void SetInputBlock(AController* Controller, bool bInputBlock);
 	// 이동할 레벨 이름(TravelLevel에서 사용)
 	FString TravelLevelName;
 	
@@ -67,6 +68,7 @@ protected:
 	FTimerHandle TimerHandle;
 
 	bool bIsGameStart = false;
+	int32 CurrentPlayer = 0;
 private:
 	// 현재 라운드/플레이어 데이터를 Subsystem으로 저장
 	void SaveGameDataToSubsystem();

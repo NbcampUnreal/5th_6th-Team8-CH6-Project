@@ -70,7 +70,7 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		if (GameFlowRule.MinPlayersToStart <= PTWGameState->PlayerArray.Num() &&
 			GameFlowRule.bAutoStartWhenMinPlayersMet)
 		{
-			if (bIsGameStart) return;
+			if (bAllPlayerReady) return;
 			
 			StartGameLobby();
 
@@ -104,16 +104,23 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::Loading)
 	{
-		SetInputBlock(true);
+		//SetInputBlock(true);
 		
 		if (AllPlayer <= PTWGameState->PlayerArray.Num())
 		{
-			if (bIsGameStart) return;
-			bIsGameStart = true;
+			if (bAllPlayerReady) return;
+			bAllPlayerReady = true;
 			FTimerHandle LoadingDealyTimer;
 			GetWorldTimerManager().SetTimer(LoadingDealyTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
 		}
 	}
+}
+
+void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	ExitSpectorMode(C);
+	
+	Super::HandleSeamlessTravelPlayer(C);
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)
@@ -130,12 +137,6 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 	// 로그 아웃하면 gamestate portal 부분 수정
 }
 
-void APTWLobbyGameMode::RestartPlayer(AController* NewPlayer)
-{
-	Super::RestartPlayer(NewPlayer);
-	
-	
-}
 
 void APTWLobbyGameMode::StartGameLobby()
 {
@@ -193,6 +194,22 @@ void APTWLobbyGameMode::EndTimer()
 	}
 
 	Super::EndTimer();
+}
+
+void APTWLobbyGameMode::ExitSpectorMode(AController* Controller)
+{
+	APlayerController* PC = Cast<APlayerController>(Controller);
+	if (!PC) return;
+
+	// 1. 관전 상태 및 대기 상태 강제 종료
+	PC->ChangeState(NAME_Playing);
+	
+	// 2. PlayerState 플래그 초기화
+	if (PC->PlayerState)
+	{
+		PC->PlayerState->SetIsSpectator(false);
+		PC->PlayerState->SetIsOnlyASpectator(false);
+	}
 }
 
 void APTWLobbyGameMode::StartRoulette()

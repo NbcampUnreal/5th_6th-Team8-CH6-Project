@@ -81,13 +81,24 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 
 	if (PTWGameState->PlayerArray.Num() >= AllPlayer)
 	{
-		if (bIsGameStart) return;
-		bIsGameStart = true;
+		if (bAllPlayerReady) return;
+		bAllPlayerReady = true;
 		
 		FTimerHandle LoadingDelayTimer;
 		GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWMiniGameMode::StartGame, 3.f);
 	}
 	
+}
+
+void APTWMiniGameMode::StartGame()
+{
+	if (!PTWGameState) return;
+	
+	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
+	
+	SetInputBlock(false);
+	
+	WaitingToStartRound();
 }
 
 void APTWMiniGameMode::StartCountDown()
@@ -180,7 +191,9 @@ void APTWMiniGameMode::EndGame()
 	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
 	ResetPlayerRoundData();
 	ResetPlayerInventoryID();
-	TravelLevel();
+
+	FTimerHandle EndGameDelayTimer;
+	GetWorldTimerManager().SetTimer(EndGameDelayTimer, this, &APTWMiniGameMode::TravelLevel, 5.f);
 }
 
 
@@ -209,23 +222,6 @@ void APTWMiniGameMode::WaitingToStartRound()
 	PrepareAllPlayersLoadingScreen(ELoadingScreenType::Lobby, NAME_None);
 }
 
-void APTWMiniGameMode::StartGame()
-{
-	if (!PTWGameState) return;
-
-	
-	
-	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
-	
-	for (APlayerState* PS : PTWGameState->PlayerArray)
-	{
-		AController* PC = PS->GetPlayerController();
-		if (!PC) continue;
-		
-		SetInputBlock(false);
-	}
-	WaitingToStartRound();
-}
 
 void APTWMiniGameMode::StartRound()
 {

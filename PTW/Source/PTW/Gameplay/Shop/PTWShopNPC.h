@@ -29,16 +29,20 @@ protected:
 
 	void CheckShopAvailability();
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void UpdateVisualState(bool bIsOpen);
+	UFUNCTION()
+	void OnRep_ShopCategory();
+
+	void ApplyCategoryVisuals();
 
 protected:
-	UPROPERTY(Replicated, VisibleInstanceOnly)
+	UPROPERTY(ReplicatedUsing = OnRep_ShopCategory, VisibleInstanceOnly)
 	EShopCategory ShopCategory;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
 	TArray<TObjectPtr<APTWDisplayItem>> DisplayItems;
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<APTWDisplayItem> DisplayItemClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Visual|Config")
+	TMap<EShopCategory, TObjectPtr<UMaterialInterface>> CategoryMaterialMap;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USceneComponent> DefaultSceneRoot;

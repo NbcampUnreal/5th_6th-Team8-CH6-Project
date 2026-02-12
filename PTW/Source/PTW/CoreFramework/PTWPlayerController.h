@@ -118,6 +118,9 @@ protected:
 	/* 채팅창 (Enter) */
 	void OnChatPressed();
 
+	/* 키가이드 (K) */
+	void OnKeyGuidePressed();
+
 	/* 플레이어 이름 */
 	/* 닉네임 가시성 업데이트 로직 */
 	void UpdateNameTagsVisibility();
@@ -148,6 +151,9 @@ protected:
 	/* 닉네임 업데이트용 타이머 핸들 */
 	FTimerHandle NameTagTimerHandle;
 
+	/* 키가이드 토글 */
+	bool bKeyGuideOn;
+
 	/* 닉네임 표시 제한거리 */
 	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag")
 	float NameTagMaxDistance = 1500.f;
@@ -175,6 +181,10 @@ protected:
 	// 채팅 (Enter)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> ChattingAction;
+
+	// 키가이드 (K)
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> KeyGuideAction;
 	
 	/* ---------- UI ---------- */
 	// HUD
@@ -200,5 +210,7 @@ protected:
 	// 룰렛
 	UPROPERTY(EditDefaultsOnly, Category = "UI|Roulette")
 	TSubclassOf<UUserWidget> MapRouletteWidgetClass;
-	
+	// 키가이드
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> KeyGuideWidgetClass;
 };

@@ -67,7 +67,7 @@ void UPTWGameInstance::DisplayLoadingScreen()
 			// 미니게임 전용 텍스트 세팅 (자식으로 캐스팅하여 호출)
 			if (UPTWLoadingMiniGame* MiniGameWidget = Cast<UPTWLoadingMiniGame>(LoadingWidget))
 			{
-				MiniGameWidget->SetupMiniGameInfo(MapData->DisplayName, FText::FromString(TEXT("미니게임 설명...")));
+				MiniGameWidget->SetupMiniGameInfo(MapData->DisplayName, MapData->MapDescription);
 			}
 		}
 	}

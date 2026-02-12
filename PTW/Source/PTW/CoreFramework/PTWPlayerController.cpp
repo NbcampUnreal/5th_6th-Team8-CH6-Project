@@ -528,6 +528,14 @@ void APTWPlayerController::SetupInputComponent()
 			this,
 			&APTWPlayerController::OnChatPressed
 		);
+
+		// 키가이드 (K)
+		EIC->BindAction(
+			KeyGuideAction,
+			ETriggerEvent::Started,
+			this,
+			&APTWPlayerController::OnKeyGuidePressed
+		);
 	}
 }
 
@@ -577,6 +585,12 @@ void APTWPlayerController::CreateUI()
 		if (DamageIndicatorClass)
 		{
 			UISubsystem->SetDamageIndicatorClass(DamageIndicatorClass);
+		}
+		if (KeyGuideWidgetClass)
+		{
+			UISubsystem->CreatePersistentWidget(KeyGuideWidgetClass, 15);
+			UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, true);
+			bKeyGuideOn = true;
 		}
 	}
 }
@@ -635,6 +649,18 @@ void APTWPlayerController::OnChatPressed()
 		{
 			ChatList->SetInteractionMode(true);
 		}
+	}
+}
+
+void APTWPlayerController::OnKeyGuidePressed()
+{
+	if (!KeyGuideWidgetClass) return;
+
+	bKeyGuideOn = !bKeyGuideOn;
+
+	if (UISubsystem)
+	{
+		UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, bKeyGuideOn);
 	}
 }
 

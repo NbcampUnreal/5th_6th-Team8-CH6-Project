@@ -83,7 +83,7 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	APTWPlayerState* PlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
 	if (!IsValid(PlayerState)) return;
 	
-	SetInputBlock(true);
+	//SetInputBlock(true);
 	
 	PTWGameState->AddRankedPlayer(PlayerState);
 

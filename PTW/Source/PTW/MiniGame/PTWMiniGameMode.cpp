@@ -36,7 +36,6 @@ void APTWMiniGameMode::InitGameState()
 		PTWGameState->SetCurrentPhase(EPTWGamePhase::Loading);
 		PTWGameState->SetMaxMiniGameRound(MiniGameRule.TimeRule.Round);
 	}
-	
 }
 
 void APTWMiniGameMode::BeginPlay()
@@ -423,7 +422,7 @@ void APTWMiniGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController
 			{
 				WeakThis->RestartPlayer(WeakDeadController.Get());
 			}
-		}, 5.0f, false);
+		}, MiniGameRule.SpawnRule.RespawnDelay, false);
 	}
 }
 

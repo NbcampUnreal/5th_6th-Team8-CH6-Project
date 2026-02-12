@@ -267,9 +267,19 @@ void APTWPlayerState::ServerRequestPurchase_Implementation(APTWShopNPC* ShopNPC,
 
 void APTWPlayerState::ClientPurchaseSuccess_Implementation(APTWShopNPC* ShopNPC)
 {
-	// 해당 상점 NPC를 찾아서 문 닫는 연출 실행
 	if (ShopNPC)
 	{
 		ShopNPC->CloseShop();
+	}
+}
+
+void APTWPlayerState::AddGold(int32 Amount)
+{
+	if (HasAuthority())
+	{
+		CurrentPlayerData.Gold += Amount;
+
+		OnPlayerDataUpdated.Broadcast(CurrentPlayerData);
+		ForceNetUpdate();
 	}
 }

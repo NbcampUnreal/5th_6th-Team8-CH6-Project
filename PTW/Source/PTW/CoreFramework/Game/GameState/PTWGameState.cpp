@@ -250,6 +250,11 @@ void APTWGameState::Multicast_BroadcastChatMessage_Implementation(const FString&
 	OnChatMessageBroadcast.Broadcast(Sender, Message);
 }
 
+void APTWGameState::Multicast_SystemMessage_Implementation(const FString& Message)
+{
+	OnChatMessageBroadcast.Broadcast(TEXT("[System]"), Message);
+}
+
 void APTWGameState::OnRep_RemainTime()
 {
 	OnRemainTimeChanged.Broadcast(RemainTime);

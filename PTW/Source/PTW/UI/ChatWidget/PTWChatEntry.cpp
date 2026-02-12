@@ -11,6 +11,15 @@ void UPTWChatEntry::SetMessage(const FString& SenderName, const FString& Message
 	{
 		const FString FullText = FString::Printf(TEXT("%s: %s"), *SenderName, *Message);
 		Text_Message->SetText(FText::FromString(FullText));
+
+		if (SenderName.Equals(TEXT("[System]")))
+		{
+			Text_Message->SetColorAndOpacity(FSlateColor(FLinearColor::Yellow));
+		}
+		else
+		{
+			Text_Message->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+		}
 	}
 
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);

@@ -58,6 +58,17 @@ void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 	{
 		PTWScoreSubsystem->IncreasePlayerCount();
 	}
+
+	FString PlayerName = TEXT("Unknown");
+	if (APTWPlayerState* PS = NewPlayer->GetPlayerState<APTWPlayerState>())
+	{
+		PlayerName = PS->GetPlayerName();
+	}
+	if (PTWGameState)
+	{
+		FString JoinMsg = FString::Printf(TEXT("Player '%s' has joined the game."), *PlayerName);
+		PTWGameState->Multicast_SystemMessage(JoinMsg);
+	}
 }
 
 void APTWGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
@@ -70,6 +81,12 @@ void APTWGameMode::HandleStartingNewPlayer_Implementation(APlayerController* New
 
 void APTWGameMode::Logout(AController* Exiting)
 {
+	FString PlayerName = TEXT("Unknown");
+	if (APlayerState* PS = Exiting->GetPlayerState<APlayerState>())
+	{
+		PlayerName = PS->GetPlayerName();
+	}
+	
 	Super::Logout(Exiting);
 
 	if (!IsValid(PTWGameState)) return;
@@ -78,6 +95,11 @@ void APTWGameMode::Logout(AController* Exiting)
 	{
 		PTWScoreSubsystem->DecreasePlayerCount();
 		AllPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
+	}
+	if (PTWGameState)
+	{
+		FString LeaveMsg = FString::Printf(TEXT("Player '%s' has left the game."), *PlayerName);
+		PTWGameState->Multicast_SystemMessage(LeaveMsg);
 	}
 	
 	CheckAllPlayersLoaded();

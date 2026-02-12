@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -69,6 +69,9 @@ protected:
 	
 	/** 승리 조건 체크 */
 	virtual void CheckEndGameCondition();
+
+	/* 코인 스폰 타이머용 함수 */ 
+	void OnCoinSpawnTimerElapsed();
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")
 	TObjectPtr<UPTWItemDefinition> ItemDefinition;
@@ -77,6 +80,7 @@ protected:
 	//TArray<TObjectPtr<APlayerStart>> PlayerStarts;
 	
 	FTimerHandle CountDownTimerHandle;
+	FTimerHandle CoinSpawnTimerHandle;
 
 private:
 	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
@@ -102,6 +106,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UPTWChaosEventManager> ChaosEventManager;
+
+	/* 코인 생성 주기 (초) */
+	UPROPERTY(EditDefaultsOnly)
+	float CoinSpawnInterval = 8.0f;
 	
 	int32 PlayerStartCount = 0;
 

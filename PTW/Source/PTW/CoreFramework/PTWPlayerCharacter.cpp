@@ -68,7 +68,7 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 void APTWPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
+	DOREPLIFETIME(ThisClass, bIsStealth);
 }
 
 void APTWPlayerCharacter::BeginPlay()
@@ -400,6 +400,16 @@ void APTWPlayerCharacter::OnStasisTagChanged(const FGameplayTag Tag, int32 NewCo
 		PC->ResetIgnoreLookInput();
 		PC->ResetIgnoreMoveInput();
 	}
+}
+
+void APTWPlayerCharacter::OnRep_StealthMode()
+{
+}
+
+void APTWPlayerCharacter::SetStealthMode(bool bSetStealthMode)
+{
+	bIsStealth = bSetStealthMode;
+	OnRep_StealthMode();
 }
 
 void APTWPlayerCharacter::ServerRPCUseActiveItem_Implementation()

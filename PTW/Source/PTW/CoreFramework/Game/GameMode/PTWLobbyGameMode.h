@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -55,6 +55,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
 	FPTWGameFlowRule GameFlowRule;
 	
+	/* 로비 복귀시에 지급될 골드 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
+	int32 RoundClearBonusGold = 300;
+
 protected:
 	virtual void InitGameState() override;
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
@@ -68,10 +72,8 @@ protected:
 	void StartGameLobby();
 
 	virtual void EndTimer() override;
-private:
-	void AddGold(APlayerController* NewPlayer);
 
-	
+private:
 	void SelectedRandomMap();
 	void SelectedRandomEvent();
 

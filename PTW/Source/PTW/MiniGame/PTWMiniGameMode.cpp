@@ -159,6 +159,8 @@ void APTWMiniGameMode::EndRound()
 {
 	//ClearTimer();
 
+	GetWorldTimerManager().ClearTimer(CoinSpawnTimerHandle);
+
 	if (!PTWGameState) return;
 	
 	if (PTWGameState->GetCurrentMiniGameRound() >= PTWGameState->GetMaxMiniGameRound())
@@ -230,6 +232,11 @@ void APTWMiniGameMode::StartRound()
 	if (MiniGameRule.TimeRule.bUserTimer)
 	{
 		StartTimer(MiniGameRule.TimeRule.Timer);
+	}
+
+	if (GetWorld())
+	{
+		GetWorldTimerManager().SetTimer(CoinSpawnTimerHandle, this, &APTWMiniGameMode::OnCoinSpawnTimerElapsed, CoinSpawnInterval, true);
 	}
 }
 
@@ -438,7 +445,13 @@ void APTWMiniGameMode::InitPlayerHealth(AController* Controller)
 	AttributeSet->SetHealth(AttributeSet->GetMaxHealth());
 }
 
-
+void APTWMiniGameMode::OnCoinSpawnTimerElapsed()
+{
+	if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+	{
+		SpawnManager->SpawnCoinInRandomVolume();
+	}
+}
 
 
 

@@ -60,6 +60,7 @@ namespace GameplayTags
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Invincible);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Stasis);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Slowing);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Stealth);
 		
 		namespace Passive
 		{
@@ -127,6 +128,7 @@ namespace GameplayTags
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Invisibility);
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Invincible);
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Stealth);
 		}
 		
 		namespace Hit

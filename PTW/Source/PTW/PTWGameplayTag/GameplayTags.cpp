@@ -58,6 +58,7 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Invincible, "State.Invincible");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Stasis, "State.Stasis");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Slowing, "State.DebuffSlow");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Stealth, "State.Stealth");
 		
 		namespace Movement
 		{
@@ -113,6 +114,7 @@ namespace GameplayTags
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Invisibility, "GameplayCue.Item.Invisibility");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Invincible, "GameplayCue.Item.Invincible");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Stealth, "GameplayCue.Item.Stealth");
 		}
 		
 		namespace Hit

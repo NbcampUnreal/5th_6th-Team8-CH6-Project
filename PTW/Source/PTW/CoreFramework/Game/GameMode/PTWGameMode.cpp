@@ -24,7 +24,7 @@ void APTWGameMode::InitGame(const FString& MapName, const FString& Options, FStr
 	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
 		CurrentRound = PTWScoreSubsystem->GetCurrentGameRound(); // GameInstance 라운드 값 받아서 GameMode에 저장
-		CurrentPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
+		AllPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
 	}
 }
 
@@ -53,6 +53,11 @@ void APTWGameMode::BeginPlay()
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+
+	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+	{
+		PTWScoreSubsystem->IncreasePlayerCount();
+	}
 }
 
 void APTWGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
@@ -72,7 +77,7 @@ void APTWGameMode::Logout(AController* Exiting)
 	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
 		PTWScoreSubsystem->DecreasePlayerCount();
-		CurrentPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
+		AllPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
 	}
 	
 	CheckAllPlayersLoaded();
@@ -170,13 +175,25 @@ void APTWGameMode::MovePlayerToStart(AController* Controller)
 	Pawn->SetActorRotation(PlayerStart->GetActorRotation());
 }
 
-void APTWGameMode::SetInputBlock(AController* Controller, bool bInputBlock)
+void APTWGameMode::SetInputBlock(bool bInputBlock)
 {
-	if (!Controller) return;
-	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Controller);
-	if (!PlayerController) return;
-
-	PlayerController->Client_SetInputRestricted(bInputBlock);
+	
+	//PlayerController->Client_SetInputRestricted(bInputBlock);
+	
+	if (!PTWGameState) return;
+	
+	PTWGameState->bGlobalInputBlocked = bInputBlock;
+	
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		{
+			if (PC->IsLocalController())
+			{
+				PC->ApplyInputRestricted(bInputBlock);
+			}
+		}
+	}
 }
 
 void APTWGameMode::SaveGameDataToSubsystem()

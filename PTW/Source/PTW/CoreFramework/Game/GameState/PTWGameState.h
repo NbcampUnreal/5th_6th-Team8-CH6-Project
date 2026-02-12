@@ -350,6 +350,14 @@ public:
 	/** 생존 플레이어들 */
 	UPROPERTY()
 	TSet<TObjectPtr<APlayerState>> AlivePlayers;
+
+	UPROPERTY(ReplicatedUsing=OnRep_GlobalInputBlocked)
+	bool bGlobalInputBlocked = false;
+
+	UFUNCTION()
+	void OnRep_GlobalInputBlocked();
+
+	
 private:
 	/**  */
 	

@@ -61,11 +61,10 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
-	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 	virtual void Logout(AController* Exiting) override;
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	
-	//* PreGameLobby 상태에서 타이머가 종료되면 게임 시작 / 
+	//* PreGameLobby 상태에서 타이머가 종료되면 게임 시작 /
 	void StartGameLobby();
 
 	virtual void EndTimer() override;

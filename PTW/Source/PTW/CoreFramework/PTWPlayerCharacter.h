@@ -30,7 +30,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	// 2. [Public] 인터페이스 함수 (외부에서 호출하는 함수)
-
+	FORCEINLINE UInputMappingContext* GetDefaultMappingContext() const { return DefaultMappingContext; }
 
 	// 3. [Public] Getter / Setter (FORCEINLINE 권장)
 	FORCEINLINE UPTWWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }

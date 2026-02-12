@@ -33,7 +33,7 @@ void APTWMiniGameMode::InitGameState()
 
 	if (PTWGameState)
 	{
-		PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
+		PTWGameState->SetCurrentPhase(EPTWGamePhase::Loading);
 		PTWGameState->SetMaxMiniGameRound(MiniGameRule.TimeRule.Round);
 	}
 	
@@ -47,7 +47,7 @@ void APTWMiniGameMode::BeginPlay()
 	//{
 	//	PlayerStarts.Add(*It);
 	//}
-	StartGame();
+	//StartGame();
 	
 	// 카오스 이벤트 태그 적용 테스트
 	if (!PTWGameState) return;
@@ -74,13 +74,19 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	
 	APTWPlayerState* PlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
 	if (!IsValid(PlayerState)) return;
-
+	
+	SetInputBlock(true);
+	
 	PTWGameState->AddRankedPlayer(PlayerState);
 
-	APawn* Pawn = NewPlayer->GetPawn();
-	if (!Pawn) return;
-
-	Pawn->DisableInput(NewPlayer);
+	if (PTWGameState->PlayerArray.Num() >= AllPlayer)
+	{
+		if (bIsGameStart) return;
+		bIsGameStart = true;
+		
+		FTimerHandle LoadingDelayTimer;
+		GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWMiniGameMode::StartGame, 3.f);
+	}
 	
 }
 
@@ -203,6 +209,19 @@ void APTWMiniGameMode::WaitingToStartRound()
 
 void APTWMiniGameMode::StartGame()
 {
+	if (!PTWGameState) return;
+
+	
+	
+	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
+	
+	for (APlayerState* PS : PTWGameState->PlayerArray)
+	{
+		AController* PC = PS->GetPlayerController();
+		if (!PC) continue;
+		
+		SetInputBlock(false);
+	}
 	WaitingToStartRound();
 }
 
@@ -251,6 +270,7 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	APlayerState* PlayerState = NewPlayer->GetPlayerState<APlayerState>();
 	if (!PlayerState) return;
 
+	//SetInputBlock(NewPlayer, true);
 	PTWGameState->AlivePlayers.Add(PlayerState);
 	
 	ApplyMiniGameTag(NewPlayer);
@@ -262,6 +282,12 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 		BaseCharacter->OnCharacterDied.RemoveDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
 		BaseCharacter->OnCharacterDied.AddDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
 	}
+}
+
+void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	Super::HandleSeamlessTravelPlayer(C);
+	
 }
 
 void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)

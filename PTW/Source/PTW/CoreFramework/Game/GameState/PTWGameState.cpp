@@ -77,6 +77,11 @@ void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
 	}
 }
 
+void APTWGameState::OnRep_LoadedPlayerCount()
+{
+	OnLoadingProgressChanged.Broadcast(LoadedPlayerCount);
+}
+
 void APTWGameState::DecreaseTimer()
 {
 	if (!HasAuthority()) return;

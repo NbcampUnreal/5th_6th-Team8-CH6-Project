@@ -4,6 +4,8 @@
 #include "PTWGameMode.h"
 
 #include "CoreFramework/PTWPlayerController.h"
+#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
+#include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
@@ -72,12 +74,53 @@ void APTWGameMode::Logout(AController* Exiting)
 		PTWScoreSubsystem->DecreasePlayerCount();
 		CurrentPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
 	}
+	
+	CheckAllPlayersLoaded();
 }
 
 void APTWGameMode::GetSeamlessTravelActorList(bool bToTransition, TArray<AActor*>& ActorList)
 {
 	Super::GetSeamlessTravelActorList(bToTransition, ActorList);
-	
+}
+
+void APTWGameMode::PostSeamlessTravel()
+{
+	Super::PostSeamlessTravel();
+
+	if (APTWGameState* GS = GetGameState<APTWGameState>())
+	{
+		GS->LoadedPlayerCount = 0;
+		GS->TotalPlayerCount = GetNumPlayers();
+	}
+}
+
+void APTWGameMode::PrepareAllPlayersLoadingScreen(ELoadingScreenType Type, FName MapRowName)
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(*It))
+		{
+			PC->Client_PrepareLoadingScreen(Type, MapRowName);
+		}
+	}
+}
+
+void APTWGameMode::CheckAllPlayersLoaded()
+{
+	APTWGameState* GS = GetGameState<APTWGameState>();
+	// 일정 인원 이상 혹은 전체 인원 체크
+	if (GS && GS->LoadedPlayerCount >= GS->TotalPlayerCount)
+	{
+		Multicast_CloseLoadingScreen();
+	}
+}
+
+void APTWGameMode::Multicast_CloseLoadingScreen_Implementation()
+{
+	if (UPTWGameInstance* GI = Cast<UPTWGameInstance>(GetGameInstance()))
+	{
+		GI->StopLoadingScreen();
+	}
 }
 
 void APTWGameMode::StartTimer(float TimeDuration)

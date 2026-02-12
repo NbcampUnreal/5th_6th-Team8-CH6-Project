@@ -33,7 +33,8 @@ public class PTW : ModuleRules
 
         // 3. UMG & UI 모듈
         PublicDependencyModuleNames.AddRange(new string[] {
-            "UMG"
+            "UMG",
+			"MoviePlayer"
         });
 
         // 4. Networking & Online Subsystem (스팀/세션 연동용)

@@ -225,6 +225,21 @@ void APTWPlayerController::OnChatInputFinished()
 	}
 }
 
+void APTWPlayerController::Client_PrepareLoadingScreen_Implementation(ELoadingScreenType Type, FName MapRowName)
+{
+	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
+	{
+		GI->PrepareLoadingScreen(Type, MapRowName);
+	}
+}
+
+void APTWPlayerController::Client_DisplayLoadingScreen_Implementation()
+{
+	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
+	{
+		GI->DisplayLoadingScreen();
+	}
+}
 
 void APTWPlayerController::BeginPlay()
 {
@@ -730,14 +745,6 @@ void APTWPlayerController::Server_ReportLoadingComplete_Implementation()
 void APTWPlayerController::ApplyMouseSensitivity(float NewValue)
 {
 	CurrentMouseSensitivity = NewValue;
-}
-
-void APTWPlayerController::Client_PrepareLoadingScreen_Implementation(ELoadingScreenType Type, FName MapRowName)
-{
-	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
-	{
-		GI->PrepareLoadingScreen(Type, MapRowName);
-	}
 }
 
 void APTWPlayerController::Client_SetInputRestricted_Implementation(bool bRestricted)

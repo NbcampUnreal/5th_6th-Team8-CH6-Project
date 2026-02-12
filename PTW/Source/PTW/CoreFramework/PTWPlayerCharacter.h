@@ -42,6 +42,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Mesh")
 	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
 	FORCEINLINE UPTWInteractComponent* GetInteractComponent() const { return InteractComponent; }
+	FORCEINLINE bool GetStealthMode() const { return bIsStealth; }
 
 protected:
 	// 4. [Protected] 오버라이드 함수 (LifeCycle) - BeginPlay, EndPlay 등
@@ -61,6 +62,11 @@ protected:
 	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
 
 	void InitCharacterState();
+
+	void OnInputTriggered();
+	void OnInputCompleted();
+	void CheckIdleCondition();
+	void SetIdleState(bool bNewState);
 	
 	/*인벤토리 관련 인풋 바인딩 함수(현정석(26.02.03))*/
 	void EquipWeapon(const FInputActionValue& Value);
@@ -80,6 +86,10 @@ protected:
 	void RegisterGameplayTagEvents();
 	UFUNCTION()
 	void OnStasisTagChanged(const FGameplayTag Tag, int32 NewCount);
+	
+	/*StealthMode 관련*/
+	UFUNCTION()
+	void OnRep_StealthMode();
 
 private:
 	// 6. [Private] 내부 전용 유틸리티 함수 (외부/자식 노출 X)
@@ -87,7 +97,9 @@ private:
 
 public:
 	// 7. [Public] 멤버 변수 (대부분의 설정값)
-
+	
+	// StealthMode 관련 함수 추가
+	void SetStealthMode(bool bSetStealthMode);
 
 protected:
 	// 8. [Protected] 멤버 변수 (내부 상태값)
@@ -114,8 +126,11 @@ protected:
 	TObjectPtr<UWidgetComponent> NameTagWidget;
 
 	FTimerHandle NameTagRetryTimer;
+	FTimerHandle IdleCheckTimerHandle;
 
 	bool bIsAbilitiesInitialized = false;
+	bool bIsIdleState = false;
+
 
 
 	// 9. [Protected] 컴포넌트 (Components)
@@ -130,6 +145,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UPTWInteractComponent> InteractComponent;
 
+	
+	//Stealth 모드 전용(현정석)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components", ReplicatedUsing = OnRep_StealthMode)
+	bool bIsStealth;
 private:
 	// 10. [Private] 멤버 변수 (완벽히 숨겨야 하는 값)
 

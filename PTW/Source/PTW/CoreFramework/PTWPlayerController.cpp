@@ -28,6 +28,7 @@
 #include "UI/InGameUI/PTWDamageIndicator.h"
 #include "UI/MiniGame/PTWGameStartTimer.h"
 #include "Inventory/Instance/PTWItemInstance.h"
+#include "Net/UnrealNetwork.h"
 #include "Weapon/PTWWeaponActor.h"
 
 void APTWPlayerController::StartSpectating()
@@ -225,6 +226,21 @@ void APTWPlayerController::OnChatInputFinished()
 	}
 }
 
+void APTWPlayerController::Client_PrepareLoadingScreen_Implementation(ELoadingScreenType Type, FName MapRowName)
+{
+	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
+	{
+		GI->PrepareLoadingScreen(Type, MapRowName);
+	}
+}
+
+void APTWPlayerController::Client_DisplayLoadingScreen_Implementation()
+{
+	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
+	{
+		GI->DisplayLoadingScreen();
+	}
+}
 
 void APTWPlayerController::BeginPlay()
 {
@@ -638,7 +654,7 @@ void APTWPlayerController::UpdateNameTagsVisibility()
 		if (!TargetChar) continue;
 
 		// 자기 자신 / 사망 체크
-		if (TargetChar == MyPawn || TargetChar->IsDead())
+		if (TargetChar == MyPawn || TargetChar->IsDead() || TargetChar->GetStealthMode())
 		{
 			if (UWidgetComponent* WidgetComp = TargetChar->GetNameTagWidget())
 			{
@@ -730,14 +746,6 @@ void APTWPlayerController::Server_ReportLoadingComplete_Implementation()
 void APTWPlayerController::ApplyMouseSensitivity(float NewValue)
 {
 	CurrentMouseSensitivity = NewValue;
-}
-
-void APTWPlayerController::Client_PrepareLoadingScreen_Implementation(ELoadingScreenType Type, FName MapRowName)
-{
-	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
-	{
-		GI->PrepareLoadingScreen(Type, MapRowName);
-	}
 }
 
 void APTWPlayerController::Client_SetInputRestricted_Implementation(bool bRestricted)

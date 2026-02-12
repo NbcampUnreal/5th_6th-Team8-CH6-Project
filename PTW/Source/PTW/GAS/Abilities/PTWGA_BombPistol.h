@@ -33,4 +33,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Special Effects")
 	TObjectPtr<UPTWItemDefinition> ItemDef;
+	
+protected:
+	bool ConsumeReflectShieldIfAny(AActor* TargetActor) const;
 };

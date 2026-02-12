@@ -8,6 +8,11 @@
 #include "UI/LoadingScreen/PTWLoadingMiniGame.h"
 #include "UI/LoadingScreen/PTWLoadingWidgetBase.h"
 
+UPTWGameInstance::UPTWGameInstance(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	NextLoadingType = ELoadingScreenType::None;
+}
 void UPTWGameInstance::Init()
 {
 	Super::Init();
@@ -23,7 +28,17 @@ void UPTWGameInstance::PrepareLoadingScreen(ELoadingScreenType InType, FName InM
 
 void UPTWGameInstance::BeginLoadingScreen(const FString& MapName)
 {
+	DisplayLoadingScreen();
+}
+
+void UPTWGameInstance::DisplayLoadingScreen()
+{
 	if (IsRunningDedicatedServer()) return;
+
+	if (NextLoadingType == ELoadingScreenType::None)
+	{
+		return;
+	}
 
 	// 위젯 클래스 결정
 	TSubclassOf<UPTWLoadingWidgetBase> TargetClass = (NextLoadingType == ELoadingScreenType::Lobby)
@@ -65,8 +80,12 @@ void UPTWGameInstance::BeginLoadingScreen(const FString& MapName)
 	// MoviePlayer 등록
 	FLoadingScreenAttributes LoadingScreen;
 	LoadingScreen.bAutoCompleteWhenLoadingCompletes = false;
+	LoadingScreen.MinimumLoadingScreenDisplayTime = 3.0f;
 	LoadingScreen.WidgetLoadingScreen = LoadingWidget->TakeWidget();
 	GetMoviePlayer()->SetupLoadingScreen(LoadingScreen);
+
+	GetMoviePlayer()->PlayMovie();
+	NextLoadingType = ELoadingScreenType::None;
 }
 
 void UPTWGameInstance::StopLoadingScreen()

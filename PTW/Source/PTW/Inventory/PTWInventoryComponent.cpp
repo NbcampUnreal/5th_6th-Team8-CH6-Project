@@ -223,9 +223,20 @@ void UPTWInventoryComponent::RemoveWeaponData()
 
 void UPTWInventoryComponent::TestFunction_GiveActiveItem_Implementation(UPTWItemDefinition* Def)
 {
-	UPTWActiveItemInstance* Active = NewObject<UPTWActiveItemInstance>(GetOwner());
-	Active->ItemDef = Def;
-	EquipActiveItem(Active);
+	if (Def->ItemType == EItemType::Active)
+	{
+		UPTWActiveItemInstance* Active = NewObject<UPTWActiveItemInstance>(GetOwner());
+		Active->ItemDef = Def;
+		EquipActiveItem(Active);
+	}
+	else
+	{
+		UPTWPassiveItemInstance* Passive = NewObject<UPTWPassiveItemInstance>(GetOwner());
+		Passive->ItemDef = Def;
+		ApplyAllPassiveItems(Passive);
+	}
+	
+
 }
 
 

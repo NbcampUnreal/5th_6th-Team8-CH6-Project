@@ -104,5 +104,8 @@ public:
 	virtual void AddScore(int32 AddScore) override;
 	virtual void ResetRoundData() override;
 
+	UFUNCTION(BlueprintCallable)
+	void AddGold(int32 Amount);
+
 	void ResetInventoryItemId();
 };

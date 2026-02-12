@@ -15,6 +15,9 @@
 #include "PTW/CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "System/Shop/PTWItemSpawnData.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "Gameplay/PTWSpawnItemVolume.h"
+#include "Gameplay/Pickup/PTWPickupCoin.h" 
+#include "Kismet/KismetSystemLibrary.h"
 
 
 void UPTWItemSpawnManager::Initialize(FSubsystemCollectionBase& Collection)
@@ -26,6 +29,15 @@ const TCHAR* DTPath = TEXT("/Game/_PTW/Data/DT_ItemSpawnData.DT_ItemSpawnData");
 	ItemSpawnTable = LoadObject<UDataTable>(nullptr, DTPath);
 
 	if (!ItemSpawnTable)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[PTWItemSpawnSubsystem] Failed to load DataTable at: %s"), DTPath);
+	}
+
+	FString Path = TEXT("/Game/_PTW/Blueprints/Gameplay/Pickup/BP_PTWPickupCoin.BP_PTWPickupCoin_C");
+
+	CoinClass = LoadClass<APTWPickupCoin>(nullptr, *Path);
+
+	if (!CoinClass)
 	{
 		UE_LOG(LogTemp, Error, TEXT("[PTWItemSpawnSubsystem] Failed to load DataTable at: %s"), DTPath);
 	}
@@ -234,5 +246,71 @@ void UPTWItemSpawnManager::SpawnSingleItem(APTWPlayerState* PS, UPTWItemDefiniti
 					*ItemDef->GetName(), *UEnum::GetValueAsString(ItemDef->ItemType));
 			}
 		}
+	}
+}
+
+void UPTWItemSpawnManager::RegisterSpawnVolume(APTWSpawnItemVolume* Volume)
+{
+	if (Volume && !SpawnVolumes.Contains(Volume))
+	{
+		SpawnVolumes.Add(Volume);
+	}
+}
+
+void UPTWItemSpawnManager::UnregisterSpawnVolume(APTWSpawnItemVolume* Volume)
+{
+	SpawnVolumes.Remove(Volume);
+}
+
+void UPTWItemSpawnManager::SpawnCoinInRandomVolume()
+{
+	if (SpawnVolumes.Num() == 0 || !CoinClass) return;
+
+	int32 RandIdx = FMath::RandRange(0, SpawnVolumes.Num() - 1);
+	APTWSpawnItemVolume* TargetVolume = SpawnVolumes[RandIdx];
+	if (!TargetVolume) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	FVector SpawnLocation = FVector::ZeroVector;
+	bool bFoundValidLocation = false;
+
+	for (int32 i = 0; i < 10; ++i)
+	{
+		FVector CandidateLoc = TargetVolume->GetRandomPointInVolume();
+
+		TArray<AActor*> ActorsToIgnore;
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_WorldStatic));
+		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_Pawn));
+		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_PhysicsBody));
+
+		TArray<AActor*> ResultActors;
+
+		bool bHit = UKismetSystemLibrary::SphereOverlapActors(
+			World,
+			CandidateLoc,
+			40.0f,
+			ObjectTypes,
+			nullptr,
+			ActorsToIgnore,
+			ResultActors
+		);
+
+		if (!bHit)
+		{
+			SpawnLocation = CandidateLoc;
+			bFoundValidLocation = true;
+			break;
+		}
+	}
+
+	if (bFoundValidLocation)
+	{
+		FActorSpawnParameters Params;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		World->SpawnActor<APTWPickupCoin>(CoinClass, SpawnLocation, FRotator::ZeroRotator, Params);
 	}
 }

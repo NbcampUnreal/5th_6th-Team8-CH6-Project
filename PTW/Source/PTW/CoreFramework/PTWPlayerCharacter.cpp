@@ -25,6 +25,7 @@
 #include "CoreFramework/Character/Component/PTWReactorComponent.h"
 #include "CoreFramework/Character/Component/PTWInteractComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
+#include "Kismet/GameplayStatics.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -144,6 +145,16 @@ void APTWPlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 
 	Super::EndPlay(EndPlayReason);
+}
+
+void APTWPlayerCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if (LandSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, LandSound, GetActorLocation());
+	}
 }
 
 void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

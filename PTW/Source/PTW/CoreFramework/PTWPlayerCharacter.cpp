@@ -146,6 +146,28 @@ void APTWPlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
+void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
+{
+	if (!HasAuthority() || !AbilitySystemComponent) return;
+	
+	APTWPlayerController* PTWPC= GetController<APTWPlayerController>();
+	if (IsValid(PTWPC))
+	{
+		PTWPC->DeathLocation = GetActorLocation();
+	}
+	else
+	{
+		PTWPC->DeathLocation = FVector::ZeroVector;
+	}
+	
+	Super::HandleDeath(Attacker);
+	
+	if(IsValid(PTWPC))
+	{
+		PTWPC->StartSpectating();
+	}
+}
+
 void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);

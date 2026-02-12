@@ -52,7 +52,7 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void InitAbilityActorInfo() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
+	virtual void HandleDeath(AActor* Attacker) override;
 
 	// 5. [Protected] 내부 구현 로직 (상속받은 자식이 쓸 수 있는 함수)
 	void Move(const FInputActionValue& Value);
@@ -75,7 +75,6 @@ protected:
 	
 	UFUNCTION(Server, Reliable)
 	void ServerRPCUseActiveItem();
-
 private:
 	// 6. [Private] 내부 전용 유틸리티 함수 (외부/자식 노출 X)
 

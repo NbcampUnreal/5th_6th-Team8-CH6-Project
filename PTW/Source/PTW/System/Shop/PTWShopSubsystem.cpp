@@ -68,12 +68,9 @@ void UPTWShopSubsystem::InitializeShopsForRound(FGameplayTag NextMinigameTag, FG
 	}
 	ActiveNPCs.Empty();
 
-	TArray<EShopCategory> SelectedCategories;
-
-	//FIXME : 테스트용으로 (유틸리티 상점으로만 채움)
-	SelectedCategories.Init(EShopCategory::Utility, ShopSpots.Num());
-
+	TArray<EShopCategory> SelectedCategories = SelectShopCategories(ShopSpots.Num());
 	TArray<APTWShopSpot*> ShuffledSpots = ShopSpots;
+
 	int32 LastIndex = ShuffledSpots.Num() - 1;
 	for (int32 i = 0; i <= LastIndex; ++i)
 	{
@@ -133,32 +130,38 @@ float UPTWShopSubsystem::GetPriceMultiplier() const
 	return 1.0f;
 }
 
-TArray<EShopCategory> UPTWShopSubsystem::SelectShopCategories()
+TArray<EShopCategory> UPTWShopSubsystem::SelectShopCategories(int32 TargetCount)
 {
 	TArray<EShopCategory> Result;
-	TMap<EShopCategory, int32> CountMap;
 
-	TArray<EShopCategory> AllTypes = {
-		EShopCategory::Attack, EShopCategory::Defense, EShopCategory::Utility,
-		EShopCategory::Chaos, EShopCategory::Lobby
+	TArray<EShopCategory> Pool = {
+		EShopCategory::Attack,
+		EShopCategory::Defense,
+		EShopCategory::Utility,
+		EShopCategory::Lobby
 	};
 
-	for (EShopCategory Type : AllTypes)
+	if (TargetCount <= 0) return Result;
+
+	for (EShopCategory Type : Pool)
 	{
-		Result.Add(Type);
-		CountMap.Add(Type, 1);
+		if (Result.Num() < TargetCount)
+		{
+			Result.Add(Type);
+		}
 	}
 
-	while (Result.Num() < 7)
+	while (Result.Num() < TargetCount)
 	{
-		int32 RandIdx = FMath::RandRange(0, AllTypes.Num() - 1);
-		EShopCategory Target = AllTypes[RandIdx];
+		int32 RandIdx = FMath::RandRange(0, Pool.Num() - 1);
+		Result.Add(Pool[RandIdx]);
+	}
 
-		if (CountMap[Target] < 3)
-		{
-			Result.Add(Target);
-			CountMap[Target]++;
-		}
+	int32 LastIndex = Result.Num() - 1;
+	for (int32 i = 0; i <= LastIndex; ++i)
+	{
+		int32 Index = FMath::RandRange(i, LastIndex);
+		Result.Swap(i, Index);
 	}
 
 	return Result;

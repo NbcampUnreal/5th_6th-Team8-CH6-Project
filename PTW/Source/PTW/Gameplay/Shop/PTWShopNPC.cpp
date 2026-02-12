@@ -51,6 +51,8 @@ void APTWShopNPC::InitializeShop(EShopCategory InCategory, const TArray<FName>& 
 
 	ShopCategory = InCategory;
 
+	ApplyCategoryVisuals();
+
 	int32 Count = FMath::Min(InItemIDs.Num(), DisplayLocs.Num());
 	for (int32 i = 0; i < Count; ++i)
 	{
@@ -102,6 +104,25 @@ void APTWShopNPC::CloseShop()
 				{
 					PrimComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 				}
+			}
+		}
+	}
+}
+
+void APTWShopNPC::OnRep_ShopCategory()
+{
+	ApplyCategoryVisuals();
+}
+
+void APTWShopNPC::ApplyCategoryVisuals()
+{
+	if (TObjectPtr<UMaterialInterface>* FoundMat = CategoryMaterialMap.Find(ShopCategory))
+	{
+		if (*FoundMat)
+		{
+			if (StandMesh)
+			{
+				StandMesh->SetMaterial(0, *FoundMat);
 			}
 		}
 	}

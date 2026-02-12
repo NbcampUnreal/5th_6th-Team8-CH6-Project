@@ -4,9 +4,11 @@
 #include "CoreFramework/PTWSpectatorPawn.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "PTWBaseCharacter.h"
 #include "PTWPlayerController.h"
 #include "Components/SphereComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -29,13 +31,24 @@ APTWSpectatorPawn::APTWSpectatorPawn()
 	SpringArmComponent->bInheritYaw = true;
 	SpringArmComponent->bInheritRoll = false;
 	
-	MaxZoom = 400.0f;
-	MinZoom = 0.0f;
+	SpringArmComponent->ProbeSize = 12.0f;
+	
+	MaxZoom = 500.0f;
+	MinZoom = 100.0f;
 	ZoomStep = 100.0f;
 	
 	bIsFreeCamera = true;
-	
 	CurrentZoomDistance = MinZoom;
+	
+	bIsFirstPerson = true;
+	
+	bAddDefaultMovementBindings = false;
+	
+	SpringArmComponent->bEnableCameraLag = true;
+	SpringArmComponent->CameraLagSpeed = 10.0f;
+
+	SpringArmComponent->bEnableCameraRotationLag = true;
+	SpringArmComponent->CameraRotationLagSpeed = 15.0f;
 }
 
 void APTWSpectatorPawn::SetSpectateTarget()
@@ -62,6 +75,8 @@ void APTWSpectatorPawn::SetThirdPersonCamera()
 
 void APTWSpectatorPawn::Move(const FInputActionValue& Value)
 {
+	if (GetAttachParentActor()) return;
+	
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (IsValid(Controller))
@@ -98,121 +113,171 @@ void APTWSpectatorPawn::Zoom(const FInputActionValue& Value)
 	CurrentZoomDistance = FMath::Clamp(CurrentZoomDistance, MinZoom, MaxZoom);
 }
 
-void APTWSpectatorPawn::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn)
+void APTWSpectatorPawn::SpectateNextPlayer()
 {
-	// OnPossessedPawnChanged.RemoveDynamic(this, &ThisClass::SpectateNextPlayer);
-
-	if (IsValid(InNewPawn)) return;
-
-	if (APawn* NewTargetView = FindNextSpectatorTarget(InNewPawn))
+	if (IsLocallyControlled())
 	{
-		SetSpectatorTarget(NewTargetView);
+		// OnPossessedPawnChanged.RemoveDynamic(this, &ThisClass::SpectateNextPlayer);
+
+		APawn* NewTargetView = nullptr;
+		if (FindNextSpectatorTarget(NewTargetView))
+		{
+			SetSpectatorTarget(NewTargetView);
+		}
 	}
 }
 
-APawn* APTWSpectatorPawn::FindNextSpectatorTarget(APawn* InNewPawn)
+void APTWSpectatorPawn::BeginSpectate()
 {
-	/*
-	if (IsValid(InNewPawn)) return nullptr;
+	GetWorldTimerManager().ClearTimer(BeginSpectateTimer);
+	TWeakObjectPtr<ThisClass> WeakThis = this;
+	GetWorldTimerManager().SetTimer(BeginSpectateTimer, [WeakThis]()
+		{
+			if (WeakThis.IsValid())
+			{
+				if (WeakThis->Controller && WeakThis->Controller->GetStateName() == NAME_Spectating)
+				{
+					WeakThis->SpectateNextPlayer();
+				}
+			}
+		}, 3.0f, false);
+}
+
+bool APTWSpectatorPawn::FindNextSpectatorTarget(APawn*& NewViewTarget)
+{
+	// APlayerState* TempPS = GetPlayerState();
+	// UE_LOG(LogTemp, Warning, TEXT("GetPlayerState = %s"), TempPS ? *TempPS->GetName() : nullptr);
+	// UE_LOG(LogTemp, Warning, TEXT("Controller = %s"), *Controller->GetName());
+	// UE_LOG(LogTemp, Warning, TEXT("Controller->PS = %s"), *GetController<APlayerController>()->PlayerState->GetName());
+	// APlayerController* TEMPPC =  GetController<APlayerController>();
+	// UE_LOG(LogTemp, Warning, TEXT("Controller->GetPawn() = %s"), TEMPPC ? *TEMPPC->GetName() : nullptr);
+	// UE_LOG(LogTemp, Warning, TEXT("Controller->PS->GetPawn() = %s"), TEMPPC->PlayerState->GetPawn() ? *TEMPPC->PlayerState->GetPawn()->GetName() : nullptr);
+	
+	UWorld* World = GetWorld();
+	if (!IsValid(World)) return false;
 	
 	APlayerController* PC = GetController<APlayerController>();
-	if (!IsValid(PC)) return nullptr;
+	if (!IsValid(PC)) return false;
 	
-	APlayerState* PS = GetPlayerState();
-	if (!IsValid(PS)) return nullptr;
+	if(PC->GetStateName() != NAME_Spectating) return false;
 	
-	if (PS->GetPawn() || PC->GetPawn()) return nullptr;
-
-	UWorld* World = GetWorld();
-	if (!IsValid(World)) return nullptr;
-
+	APlayerState* PS = PC->PlayerState;
+	if (!IsValid(PS)) return false;
+	
 	AGameStateBase* GS = World->GetGameState();
-	if (!IsValid(GS)) return nullptr;
+	if (!IsValid(GS)) return false;
 
-	const TArray<APlayerState*>& PlayArray = GS->PlayerArray;
-	if (PlayArray.IsEmpty()) return nullptr;
-
-	APawn* CurrentViewTarget = nullptr;
-	APawn* NewViewTarget = nullptr;
-
-	if (AActor* CurrentViewTargetActor = GetViewTarget())
+	const TArray<APlayerState*>& PlayerArray = GS->PlayerArray;
+	if (PlayerArray.IsEmpty()) return false;
+	
+	APlayerState* CurrentTargetPS = nullptr;
+	AActor* CurrentViewTarget = PC->GetViewTarget();
+	
+	if (GetAttachParentActor())
 	{
-		CurrentViewTarget = Cast<APawn>(CurrentViewTargetActor);
-		if (IsValid(CurrentViewTarget))
+		if (APawn* ParentPawn = Cast<APawn>(GetAttachParentActor()))
 		{
-			if (APlayerState* CurrentViewTargetPS = CurrentViewTarget->GetPlayerState())
-			{
-				if (!IsValid(CurrentViewTargetPS))
-				{
-					CurrentViewTargetPS = PS;
-				}
+			CurrentTargetPS = ParentPawn->GetPlayerState();
+		}
+	}
+	else if (APawn* TargetPawn = Cast<APawn>(CurrentViewTarget))
+	{
+		CurrentTargetPS = TargetPawn->GetPlayerState();
+	}
 
-				int32 FoundIndex = PlayArray.Find(CurrentViewTargetPS);
-				if (FoundIndex != INDEX_NONE)
-				{
-					for (int32 i = FoundIndex + 1; i < PlayArray.Num(); i++)
-					{
-						if (PlayArray[i] && PlayArray[i]->GetPawn() && !PlayArray[i]->IsSpectator())
-						{
-							NewViewTarget = PlayArray[i]->GetPawn();
-							break;
-						}
-					}
-				}
-			}
+	// 현재 타겟의 인덱스 찾기
+	int32 CurrentIndex = -1;
+	if (CurrentTargetPS)
+	{
+		CurrentIndex = PlayerArray.Find(CurrentTargetPS);
+	}
+
+	// 다음 인덱스부터 순회 (원형 큐처럼 순환)
+	for (int32 i = 1; i <= PlayerArray.Num(); ++i)
+	{
+		int32 NextIndex = (CurrentIndex + i) % PlayerArray.Num();
+		APlayerState* CandidatePS = PlayerArray[NextIndex];
+
+		// 유효성 검사: 존재함 && 관전자가 아님 && 나 자신이 아님 && 폰이 있음
+		if (CandidatePS && !CandidatePS->IsSpectator() && 
+			CandidatePS != PC->PlayerState && CandidatePS->GetPawn())
+		{
+			NewViewTarget = CandidatePS->GetPawn();
+			return true;
 		}
 	}
 
-	if (!IsValid(NewViewTarget))
-	{
-		for (APlayerState* PS : PlayArray)
-		{
-			if (PS && (PS != PlayerState) && (!PS->IsSpectator()) && PS->GetPawn())
-			{
-				NewViewTarget = PS->GetPawn();
-				break;
-			}
-		}
-	}
-
-	if (IsValid(NewViewTarget))
-	{
-		if (!IsValid(CurrentViewTarget) || (CurrentViewTarget != NewViewTarget))
-		{
-			return NewViewTarget;
-		}
-	}
-	*/
-	return nullptr;
+	return false;
 }
 
 void APTWSpectatorPawn::SetSpectatorTarget(APawn* NewViewTarget)
 {
-	TWeakObjectPtr<ThisClass> WeakThis = this;
-	TWeakObjectPtr<APawn> WeakViewTarget = NewViewTarget;
-	FTimerHandle NextViewTimerHandle;
-	// GetWorldTimerManager().SetTimerForNextTick(NextViewTimerHandle, [WeakThis, WeakViewTarget]()
-	// 	{
-	// 		if (WeakThis.IsValid() && WeakViewTarget.IsValid())
-	// 		{
-	// 			if (APlayerController* PC = WeakThis->GetController<APlayerController>())
-	// 			{
-	// 				if (!IsValid(PC->GetPawn()))
-	// 				{
-	// 					PC->SetViewTargetWithBlend(WeakViewTarget.Get(), 0.5f, VTBlend_Cubic);
-	// 				}
-	// 			}
-	// 		}
-	// 	}, false);
+	APlayerController* PC = GetController<APlayerController>();
+	if (!PC || !NewViewTarget) return
+	
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	if (IsValid(CurrentViewCharacter))
+	{
+		CurrentViewCharacter->OnCharacterDied.RemoveDynamic(this, &ThisClass::OnTargetDeath);
+		CurrentViewCharacter = nullptr;
+	}
+	
+	AttachToActor(NewViewTarget, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	
+	if (IsValid(CurrentViewCharacter))
+	{
+		if (APTWBaseCharacter* CurrentCharacter = Cast<APTWBaseCharacter>(NewViewTarget))
+		{
+			CurrentViewCharacter->OnCharacterDied.AddDynamic(this, &ThisClass::OnTargetDeath);
+			CurrentViewCharacter = CurrentCharacter;
+		}
+	}
+	
+	CurrentZoomDistance = MaxZoom;
+	if (UCapsuleComponent* TargetCapsule = NewViewTarget->GetComponentByClass<UCapsuleComponent>())
+	{
+		TargetCapsule->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	}
+	
+	SpringArmComponent->SocketOffset = FVector(0.0f, 0.0f, 0.0f);
+	
+	PC->SetViewTarget(this);
 }
 
 void APTWSpectatorPawn::OnInputSpectateNext()
 {
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	if (PC->GetStateName() == NAME_Spectating)
+	if (IsLocallyControlled())
 	{
-		SpectateNextPlayer(this, this);
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		if (PC->GetStateName() == NAME_Spectating)
+		{
+			SpectateNextPlayer();
+		}
 	}
+}
+
+void APTWSpectatorPawn::OnTargetDeath(AActor* DeadActor, AActor* KillerActor)
+{
+	if (IsValid(DeadActor))
+	{
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &APTWSpectatorPawn::SpectateNextPlayer, 1.0f, false);
+	}
+}
+
+void APTWSpectatorPawn::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void APTWSpectatorPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (IsLocallyControlled())
+	{
+		GetWorldTimerManager().ClearTimer(BeginSpectateTimer);
+	}
+	
+	Super::EndPlay(EndPlayReason);
 }
 
 void APTWSpectatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -245,6 +310,10 @@ void APTWSpectatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		{
 			EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Triggered, this, &ThisClass::Zoom);
 		}
+		if (SpectateNextAction)
+		{
+			EnhancedInputComponent->BindAction(SpectateNextAction, ETriggerEvent::Completed, this, &ThisClass::OnInputSpectateNext);
+		}
 	}
 }
 
@@ -264,3 +333,92 @@ void APTWSpectatorPawn::Tick(float DeltaTime)
 		SpringArmComponent->TargetArmLength = NewLength;
 	}
 }
+
+void APTWSpectatorPawn::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	
+	if (IsLocallyControlled())
+	{
+		BeginSpectate();
+	}
+}
+
+void APTWSpectatorPawn::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	
+	if (IsLocallyControlled())
+	{
+		BeginSpectate();
+	}
+}
+
+/*
+void APTWPlayerController::SetViewTarget(AActor* NewViewTarget, FViewTargetTransitionParams TransitionParams)
+{
+	AActor* PrevViewTarget = GetViewTarget();
+	Super::SetViewTarget(NewViewTarget, TransitionParams);
+	
+	if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(PrevViewTarget))
+	{
+		SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh1P(), true);
+		SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh1P(), true);
+			
+		SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh3P(), false);
+		SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh3P(), false);
+	}
+	
+	if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewViewTarget))
+	{
+		if (GetPawn() == NewViewTarget)		// 내 카메라를 사용할 경우
+		{
+			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh1P(), true);
+			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh1P(), false);
+			
+			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh3P(), false);
+			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh3P(), true);
+		}
+		else
+		{
+			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh1P(), false);
+			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh1P(), false);
+			
+			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh3P(), true);
+			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh3P(), true);
+		}
+	}
+}
+
+void APTWPlayerController::SetOwnerNoSeeRecursive(USceneComponent* InParentComponent, bool bNewOwnerNoSee)
+{
+	if (!InParentComponent) return;
+	
+	if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(InParentComponent))
+	{
+		PrimComp->SetOwnerNoSee(bNewOwnerNoSee);
+	}
+	
+	TArray<USceneComponent*> _Children = InParentComponent->GetAttachChildren();
+	for (USceneComponent* Child : _Children)
+	{
+		SetOwnerNoSeeRecursive(Child, bNewOwnerNoSee);
+	}
+}
+
+void APTWPlayerController::SetSetOnlyOwnerSeeRecursive(USceneComponent* InParentComponent, bool bNewOnlyOwnerSee)
+{
+	if (!InParentComponent) return;
+	
+	if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(InParentComponent))
+	{
+		PrimComp->SetOnlyOwnerSee(bNewOnlyOwnerSee);
+	}
+	
+	TArray<USceneComponent*> _Children = InParentComponent->GetAttachChildren();
+	for (USceneComponent* Child : _Children)
+	{
+		SetSetOnlyOwnerSeeRecursive(Child, bNewOnlyOwnerSee);
+	}
+}
+*/

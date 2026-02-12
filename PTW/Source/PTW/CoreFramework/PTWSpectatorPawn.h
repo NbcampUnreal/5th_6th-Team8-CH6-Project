@@ -5,6 +5,7 @@
 #include "GameFramework/SpectatorPawn.h"
 #include "PTWSpectatorPawn.generated.h"
 
+class APTWBaseCharacter;
 /**
  * 
  */
@@ -36,16 +37,25 @@ public:
 	void Turn();
 	
 	UFUNCTION()
-	void SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn);
-	APawn* FindNextSpectatorTarget(APawn* InNewPawn);
+	void SpectateNextPlayer();
+	void BeginSpectate();
+	bool FindNextSpectatorTarget(APawn*& NewViewTarget);
 	void SetSpectatorTarget(APawn* NewViewTarget);
 	UFUNCTION()
 	void OnInputSpectateNext();
 	
+	void OnTargetDeath(AActor* DeadActor, AActor* KillerActor);
+	
 protected:
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
+	
 public:
+	FTimerHandle BeginSpectateTimer;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
@@ -70,7 +80,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* SpectateNextAction;
 	
-	TObjectPtr<ACharacter> CurrentViewTarget;
+	// TObjectPtr<ACharacter> CurrentViewTarget;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Variables")
 	float CurrentZoomDistance;
@@ -84,4 +94,7 @@ protected:
 	
 	bool bIsFreeCamera;
 	bool bIsFirstPerson;
+	
+private:
+	TObjectPtr<APTWBaseCharacter> CurrentViewCharacter;
 };

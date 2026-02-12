@@ -5,6 +5,8 @@
 
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "MiniGame/PTWMiniGameMapRow.h"
 #include "MiniGame/Data/PTWRoundEvent.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
@@ -72,7 +74,7 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		if (GameFlowRule.MinPlayersToStart <= PTWGameState->PlayerArray.Num() &&
 			GameFlowRule.bAutoStartWhenMinPlayersMet)
 		{
-			if (bIsGameStart) return;
+			if (bAllPlayerReady) return;
 			
 			StartGameLobby();
 
@@ -101,16 +103,23 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 	
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::Loading)
 	{
-		SetInputBlock(true);
+		//SetInputBlock(true);
 		
 		if (AllPlayer <= PTWGameState->PlayerArray.Num())
 		{
-			if (bIsGameStart) return;
-			bIsGameStart = true;
+			if (bAllPlayerReady) return;
+			bAllPlayerReady = true;
 			FTimerHandle LoadingDealyTimer;
 			GetWorldTimerManager().SetTimer(LoadingDealyTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
 		}
 	}
+}
+
+void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	ExitSpectorMode(C);
+	
+	Super::HandleSeamlessTravelPlayer(C);
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)
@@ -127,12 +136,6 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 	// 로그 아웃하면 gamestate portal 부분 수정
 }
 
-void APTWLobbyGameMode::RestartPlayer(AController* NewPlayer)
-{
-	Super::RestartPlayer(NewPlayer);
-	
-	
-}
 
 void APTWLobbyGameMode::StartGameLobby()
 {
@@ -207,6 +210,22 @@ void APTWLobbyGameMode::AddGold(APlayerController* NewPlayer)
 
 	// 나중에 preLobby가 아닌 postLobby일 때 한번에 모든 플레이어에게 골드 지급하는 식으로 변경해야함
 	// 하드 코딩 되있는 부분도 변수로 만들어서 bp에서 수정 가능하게 변경
+}
+
+void APTWLobbyGameMode::ExitSpectorMode(AController* Controller)
+{
+	APlayerController* PC = Cast<APlayerController>(Controller);
+	if (!PC) return;
+
+	// 1. 관전 상태 및 대기 상태 강제 종료
+	PC->ChangeState(NAME_Playing);
+	
+	// 2. PlayerState 플래그 초기화
+	if (PC->PlayerState)
+	{
+		PC->PlayerState->SetIsSpectator(false);
+		PC->PlayerState->SetIsOnlyASpectator(false);
+	}
 }
 
 void APTWLobbyGameMode::StartRoulette()

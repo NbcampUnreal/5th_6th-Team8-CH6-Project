@@ -177,7 +177,6 @@ void APTWGameMode::MovePlayerToStart(AController* Controller)
 
 void APTWGameMode::SetInputBlock(bool bInputBlock)
 {
-	
 	//PlayerController->Client_SetInputRestricted(bInputBlock);
 	
 	if (!PTWGameState) return;

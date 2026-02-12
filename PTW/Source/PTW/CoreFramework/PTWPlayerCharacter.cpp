@@ -168,10 +168,14 @@ void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		if (MoveAction)
 		{
 			EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APTWPlayerCharacter::Move);
+			EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APTWPlayerCharacter::OnInputTriggered);
+			EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &APTWPlayerCharacter::OnInputCompleted);
 		}
 		if (LookAction)
 		{
 			EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APTWPlayerCharacter::Look);
+			EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APTWPlayerCharacter::OnInputTriggered);
+			EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Completed, this, &APTWPlayerCharacter::OnInputCompleted);
 		}
 		if (EquipWeaponAction)
 		{
@@ -288,6 +292,59 @@ void APTWPlayerCharacter::InitCharacterState()
 	UpdateNameTagText();
 
 	bIsAbilitiesInitialized = true;
+}
+
+void APTWPlayerCharacter::OnInputTriggered()
+{
+	GetWorldTimerManager().ClearTimer(IdleCheckTimerHandle);
+
+	if (bIsIdleState)
+	{
+		SetIdleState(false);
+	}
+}
+
+void APTWPlayerCharacter::OnInputCompleted()
+{
+	if (!GetWorldTimerManager().IsTimerActive(IdleCheckTimerHandle))
+	{
+		GetWorldTimerManager().SetTimer(IdleCheckTimerHandle, this, &APTWPlayerCharacter::CheckIdleCondition, 0.1f, true);
+	}
+}
+
+void APTWPlayerCharacter::CheckIdleCondition()
+{
+	bool bIsStationary = GetVelocity().SizeSquared() < 10.0f;
+	bool bIsNotFalling = !GetCharacterMovement()->IsFalling();
+
+	if (bIsStationary && bIsNotFalling)
+	{
+		SetIdleState(true);
+
+		GetWorldTimerManager().ClearTimer(IdleCheckTimerHandle);
+	}
+}
+
+void APTWPlayerCharacter::SetIdleState(bool bNewState)
+{
+	if (bIsIdleState == bNewState) return;
+
+	bIsIdleState = bNewState;
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	FGameplayTag IdleTag = FGameplayTag::RequestGameplayTag(FName("State.Idle"));
+
+	if (bIsIdleState)
+	{
+		ASC->AddLooseGameplayTag(IdleTag);
+	}
+	else
+	{
+		// 태그 제거
+		ASC->RemoveLooseGameplayTag(IdleTag);
+	}
 }
 
 void APTWPlayerCharacter::UpdateNameTagText()

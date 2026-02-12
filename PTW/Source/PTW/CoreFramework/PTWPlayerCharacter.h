@@ -61,6 +61,11 @@ protected:
 	void Input_AbilityInputTagReleased(FGameplayTag InputTag);
 
 	void InitCharacterState();
+
+	void OnInputTriggered();
+	void OnInputCompleted();
+	void CheckIdleCondition();
+	void SetIdleState(bool bNewState);
 	
 	/*인벤토리 관련 인풋 바인딩 함수(현정석(26.02.03))*/
 	void EquipWeapon(const FInputActionValue& Value);
@@ -114,8 +119,11 @@ protected:
 	TObjectPtr<UWidgetComponent> NameTagWidget;
 
 	FTimerHandle NameTagRetryTimer;
+	FTimerHandle IdleCheckTimerHandle;
 
 	bool bIsAbilitiesInitialized = false;
+	bool bIsIdleState = false;
+
 
 
 	// 9. [Protected] 컴포넌트 (Components)

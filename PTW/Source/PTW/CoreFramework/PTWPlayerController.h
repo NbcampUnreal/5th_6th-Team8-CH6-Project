@@ -68,6 +68,8 @@ public:
 	/* 게임 로딩 관련 */
 	UFUNCTION(Client, Reliable)
 	void Client_PrepareLoadingScreen(ELoadingScreenType Type, FName MapRowName);
+	UFUNCTION(Client, Reliable)
+	void Client_DisplayLoadingScreen();
 
 protected:
 	virtual void BeginPlay() override;

@@ -11,6 +11,7 @@ class UPTWLoadingWidgetBase;
 UENUM(BlueprintType)
 enum class ELoadingScreenType : uint8
 {
+	None,
 	Lobby,
 	MiniGame
 };
@@ -25,6 +26,8 @@ class PTW_API UPTWGameInstance : public UAdvancedFriendsGameInstance
 
 
 public:
+	UPTWGameInstance(const FObjectInitializer& ObjectInitializer);
+
 	bool bIsFirstLobby = true;
 	int32 CurrentPlayerCount =0;
 	
@@ -36,6 +39,9 @@ public:
 	/* MoviePlayer 로딩 화면 시작 */
 	UFUNCTION()
 	virtual void BeginLoadingScreen(const FString& MapName);
+
+	/* MoviePlayer 로딩 화면 수동 시작 */
+	void DisplayLoadingScreen();
 
 	/* MoviePlayer 로딩 화면 수동 종료 */
 	void StopLoadingScreen();

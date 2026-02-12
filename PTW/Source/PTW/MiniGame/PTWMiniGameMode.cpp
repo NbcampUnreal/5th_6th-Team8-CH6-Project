@@ -178,7 +178,6 @@ void APTWMiniGameMode::EndGame()
 	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
 	ResetPlayerRoundData();
 	ResetPlayerInventoryID();
-	PrepareAllPlayersLoadingScreen(ELoadingScreenType::Lobby, NAME_None);
 	TravelLevel();
 }
 
@@ -205,6 +204,7 @@ void APTWMiniGameMode::WaitingToStartRound()
 	}
 	
 	StartCountDown();
+	PrepareAllPlayersLoadingScreen(ELoadingScreenType::Lobby, NAME_None);
 }
 
 void APTWMiniGameMode::StartGame()

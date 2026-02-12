@@ -157,6 +157,13 @@ void APTWGameMode::EndTimer()
 
 void APTWGameMode::TravelLevel()
 {
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(*It))
+		{
+			PC->Client_DisplayLoadingScreen();
+		}
+	}
 	SaveGameDataToSubsystem();
 	GetWorld()->ServerTravel(TravelLevelName);
 }

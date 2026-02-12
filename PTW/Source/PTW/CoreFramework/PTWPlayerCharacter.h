@@ -52,7 +52,7 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void InitAbilityActorInfo() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
+	virtual void Landed(const FHitResult& Hit) override;
 
 	// 5. [Protected] 내부 구현 로직 (상속받은 자식이 쓸 수 있는 함수)
 	void Move(const FInputActionValue& Value);
@@ -75,6 +75,11 @@ protected:
 	
 	UFUNCTION(Server, Reliable)
 	void ServerRPCUseActiveItem();
+	
+	/*움직임 제한 이벤트 함수(태그 적용 시 자동으로 움직임을 멈춤) 현정석(26.02.12)*/
+	void RegisterGameplayTagEvents();
+	UFUNCTION()
+	void OnStasisTagChanged(const FGameplayTag Tag, int32 NewCount);
 
 private:
 	// 6. [Private] 내부 전용 유틸리티 함수 (외부/자식 노출 X)
@@ -99,7 +104,8 @@ protected:
 	TObjectPtr<UInputAction> EquipWeaponAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> UseActiveItemAction;
-
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	TObjectPtr<USoundBase> LandSound;
 	//FIXME : 테스트 용도
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Temp")
 	TObjectPtr<UPTWItemDefinition> ItemDef;

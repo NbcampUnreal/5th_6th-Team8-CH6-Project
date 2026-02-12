@@ -6,6 +6,7 @@
 #include "PTWGA_ItemAbilityBase.h"
 #include "PTWGA_Banana.generated.h"
 
+class ABananaItemActor;
 /**
  * 
  */
@@ -18,4 +19,9 @@ public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void InitializeVariable() override;
 	virtual void ApplyItemEffect() override;
+	
+	
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Spawn")
+	TSubclassOf<ABananaItemActor> BananaActor;
 };

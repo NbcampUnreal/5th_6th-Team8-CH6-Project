@@ -22,7 +22,9 @@ enum class EPTWGamePhase : uint8
 	MiniGame UMETA(DisplayName="Mini Game"),
 
 	/** 미니 게임 진행 후 로비 */
-	PostGameLobby UMETA(DisplayName="Post Game Lobby")
+	PostGameLobby UMETA(DisplayName="Post Game Lobby"),
+
+	Loading UMETA(DisplayName="Loading"),
 };
 
 // 룰렛 진행 단계를 나타내는 열거형
@@ -125,6 +127,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMiniGameCountDownValueChanged, in
 /** */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPortalCountChanged, int32, Current, int32, Required);
 
+/* 로딩 진척도 UI 업데이트용 델리게이트 */
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnLoadingProgressChanged, int32);
+
 #pragma endregion
 
 UCLASS()
@@ -220,6 +225,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
 	FOnMiniGameRoundChanged OnMiniGameRoundChanged;
+
+	/* 로딩 진척도 UI 업데이트용 */
+	FOnLoadingProgressChanged OnLoadingProgressChanged;
 #pragma endregion
 
 #pragma region Getter
@@ -328,6 +336,16 @@ public:
 	
 	/** 미니 게임 순위를 기준으로 승점 부여 */
 	void ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule);
+
+	/* 로딩스크린 업데이트용 */
+	// 현재 맵에 로딩완료된 플레이어 수
+	UPROPERTY(ReplicatedUsing = OnRep_LoadedPlayerCount)
+	int32 LoadedPlayerCount = 0;
+	UPROPERTY(Replicated)
+	int32 TotalPlayerCount;
+
+	UFUNCTION()
+	void OnRep_LoadedPlayerCount();
 
 	/** 생존 플레이어들 */
 	UPROPERTY()

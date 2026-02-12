@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -31,4 +31,7 @@ struct FPTWMiniGameMapRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, meta = (ClampMax = "16"))
 	int32 MaxPlayers = 16;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText MapDescription;
 };

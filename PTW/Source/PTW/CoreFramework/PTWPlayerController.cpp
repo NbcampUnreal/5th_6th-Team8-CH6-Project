@@ -17,6 +17,8 @@
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "CoreFramework/Game/GameMode/PTWGameMode.h"
+#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "UI/PTWUISubsystem.h"
 #include "UI/PTWHUD.h"
 #include "UI/PTWInGameHUD.h"
@@ -299,6 +301,9 @@ void APTWPlayerController::OnRep_Pawn()
 void APTWPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
+	/* 로딩완료 */
+	Server_ReportLoadingComplete();
 }
 
 void APTWPlayerController::OnUnPossess()
@@ -709,9 +714,30 @@ void APTWPlayerController::UpdateNameTagsVisibility()
 	}
 }
 
+void APTWPlayerController::Server_ReportLoadingComplete_Implementation()
+{
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		GS->LoadedPlayerCount++;
+	}
+
+	if (APTWGameMode* GM = GetWorld()->GetAuthGameMode<APTWGameMode>())
+	{
+		GM->CheckAllPlayersLoaded();
+	}
+}
+
 void APTWPlayerController::ApplyMouseSensitivity(float NewValue)
 {
 	CurrentMouseSensitivity = NewValue;
+}
+
+void APTWPlayerController::Client_PrepareLoadingScreen_Implementation(ELoadingScreenType Type, FName MapRowName)
+{
+	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
+	{
+		GI->PrepareLoadingScreen(Type, MapRowName);
+	}
 }
 
 void APTWPlayerController::Client_SetInputRestricted_Implementation(bool bRestricted)

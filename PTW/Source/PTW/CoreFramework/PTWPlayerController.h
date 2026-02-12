@@ -63,6 +63,10 @@ public:
 	/* 게임설정 */
 	void ApplyMouseSensitivity(float NewValue);
 
+	/* 게임 로딩 관련 */
+	UFUNCTION(Client, Reliable)
+	void Client_PrepareLoadingScreen(ELoadingScreenType Type, FName MapRowName);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -112,7 +116,11 @@ protected:
 	/* 플레이어 이름 */
 	/* 닉네임 가시성 업데이트 로직 */
 	void UpdateNameTagsVisibility();
-	
+
+	/* (로딩스크린) 로딩완료 알리기 */
+	UFUNCTION(Server, Reliable)
+	void Server_ReportLoadingComplete();
+
 public:
 	/* KillLog 델리게이트 */
 	FOnKillLog OnKillLog;

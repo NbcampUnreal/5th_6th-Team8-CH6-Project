@@ -19,6 +19,7 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
+#include "GameFramework/SpectatorPawn.h"
 #include "UI/PTWUISubsystem.h"
 #include "UI/PTWHUD.h"
 #include "UI/PTWInGameHUD.h"
@@ -41,144 +42,11 @@ void APTWPlayerController::StartSpectating()
 
 void APTWPlayerController::MulticastRPC_StartSpectating_Implementation()
 {
-	if (IsLocalController())
-	{
-		if (!OnPossessedPawnChanged.IsAlreadyBound(this, &ThisClass::SpectateNextPlayer))
-		{
-			OnPossessedPawnChanged.AddDynamic(this, &ThisClass::SpectateNextPlayer);
-		}
-	}
-
-	UnPossess();
-	ChangeState(NAME_Spectating);
 	if (HasAuthority())
 	{
+		UnPossess();
+		ChangeState(NAME_Spectating);
 		ClientGotoState(NAME_Spectating);
-	}
-}
-
-void APTWPlayerController::SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn)
-{
-	if (OnPossessedPawnChanged.IsAlreadyBound(this, &ThisClass::SpectateNextPlayer))
-	{
-		OnPossessedPawnChanged.RemoveDynamic(this, &ThisClass::SpectateNextPlayer);
-	}
-
-	if (IsValid(InNewPawn)) return;
-
-	if (APawn* NewTargetView = FindNextSpectatorTarget(InNewPawn))
-	{
-		SetSpectatorTarget(NewTargetView);
-	}
-}
-
-APawn* APTWPlayerController::FindNextSpectatorTarget(APawn* InNewPawn)
-{
-	if (IsValid(InNewPawn))
-	{
-		return nullptr;
-	}
-
-	if (!IsValid(PlayerState))
-	{
-		return nullptr;
-	}
-
-	if (PlayerState->GetPawn() || GetPawn())
-	{
-		return nullptr;
-	}
-
-	UWorld* World = GetWorld();
-	if (!IsValid(World))
-	{
-		return nullptr;
-	}
-
-	AGameStateBase* GS = World->GetGameState();
-	if (!IsValid(GS))
-	{
-		return nullptr;
-	}
-
-	const TArray<APlayerState*>& PlayArray = GS->PlayerArray;
-	if (PlayArray.IsEmpty())
-	{
-		return nullptr;
-	}
-
-	APawn* CurrentViewTarget = nullptr;
-	APawn* NewViewTarget = nullptr;
-
-	if (AActor* CurrentViewTargetActor = GetViewTarget())
-	{
-		CurrentViewTarget = Cast<APawn>(CurrentViewTargetActor);
-		if (IsValid(CurrentViewTarget))
-		{
-			if (APlayerState* CurrentViewTargetPS = CurrentViewTarget->GetPlayerState())
-			{
-				if (!IsValid(CurrentViewTargetPS))
-				{
-					CurrentViewTargetPS = PlayerState;
-				}
-
-				int32 FoundIndex = PlayArray.Find(CurrentViewTargetPS);
-				if (FoundIndex != INDEX_NONE)
-				{
-					for (int32 i = FoundIndex + 1; i < PlayArray.Num(); i++)
-					{
-						if (PlayArray[i] && PlayArray[i]->GetPawn() && !PlayArray[i]->IsSpectator())
-						{
-							NewViewTarget = PlayArray[i]->GetPawn();
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if (!IsValid(NewViewTarget))
-	{
-		for (APlayerState* PS : PlayArray)
-		{
-			if (PS && (PS != PlayerState) && (!PS->IsSpectator()) && PS->GetPawn())
-			{
-				NewViewTarget = PS->GetPawn();
-				break;
-			}
-		}
-	}
-
-	if (IsValid(NewViewTarget))
-	{
-		if (!IsValid(CurrentViewTarget) || (CurrentViewTarget != NewViewTarget))
-		{
-			return NewViewTarget;
-		}
-	}
-	return nullptr;
-}
-
-void APTWPlayerController::SetSpectatorTarget(APawn* NewViewTarget)
-{
-	TWeakObjectPtr<ThisClass> WeakThis = this;
-	TWeakObjectPtr<APawn> WeakViewTarget = NewViewTarget;
-	FTimerHandle NextViewTimerHandle;
-	GetWorldTimerManager().SetTimer(NextViewTimerHandle, [WeakThis, WeakViewTarget]()
-		{
-			if (WeakThis.IsValid() && WeakViewTarget.IsValid() && !IsValid(WeakThis->GetPawn()))
-			{
-				WeakThis->SetViewTargetWithBlend(WeakViewTarget.Get(), 0.5f, VTBlend_Cubic);
-			}
-		}, 0.1f, false);
-}
-
-void APTWPlayerController::OnInputSpectateNext()
-{
-	if (GetStateName() == NAME_Spectating)
-	{
-		SpectateNextPlayer(GetPawn(), GetPawn());
 	}
 }
 
@@ -330,72 +198,10 @@ void APTWPlayerController::OnUnPossess()
 void APTWPlayerController::BeginSpectatingState()
 {
 	Super::BeginSpectatingState();
-}
-
-void APTWPlayerController::SetViewTarget(AActor* NewViewTarget, FViewTargetTransitionParams TransitionParams)
-{
-	AActor* PrevViewTarget = GetViewTarget();
-	Super::SetViewTarget(NewViewTarget, TransitionParams);
 	
-	if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(PrevViewTarget))
+	if (HasAuthority() && GetSpectatorPawn() && !DeathLocation.IsZero())
 	{
-		SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh1P(), true);
-		SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh1P(), true);
-			
-		SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh3P(), false);
-		SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh3P(), false);
-	}
-	
-	if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewViewTarget))
-	{
-		if (GetPawn() == NewViewTarget)		// 내 카메라를 사용할 경우
-		{
-			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh1P(), true);
-			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh1P(), false);
-			
-			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh3P(), false);
-			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh3P(), true);
-		}
-		else
-		{
-			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh1P(), false);
-			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh1P(), false);
-			
-			SetSetOnlyOwnerSeeRecursive(PlayerCharacter->GetMesh3P(), true);
-			SetOwnerNoSeeRecursive(PlayerCharacter->GetMesh3P(), true);
-		}
-	}
-}
-
-void APTWPlayerController::SetOwnerNoSeeRecursive(USceneComponent* InParentComponent, bool bNewOwnerNoSee)
-{
-	if (!InParentComponent) return;
-	
-	if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(InParentComponent))
-	{
-		PrimComp->SetOwnerNoSee(bNewOwnerNoSee);
-	}
-	
-	TArray<USceneComponent*> _Children = InParentComponent->GetAttachChildren();
-	for (USceneComponent* Child : _Children)
-	{
-		SetOwnerNoSeeRecursive(Child, bNewOwnerNoSee);
-	}
-}
-
-void APTWPlayerController::SetSetOnlyOwnerSeeRecursive(USceneComponent* InParentComponent, bool bNewOnlyOwnerSee)
-{
-	if (!InParentComponent) return;
-	
-	if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(InParentComponent))
-	{
-		PrimComp->SetOnlyOwnerSee(bNewOnlyOwnerSee);
-	}
-	
-	TArray<USceneComponent*> _Children = InParentComponent->GetAttachChildren();
-	for (USceneComponent* Child : _Children)
-	{
-		SetSetOnlyOwnerSeeRecursive(Child, bNewOnlyOwnerSee);
+		GetSpectatorPawn()->SetActorLocation(DeathLocation);
 	}
 }
 
@@ -507,11 +313,6 @@ void APTWPlayerController::SetupInputComponent()
 			this,
 			&APTWPlayerController::OnRankingReleased
 		);
-		EIC->BindAction(
-			SpectateNextAction,
-			ETriggerEvent::Started,
-			this,
-			&ThisClass::OnInputSpectateNext);
 
 		// Pause Menu (ESC)
 		EIC->BindAction(

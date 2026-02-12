@@ -67,6 +67,15 @@ void APTWMiniGameMode::Logout(AController* Exiting)
 
 void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
+	if (IsValid(PTWGameState) && PTWGameState->IsMatchInProgress())
+	{
+		if(PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::MiniGame)
+		{
+			NewPlayer->StartSpectatingOnly();
+			return;
+		}
+	}
+	
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	
 	if (!IsValid(PTWGameState)) return;

@@ -36,12 +36,6 @@ public:
 	void StartSpectating();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_StartSpectating();
-	UFUNCTION()
-	void SpectateNextPlayer(APawn* InOldPawn, APawn* InNewPawn);
-	APawn* FindNextSpectatorTarget(APawn* InNewPawn);
-	void SetSpectatorTarget(APawn* NewViewTarget);
-	UFUNCTION()
-	void OnInputSpectateNext();
 	
 	/* 데미지 인디케이터 */
 	UFUNCTION(Client, Reliable)
@@ -80,11 +74,6 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 	virtual void BeginSpectatingState() override;
-	virtual void SetViewTarget(AActor* NewViewTarget, 
-		FViewTargetTransitionParams TransitionParams = FViewTargetTransitionParams()) override;
-
-	void SetOwnerNoSeeRecursive(USceneComponent* InParentComponent, bool bNewOwnerNoSee);
-	void SetSetOnlyOwnerSeeRecursive(USceneComponent* InParentComponent, bool bNewOnlyOwnerSee);
 	
 	/*  ASC Delegate 바인딩 */
 	//void BindASCDelegates();
@@ -138,7 +127,8 @@ public:
 
 	/* 게임설정 */
 	float CurrentMouseSensitivity = 1.0f;
-
+	
+	FVector DeathLocation = FVector::ZeroVector;
 protected:
 	/* 캐싱된 Ability System Component */
 	UPROPERTY()
@@ -170,9 +160,6 @@ protected:
 	UInputMappingContext* DefaultMappingContext;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* ShowRankingAction;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	UInputAction* SpectateNextAction;
 
 	// PauseMenu (ESC)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")

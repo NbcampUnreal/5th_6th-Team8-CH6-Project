@@ -107,6 +107,11 @@ protected:
 	
 	virtual void ExecuteHitImpactCue(const FHitResult& HitResult);
 	
+	virtual bool CheckingTag(UAbilitySystemComponent* ASC);
+	
 private:
 	float MaxRange = 5000.0f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "IgnoreTag")
+	FGameplayTag IgnoreTag;
 };

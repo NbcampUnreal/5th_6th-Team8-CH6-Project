@@ -73,7 +73,7 @@ void APTWDisplayItem::OnInteract_Implementation(APawn* InstigatorPawn)
 
 FText APTWDisplayItem::GetInteractionKeyword_Implementation()
 {
-	FString ActionStr = FString::Printf(TEXT("구매하기 (%d G)"), CachedPrice);
+	FString ActionStr = FString::Printf(TEXT("F를 눌러 구매하기 (%d G)"), CachedPrice);
 	return FText::FromString(ActionStr);
 }
 

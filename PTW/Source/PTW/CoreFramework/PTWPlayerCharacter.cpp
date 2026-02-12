@@ -25,6 +25,7 @@
 #include "CoreFramework/Character/Component/PTWReactorComponent.h"
 #include "CoreFramework/Character/Component/PTWInteractComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
+#include "Kismet/GameplayStatics.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -90,6 +91,8 @@ void APTWPlayerCharacter::BeginPlay()
 		Mesh1P->SetVisibility(true);
 		Mesh1P->HideBoneByName(FName("head"), EPhysBodyOp::PBO_None);
 	}
+	
+	RegisterGameplayTagEvents();
 }
 
 void APTWPlayerCharacter::PossessedBy(AController* NewController)
@@ -144,6 +147,16 @@ void APTWPlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 
 	Super::EndPlay(EndPlayReason);
+}
+
+void APTWPlayerCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if (LandSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, LandSound, GetActorLocation());
+	}
 }
 
 void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -303,6 +316,33 @@ void APTWPlayerCharacter::UpdateNameTagText()
 	}
 
 	NameWidget->SetPlayerName(Name);
+}
+
+void APTWPlayerCharacter::RegisterGameplayTagEvents()
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Stasis, EGameplayTagEventType::AnyCountChange)
+		.AddUObject(this, &APTWPlayerCharacter::OnStasisTagChanged);
+	}
+}
+
+void APTWPlayerCharacter::OnStasisTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	APTWPlayerController* PC = Cast<APTWPlayerController>(Controller);
+	if (!PC) return;
+	
+	if (NewCount > 0)
+	{
+		PC->SetIgnoreLookInput(true);
+		PC->SetIgnoreMoveInput(true);
+		GetCharacterMovement()->StopMovementImmediately();
+	}
+	else
+	{
+		PC->ResetIgnoreLookInput();
+		PC->ResetIgnoreMoveInput();
+	}
 }
 
 void APTWPlayerCharacter::ServerRPCUseActiveItem_Implementation()

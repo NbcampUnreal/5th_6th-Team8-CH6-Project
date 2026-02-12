@@ -57,6 +57,8 @@ namespace GameplayTags
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Posture_Crouching);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Status_Dead);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Status_Bomb);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Invincible);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Stasis);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Slowing);
 		
 		namespace Movement
@@ -112,6 +114,7 @@ namespace GameplayTags
 		namespace Item
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Invisibility);
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Invincible);
 		}
 		
 		namespace Hit

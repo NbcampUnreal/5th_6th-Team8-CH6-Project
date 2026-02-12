@@ -196,27 +196,34 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilityTargetDataHandle& Ta
 		AActor* HitActor = HitResult ? HitResult->GetActor() : nullptr;
         
 		if (!HitActor) continue;
-
+		
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
 		if (!TargetASC) continue;
 		
-		IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(HitActor);
-		float CurrentDamage = BaseDamage;
-		if (CombatInt)
+		if (!CheckingTag(TargetASC))
 		{
-			CurrentDamage *= CombatInt->GetDamageMultiplier(HitResult->BoneName);
-			
-			if (HitResult->BoneName == FName("head"))
+			IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(HitActor);
+			float CurrentDamage = BaseDamage;
+			if (CombatInt)
 			{
-				CombatInt->ApplyGameplayEffectToSelf(HeadShotEffectClass, 1.0f, MakeEffectContext(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo()));
+				CurrentDamage *= CombatInt->GetDamageMultiplier(HitResult->BoneName);
+			
+				if (HitResult->BoneName == FName("head"))
+				{
+					CombatInt->ApplyGameplayEffectToSelf(HeadShotEffectClass, 1.0f, MakeEffectContext(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo()));
+				}
+			}
+		
+			FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageGEClass, GetAbilityLevel());
+			if (SpecHandle.IsValid())
+			{
+				SpecHandle.Data->SetSetByCallerMagnitude(Tag_Damage, -CurrentDamage);
+				ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, TargetData);
 			}
 		}
-		
-		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(DamageGEClass, GetAbilityLevel());
-		if (SpecHandle.IsValid())
+		else
 		{
-			SpecHandle.Data->SetSetByCallerMagnitude(Tag_Damage, -CurrentDamage);
-			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, TargetData);
+			UE_LOG(LogTemp, Warning, TEXT("무적"));
 		}
 	}
 }
@@ -321,4 +328,9 @@ void UPTWGA_Fire::ExecuteHitImpactCue(const FHitResult& HitResult)
 			}
 		}
 	}
+}
+
+bool UPTWGA_Fire::CheckingTag(UAbilitySystemComponent* ASC)
+{
+	return ASC->HasMatchingGameplayTag(IgnoreTag);
 }

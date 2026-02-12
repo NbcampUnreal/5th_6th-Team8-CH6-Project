@@ -152,6 +152,10 @@ public:
 	/* 채팅 RPC */
 	void BroadcastChatMessage(const FString& Sender, const FString& Message);
 
+	/* 시스템 메세지 전송 */
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SystemMessage(const FString& Message);
+
 	/* 미니게임 카운트다운 */
 	bool IsMiniGameCountdown() const { return bMiniGameCountdown; }
 #pragma region Setter

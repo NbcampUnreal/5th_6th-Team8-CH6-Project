@@ -103,6 +103,23 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 
 	PTWPlayerState->ResetInventoryItemId();
 	//RestartPlayer(NewPlayer);
+
+	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::Loading)
+	{
+		if (CurrentPlayer <= PTWGameState->PlayerArray.Num())
+		{
+			if (bIsGameStart) return;
+			
+			StartGameLobby();
+		}
+	}
+}
+
+void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	Super::HandleSeamlessTravelPlayer(C);
+
+	//SetInputBlock(C, true);
 }
 
 

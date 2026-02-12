@@ -41,7 +41,7 @@ public:
 	const FShopItemRow* GetShopItemData(FName ItemID) const;
 
 protected:
-	TArray<EShopCategory> SelectShopCategories();
+	TArray<EShopCategory> SelectShopCategories(int32 TargetCount);
 	TArray<FName> SelectItemsForShop(EShopCategory Category, FGameplayTag BanTag);
 
 	//현재 이벤트 태그에 따른 가격 배율 계산 (0.5 ~ 2.0)

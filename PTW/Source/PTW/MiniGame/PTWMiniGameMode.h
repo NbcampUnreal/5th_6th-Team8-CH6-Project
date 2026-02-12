@@ -33,8 +33,10 @@ protected:
 	virtual void Logout(AController* Exiting) override;
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 	virtual void RestartPlayer(AController* NewPlayer) override;
-
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
+	
 	//* 미니 게임 시작 */
+	UFUNCTION()
 	virtual void StartGame();
 	virtual void StartRound();
 	

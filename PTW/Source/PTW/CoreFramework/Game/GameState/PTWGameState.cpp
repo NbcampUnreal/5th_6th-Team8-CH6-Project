@@ -3,8 +3,10 @@
 
 #include "PTWGameState.h"
 
+#include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "Net/UnrealNetwork.h"
+
 
 APTWGameState::APTWGameState()
 {
@@ -80,6 +82,20 @@ void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
 void APTWGameState::OnRep_LoadedPlayerCount()
 {
 	OnLoadingProgressChanged.Broadcast(LoadedPlayerCount);
+}
+
+void APTWGameState::OnRep_GlobalInputBlocked()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	APlayerController* PC = World->GetFirstPlayerController();
+	if (!PC) return;
+
+	APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC);
+	if (!PTWPC) return;
+
+	PTWPC->ApplyInputRestricted(bGlobalInputBlocked);
 }
 
 void APTWGameState::DecreaseTimer()

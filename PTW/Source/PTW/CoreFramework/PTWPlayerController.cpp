@@ -745,3 +745,29 @@ void APTWPlayerController::Client_SetInputRestricted_Implementation(bool bRestri
 	SetIgnoreMoveInput(bRestricted);
 	SetIgnoreLookInput(bRestricted);
 }
+
+void APTWPlayerController::ApplyInputRestricted(bool bRestricted)
+{
+	if (!IsLocalController()) return;
+	
+	SetIgnoreMoveInput(bRestricted);
+	SetIgnoreLookInput(bRestricted);
+	
+	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetPawn());
+	if (!PC) return;
+
+	UInputMappingContext* IMC = PC->GetDefaultMappingContext();
+	if (!IMC) return;
+
+	ULocalPlayer* LocalPlayer = GetLocalPlayer();
+	if (!LocalPlayer) return;
+
+	UEnhancedInputLocalPlayerSubsystem* Subsystem =
+		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
+	if (!Subsystem) return;
+
+	if (bRestricted)
+		Subsystem->RemoveMappingContext(IMC);
+	else
+		Subsystem->AddMappingContext(IMC, 0);
+}

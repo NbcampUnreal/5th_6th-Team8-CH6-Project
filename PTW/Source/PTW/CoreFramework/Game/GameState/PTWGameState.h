@@ -22,7 +22,9 @@ enum class EPTWGamePhase : uint8
 	MiniGame UMETA(DisplayName="Mini Game"),
 
 	/** 미니 게임 진행 후 로비 */
-	PostGameLobby UMETA(DisplayName="Post Game Lobby")
+	PostGameLobby UMETA(DisplayName="Post Game Lobby"),
+
+	Loading UMETA(DisplayName="Loading"),
 };
 
 // 룰렛 진행 단계를 나타내는 열거형

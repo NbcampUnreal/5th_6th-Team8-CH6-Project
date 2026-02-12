@@ -16,10 +16,26 @@ void UPTWScoreSubsystem::SaveGameRound(int32 NewGameRound)
 	SavedGameRound = NewGameRound;
 }
 
+void UPTWScoreSubsystem::SavePlayerCount(int32 NewPlayerCount)
+{
+	SavedPlayerCount = NewPlayerCount;
+}
+void UPTWScoreSubsystem::IncreasePlayerCount()
+{
+	++SavedPlayerCount;
+}
+
+void UPTWScoreSubsystem::DecreasePlayerCount()
+{
+	--SavedPlayerCount;
+}
+
 FPTWPlayerData* UPTWScoreSubsystem::FindPlayerData(const FString& PlayerName)
 {
 	return SavedPlayersData.Find(PlayerName);
 }
+
+
 
 
 

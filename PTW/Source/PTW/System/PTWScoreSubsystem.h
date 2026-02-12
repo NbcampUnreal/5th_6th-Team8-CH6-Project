@@ -33,8 +33,11 @@ public:
 	 * @param NewGameRound 저장 할 현재 게임 라운드 번호
 	 */
 	void SaveGameRound(int32 NewGameRound);
+	void SavePlayerCount(int32 NewPlayerCount);
 
-
+	void IncreasePlayerCount();
+	void DecreasePlayerCount();
+	
 	bool bIsFirstLobby = true;
 	
 	/** 지정한 플레이어의 저장된 데이터가 있으면 반환 */
@@ -42,10 +45,11 @@ public:
 
 	/** 저장된 라운드 반환 */
 	FORCEINLINE int32 GetCurrentGameRound() const { return SavedGameRound; }
-
+	FORCEINLINE int32 GetSavedPlayerCount() const { return SavedPlayerCount; }
 private:
 	// 현재 저장 게임 라운드 번호
-	int32 SavedGameRound = 1;
+	int32 SavedGameRound = 0;
+	int32 SavedPlayerCount = 0;
 	
 	// 플레이어 ID를 키로 하는 플레이어 데이터 저장소
 	TMap<FString, FPTWPlayerData> SavedPlayersData;

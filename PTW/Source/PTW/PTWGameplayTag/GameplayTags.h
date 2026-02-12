@@ -61,12 +61,24 @@ namespace GameplayTags
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Stasis);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Slowing);
 		
+		namespace Passive
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(ReflectShield);
+		}
+		
 		namespace Movement
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InAir);
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sprinting);
 		}
 		
+	}
+	namespace Item
+	{
+		namespace Passive
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(ReflectShield);
+		}
 	}
 	
 	namespace Weapon

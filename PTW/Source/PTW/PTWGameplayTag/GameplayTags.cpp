@@ -59,6 +59,11 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Stasis, "State.Stasis");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Slowing, "State.DebuffSlow");
 		
+		namespace Passive
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(ReflectShield, "State.Passive.ReflectShield");
+		}
+		
 		namespace Movement
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(InAir, "State.Movement.InAir");
@@ -67,6 +72,13 @@ namespace GameplayTags
 		
 	}
 	
+	namespace Item
+	{
+		namespace Passive
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(ReflectShield, "Item.Passive.ReflectShield");
+		}
+	}
 	namespace Weapon
 	{
 		namespace Anim

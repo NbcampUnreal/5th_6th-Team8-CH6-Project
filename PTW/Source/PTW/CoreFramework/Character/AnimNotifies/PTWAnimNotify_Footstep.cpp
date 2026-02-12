@@ -27,7 +27,7 @@ void UPTWAnimNotify_Footstep::Notify(USkeletalMeshComponent* MeshComp, UAnimSequ
 
 		if (bIsLocallyControlled)
 		{
-			if (MeshComp != PTWChar->GetMesh1P())
+			if (MeshComp == PTWChar->GetMesh1P())
 			{
 				return;
 			}

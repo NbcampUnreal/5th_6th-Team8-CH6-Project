@@ -52,7 +52,7 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void InitAbilityActorInfo() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
+	virtual void Landed(const FHitResult& Hit) override;
 
 	// 5. [Protected] 내부 구현 로직 (상속받은 자식이 쓸 수 있는 함수)
 	void Move(const FInputActionValue& Value);
@@ -104,7 +104,8 @@ protected:
 	TObjectPtr<UInputAction> EquipWeaponAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> UseActiveItemAction;
-
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	TObjectPtr<USoundBase> LandSound;
 	//FIXME : 테스트 용도
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Temp")
 	TObjectPtr<UPTWItemDefinition> ItemDef;

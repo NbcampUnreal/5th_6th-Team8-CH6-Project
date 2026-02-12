@@ -2,6 +2,8 @@
 
 
 #include "PTWGameMode.h"
+
+#include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
@@ -22,6 +24,7 @@ void APTWGameMode::InitGame(const FString& MapName, const FString& Options, FStr
 	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
 		CurrentRound = PTWScoreSubsystem->GetCurrentGameRound(); // GameInstance 라운드 값 받아서 GameMode에 저장
+		CurrentPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
 	}
 }
 
@@ -65,6 +68,12 @@ void APTWGameMode::Logout(AController* Exiting)
 	Super::Logout(Exiting);
 
 	if (!IsValid(PTWGameState)) return;
+
+	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
+	{
+		PTWScoreSubsystem->DecreasePlayerCount();
+		CurrentPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
+	}
 	
 	CheckAllPlayersLoaded();
 }
@@ -72,7 +81,6 @@ void APTWGameMode::Logout(AController* Exiting)
 void APTWGameMode::GetSeamlessTravelActorList(bool bToTransition, TArray<AActor*>& ActorList)
 {
 	Super::GetSeamlessTravelActorList(bToTransition, ActorList);
-	
 }
 
 void APTWGameMode::PostSeamlessTravel()
@@ -144,12 +152,6 @@ void APTWGameMode::EndTimer()
 
 void APTWGameMode::TravelLevel()
 {
-	// 레벨 이동 할 때 마다 현재 인원 갱신
-	if (UPTWGameInstance* PTWGameInstance = Cast<UPTWGameInstance>(GetGameInstance()))
-	{
-		PTWGameInstance->CurrentPlayerCount = PTWGameState->PlayerArray.Num();
-	}
-	
 	SaveGameDataToSubsystem();
 	GetWorld()->ServerTravel(TravelLevelName);
 }
@@ -168,12 +170,22 @@ void APTWGameMode::MovePlayerToStart(AController* Controller)
 	Pawn->SetActorRotation(PlayerStart->GetActorRotation());
 }
 
+void APTWGameMode::SetInputBlock(AController* Controller, bool bInputBlock)
+{
+	if (!Controller) return;
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Controller);
+	if (!PlayerController) return;
+
+	PlayerController->Client_SetInputRestricted(bInputBlock);
+}
+
 void APTWGameMode::SaveGameDataToSubsystem()
 {
 	if (!PTWGameState) return;
 	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
 		PTWScoreSubsystem->SaveGameRound(PTWGameState->GetCurrentRound());
+		PTWScoreSubsystem->SavePlayerCount(PTWGameState->PlayerArray.Num());
 
 		for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 		{

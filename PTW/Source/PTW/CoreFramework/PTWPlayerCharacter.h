@@ -75,6 +75,11 @@ protected:
 	
 	UFUNCTION(Server, Reliable)
 	void ServerRPCUseActiveItem();
+	
+	/*움직임 제한 이벤트 함수(태그 적용 시 자동으로 움직임을 멈춤) 현정석(26.02.12)*/
+	void RegisterGameplayTagEvents();
+	UFUNCTION()
+	void OnStasisTagChanged(const FGameplayTag Tag, int32 NewCount);
 
 private:
 	// 6. [Private] 내부 전용 유틸리티 함수 (외부/자식 노출 X)

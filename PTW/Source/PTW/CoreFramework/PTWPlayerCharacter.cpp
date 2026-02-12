@@ -90,6 +90,8 @@ void APTWPlayerCharacter::BeginPlay()
 		Mesh1P->SetVisibility(true);
 		Mesh1P->HideBoneByName(FName("head"), EPhysBodyOp::PBO_None);
 	}
+	
+	RegisterGameplayTagEvents();
 }
 
 void APTWPlayerCharacter::PossessedBy(AController* NewController)
@@ -303,6 +305,33 @@ void APTWPlayerCharacter::UpdateNameTagText()
 	}
 
 	NameWidget->SetPlayerName(Name);
+}
+
+void APTWPlayerCharacter::RegisterGameplayTagEvents()
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Stasis, EGameplayTagEventType::AnyCountChange)
+		.AddUObject(this, &APTWPlayerCharacter::OnStasisTagChanged);
+	}
+}
+
+void APTWPlayerCharacter::OnStasisTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	APTWPlayerController* PC = Cast<APTWPlayerController>(Controller);
+	if (!PC) return;
+	
+	if (NewCount > 0)
+	{
+		PC->SetIgnoreLookInput(true);
+		PC->SetIgnoreMoveInput(true);
+		GetCharacterMovement()->StopMovementImmediately();
+	}
+	else
+	{
+		PC->ResetIgnoreLookInput();
+		PC->ResetIgnoreMoveInput();
+	}
 }
 
 void APTWPlayerCharacter::ServerRPCUseActiveItem_Implementation()

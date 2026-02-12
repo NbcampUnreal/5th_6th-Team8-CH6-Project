@@ -28,6 +28,7 @@
 #include "UI/InGameUI/PTWDamageIndicator.h"
 #include "UI/MiniGame/PTWGameStartTimer.h"
 #include "Inventory/Instance/PTWItemInstance.h"
+#include "Net/UnrealNetwork.h"
 #include "Weapon/PTWWeaponActor.h"
 
 void APTWPlayerController::StartSpectating()
@@ -653,7 +654,7 @@ void APTWPlayerController::UpdateNameTagsVisibility()
 		if (!TargetChar) continue;
 
 		// 자기 자신 / 사망 체크
-		if (TargetChar == MyPawn || TargetChar->IsDead())
+		if (TargetChar == MyPawn || TargetChar->IsDead() || TargetChar->GetStealthMode())
 		{
 			if (UWidgetComponent* WidgetComp = TargetChar->GetNameTagWidget())
 			{

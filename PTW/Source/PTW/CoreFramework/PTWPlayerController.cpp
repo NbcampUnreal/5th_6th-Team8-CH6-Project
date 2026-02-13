@@ -31,6 +31,7 @@
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "System/PTWSessionSubsystem.h"
 #include "Weapon/PTWWeaponActor.h"
 
 void APTWPlayerController::StartSpectating()
@@ -113,7 +114,13 @@ void APTWPlayerController::Client_DisplayLoadingScreen_Implementation()
 
 void APTWPlayerController::Client_OpenMainMenu_Implementation()
 {
-	UGameplayStatics::OpenLevel(this,  FName(TEXT("/Game/_PTW/Maps/MainMenu")));
+	UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>();
+	if (!GI) return;
+	
+	if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
+	{
+		SessionSubsystem->LeaveGameSession();
+	}
 }
 
 void APTWPlayerController::BeginPlay()

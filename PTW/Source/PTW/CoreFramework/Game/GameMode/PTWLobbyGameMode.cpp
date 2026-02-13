@@ -11,6 +11,7 @@
 #include "MiniGame/Data/PTWRoundEvent.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
+#include "System/PTWSessionSubsystem.h"
 #include "System/Session/SessionConfig.h"
 #include "System/Shop/PTWShopSubsystem.h"
 
@@ -255,7 +256,13 @@ void APTWLobbyGameMode::ReturnToMainMenu()
 		}
 	}
 	// 리슨 서버일 경우 호스트는 따로 구현
-	UGameplayStatics::OpenLevel(this, FName(TEXT("/Game/_PTW/Maps/MainMenu")));
+	UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>();
+	if (!GI) return;
+	
+	if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
+	{
+		SessionSubsystem->LeaveGameSession();
+	}
 }
 
 

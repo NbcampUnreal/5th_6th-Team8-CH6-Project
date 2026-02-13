@@ -299,6 +299,21 @@ void APTWPlayerCharacter::InitCharacterState()
 				UE_LOG(LogTemp, Warning, TEXT("InitCharacterState: Force Removed Equip Tag"));
 			}
 		}
+
+		if (!bHasGivenStartupItems)
+		{
+			FPTWPlayerData CurrentData = PS->GetPlayerData();
+
+			if (CurrentData.InventoryItemIDs.Num() > 0)
+			{
+				OnPlayerDataLoaded(CurrentData);
+			}
+			else
+			{
+				PS->OnPlayerDataUpdated.RemoveDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);
+				PS->OnPlayerDataUpdated.AddDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);
+			}
+		}
 	}
 
 	GiveDefaultAbilities();
@@ -439,5 +454,25 @@ void APTWPlayerCharacter::ServerRPCEquipWeapon_Implementation(int32 SelectIndex)
 	if (InventoryComponent)
 	{
 		InventoryComponent->EquipWeapon(SelectIndex);
+	}
+}
+
+
+void APTWPlayerCharacter::OnPlayerDataLoaded(const FPTWPlayerData& NewData)
+{
+	if (bHasGivenStartupItems || NewData.InventoryItemIDs.Num() == 0)
+	{
+		return;
+	}
+
+	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
+	if (!PS) return;
+
+	if (UPTWItemSpawnManager* SpawnSys = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+	{
+		SpawnSys->SpawnAndGiveItems(PS);
+
+		bHasGivenStartupItems = true;
+		PS->OnPlayerDataUpdated.RemoveDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);;
 	}
 }

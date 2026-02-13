@@ -6,6 +6,7 @@
 #include "PTWBaseCharacter.h"
 #include "InputActionValue.h"
 #include "PTWInputConfig.h"
+#include "CoreFramework/PTWPlayerData.h"
 #include "PTWPlayerCharacter.generated.h"
 
 class APTWPlayerState;
@@ -159,6 +160,8 @@ private:
 
 public:
 	// 11. [Delegate] 델리게이트 (최하단 배치 규칙 준수)
+	UFUNCTION()
+	void OnPlayerDataLoaded(const FPTWPlayerData& NewData);
 
-
+	bool bHasGivenStartupItems = false;
 };

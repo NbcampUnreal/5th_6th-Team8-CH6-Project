@@ -25,6 +25,9 @@ enum class EPTWGamePhase : uint8
 	PostGameLobby UMETA(DisplayName="Post Game Lobby"),
 
 	Loading UMETA(DisplayName="Loading"),
+	
+	Result UMETA(DisplayName="Result"),
+	
 };
 
 // 룰렛 진행 단계를 나타내는 열거형

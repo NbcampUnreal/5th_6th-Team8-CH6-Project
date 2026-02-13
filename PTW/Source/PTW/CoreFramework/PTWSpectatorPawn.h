@@ -43,9 +43,10 @@ public:
 	void SetSpectatorTarget(APawn* NewViewTarget);
 	UFUNCTION()
 	void OnInputSpectateNext();
-	
+	UFUNCTION()
 	void OnTargetDeath(AActor* DeadActor, AActor* KillerActor);
-	
+	UFUNCTION()
+	void ClearAllTimer();
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -63,7 +64,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<UCameraComponent> CameraComponent;
-	
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	TObjectPtr<UInputMappingContext> IMC_Spectator;

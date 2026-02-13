@@ -227,11 +227,13 @@ void APTWMiniGameMode::EndGame()
 	if (!PTWGameState) return;
 
 	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
+	PTWGameState->Multicast_BroadcastMiniGameEnded();
 
 	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
 	GetWorldTimerManager().ClearTimer(CoinSpawnTimerHandle);
 
-	StartResultSequence();
+	FTimerHandle ResultSequenceTimerHandle;
+	GetWorldTimerManager().SetTimer(ResultSequenceTimerHandle, this, &ThisClass::StartResultSequence, 3.0f, false);
 }
 
 

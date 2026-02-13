@@ -86,6 +86,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCountDownFinished);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGamePhaseChanged, EPTWGamePhase, CurrentGamePhase);
 
 /**
+ * 미니 게임 종료 이벤트
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMiniGameEnded);
+
+/**
  * 라운드 변경 이벤트
  * - 현재 라운드 값이 변경될 때 브로드캐스트
  * - 라운드 UI 갱신, 라운드 시작/종료 연출 트리거 등에 사용
@@ -163,6 +168,10 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SystemMessage(const FString& Message);
 
+	/** 미니게임 종료 */
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_BroadcastMiniGameEnded();
+	
 	/* 미니게임 카운트다운 */
 	bool IsMiniGameCountdown() const { return bMiniGameCountdown; }
 #pragma region Setter
@@ -239,6 +248,8 @@ public:
 
 	/* 로딩 진척도 UI 업데이트용 */
 	FOnLoadingProgressChanged OnLoadingProgressChanged;
+	
+	FOnMiniGameEnded OnMiniGameEnded;
 #pragma endregion
 
 #pragma region Getter

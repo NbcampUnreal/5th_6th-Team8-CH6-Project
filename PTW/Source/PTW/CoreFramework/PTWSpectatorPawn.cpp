@@ -129,7 +129,6 @@ void APTWSpectatorPawn::SpectateNextPlayer()
 
 void APTWSpectatorPawn::BeginSpectate()
 {
-	GetWorldTimerManager().ClearTimer(BeginSpectateTimer);
 	TWeakObjectPtr<ThisClass> WeakThis = this;
 	GetWorldTimerManager().SetTimer(BeginSpectateTimer, [WeakThis]()
 		{
@@ -249,6 +248,7 @@ void APTWSpectatorPawn::OnInputSpectateNext()
 		APlayerController* PC = Cast<APlayerController>(GetController());
 		if (PC->GetStateName() == NAME_Spectating)
 		{
+			GetWorldTimerManager().ClearTimer(BeginSpectateTimer);
 			SpectateNextPlayer();
 		}
 	}
@@ -256,12 +256,14 @@ void APTWSpectatorPawn::OnInputSpectateNext()
 
 void APTWSpectatorPawn::OnTargetDeath(AActor* DeadActor, AActor* KillerActor)
 {
-	if (!IsLocallyControlled()) return;
-	if (!IsValid(DeadActor)) return;
+	if (!IsLocallyControlled() && !IsValid(DeadActor)) return;
 	
-	FTimerHandle TimerHandle;
-	GetWorldTimerManager().SetTimer(TimerHandle, this, &APTWSpectatorPawn::SpectateNextPlayer, 1.0f, false);
+	GetWorldTimerManager().SetTimer(BeginSpectateTimer, this, &APTWSpectatorPawn::SpectateNextPlayer, 2.0f, false);
+}
 
+void APTWSpectatorPawn::ClearAllTimer()
+{
+	GetWorldTimerManager().ClearTimer(BeginSpectateTimer);
 }
 
 void APTWSpectatorPawn::BeginPlay()
@@ -273,7 +275,11 @@ void APTWSpectatorPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (IsLocallyControlled())
 	{
-		GetWorldTimerManager().ClearTimer(BeginSpectateTimer);
+		ClearAllTimer();
+		if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+		{
+			GS->OnMiniGameEnded.RemoveAll(this);
+		}
 	}
 	
 	Super::EndPlay(EndPlayReason);
@@ -340,6 +346,10 @@ void APTWSpectatorPawn::PossessedBy(AController* NewController)
 	if (IsLocallyControlled())
 	{
 		BeginSpectate();
+		if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+		{
+			GS->OnMiniGameEnded.AddUniqueDynamic(this, &ThisClass::ClearAllTimer);
+		}
 	}
 }
 
@@ -350,6 +360,10 @@ void APTWSpectatorPawn::OnRep_PlayerState()
 	if (IsLocallyControlled())
 	{
 		BeginSpectate();
+		if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+		{
+			GS->OnMiniGameEnded.AddUniqueDynamic(this, &ThisClass::ClearAllTimer);
+		}
 	}
 }
 

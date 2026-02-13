@@ -118,7 +118,6 @@ void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
 			RankedPlayers[i]->SetPlayerData(PlayerData);
 		}
 	}
-	
 }
 
 void APTWGameState::OnRep_LoadedPlayerCount()
@@ -269,6 +268,14 @@ void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& M
 	}
 
 	Multicast_BroadcastChatMessage(Sender, Message);
+}
+
+void APTWGameState::Multicast_BroadcastMiniGameEnded_Implementation()
+{
+	if (OnMiniGameEnded.IsBound())
+	{
+		OnMiniGameEnded.Broadcast();
+	}
 }
 
 void APTWGameState::Multicast_BroadcastKilllog_Implementation(AActor* DeadActor, AActor* KillerActor)

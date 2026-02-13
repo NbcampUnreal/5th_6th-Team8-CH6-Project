@@ -70,7 +70,8 @@ protected:
 	void SetIdleState(bool bNewState);
 	
 	/*인벤토리 관련 인풋 바인딩 함수(현정석(26.02.03))*/
-	void EquipWeapon(const FInputActionValue& Value);
+	void EquipFirstWeapon(const FInputActionValue& Value);
+	void EquipSecondWeapon(const FInputActionValue& Value);
 	void UseActiveItem(const FInputActionValue& Value);
 
 	/* 위젯에 닉네임 전달 */
@@ -78,7 +79,7 @@ protected:
 	
 	/*인벤토리 RPC 함수 추가(현정석(26.02.03))*/
 	UFUNCTION(Server, Reliable)
-	void ServerRPCEquipWeapon(); // 후에 인풋 바인딩에 무기 슬롯 인덱스 받을 수도?
+	void ServerRPCEquipWeapon(int32 SelectIndex); // 후에 인풋 바인딩에 무기 슬롯 인덱스 받을 수도?
 	
 	UFUNCTION(Server, Reliable)
 	void ServerRPCUseActiveItem();
@@ -114,7 +115,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TObjectPtr<UInputAction> EquipWeaponAction;
+	TObjectPtr<UInputAction> EquipFirstWeaponAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> EquipSecondWeaponAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> UseActiveItemAction;
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")

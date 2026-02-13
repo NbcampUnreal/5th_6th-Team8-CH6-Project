@@ -199,9 +199,10 @@ void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APTWPlayerCharacter::OnInputTriggered);
 			EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Completed, this, &APTWPlayerCharacter::OnInputCompleted);
 		}
-		if (EquipWeaponAction)
+		if (EquipFirstWeaponAction && EquipSecondWeaponAction)
 		{
-			EnhancedInputComponent->BindAction(EquipWeaponAction, ETriggerEvent::Started, this, &APTWPlayerCharacter::EquipWeapon);
+			EnhancedInputComponent->BindAction(EquipFirstWeaponAction, ETriggerEvent::Started, this, &APTWPlayerCharacter::EquipFirstWeapon);
+			EnhancedInputComponent->BindAction(EquipSecondWeaponAction, ETriggerEvent::Started, this, &APTWPlayerCharacter::EquipSecondWeapon);
 		}
 		if (UseActiveItemAction)
 		{
@@ -250,12 +251,19 @@ void APTWPlayerCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void APTWPlayerCharacter::EquipWeapon(const FInputActionValue& Value)
+void APTWPlayerCharacter::EquipFirstWeapon(const FInputActionValue& Value)
 {
 	if (IsLocallyControlled())
 	{
+		ServerRPCEquipWeapon(0);
+	}
+}
 
-		ServerRPCEquipWeapon();
+void APTWPlayerCharacter::EquipSecondWeapon(const FInputActionValue& Value)
+{
+	if (IsLocallyControlled())
+	{
+		ServerRPCEquipWeapon(1);
 	}
 }
 
@@ -442,10 +450,10 @@ void APTWPlayerCharacter::ServerRPCUseActiveItem_Implementation()
 	}
 }
 
-void APTWPlayerCharacter::ServerRPCEquipWeapon_Implementation()
+void APTWPlayerCharacter::ServerRPCEquipWeapon_Implementation(int32 SelectIndex)
 {
 	if (InventoryComponent)
 	{
-		InventoryComponent->EquipWeapon(0);
+		InventoryComponent->EquipWeapon(SelectIndex);
 	}
 }

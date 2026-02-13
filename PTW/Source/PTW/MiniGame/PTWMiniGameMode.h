@@ -14,6 +14,7 @@ class APTWPlayerController;
 class APTWPlayerState;
 class UPTWItemDefinition;
 class APTWWeaponActor;
+class APTWResultCharacter;
 
 UCLASS()
 class PTW_API APTWMiniGameMode : public APTWGameMode
@@ -73,14 +74,29 @@ protected:
 	/* 코인 스폰 타이머용 함수 */ 
 	void OnCoinSpawnTimerElapsed();
 	
+	//연출 단계 함수
+	void StartResultSequence();
+	void FinishEndGameSequence();
+
+protected:
+
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")
 	TObjectPtr<UPTWItemDefinition> ItemDefinition;
 
 	//UPROPERTY()
 	//TArray<TObjectPtr<APlayerStart>> PlayerStarts;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Rule|Result")
+	TSubclassOf<class APTWResultCharacter> ResultCharacterClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Rule|Result")
+	float ResultSequenceDuration = 15.0f;
+
+	/* 이미 게임 종료가 호출됬는지 체크 */
+	bool bIsGameEnded = false;
 	
 	FTimerHandle CountDownTimerHandle;
 	FTimerHandle CoinSpawnTimerHandle;
+	FTimerHandle ResultTimerHandle;
 
 private:
 	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */

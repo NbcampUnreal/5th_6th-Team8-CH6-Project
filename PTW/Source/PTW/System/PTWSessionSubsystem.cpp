@@ -279,6 +279,11 @@ void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasS
 void UPTWSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, 
 	ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
+	LeaveGameSession();
+}
+
+void UPTWSessionSubsystem::LeaveGameSession()
+{
 	if (SessionInterface.IsValid())
 	{
 		DestroySessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(

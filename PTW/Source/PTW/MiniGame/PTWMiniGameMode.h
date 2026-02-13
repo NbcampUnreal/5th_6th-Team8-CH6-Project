@@ -134,7 +134,7 @@ private:
 
 	/* 코인 생성 주기 (초) */
 	UPROPERTY(EditDefaultsOnly)
-	float CoinSpawnInterval = 8.0f;
+	float CoinSpawnInterval = 3.0f;
 	
 	int32 PlayerStartCount = 0;
 

@@ -71,7 +71,8 @@ void UPTWRankingBoard::UpdateRanking()
 	TSubclassOf<UPTWRankingEntry> SelectedEntryClass = nullptr;
 
 	int32 Round = GS->GetCurrentRound();
-	FString TitleString = FString::Printf(TEXT("ROUND %d "), Round);
+	int32 MiniGameRound = GS->GetCurrentMiniGameRound();
+	FString TitleString;
 
 	switch (GS->GetCurrentGamePhase())
 	{
@@ -81,13 +82,16 @@ void UPTWRankingBoard::UpdateRanking()
 		SelectedEntryClass = PreGameEntryClass;
 		break;
 	case EPTWGamePhase::MiniGame:
+		TitleString = FString::Printf(TEXT("ROUND %d - %d"), Round, MiniGameRound);
 		Text_GameTitle->SetText(FText::FromString(TitleString));
 		Text_GameTitle->SetVisibility(ESlateVisibility::Visible);
 		SelectedHeaderClass = MiniGameHeaderClass;
 		SelectedEntryClass = MiniGameEntryClass;
 		break;
 	case EPTWGamePhase::PostGameLobby:
-		Text_GameTitle->SetVisibility(ESlateVisibility::Collapsed);
+		TitleString = FString::Printf(TEXT("ROUND %d "), Round);
+		Text_GameTitle->SetText(FText::FromString(TitleString));
+		Text_GameTitle->SetVisibility(ESlateVisibility::Visible);
 		SelectedHeaderClass = PostGameHeaderClass;
 		SelectedEntryClass = PostGameEntryClass;
 		break;

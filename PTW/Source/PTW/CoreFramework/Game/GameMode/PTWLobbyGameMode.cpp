@@ -99,8 +99,7 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 	if (!PTWPlayerState) return;
 
 	PTWPlayerState->ResetInventoryItemId();
-	//RestartPlayer(NewPlayer);
-
+	
 	// 골드 지급
 	FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
 	PlayerData.Gold += RoundClearBonusGold;
@@ -118,13 +117,16 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 			GetWorldTimerManager().SetTimer(LoadingDealyTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
 		}
 	}
+
+	RestartPlayer(NewPlayer);
 }
 
 void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	ExitSpectorMode(C);
-	
 	Super::HandleSeamlessTravelPlayer(C);
+	
+	ExitSpectorMode(C);
+	RestartPlayer(C);
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)
@@ -163,8 +165,6 @@ void APTWLobbyGameMode::StartGameLobby()
 	{
 		for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 		{
-			
-			
 			if (!PlayerState) continue;
 			
 			AController* Controller = PlayerState->GetOwningController();
@@ -216,6 +216,7 @@ void APTWLobbyGameMode::ExitSpectorMode(AController* Controller)
 
 	// 1. 관전 상태 및 대기 상태 강제 종료
 	PC->ChangeState(NAME_Playing);
+	PC->ClientGotoState(NAME_Playing);
 	
 	// 2. PlayerState 플래그 초기화
 	if (PC->PlayerState)

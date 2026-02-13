@@ -198,11 +198,62 @@ void APTWPlayerController::OnUnPossess()
 void APTWPlayerController::BeginSpectatingState()
 {
 	Super::BeginSpectatingState();
-	
-	if (HasAuthority() && GetSpectatorPawn() && !DeathLocation.IsZero())
+}
+
+ASpectatorPawn* APTWPlayerController::SpawnSpectatorPawn()
+{
+	ASpectatorPawn* SpawnedSpectator = nullptr;
+
+	// Only spawned for the local player
+	if ((GetSpectatorPawn() == nullptr) && IsLocalController())
 	{
-		GetSpectatorPawn()->SetActorLocation(DeathLocation);
+		UWorld* World = GetWorld();
+		if (AGameStateBase const* const GameState = World->GetGameState())
+		{
+			if (UClass* SpectatorClass = GameState->SpectatorClass)
+			{
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.Owner = this;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				SpawnParams.ObjectFlags |= RF_Transient;	// We never want to save spectator pawns into a map
+				
+				FVector DeadActorLocation = GetSpawnLocation();
+				FRotator DeadActorRotation = GetControlRotation();
+				
+				if (APawn* DeadPawn = GetPawn())
+				{
+					DeadActorLocation = DeadPawn->GetActorLocation();
+					DeadActorRotation = DeadPawn->GetActorRotation();
+				}
+				
+				SpawnedSpectator = World->SpawnActor<ASpectatorPawn>(SpectatorClass, DeadActorLocation, DeadActorRotation, SpawnParams);
+				if (SpawnedSpectator)
+				{
+					SpawnedSpectator->SetReplicates(false); // Client-side only
+					SpawnedSpectator->PossessedBy(this);
+					SpawnedSpectator->DispatchRestart(true);
+					if (SpawnedSpectator->PrimaryActorTick.bStartWithTickEnabled)
+					{
+						SpawnedSpectator->SetActorTickEnabled(true);
+					}
+
+					UE_LOG(LogPlayerController, Verbose, TEXT("Spawned spectator %s [server:%d]"), *GetNameSafe(SpawnedSpectator), GetNetMode() < NM_Client);
+				}
+				else
+				{
+					UE_LOG(LogPlayerController, Warning, TEXT("Failed to spawn spectator with class %s"), *GetNameSafe(SpectatorClass));
+				}
+			}
+		}
+		else
+		{
+			// This normally happens on clients if the Player is replicated but the GameState has not yet.
+			UE_LOG(LogPlayerController, Verbose, TEXT("NULL GameState when trying to spawn spectator!"));
+		}
 	}
+
+	return SpawnedSpectator;
 }
 
 void APTWPlayerController::BindGameStateDelegates()

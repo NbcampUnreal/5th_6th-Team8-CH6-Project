@@ -153,19 +153,9 @@ void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
 {
 	if (!HasAuthority() || !AbilitySystemComponent) return;
 	
-	APTWPlayerController* PTWPC= GetController<APTWPlayerController>();
-	if (IsValid(PTWPC))
-	{
-		PTWPC->DeathLocation = GetActorLocation();
-	}
-	else
-	{
-		PTWPC->DeathLocation = FVector::ZeroVector;
-	}
-	
 	Super::HandleDeath(Attacker);
 	
-	if(IsValid(PTWPC))
+	if(APTWPlayerController* PTWPC= GetController<APTWPlayerController>())
 	{
 		PTWPC->StartSpectating();
 	}

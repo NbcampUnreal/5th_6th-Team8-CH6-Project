@@ -81,6 +81,10 @@ protected:
 	void StartResultSequence();
 	void FinishEndGameSequence();
 
+	// FIXME : 임시로 관전상태 해제테스트
+	/* 플레이어 관전상태 해제 */
+	void ExitSpectatorMode(AController* Controller);
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")

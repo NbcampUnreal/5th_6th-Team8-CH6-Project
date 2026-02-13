@@ -149,6 +149,8 @@ void APTWLobbyGameMode::StartGameLobby()
 	if (PTWGameState->GetCurrentRound() >= GameFlowRule.MaxRound)
 	{
 		EndGame();
+		
+		return;
 	}
 	
 	PTWGameState->AdvanceRound();

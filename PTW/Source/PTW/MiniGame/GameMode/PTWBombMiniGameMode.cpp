@@ -122,6 +122,9 @@ void APTWBombMiniGameMode::GetAlivePlayerStates(TArray<APTWPlayerState*>& OutAli
 		if (PTWPS->IsOnlyASpectator()) continue;
 		if (PTWPS->IsInactive()) continue;
 
+		APawn* Pawn = PTWPS->GetPawn();
+		if (!Pawn) continue;
+		
 		OutAlive.Add(PTWPS);
 	}
 }

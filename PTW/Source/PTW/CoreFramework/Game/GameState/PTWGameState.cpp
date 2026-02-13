@@ -5,6 +5,7 @@
 
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "MiniGame/PTWMiniGameRule.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -32,7 +33,7 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 }
 
-void APTWGameState::UpdateRanking()
+void APTWGameState::UpdateRanking(const FPTWMiniGameRule& MiniGameRule)
 {
 	//TArray<APTWPlayerState*> RankingPlayers;
 	RankedPlayers.Reset();
@@ -48,15 +49,25 @@ void APTWGameState::UpdateRanking()
 		}
 	}
 	
-	RankedPlayers.Sort([](const APTWPlayerState& A, const APTWPlayerState& B) {
+	RankedPlayers.Sort([MiniGameRule](const APTWPlayerState& A, const APTWPlayerState& B) {
        
 		   if (!IsValid(&A)) return false;     
 		   if (!IsValid(&B)) return true;
 
-		   const auto& APD = A.GetPlayerRoundData();
-		   const auto& BPD = B.GetPlayerRoundData();
+		if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Survival)
+		{
+			const auto& APD = A.GetPlayerRoundData();
+			const auto& BPD = B.GetPlayerRoundData();
+
+			return APD.DeathOrder < BPD.DeathOrder;
+		}
+		else
+		{
+			const auto& APD = A.GetPlayerRoundData();
+			const auto& BPD = B.GetPlayerRoundData();
 		
-		   return APD.Score > BPD.Score;
+			return APD.Score > BPD.Score;
+		}
 	});
 }
 

@@ -47,7 +47,6 @@ void APTWLobbyGameMode::InitGameState()
 		{
 			PTWGameState->SetCurrentPhase(EPTWGamePhase::Loading);
 			TravelLevelName = TEXT("/Game/_PTW/Maps/MiniGame_Bomb");
-			PTWGameState->AdvanceRound(); // 라운드 증가
 		}
 	}
 }
@@ -142,6 +141,7 @@ void APTWLobbyGameMode::StartGameLobby()
 {
 	ClearTimer();
 
+	PTWGameState->AdvanceRound();
 	
 	if (!IsValid(PTWGameState)) return;
 
@@ -150,7 +150,7 @@ void APTWLobbyGameMode::StartGameLobby()
 	{
 		for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 		{
-			PTWGameState->AdvanceRound();
+			
 			
 			if (!PlayerState) continue;
 			

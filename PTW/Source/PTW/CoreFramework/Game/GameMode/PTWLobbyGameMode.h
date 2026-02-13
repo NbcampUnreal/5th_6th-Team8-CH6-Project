@@ -40,6 +40,11 @@ struct FPTWGameFlowRule
 	/** 최소 인원이 충족되면 자동으로 게임을 시작 할 지 여부 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
 	bool bAutoStartWhenMinPlayersMet = true;
+
+	/** 최대 인원 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
+	int32 MaxPlayers = 16;
+	
 };
 
 /**
@@ -73,7 +78,7 @@ protected:
 	void StartGameLobby();
 
 	virtual void EndTimer() override;
-
+	
 private:
 	void ExitSpectorMode(AController* Controller);
 	
@@ -86,6 +91,8 @@ private:
 	void EndRoulette();
 	void StartRoulette();
 
+	void EndGame();
+	void ReturnToMainMenu();
 	
 	TArray<FName> GetSelectableMapRowNames();
 

@@ -29,6 +29,7 @@
 #include "UI/InGameUI/PTWDamageIndicator.h"
 #include "UI/MiniGame/PTWGameStartTimer.h"
 #include "Inventory/Instance/PTWItemInstance.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Weapon/PTWWeaponActor.h"
 
@@ -108,6 +109,11 @@ void APTWPlayerController::Client_DisplayLoadingScreen_Implementation()
 	{
 		GI->DisplayLoadingScreen();
 	}
+}
+
+void APTWPlayerController::Client_OpenMainMenu_Implementation()
+{
+	UGameplayStatics::OpenLevel(this,  FName(TEXT("/Game/_PTW/Maps/MainMenu")));
 }
 
 void APTWPlayerController::BeginPlay()

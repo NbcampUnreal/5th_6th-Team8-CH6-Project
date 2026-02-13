@@ -494,7 +494,7 @@ void APTWMiniGameMode::StartResultSequence()
 {
 	UWorld* World = GetWorld();
 	if (!World) return;
-
+	
 	AActor* ResultCamera = nullptr;
 	TArray<AActor*> FoundActors;
 
@@ -508,10 +508,13 @@ void APTWMiniGameMode::StartResultSequence()
 	AActor* LoseSpot = nullptr;
 	UGameplayStatics::GetAllActorsWithTag(World, FName("LoseSpot"), FoundActors);
 	if (FoundActors.Num() > 0) LoseSpot = FoundActors[0];
-
+	
+	if (!PTWGameState) return;
+	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGameResult);
+	
 	int32 WinnerCount = 0;
 	int32 LoserCount = 0;
-
+	
 	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
 	{
 		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());

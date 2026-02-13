@@ -81,6 +81,9 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 			return;
 		}
 	}*/
+
+	//FIXME : 임시로 난입플레이어도 관전상태해제
+	ExitSpectatorMode(NewPlayer);
 	
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	
@@ -92,16 +95,31 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	
 	//SetInputBlock(true);
 	
+
 	PTWGameState->AddRankedPlayer(PlayerState);
+
+	//FIXME : 임시로 난입플레이어도 리스타트 플레이어 시키기
+	if (NewPlayer->GetPawn() == nullptr)
+	{
+		RestartPlayer(NewPlayer);
+	}
 
 	if (PTWGameState->PlayerArray.Num() >= AllPlayer)
 	{
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
-		
+
 		FTimerHandle LoadingDelayTimer;
 		GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWMiniGameMode::StartGame, 3.f);
 	}
+	//if (PTWGameState->PlayerArray.Num() >= AllPlayer)
+	//{
+	//	if (bAllPlayerReady) return;
+	//	bAllPlayerReady = true;
+	//	
+	//	FTimerHandle LoadingDelayTimer;
+	//	GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWMiniGameMode::StartGame, 3.f);
+	//}
 	
 }
 
@@ -309,8 +327,9 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 
 void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	Super::HandleSeamlessTravelPlayer(C);
+	ExitSpectatorMode(C);
 	
+	Super::HandleSeamlessTravelPlayer(C);
 }
 
 void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
@@ -561,3 +580,26 @@ void APTWMiniGameMode::FinishEndGameSequence()
 	TravelLevel();
 }
 
+
+
+// FIXME : 임시로 관전상태 해제테스트
+void APTWMiniGameMode::ExitSpectatorMode(AController* Controller)
+{
+	APlayerController* PC = Cast<APlayerController>(Controller);
+	if (!PC) return;
+
+	if (PC->GetStateName() == NAME_Spectating)
+	{
+		PC->ChangeState(NAME_Playing);
+	}
+
+	if (PC->PlayerState)
+	{
+		PC->PlayerState->SetIsSpectator(false);
+		PC->PlayerState->SetIsOnlyASpectator(false);
+		PC->PlayerState->SetIsSpectator(false);
+		PC->PlayerState->SetIsOnlyASpectator(false);
+	}
+
+	PC->SetViewTarget(PC);
+}

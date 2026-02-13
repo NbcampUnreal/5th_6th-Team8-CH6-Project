@@ -340,7 +340,7 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	UpdatePlayerRoundData(DeadPlayerState, KillPlayerState);
 	
 	if (!PTWGameState) return;
-	PTWGameState->UpdateRanking();
+	PTWGameState->UpdateRanking(MiniGameRule);
 	PTWGameState->AlivePlayers.Remove(DeadPlayerState);
 
 	CheckEndGameCondition();
@@ -354,6 +354,7 @@ void APTWMiniGameMode::UpdatePlayerRoundData(APlayerState* DeadPlayerState, APla
 		if (IPTWPlayerRoundDataInterface* DeadPlayerData = Cast<IPTWPlayerRoundDataInterface>(DeadPlayerState))
 		{
 			DeadPlayerData->AddDeathCount(1);
+			DeadPlayerData->SetDeathOrder(CurrentDeathOrder++);
 		}
 	}
 

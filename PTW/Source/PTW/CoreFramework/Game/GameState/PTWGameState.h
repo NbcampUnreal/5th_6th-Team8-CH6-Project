@@ -333,7 +333,7 @@ public:
 	void AdvanceMiniGameRound();
 	
 	/** 현재 상태 기준으로 랭킹 갱신 */
-	void UpdateRanking();
+	void UpdateRanking(const FPTWMiniGameRule& MiniGameRule);
 	
 	/** 순위 정렬을 위해 플레이어 추가 */
 	void AddRankedPlayer(APTWPlayerState* NewPlayerState);

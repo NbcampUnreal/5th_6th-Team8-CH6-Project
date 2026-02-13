@@ -48,6 +48,9 @@ protected:
 	
 	//* 미니 게임이 완전히 끝났을 때 호출하는 함수 */
 	virtual void EndGame();
+
+	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
+	void UpdatePlayerRoundData(APlayerState* DeadPlayerState, APlayerState* KillPlayerState);
 	
 	/** 플레이어 사망할 때 호출되는 함수 */
 	UFUNCTION()
@@ -83,8 +86,7 @@ protected:
 	FTimerHandle CoinSpawnTimerHandle;
 
 private:
-	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
-	void UpdatePlayerRoundData(APlayerState* DeadPlayerState, APlayerState* KillPlayerState);
+	
 
 	/** 플레이어에게 미니 게임 태그 적용 */
 	void ApplyMiniGameTag(AController* NewPlayer);

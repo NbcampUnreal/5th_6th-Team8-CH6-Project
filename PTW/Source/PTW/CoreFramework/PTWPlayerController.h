@@ -74,6 +74,7 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 	virtual void BeginSpectatingState() override;
+	virtual ASpectatorPawn* SpawnSpectatorPawn() override;
 	
 	/*  ASC Delegate 바인딩 */
 	//void BindASCDelegates();
@@ -127,8 +128,7 @@ public:
 
 	/* 게임설정 */
 	float CurrentMouseSensitivity = 1.0f;
-	
-	FVector DeathLocation = FVector::ZeroVector;
+
 protected:
 	/* 캐싱된 Ability System Component */
 	UPROPERTY()

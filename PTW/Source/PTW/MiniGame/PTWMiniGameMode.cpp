@@ -400,6 +400,8 @@ void APTWMiniGameMode::UpdatePlayerRoundData(APlayerState* DeadPlayerState, APla
 			DeadPlayerData->SetDeathOrder(CurrentDeathOrder++);
 		}
 	}
+	
+	if (DeadPlayerState == KillPlayerState) return;
 
 	if (IsValid(KillPlayerState))
 	{

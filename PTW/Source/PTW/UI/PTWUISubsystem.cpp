@@ -135,6 +135,16 @@ bool UPTWUISubsystem::IsStackEmpty() const
 	return WidgetStack.Num() == 0;
 }
 
+void UPTWUISubsystem::StackReset()
+{
+	APlayerController* PC = GetPlayerController();
+	if (!PC) return;
+
+	WidgetStack.Reset();
+	PC->SetShowMouseCursor(false);
+	PC->SetInputMode(FInputModeGameOnly());
+}
+
 UUserWidget* UPTWUISubsystem::GetTopWidget() const
 {
 	if (WidgetStack.Num() > 0)

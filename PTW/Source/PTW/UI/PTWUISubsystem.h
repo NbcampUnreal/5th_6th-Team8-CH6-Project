@@ -58,6 +58,7 @@ public:
 	void PopWidget();
 	bool IsWidgetInStack(TSubclassOf<UUserWidget> WidgetClass) const;
 	bool IsStackEmpty() const;
+	void StackReset();
 	UUserWidget* GetTopWidget() const;
 
 	/* HUD */

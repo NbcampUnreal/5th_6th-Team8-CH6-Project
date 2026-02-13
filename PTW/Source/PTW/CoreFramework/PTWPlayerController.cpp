@@ -363,6 +363,7 @@ void APTWPlayerController::CreateUI()
 {
 	if (UISubsystem)
 	{
+		UISubsystem->StackReset();
 		if (HUDClass)
 		{
 			UISubsystem->ShowHUD(HUDClass);
@@ -370,6 +371,7 @@ void APTWPlayerController::CreateUI()
 		if (RankingBoardClass)
 		{
 			UISubsystem->CreatePersistentWidget(RankingBoardClass, 10);
+			bAbleRankingBoard = true;
 		}
 		if (ChatListClass)
 		{
@@ -398,7 +400,7 @@ void APTWPlayerController::CreateUI()
 
 void APTWPlayerController::OnRankingPressed()
 {
-	if(UISubsystem)
+	if(UISubsystem && bAbleRankingBoard)
 	{
 		UISubsystem->SetWidgetVisibility(RankingBoardClass, true);
 	}
@@ -406,7 +408,7 @@ void APTWPlayerController::OnRankingPressed()
 
 void APTWPlayerController::OnRankingReleased()
 {
-	if (UISubsystem)
+	if (UISubsystem && bAbleRankingBoard)
 	{
 		UISubsystem->SetWidgetVisibility(RankingBoardClass, false);
 	}

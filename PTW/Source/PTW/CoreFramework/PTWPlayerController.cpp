@@ -280,10 +280,12 @@ void APTWPlayerController::BindGameStateDelegates()
 	// 델리게이트 바인드
 	GS->OnMiniGameCountdownChanged.AddDynamic(this, &ThisClass::OnMiniGameCountdownChanged);
 	GS->OnRoulettePhaseChanged.AddDynamic(this, &ThisClass::HandleRoulettePhaseChanged);
+	GS->OnGamePhaseChanged.AddDynamic(this, &ThisClass::HandleGamePhaseChanged);
 
 	// 현재상태 반영
 	OnMiniGameCountdownChanged(GS->IsMiniGameCountdown());
 	HandleRoulettePhaseChanged(GS->GetRouletteData());
+	HandleGamePhaseChanged(GS->GetCurrentGamePhase());
 }
 
 void APTWPlayerController::UnbindGameStateDelegates()
@@ -292,6 +294,7 @@ void APTWPlayerController::UnbindGameStateDelegates()
 	{
 		GS->OnMiniGameCountdownChanged.RemoveAll(this);
 		GS->OnRoulettePhaseChanged.RemoveAll(this);
+		GS->OnGamePhaseChanged.RemoveAll(this);
 	}
 }
 
@@ -354,6 +357,40 @@ void APTWPlayerController::HandleRoulettePhaseChanged(FPTWRouletteData RouletteD
 		break;
 
 	default:
+		break;
+	}
+}
+
+void APTWPlayerController::HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase)
+{
+	const UEnum* EnumPtr = StaticEnum<EPTWGamePhase>();
+	FString PhaseName = EnumPtr ? EnumPtr->GetNameStringByValue((int64)CurrentGamePhase) : TEXT("Invalid");
+
+	if (!UISubsystem)
+	{
+		return;
+	}
+
+	switch (CurrentGamePhase)
+	{
+	case EPTWGamePhase::GameResult:
+		if (RankingBoardClass)
+		{
+			UISubsystem->SetWidgetVisibility(RankingBoardClass, true);
+			bAbleRankingBoard = false;
+		}
+		break;
+
+	case EPTWGamePhase::MiniGameResult:
+		if (RankingBoardClass)
+		{
+			UISubsystem->SetWidgetVisibility(RankingBoardClass, true);
+			bAbleRankingBoard = false;
+		}
+		break;
+
+	default:
+		bAbleRankingBoard = true;
 		break;
 	}
 }

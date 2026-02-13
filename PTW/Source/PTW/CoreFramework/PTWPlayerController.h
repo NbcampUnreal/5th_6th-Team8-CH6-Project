@@ -64,7 +64,10 @@ public:
 	void Client_PrepareLoadingScreen(ELoadingScreenType Type, FName MapRowName);
 	UFUNCTION(Client, Reliable)
 	void Client_DisplayLoadingScreen();
-	
+
+	/* 메인 메뉴로 이동 */
+	UFUNCTION(Client, Reliable)
+	void Client_OpenMainMenu();
 
 protected:
 	virtual void BeginPlay() override;

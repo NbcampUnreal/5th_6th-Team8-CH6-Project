@@ -3,12 +3,15 @@
 
 #include "PTWLobbyGameMode.h"
 
+#include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 #include "MiniGame/PTWMiniGameMapRow.h"
 #include "MiniGame/Data/PTWRoundEvent.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
+#include "System/Session/SessionConfig.h"
 #include "System/Shop/PTWShopSubsystem.h"
 
 
@@ -29,7 +32,8 @@ void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options,
 			PTWGameInstance->bIsFirstLobby = false;
 		}
 	}
-	
+	GameFlowRule.MaxPlayers = UGameplayStatics::GetIntOption(Options, SessionKey::MaxPlayers.ToString(), 16);
+	GameFlowRule.MaxRound  = UGameplayStatics::GetIntOption(Options, SessionKey::MaxRounds.ToString(), 5);
 }
 
 void APTWLobbyGameMode::InitGameState()
@@ -141,6 +145,12 @@ void APTWLobbyGameMode::StartGameLobby()
 {
 	ClearTimer();
 
+	// 최대 라운드에 도달 하면 게임 종료
+	if (PTWGameState->GetCurrentRound() >= GameFlowRule.MaxRound)
+	{
+		EndGame();
+	}
+	
 	PTWGameState->AdvanceRound();
 	
 	if (!IsValid(PTWGameState)) return;
@@ -219,6 +229,34 @@ void APTWLobbyGameMode::StartRoulette()
 	
 	StartMapRoulette();
 }
+
+void APTWLobbyGameMode::EndGame()
+{
+	if (!PTWGameState) return;
+
+	PTWGameState->SetCurrentPhase(EPTWGamePhase::GameResult);
+
+	FTimerHandle EndGameTimer;
+	GetWorldTimerManager().SetTimer(EndGameTimer, this, &APTWLobbyGameMode::ReturnToMainMenu, 15.f);
+}
+
+void APTWLobbyGameMode::ReturnToMainMenu()
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		{
+			if (!PC->IsLocalController())
+			{
+				PC->Client_OpenMainMenu();
+			}
+		}
+	}
+	// 리슨 서버일 경우 호스트는 따로 구현
+	UGameplayStatics::OpenLevel(this, FName(TEXT("/Game/_PTW/Maps/MainMenu")));
+}
+
+
 
 void APTWLobbyGameMode::SelectedRandomMap()
 {

@@ -36,6 +36,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void CreateListenLevel(FName MapName, FSessionConfig SessionConfig);
 	
+	void LeaveGameSession();
+	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;

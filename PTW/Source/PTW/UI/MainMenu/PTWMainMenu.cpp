@@ -5,6 +5,7 @@
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "PTWLobbyBrowser.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 void UPTWMainMenu::OpenLobbyBrowser()
 {
@@ -26,6 +27,11 @@ void UPTWMainMenu::NativeConstruct()
 	if (LobbyBrowser)
 	{
 		LobbyBrowser->OnLobbyBackAction.AddDynamic(this, &ThisClass::ReturnToMainMenu);
+	}
+	
+	if (ExitButton)
+	{
+		ExitButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedExitButton);
 	}
 }
 
@@ -56,4 +62,10 @@ void UPTWMainMenu::ReturnToMainMenu()
 	{
 		MenuSwitcher->SetActiveWidget(MainMenuCanvas);
 	}
+}
+
+void UPTWMainMenu::OnClickedExitButton()
+{
+	UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(), 
+		EQuitPreference::Quit, false);
 }

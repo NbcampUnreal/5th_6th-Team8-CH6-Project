@@ -107,7 +107,7 @@ void UPTWPauseMenu::OnClickedLeaveGame()
 		if (UPTWSessionSubsystem* SessionSubsystem =
 			GI->GetSubsystem<UPTWSessionSubsystem>())
 		{
-			//SessionSubsystem-> 세션 나가기();
+			SessionSubsystem->LeaveGameSession();
 		}
 	}
 }

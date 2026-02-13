@@ -30,6 +30,8 @@ protected:
 	void OnClickedPlayButton();
 	UFUNCTION()
 	void ReturnToMainMenu();
+	UFUNCTION()
+	void OnClickedExitButton();
 	
 protected:
 	UPROPERTY(meta=(BindWidget))

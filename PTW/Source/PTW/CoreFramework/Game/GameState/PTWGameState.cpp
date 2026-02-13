@@ -51,21 +51,34 @@ void APTWGameState::UpdateRanking(const FPTWMiniGameRule& MiniGameRule)
 	
 	RankedPlayers.Sort([MiniGameRule](const APTWPlayerState& A, const APTWPlayerState& B) {
        
-		   if (!IsValid(&A)) return false;     
-		   if (!IsValid(&B)) return true;
+		if (!IsValid(&A)) return false;     
+		if (!IsValid(&B)) return true;
 
+		const auto& APD = A.GetPlayerRoundData();
+		const auto& BPD = B.GetPlayerRoundData();
+		
 		if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Survival)
 		{
-			const auto& APD = A.GetPlayerRoundData();
-			const auto& BPD = B.GetPlayerRoundData();
+			const bool bAAlive = (APD.DeathOrder == 0);
+			const bool bBAlive = (BPD.DeathOrder == 0);
 
-			return APD.DeathOrder < BPD.DeathOrder;
+			if (bAAlive != bBAlive)
+			{
+				return bAAlive;
+			}
+
+			if (!bAAlive) 
+			{
+				if (APD.DeathOrder != BPD.DeathOrder)
+				{
+					return APD.DeathOrder > BPD.DeathOrder;
+				}
+					
+			}
+			return APD.Score > BPD.Score;
 		}
 		else
 		{
-			const auto& APD = A.GetPlayerRoundData();
-			const auto& BPD = B.GetPlayerRoundData();
-		
 			return APD.Score > BPD.Score;
 		}
 	});

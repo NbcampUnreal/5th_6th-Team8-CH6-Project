@@ -94,9 +94,13 @@ namespace GameplayTags
 				PTW_API UE_DEFINE_GAMEPLAY_TAG(Pistol, "Weapon.Gun.Pistol");
 				PTW_API UE_DEFINE_GAMEPLAY_TAG(BombPistol, "Weapon.Gun.Pistol.BombPistol");
 			}
-			PTW_API UE_DEFINE_GAMEPLAY_TAG(Rifle, "Weapon.Gun.Rifle");
+
+			namespace Rifle
+			{
+				PTW_API UE_DEFINE_GAMEPLAY_TAG(Rifle, "Weapon.Gun.Rifle");
+				PTW_API UE_DEFINE_GAMEPLAY_TAG(WaterGun, "Weapon.Gun.Rifle.WaterGun");
+			}
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Rocket, "Weapon.Gun.Rocket");
-			PTW_API UE_DEFINE_GAMEPLAY_TAG(WaterGun, "Weapon.Gun.WaterGun");
 		}
 		namespace State
 		{

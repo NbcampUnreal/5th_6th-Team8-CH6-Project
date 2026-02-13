@@ -137,8 +137,7 @@ TArray<EShopCategory> UPTWShopSubsystem::SelectShopCategories(int32 TargetCount)
 	TArray<EShopCategory> Pool = {
 		EShopCategory::Attack,
 		EShopCategory::Defense,
-		EShopCategory::Utility,
-		EShopCategory::Lobby
+		EShopCategory::Utility
 	};
 
 	if (TargetCount <= 0) return Result;

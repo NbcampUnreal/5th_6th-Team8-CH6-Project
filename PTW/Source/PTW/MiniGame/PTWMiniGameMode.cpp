@@ -12,12 +12,18 @@
 #include "EngineUtils.h"
 #include "Manager/PTWChaosEventManager.h"
 #include "PTW/Inventory/PTWItemDefinition.h"
+#include "Kismet/GameplayStatics.h"
+#include "Camera/CameraActor.h"
+#include "Engine/TargetPoint.h"
+#include "Gameplay/Actor/PTWResultCharacter.h"
 
 class UPTWScoreSubsystem;
 
 APTWMiniGameMode::APTWMiniGameMode()
 {
 	ChaosEventManager = CreateDefaultSubobject<UPTWChaosEventManager>(TEXT("ChaosEventManager"));
+
+	bIsGameEnded = false;
 }
 
 void APTWMiniGameMode::AddWinPoint(AActor* Actor, int32 AddPoint)
@@ -66,6 +72,15 @@ void APTWMiniGameMode::Logout(AController* Exiting)
 
 void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
+	if (IsValid(PTWGameState) && PTWGameState->IsMatchInProgress())
+	{
+		if(PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::MiniGame)
+		{
+			NewPlayer->StartSpectatingOnly();
+			return;
+		}
+	}
+	
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	
 	if (!IsValid(PTWGameState)) return;
@@ -167,8 +182,6 @@ void APTWMiniGameMode::EndTimer()
 
 void APTWMiniGameMode::EndRound()
 {
-	//ClearTimer();
-
 	GetWorldTimerManager().ClearTimer(CoinSpawnTimerHandle);
 
 	if (!PTWGameState) return;
@@ -185,14 +198,21 @@ void APTWMiniGameMode::EndRound()
 
 void APTWMiniGameMode::EndGame()
 {
-	if (!PTWGameState) return;
-	
-	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
-	ResetPlayerRoundData();
-	ResetPlayerInventoryID();
+	if (bIsGameEnded)
+	{
+		return;
+	}
 
-	FTimerHandle EndGameDelayTimer;
-	GetWorldTimerManager().SetTimer(EndGameDelayTimer, this, &APTWMiniGameMode::TravelLevel, 5.f);
+	bIsGameEnded = true;
+
+	if (!PTWGameState) return;
+
+	PTWGameState->ApplyMiniGameRankScore(MiniGameRule);
+
+	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
+	GetWorldTimerManager().ClearTimer(CoinSpawnTimerHandle);
+
+	StartResultSequence();
 }
 
 
@@ -449,5 +469,94 @@ void APTWMiniGameMode::OnCoinSpawnTimerElapsed()
 	}
 }
 
+void APTWMiniGameMode::StartResultSequence()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
 
+	AActor* ResultCamera = nullptr;
+	TArray<AActor*> FoundActors;
+
+	UGameplayStatics::GetAllActorsWithTag(World, FName("ResultCamera"), FoundActors);
+	if (FoundActors.Num() > 0) ResultCamera = FoundActors[0];
+
+	AActor* WinSpot = nullptr;
+	UGameplayStatics::GetAllActorsWithTag(World, FName("WinSpot"), FoundActors);
+	if (FoundActors.Num() > 0) WinSpot = FoundActors[0];
+
+	AActor* LoseSpot = nullptr;
+	UGameplayStatics::GetAllActorsWithTag(World, FName("LoseSpot"), FoundActors);
+	if (FoundActors.Num() > 0) LoseSpot = FoundActors[0];
+
+	int32 WinnerCount = 0;
+	int32 LoserCount = 0;
+
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
+		if (!PC) continue;
+
+		APTWPlayerState* PS = PC->GetPlayerState<APTWPlayerState>();
+		if (!PS) continue;
+
+		PC->SetIgnoreMoveInput(true);
+		PC->SetIgnoreLookInput(true);
+
+		if (APawn* OriginalPawn = PC->GetPawn())
+		{
+			OriginalPawn->SetActorHiddenInGame(true);
+			OriginalPawn->SetActorEnableCollision(false);
+		}
+
+		if (ResultCamera)
+		{
+			FViewTargetTransitionParams Params;
+			Params.BlendTime = 1.0f;
+			Params.BlendFunction = EViewTargetBlendFunction::VTBlend_Linear;
+			Params.bLockOutgoing = true;
+
+			PC->ClientSetViewTarget(ResultCamera, Params);
+		}
+
+		if (ResultCharacterClass)
+		{
+			bool bIsWinner = (PS->GetDeathOrder() == 0);
+			FVector SpawnLoc = FVector::ZeroVector;
+			FRotator SpawnRot = FRotator::ZeroRotator;
+
+			if (bIsWinner && WinSpot)
+			{
+				SpawnLoc = WinSpot->GetActorLocation() + (WinSpot->GetActorRightVector() * 100.0f * WinnerCount++);
+				SpawnRot = WinSpot->GetActorRotation();
+			}
+			else if (!bIsWinner && LoseSpot)
+			{
+				SpawnLoc = LoseSpot->GetActorLocation() + (LoseSpot->GetActorRightVector() * 100.0f * LoserCount++);
+				SpawnRot = LoseSpot->GetActorRotation();
+			}
+
+			if (!SpawnLoc.IsZero())
+			{
+				FActorSpawnParameters Params;
+				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				APTWResultCharacter* ResultChar = World->SpawnActor<APTWResultCharacter>(ResultCharacterClass, SpawnLoc, SpawnRot, Params);
+
+				if (ResultChar)
+				{
+					ResultChar->InitializeResult(bIsWinner);
+				}
+			}
+		}
+	}
+	GetWorldTimerManager().SetTimer(ResultTimerHandle, this, &APTWMiniGameMode::FinishEndGameSequence, ResultSequenceDuration, false);
+
+}
+
+void APTWMiniGameMode::FinishEndGameSequence()
+{
+	ResetPlayerRoundData();
+	ResetPlayerInventoryID();
+	TravelLevel();
+}
 

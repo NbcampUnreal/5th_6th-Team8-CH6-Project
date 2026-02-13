@@ -390,7 +390,11 @@ void APTWPlayerController::HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase
 		break;
 
 	default:
-		bAbleRankingBoard = true;
+		if (RankingBoardClass)
+		{
+			UISubsystem->SetWidgetVisibility(RankingBoardClass, false);
+			bAbleRankingBoard = true;
+		}		
 		break;
 	}
 }

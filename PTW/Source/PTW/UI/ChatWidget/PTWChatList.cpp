@@ -24,15 +24,18 @@ void UPTWChatList::AddChatMessage(const FString& Sender, const FString& Message)
 	}
 
 	/* 새로운 엔트리 생성 및 추가 */
-	if (UPTWChatEntry* NewEntry = CreateWidget<UPTWChatEntry>(this, EntryClass))
+	if (APlayerController* PC = GetOwningPlayer())
 	{
-		ChatScrollBox->AddChild(NewEntry);
-		NewEntry->SetMessage(Sender, Message);
+		if (UPTWChatEntry* NewEntry = CreateWidget<UPTWChatEntry>(PC, EntryClass))
+		{
+			ChatScrollBox->AddChild(NewEntry);
+			NewEntry->SetMessage(Sender, Message);
 
-		NewEntry->SetInteractionMode(bIsInteracting);
+			NewEntry->SetInteractionMode(bIsInteracting);
 
-		/* 항상 최신 메세지가 보이도록 스크롤 하단 이동 */
-		ChatScrollBox->ScrollToEnd();
+			/* 항상 최신 메세지가 보이도록 스크롤 하단 이동 */
+			ChatScrollBox->ScrollToEnd();
+		}
 	}
 }
 

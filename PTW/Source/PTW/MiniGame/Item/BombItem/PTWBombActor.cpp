@@ -237,7 +237,6 @@ bool APTWBombActor::ExplosionOverlapSetter(TArray<FOverlapResult>& OverlapResult
 		CollisionParams
 	);
 
-	DrawDebugSphere(GetWorld(), ExplosionLocation, ExplosionRad, 32, FColor::Red, false, 2.0f);
 	return bHasOverlap;
 }
 

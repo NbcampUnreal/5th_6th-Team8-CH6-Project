@@ -67,7 +67,7 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 		BombActor->SetBombOwner(OwnerPawn);
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Play Start"), CurrentRound);
+	//UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Play Start"), CurrentRound);
 
 	// 라운드 진행 타이머 시작
 	//GetWorldTimerManager().SetTimer(RoundTimerHandle, this, &APTWBombMiniGameMode::EndTimer, RoundPlayTime, false);
@@ -75,7 +75,7 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 
 void APTWBombMiniGameMode::EndTimer()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Explosion Timing"), CurrentRound);
+	//UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Explosion Timing"), CurrentRound);
 
 	Super::EndTimer();
 	
@@ -134,7 +134,7 @@ void APTWBombMiniGameMode::AssignRandomBombOwner()
 	if (AlivePlayers.Num() <= 0)
 	{
 		BombOwnerPS = nullptr;
-		UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - BombOwner assign failed (no alive players)"), CurrentRound);
+		//UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - BombOwner assign failed (no alive players)"), CurrentRound);
 		return;
 	}
 
@@ -144,7 +144,7 @@ void APTWBombMiniGameMode::AssignRandomBombOwner()
 	GiveItemAndEquipWeapon();
 	
 	const FString OwnerName = BombOwnerPS ? BombOwnerPS->GetPlayerName() : TEXT("None");
-	UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - BombOwner = %s"), CurrentRound, *OwnerName);
+	//UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - BombOwner = %s"), CurrentRound, *OwnerName);
 }
 
 void APTWBombMiniGameMode::RestartPlayer(AController* NewPlayer)
@@ -205,25 +205,38 @@ void APTWBombMiniGameMode::HandleBombPlayerDeath(AActor* Victim, AActor* Attacke
 	
 	if (APTWGameState* GS = GetGameState<APTWGameState>())
 	{
-		if (DeadPS && BombOwnerPS)
+		if (DeadPS)
 		{
-			GS->Multicast_BroadcastKilllogEx(
-				Cast<AActor>(DeadPS),          // Victim
-				Cast<AActor>(BombOwnerPS),    // Killer 
-				FName(TEXT("BOMB"))            // 원인
-			);
+			APlayerState* CurrentOwnerPS = nullptr;
+			if (BombActor)
+			{
+				CurrentOwnerPS = BombActor->GetBombOwnerPlayerState();
+			}
+			
+			AActor* KillerForLog = Cast<AActor>(CurrentOwnerPS ? CurrentOwnerPS : BombOwnerPS);
+
+			if (KillerForLog)
+			{
+				GS->Multicast_BroadcastKilllogEx(
+					Cast<AActor>(DeadPS),
+					KillerForLog,
+					FName(TEXT("BOMB"))
+				);
+				return;
+			}
 		}
 	}
+
 
 	if (DeadPS)
 	{
 		EliminatedPlayers.Add(DeadPS);
 	}
 
-	if (DeadController)
-	{
-		SetSpectator(DeadController);
-	}
+	// if (DeadController)
+	// {
+	// 	SetSpectator(DeadController);
+	// }
 }
 
 

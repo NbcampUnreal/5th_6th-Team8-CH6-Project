@@ -134,7 +134,7 @@ void APTWBombActor::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> EffectClass)
 
 void APTWBombActor::HandleRemainingTimeChanged(const FOnAttributeChangeData& Data)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Bomb] RemainingTime: %.0f"), Data.NewValue);
+	//UE_LOG(LogTemp, Warning, TEXT("[Bomb] RemainingTime: %.0f"), Data.NewValue);
 
 	UpdateBombEffects(Data.NewValue);
 }
@@ -142,6 +142,14 @@ void APTWBombActor::HandleRemainingTimeChanged(const FOnAttributeChangeData& Dat
 void APTWBombActor::SetBombOwner(APawn* NewOwnerPawn)
 {
 	if (!HasAuthority()) return;
+
+	const FString OldName = BombOwnerPawn && BombOwnerPawn->GetPlayerState()
+		? BombOwnerPawn->GetPlayerState()->GetPlayerName() : TEXT("None");
+
+	const FString NewName = NewOwnerPawn && NewOwnerPawn->GetPlayerState()
+		? NewOwnerPawn->GetPlayerState()->GetPlayerName() : TEXT("None");
+
+	//UE_LOG(LogTemp, Warning, TEXT("[Bomb] SetBombOwner: %s -> %s"), *OldName, *NewName);
 
 	BombOwnerPawn = NewOwnerPawn;
 	OnRep_BombOwnerPawn();
@@ -153,7 +161,7 @@ void APTWBombActor::OnRep_BombOwnerPawn()
 	{
 		APlayerState* PS = BombOwnerPawn->GetPlayerState();
 		const FString Name = PS ? PS->GetPlayerName() : TEXT("Unknown");
-		UE_LOG(LogTemp, Warning, TEXT("[Bomb] Owner Changed -> PlayerState: %s"), *Name);
+		//UE_LOG(LogTemp, Warning, TEXT("[Bomb] Owner Changed -> PlayerState: %s"), *Name);
 	}
 
 	AttachToOwnerPawn();

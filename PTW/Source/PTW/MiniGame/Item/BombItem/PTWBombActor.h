@@ -74,6 +74,12 @@ public:
 	APawn* GetBombOwner() const { return BombOwnerPawn; }
 
 	FORCEINLINE APawn* GetBombOwnerPawn() const { return BombOwnerPawn; }
+	
+	UFUNCTION(BlueprintPure, Category="Bomb")
+	APlayerState* GetBombOwnerPlayerState() const
+	{
+		return BombOwnerPawn ? BombOwnerPawn->GetPlayerState() : nullptr;
+	}
 
 protected:
 	UFUNCTION()

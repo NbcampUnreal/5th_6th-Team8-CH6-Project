@@ -70,6 +70,8 @@ void UPTWGA_BombPistol::ApplyDamageToTarget(const FGameplayAbilityTargetDataHand
 
 void UPTWGA_BombPistol::AttachBombToTarget(AActor* Bomb, AActor* Target)
 {
+	if (!Bomb || !Target) return;
+
 	if (USceneComponent* TargetMesh = Target->FindComponentByClass<USkeletalMeshComponent>())
 	{
 		Bomb->AttachToComponent(
@@ -77,7 +79,19 @@ void UPTWGA_BombPistol::AttachBombToTarget(AActor* Bomb, AActor* Target)
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 			FName(TEXT("BombHeadSocket"))
 		);
+
 		Bomb->SetOwner(Target);
+	}
+	
+	if (HasAuthority(&CurrentActivationInfo))
+	{
+		if (APTWBombActor* BombActor = Cast<APTWBombActor>(Bomb))
+		{
+			if (APawn* TargetPawn = Cast<APawn>(Target))
+			{
+				BombActor->SetBombOwner(TargetPawn);
+			}
+		}
 	}
 }
 

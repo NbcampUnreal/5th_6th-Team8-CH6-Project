@@ -47,7 +47,7 @@ APTWBombActor::APTWBombActor()
 	// GAS
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Full);
 
 	BombAttributeSet = CreateDefaultSubobject<UPTWBombAttributeSet>(TEXT("BombAttributeSet"));
 	
@@ -183,6 +183,18 @@ void APTWBombActor::AttachToOwnerPawn()
 	}
 }
 
+void APTWBombActor::Multicast_PlayExplosionCue_Implementation(const FVector& Loc, AActor* InstigatorActor)
+{
+	if (AbilitySystemComponent && ExplosionCueTag.IsValid())
+	{
+		FGameplayCueParameters CueParams;
+		CueParams.Location   = Loc;
+		CueParams.Instigator = InstigatorActor ? InstigatorActor : this;
+
+		AbilitySystemComponent->ExecuteGameplayCue(ExplosionCueTag, CueParams);
+	}
+}
+
 void APTWBombActor::RequestExplode(AActor* InstigatorActor)
 {
 	if (!HasAuthority())
@@ -202,17 +214,14 @@ void APTWBombActor::RequestExplode(AActor* InstigatorActor)
 	const float FinalDamage = BaseBombDamage;
 	ApplyExplosionDamage(OverlapResults, FinalDamage, InstigatorActor);
 
-	// 폭발 큐 실행
-	if (AbilitySystemComponent && ExplosionCueTag.IsValid())
-	{
-		FGameplayCueParameters CueParams;
-		CueParams.Location = GetActorLocation();
-		CueParams.Instigator = InstigatorActor ? InstigatorActor : this;
+	Multicast_PlayExplosionCue(GetActorLocation(), InstigatorActor);
+	
+	SetActorEnableCollision(false);
+	SetActorHiddenInGame(true);
 
-		AbilitySystemComponent->ExecuteGameplayCue(ExplosionCueTag, CueParams);
-	}
+	if (AudioComponent && AudioComponent->IsPlaying()) AudioComponent->Stop();
+	if (AudioLoopComponent && AudioLoopComponent->IsPlaying()) AudioLoopComponent->Stop();
 
-	Destroy();
 }
 
 void APTWBombActor::ServerRequestExplode_Implementation(AActor* InstigatorActor)

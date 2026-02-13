@@ -67,6 +67,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRequestExplode(AActor* InstigatorActor);
 	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayExplosionCue(const FVector& Loc, AActor* InstigatorActor);
+	
 	UFUNCTION(BlueprintCallable, Category="Bomb")
 	void SetBombOwner(APawn* NewOwnerPawn);
 

@@ -8,7 +8,7 @@ void UPTWMiniGameEntry::SetEntryData(int32 InRank, const FPTWPlayerData& InData,
 {
 	Super::SetEntryData(InRank, InData, InRoundData, SteamName, bIsMe);
 
-	if (Text_WinPoints) Text_WinPoints->SetText(FText::AsNumber(InData.TotalWinPoints));
+	if (Text_WinPoints) Text_WinPoints->SetText(FText::AsNumber(InRoundData.Score));
 
 	if (Text_KDA)
 	{

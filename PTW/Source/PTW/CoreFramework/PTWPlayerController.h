@@ -141,6 +141,9 @@ protected:
 	/* 닉네임 업데이트용 타이머 핸들 */
 	FTimerHandle NameTagTimerHandle;
 
+	/* 랭킹보드 토글 가능 유무 */
+	bool bAbleRankingBoard;
+
 	/* 키가이드 토글 */
 	bool bKeyGuideOn;
 

@@ -317,6 +317,7 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	ApplyMiniGameTag(NewPlayer);
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);
+	SpawnPlayerSavedItems(NewPlayer);
 	
 	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
 	{
@@ -580,8 +581,6 @@ void APTWMiniGameMode::FinishEndGameSequence()
 	TravelLevel();
 }
 
-
-
 // FIXME : 임시로 관전상태 해제테스트
 void APTWMiniGameMode::ExitSpectatorMode(AController* Controller)
 {
@@ -597,9 +596,29 @@ void APTWMiniGameMode::ExitSpectatorMode(AController* Controller)
 	{
 		PC->PlayerState->SetIsSpectator(false);
 		PC->PlayerState->SetIsOnlyASpectator(false);
-		PC->PlayerState->SetIsSpectator(false);
-		PC->PlayerState->SetIsOnlyASpectator(false);
 	}
 
 	PC->SetViewTarget(PC);
+}
+
+
+void APTWMiniGameMode::SpawnPlayerSavedItems(AController* Controller)
+{
+	if (!Controller) return;
+
+	APTWPlayerState* PS = Controller->GetPlayerState<APTWPlayerState>();
+	APawn* Pawn = Controller->GetPawn();
+
+	if (PS && Pawn)
+	{
+		if (UPTWItemSpawnManager* SpawnSys = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+		{
+			SpawnSys->SpawnAndGiveItems(PS);
+			UE_LOG(LogTemp, Log, TEXT("[GameMode] SpawnPlayerSavedItems Success for %s"), *PS->GetPlayerName());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[GameMode] Failed to Spawn Items. PS or Pawn is invalid."));
+	}
 }

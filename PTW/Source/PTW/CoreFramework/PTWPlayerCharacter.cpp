@@ -299,12 +299,6 @@ void APTWPlayerCharacter::InitCharacterState()
 				UE_LOG(LogTemp, Warning, TEXT("InitCharacterState: Force Removed Equip Tag"));
 			}
 		}
-
-		if (UPTWItemSpawnManager* SpawnSys = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
-		{
-			SpawnSys->SpawnAndGiveItems(PS);
-			UE_LOG(LogTemp, Log, TEXT("[Init] Items Spawned for Player: %s"), *PS->GetPlayerName());
-		}
 	}
 
 	GiveDefaultAbilities();

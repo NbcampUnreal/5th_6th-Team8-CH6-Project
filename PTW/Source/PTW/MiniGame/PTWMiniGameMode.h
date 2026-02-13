@@ -85,6 +85,9 @@ protected:
 	/* 플레이어 관전상태 해제 */
 	void ExitSpectatorMode(AController* Controller);
 
+	/* 인벤토리 아이템에 따른 아이템 지급 함수 */
+	void SpawnPlayerSavedItems(AController* Controller);
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")

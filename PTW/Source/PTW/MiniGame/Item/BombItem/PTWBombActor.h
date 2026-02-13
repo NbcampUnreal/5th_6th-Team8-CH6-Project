@@ -16,6 +16,8 @@ class UPTWBombAttributeSet;
 class UGameplayAbility;
 class APawn;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBombTimeExpired, AActor* /*InstigatorActor*/);
+
 UCLASS()
 class PTW_API APTWBombActor : public AActor, public IAbilitySystemInterface
 {
@@ -30,6 +32,8 @@ public:
 	// Replication
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	FOnBombTimeExpired OnBombTimeExpired;
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -109,6 +113,9 @@ protected:
 	/** 중복 폭발 방지 */
 	UPROPERTY()
 	bool bExplodeRequested = false;
+	
+	UPROPERTY()
+	bool bTimeExpiredNotified = false;
 
 	/** 폭발 반경 */
 	UPROPERTY(EditDefaultsOnly, Category="Bomb|Explosion")

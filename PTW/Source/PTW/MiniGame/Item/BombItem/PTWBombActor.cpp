@@ -148,8 +148,8 @@ void APTWBombActor::SetBombOwner(APawn* NewOwnerPawn)
 
 	const FString NewName = NewOwnerPawn && NewOwnerPawn->GetPlayerState()
 		? NewOwnerPawn->GetPlayerState()->GetPlayerName() : TEXT("None");
-
-	//UE_LOG(LogTemp, Warning, TEXT("[Bomb] SetBombOwner: %s -> %s"), *OldName, *NewName);
+	
+	bTimeExpiredNotified = false;
 
 	BombOwnerPawn = NewOwnerPawn;
 	OnRep_BombOwnerPawn();
@@ -323,6 +323,16 @@ void APTWBombActor::UpdateBombEffects(float NewTime)
 		if (AudioComponent->IsPlaying()) AudioComponent->Stop();
 		if (AudioLoopComponent->IsPlaying()) AudioLoopComponent->Stop();
 		if (BombDynamicMat) BombDynamicMat->SetScalarParameterValue(FName("BlinkSpeed"), 0.0f);
+		
+		if (HasAuthority() && !bTimeExpiredNotified)
+		{
+			bTimeExpiredNotified = true;
+
+			AActor* InstigatorActor = BombOwnerPawn ? Cast<AActor>(BombOwnerPawn) : this;
+			OnBombTimeExpired.Broadcast(InstigatorActor);
+		}
+
+		
 		return;
 	}
 

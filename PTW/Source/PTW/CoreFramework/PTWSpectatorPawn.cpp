@@ -213,33 +213,31 @@ bool APTWSpectatorPawn::FindNextSpectatorTarget(APawn*& NewViewTarget)
 void APTWSpectatorPawn::SetSpectatorTarget(APawn* NewViewTarget)
 {
 	APlayerController* PC = GetController<APlayerController>();
-	if (!PC || !NewViewTarget) return
+	if (!IsValid(PC) || !IsValid(NewViewTarget)) return;
 	
-	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	if (IsValid(CurrentViewCharacter))
 	{
 		CurrentViewCharacter->OnCharacterDied.RemoveDynamic(this, &ThisClass::OnTargetDeath);
 		CurrentViewCharacter = nullptr;
 	}
 	
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	AttachToActor(NewViewTarget, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	
-	if (IsValid(CurrentViewCharacter))
+	if (APTWBaseCharacter* CurrentCharacter = Cast<APTWBaseCharacter>(NewViewTarget))
 	{
-		if (APTWBaseCharacter* CurrentCharacter = Cast<APTWBaseCharacter>(NewViewTarget))
-		{
-			CurrentViewCharacter->OnCharacterDied.AddDynamic(this, &ThisClass::OnTargetDeath);
-			CurrentViewCharacter = CurrentCharacter;
-		}
+		CurrentViewCharacter = CurrentCharacter;
+		CurrentViewCharacter->OnCharacterDied.AddUniqueDynamic(this, &ThisClass::OnTargetDeath);
 	}
 	
 	CurrentZoomDistance = MaxZoom;
-	if (UCapsuleComponent* TargetCapsule = NewViewTarget->GetComponentByClass<UCapsuleComponent>())
+	
+	if (UCapsuleComponent* TargetCapsule = NewViewTarget->FindComponentByClass<UCapsuleComponent>())
 	{
 		TargetCapsule->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	}
 	
-	SpringArmComponent->SocketOffset = FVector(0.0f, 0.0f, 0.0f);
+	SpringArmComponent->SocketOffset = FVector::ZeroVector;
 	
 	PC->SetViewTarget(this);
 }
@@ -258,11 +256,12 @@ void APTWSpectatorPawn::OnInputSpectateNext()
 
 void APTWSpectatorPawn::OnTargetDeath(AActor* DeadActor, AActor* KillerActor)
 {
-	if (IsValid(DeadActor))
-	{
-		FTimerHandle TimerHandle;
-		GetWorldTimerManager().SetTimer(TimerHandle, this, &APTWSpectatorPawn::SpectateNextPlayer, 1.0f, false);
-	}
+	if (!IsLocallyControlled()) return;
+	if (!IsValid(DeadActor)) return;
+	
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &APTWSpectatorPawn::SpectateNextPlayer, 1.0f, false);
+
 }
 
 void APTWSpectatorPawn::BeginPlay()

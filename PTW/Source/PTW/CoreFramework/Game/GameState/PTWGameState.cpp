@@ -95,12 +95,30 @@ void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
 	
 	// 승리 포인트는 임시로 플레이어 인원 수만큼 지급
 	// 동점 계산 X
-	for (int i = 0; i < RankedPlayers.Num(); i++)
+
+	if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Survival)
 	{
-		FPTWPlayerData PlayerData = RankedPlayers[i]->GetPlayerData();
-		PlayerData.TotalWinPoints += RankedPlayers.Num() - i;
-		RankedPlayers[i]->SetPlayerData(PlayerData);
+		if (AlivePlayers.Num() == 0) return;
+		
+		for (int i = 0; i < AlivePlayers.Num(); i++)
+		{
+			FPTWPlayerData PlayerData = RankedPlayers[i]->GetPlayerData();
+			PlayerData.TotalWinPoints += 3;
+			RankedPlayers[i]->SetPlayerData(PlayerData);
+		}
 	}
+	else
+	{
+		if (RankedPlayers.Num() == 0) return;
+		
+		for (int i = 0; i < RankedPlayers.Num(); i++)
+		{
+			FPTWPlayerData PlayerData = RankedPlayers[i]->GetPlayerData();
+			PlayerData.TotalWinPoints += RankedPlayers.Num() - i;
+			RankedPlayers[i]->SetPlayerData(PlayerData);
+		}
+	}
+	
 }
 
 void APTWGameState::OnRep_LoadedPlayerCount()

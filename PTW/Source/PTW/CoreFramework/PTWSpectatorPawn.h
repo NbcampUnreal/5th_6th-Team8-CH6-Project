@@ -23,30 +23,23 @@ class PTW_API APTWSpectatorPawn : public ASpectatorPawn
 public:
 	APTWSpectatorPawn();
 	
-	void SetSpectateTarget();
-	
-	void SetFirstPersonCamera();
-	void SetThirdPersonCamera();
-	
-	void Move(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
-	
-	void Zoom(const FInputActionValue& Value);
-	
-	void LookUp();
-	void Turn();
-	
-	UFUNCTION()
-	void SpectateNextPlayer();
-	void BeginSpectate();
-	bool FindNextSpectatorTarget(APawn*& NewViewTarget);
+	void SetViewTarget();
 	void SetSpectatorTarget(APawn* NewViewTarget);
-	UFUNCTION()
-	void OnInputSpectateNext();
+	bool FindNextSpectatorTarget(APawn*& NewViewTarget);
+	void SpectateNextPlayer();
+	
+	void BeginSpectate();
 	UFUNCTION()
 	void OnTargetDeath(AActor* DeadActor, AActor* KillerActor);
 	UFUNCTION()
-	void ClearAllTimer();
+	void BlockSpectating();
+	
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	void Zoom(const FInputActionValue& Value);
+	void OnInputSpectateNext();
+	void SwitchToFirstThirdPerson();
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -56,7 +49,7 @@ protected:
 	virtual void OnRep_PlayerState() override;
 	
 public:
-	FTimerHandle BeginSpectateTimer;
+	FTimerHandle SpectateTimer;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
@@ -78,18 +71,29 @@ protected:
 	TObjectPtr<UInputAction> ZoomAction;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> FirstThirdPersonAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* SpectateNextAction;
 	
 	// TObjectPtr<ACharacter> CurrentViewTarget;
 	
-	UPROPERTY(VisibleAnywhere, Category = "Variables")
+	/* 현재 줌 값 */
+	UPROPERTY(VisibleAnywhere, Category = "ThirdPerson")
 	float CurrentZoomDistance;
+	float Current3PZoomDistance;
+	float Starting3PZoomDistance;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Variables")
+	/* 최대 줌 길이 */
+	UPROPERTY(EditDefaultsOnly, Category = "ThirdPerson|Zoom", meta=(ClampMin="100.0", ClampMax="1000.0"))
 	float MaxZoom;
-	UPROPERTY(EditDefaultsOnly, Category = "Variables")
+	
+	/* 최소 줌 길이 (1인칭은 개별적인 '0'값을 사용) */
+	UPROPERTY(EditDefaultsOnly, Category = "ThirdPerson|Zoom", meta=(ClampMin="100.0", ClampMax="1000.0"))
 	float MinZoom;
-	UPROPERTY(EditDefaultsOnly, Category = "Variables")
+	
+	/* 한번에 줌이 될 길이 */
+	UPROPERTY(EditDefaultsOnly, Category = "ThirdPerson|Zoom", meta=(ClampMin="100.0", ClampMax="1000.0"))
 	float ZoomStep;
 	
 	bool bIsFreeCamera;

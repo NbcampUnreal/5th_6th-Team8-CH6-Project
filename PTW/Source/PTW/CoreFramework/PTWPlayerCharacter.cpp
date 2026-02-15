@@ -69,6 +69,7 @@ void APTWPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ThisClass, bIsStealth);
+	DOREPLIFETIME(ThisClass, AimPitch);
 }
 
 void APTWPlayerCharacter::BeginPlay()
@@ -161,6 +162,18 @@ void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
 	}
 }
 
+void APTWPlayerCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	
+	if (!IsLocallyControlled())
+	{
+		FRotator NewRotation = PlayerCamera->GetRelativeRotation();
+		NewRotation.Pitch = AimPitch;
+		PlayerCamera->SetRelativeRotation(NewRotation);
+	}
+}
+
 void APTWPlayerCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
@@ -238,6 +251,9 @@ void APTWPlayerCharacter::Look(const FInputActionValue& Value)
 	{
 		AddControllerYawInput(LookAxisVector.X * PC->CurrentMouseSensitivity);
 		AddControllerPitchInput(LookAxisVector.Y * PC->CurrentMouseSensitivity);
+		
+		AimPitch = GetControlRotation().Pitch;
+		ServerRPCUpdateAimPitch(AimPitch);
 	}
 }
 
@@ -424,6 +440,11 @@ void APTWPlayerCharacter::OnStasisTagChanged(const FGameplayTag Tag, int32 NewCo
 
 void APTWPlayerCharacter::OnRep_StealthMode()
 {
+}
+
+void APTWPlayerCharacter::ServerRPCUpdateAimPitch_Implementation(float NewAimPitch)
+{
+	AimPitch = NewAimPitch;
 }
 
 void APTWPlayerCharacter::SetStealthMode(bool bSetStealthMode)

@@ -55,7 +55,8 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Landed(const FHitResult& Hit) override;
 	virtual void HandleDeath(AActor* Attacker) override;
-
+	virtual void Tick(float DeltaTime) override;
+	
 	// 5. [Protected] 내부 구현 로직 (상속받은 자식이 쓸 수 있는 함수)
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -99,7 +100,11 @@ private:
 
 public:
 	// 7. [Public] 멤버 변수 (대부분의 설정값)
+	UPROPERTY(Replicated, meta=(COND_SkipOwner))
+	float AimPitch = 0.0f;
 	
+	UFUNCTION(Server, Reliable)
+	void ServerRPCUpdateAimPitch(float NewAimPitch);
 	// StealthMode 관련 함수 추가
 	void SetStealthMode(bool bSetStealthMode);
 

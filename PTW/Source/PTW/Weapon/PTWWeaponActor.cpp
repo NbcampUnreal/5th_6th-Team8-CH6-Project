@@ -50,13 +50,13 @@ void APTWWeaponActor::ApplyVisualPerspective()
 		if (bIsLocal)
 		{
 			WeaponMesh->SetOwnerNoSee(true);
+			WeaponMesh->SetOnlyOwnerSee(false);
 			WeaponMesh->SetCastShadow(false);
 		} 
 		else
 		{
 			WeaponMesh->SetOnlyOwnerSee(false);
-			WeaponMesh->SetOwnerNoSee(false);
-			WeaponMesh->SetVisibility(true);
+			WeaponMesh->SetOwnerNoSee(true);
 		}
 	}
 }

@@ -125,8 +125,11 @@ void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);
 	
-	ExitSpectorMode(C);
-	RestartPlayer(C);
+	APlayerController* PlayerController  = Cast<APlayerController>(C);
+	if (!PlayerController) return;
+	
+	ExitSpectorMode(PlayerController);
+	RestartPlayer(PlayerController);
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)

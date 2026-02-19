@@ -205,6 +205,13 @@ void APTWPlayerState::ResetInventoryItemId()
 	}
 }
 
+void APTWPlayerState::CopyProperties(APlayerState* PlayerState)
+{
+	Super::CopyProperties(PlayerState);
+
+	bIsReadyToPlay = false;
+}
+
 void APTWPlayerState::OnRep_CurrentPlayerData()
 {
 	OnPlayerDataUpdated.Broadcast(CurrentPlayerData);

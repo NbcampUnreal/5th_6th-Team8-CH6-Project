@@ -34,6 +34,9 @@ public:
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
 protected:
+	/** Seamless Travel시 데이터 복사를 위해 사용되는 함수 */
+	virtual void CopyProperties(APlayerState* PlayerState) override;
+	
 	UFUNCTION()
 	void OnRep_CurrentPlayerData();
 	
@@ -108,4 +111,6 @@ public:
 	void AddGold(int32 Amount);
 
 	void ResetInventoryItemId();
+
+	bool bIsReadyToPlay = false;
 };

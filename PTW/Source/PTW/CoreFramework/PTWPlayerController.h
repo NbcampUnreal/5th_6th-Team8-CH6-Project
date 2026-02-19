@@ -68,7 +68,10 @@ public:
 	/* 메인 메뉴로 이동 */
 	UFUNCTION(Client, Reliable)
 	void Client_OpenMainMenu();
-
+	
+	/* 서버에 플레이어가 준비 상태인 것을 알림 */
+	UFUNCTION(Server, Reliable)
+	void Server_NotifyReadyToPlay();
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -78,6 +81,7 @@ protected:
 	virtual void OnUnPossess() override;
 	virtual void BeginSpectatingState() override;
 	virtual ASpectatorPawn* SpawnSpectatorPawn() override;
+	
 	
 	/*  ASC Delegate 바인딩 */
 	//void BindASCDelegates();

@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AdvancedFriendsGameInstance.h"
 #include "PTWGameInstance.generated.h"
 
 class UPTWLoadingWidgetBase;
@@ -20,7 +19,7 @@ enum class ELoadingScreenType : uint8
  * 
  */
 UCLASS()
-class PTW_API UPTWGameInstance : public UAdvancedFriendsGameInstance
+class PTW_API UPTWGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 

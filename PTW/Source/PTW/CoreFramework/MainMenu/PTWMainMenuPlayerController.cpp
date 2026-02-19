@@ -4,7 +4,6 @@
 #include "PTWMainMenuPlayerController.h"
 #include "Blueprint/UserWidget.h"
 #include "PTW/UI/MainMenu/PTWMainMenu.h"
-#include "PTW/UI/MainMenu/PTWLobbyBrowser.h"
 
 APTWMainMenuPlayerController::APTWMainMenuPlayerController()
 {

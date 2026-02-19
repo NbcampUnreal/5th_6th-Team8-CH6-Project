@@ -9,18 +9,14 @@
 class UCanvas;
 class UButton;
 class UWidgetSwitcher;
-class UPTWLobbyBrowser;
-
-/**
- * 
- */
+class UPTWServerBrowser;
 
 UCLASS()
 class PTW_API UPTWMainMenu : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-	void OpenLobbyBrowser();
+	void OpenServerBrowser();
 	
 protected:
 	virtual void NativeConstruct() override;
@@ -50,5 +46,5 @@ protected:
 	TObjectPtr<UWidget> MainMenuCanvas;
 	
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWLobbyBrowser> LobbyBrowser;
+	TObjectPtr<UPTWServerBrowser> ServerBrowser;
 };

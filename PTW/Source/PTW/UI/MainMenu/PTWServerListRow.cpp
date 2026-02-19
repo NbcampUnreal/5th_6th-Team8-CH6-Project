@@ -1,25 +1,25 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PTWLobbyListRow.h"
+#include "PTWServerListRow.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "PTW/System/PTWSessionSubsystem.h"
 #include "System/Session/SessionConfig.h"
 
-void UPTWLobbyListRow::Setup(const FBlueprintSessionResult& SearchResult)
+void UPTWServerListRow::Setup(const FOnlineSessionSearchResultBP& SearchResult)
 {
-	SessionData = SearchResult.OnlineResult;
+	SessionData = SearchResult.OnlineSessionSearchResult;
 	const FSessionSettings& SessionSettings = SessionData.Session.SessionSettings.Settings;
 	
 	if (SessionSettings.Find(SessionKey::ServerName))
 	{
-		FString LobbyNameStr = SessionSettings.Find(SessionKey::ServerName)->ToString();
-		LobbyName->SetText(FText::FromString(LobbyNameStr));
+		FString ServerNameStr = SessionSettings.Find(SessionKey::ServerName)->ToString();
+		ServerName->SetText(FText::FromString(ServerNameStr));
 	}
 }
 
-void UPTWLobbyListRow::NativeConstruct()
+void UPTWServerListRow::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
@@ -29,7 +29,7 @@ void UPTWLobbyListRow::NativeConstruct()
 	}
 }
 
-void UPTWLobbyListRow::NativeDestruct()
+void UPTWServerListRow::NativeDestruct()
 {
 	if (!IsValid(JoinButton))
 	{
@@ -39,7 +39,7 @@ void UPTWLobbyListRow::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UPTWLobbyListRow::OnClickedJoinButton()
+void UPTWServerListRow::OnClickedJoinButton()
 {
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!IsValid(GameInstance)) return;
@@ -47,5 +47,5 @@ void UPTWLobbyListRow::OnClickedJoinButton()
 	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
 	if (!IsValid(SessionSubsystem)) return;
 	
-	SessionSubsystem->JoinGameSession(FBlueprintSessionResult(SessionData));
+	SessionSubsystem->JoinGameSession(FOnlineSessionSearchResultBP(SessionData));
 }

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "FindSessionsCallbackProxy.h"
 #include "Blueprint/UserWidget.h"
-#include "PTWLobbyListRow.generated.h"
+#include "PTWServerListRow.generated.h"
 
 class UTextBlock;
 class UButton;
@@ -13,13 +13,13 @@ class UButton;
  * 
  */
 UCLASS()
-class PTW_API UPTWLobbyListRow : public UUserWidget
+class PTW_API UPTWServerListRow : public UUserWidget
 {
 	GENERATED_BODY()
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void Setup(const FBlueprintSessionResult& SearchResult);
+	void Setup(const FOnlineSessionSearchResultBP& SearchResult);
 	
 protected:
 	virtual void NativeConstruct() override;
@@ -30,10 +30,10 @@ protected:
 	
 protected:
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UTextBlock> LobbyID;
+	TObjectPtr<UTextBlock> ServerID;
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UTextBlock> LobbyName;
+	TObjectPtr<UTextBlock> ServerName;
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> JoinButton;

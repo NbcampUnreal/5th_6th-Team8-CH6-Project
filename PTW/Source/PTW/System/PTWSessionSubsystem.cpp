@@ -1,13 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PTWSessionSubsystem.h"
-#include "FindSessionsCallbackProxy.h"
 #include "OnlineSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Online/OnlineSessionNames.h"
 #include "System/Session/SessionConfig.h"
+
+bool UPTWSessionSubsystem::IsUsingSteamSubsystem()
+{
+	if (IOnlineSubsystem* SI = IOnlineSubsystem::Get())
+	{
+		return SI->GetSubsystemName() == FName("Steam");
+	}
+	return false;
+}
 
 void UPTWSessionSubsystem::CreateGameSession(FSessionConfig SessionConfig)
 {
@@ -45,11 +53,11 @@ void UPTWSessionSubsystem::CreateGameSession(FSessionConfig SessionConfig)
     }
 }
 
-void UPTWSessionSubsystem::JoinGameSession(const FBlueprintSessionResult& BPSearchResult)
+void UPTWSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResultBP& BPSearchResult)
 {
 	if (!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
-	const FOnlineSessionSearchResult& SearchResult = BPSearchResult.OnlineResult;
+	const FOnlineSessionSearchResult& SearchResult = BPSearchResult.OnlineSessionSearchResult;
 	
 	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(
 		FOnJoinSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnJoinSessionComplete));
@@ -124,7 +132,7 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	if(!SessionInterface.IsValid()) return;
 	
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
-	TArray<FBlueprintSessionResult> BPSearchResults;
+	TArray<FOnlineSessionSearchResultBP> BPSearchResults;
 	if (bWasSuccessful && SessionSearch.IsValid())
 	{
 		UE_LOG(LogTemp, Log, TEXT("Search Complete! Found %d sessions."), SessionSearch->SearchResults.Num());
@@ -138,7 +146,7 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 			if (SearchResult.Session.SessionSettings.Get(SessionKey::ServerName, ServerName))
 			{
 				UE_LOG(LogTemp, Log, TEXT("Found Server: %s (Ping: %d)"), *ServerName, Ping);
-				BPSearchResults.Add(FBlueprintSessionResult(SearchResult));
+				BPSearchResults.Add(FOnlineSessionSearchResultBP(SearchResult));
 			}
 			else
 			{
@@ -157,8 +165,7 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	}
 }
 
-void UPTWSessionSubsystem::LaunchDedicatedServer(const TArray<FSessionPropertyKeyPair>& LobbySettings,
-	int32 MaxPlayers, bool bIsPrivate)
+void UPTWSessionSubsystem::LaunchDedicatedServer(FSessionConfig SessionConfig)
 {
 	// FString ServerPath = FPaths::ConvertRelativePathToFull(FPaths::RootDir() + 
 	// 	TEXT("Engine/Binaries/Win64/UnrealEditor.exe"));
@@ -173,15 +180,14 @@ void UPTWSessionSubsystem::LaunchDedicatedServer(const TArray<FSessionPropertyKe
 	FString Arguments = FString::Printf(TEXT("\"%s\""), *ProjectPath);
 	
 	Arguments += FString::Printf(TEXT(" ServerEntry"));
-	Arguments += FString::Printf(TEXT("?MaxPlayers=%d"), MaxPlayers);
-	Arguments += FString::Printf(TEXT("?bIsPrivate=%d"), bIsPrivate ? 1 : 0);
+	Arguments += FString::Printf(TEXT("?MaxPlayers=%d"), SessionConfig.MaxPlayers);
 	
-	// for (const FSessionPropertyKeyPair& LobbySetting : LobbySettings)
+	// for (const FSessionPropertyKeyPair& ServerSetting : ServerSettings)
 	// {
 	// 	// FName Key;
 	// 	// FVariantData Data;
-	// 	FString Key = LobbySetting.Key.ToString();
-	// 	FString Value = LobbySetting.Data.ToString();
+	// 	FString Key = ServerSetting.Key.ToString();
+	// 	FString Value = ServerSetting.Data.ToString();
 	// 	Arguments += FString::Printf(TEXT("?%s=\"%s\""), *Key, *Value);
 	// }
 	
@@ -268,7 +274,7 @@ void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasS
 	if (bWasSuccessful)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Steam Session Created Successfully!"));
-		CreateListenLevel("Lobby", SessionConfig);
+		CreateListenLevel("Server", SessionConfig);
 	}
 	else
 	{

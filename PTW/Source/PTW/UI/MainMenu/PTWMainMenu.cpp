@@ -4,14 +4,14 @@
 #include "PTWMainMenu.h"
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
-#include "PTWLobbyBrowser.h"
+#include "PTWServerBrowser.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-void UPTWMainMenu::OpenLobbyBrowser()
+void UPTWMainMenu::OpenServerBrowser()
 {
-	if (IsValid(MenuSwitcher) && IsValid(LobbyBrowser))
+	if (IsValid(MenuSwitcher) && IsValid(ServerBrowser))
 	{
-		MenuSwitcher->SetActiveWidget(LobbyBrowser);
+		MenuSwitcher->SetActiveWidget(ServerBrowser);
 	}
 }
 
@@ -24,9 +24,9 @@ void UPTWMainMenu::NativeConstruct()
 		PlayButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedPlayButton);
 	}
 	
-	if (LobbyBrowser)
+	if (ServerBrowser)
 	{
-		LobbyBrowser->OnLobbyBackAction.AddDynamic(this, &ThisClass::ReturnToMainMenu);
+		ServerBrowser->OnServerBackAction.AddDynamic(this, &ThisClass::ReturnToMainMenu);
 	}
 	
 	if (ExitButton)
@@ -42,9 +42,9 @@ void UPTWMainMenu::NativeDestruct()
 		PlayButton->OnClicked.RemoveDynamic(this, &ThisClass::OnClickedPlayButton);
 	}
 	
-	if (LobbyBrowser)
+	if (ServerBrowser)
 	{
-		LobbyBrowser->OnLobbyBackAction.RemoveDynamic(this, &ThisClass::ReturnToMainMenu);
+		ServerBrowser->OnServerBackAction.RemoveDynamic(this, &ThisClass::ReturnToMainMenu);
 	}
 	
 	Super::NativeDestruct();
@@ -52,7 +52,7 @@ void UPTWMainMenu::NativeDestruct()
 
 void UPTWMainMenu::OnClickedPlayButton()
 {
-	OpenLobbyBrowser();
+	OpenServerBrowser();
 }
 
 void UPTWMainMenu::ReturnToMainMenu()

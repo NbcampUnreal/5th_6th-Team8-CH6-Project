@@ -126,19 +126,19 @@ void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);
 	
-	// APlayerController* PlayerController  = Cast<APlayerController>(C);
-	// if (!PlayerController) return;
-	//
-	// ExitSpectorMode(PlayerController);
-	//
-	// FTimerHandle RestartTimerHandle;
-	// GetWorldTimerManager().SetTimer(RestartTimerHandle, [this, PlayerController]()
-	// {
-	// 	if (IsValid(PlayerController))
-	// 	{
-	// 		RestartPlayer(PlayerController);
-	// 	}
-	// }, 0.2f, false);
+	APlayerController* PlayerController  = Cast<APlayerController>(C);
+	if (!PlayerController) return;
+	
+	ExitSpectorMode(PlayerController);
+	
+	FTimerHandle RestartTimerHandle;
+	GetWorldTimerManager().SetTimer(RestartTimerHandle, [this, PlayerController]()
+	{
+		if (PlayerController->GetPawn() == nullptr)
+		{
+			RestartPlayer(PlayerController);
+		}
+	}, 0.2f, false);
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)

@@ -90,25 +90,28 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 
 void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
+	ExitSpectorMode(NewPlayer);
+
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 
-	if (!IsValid(PTWGameState)) return;
+	if (!IsValid(PTWGameState) || !NewPlayer) return;
 
-	// 미니 게임 끝나면 인벤토리 비워주지만 로비 이동 후에 한번더 초기화
 	APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
 	if (!PTWPlayerState) return;
 
+	// 데이터 초기화 및 골드 지급
 	PTWPlayerState->ResetInventoryItemId();
-	
-	// 골드 지급
 	FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
 	PlayerData.Gold += RoundClearBonusGold;
 	PTWPlayerState->SetPlayerData(PlayerData);
-
+	
+	if (NewPlayer->GetPawn() == nullptr)
+	{
+		RestartPlayer(NewPlayer);
+	}
+	
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::Loading)
 	{
-		//SetInputBlock(true);
-		
 		if (AllPlayer <= PTWGameState->PlayerArray.Num())
 		{
 			if (bAllPlayerReady) return;
@@ -117,19 +120,25 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 			GetWorldTimerManager().SetTimer(LoadingDealyTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
 		}
 	}
-
-	RestartPlayer(NewPlayer);
 }
 
 void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);
 	
-	APlayerController* PlayerController  = Cast<APlayerController>(C);
-	if (!PlayerController) return;
-	
-	ExitSpectorMode(PlayerController);
-	RestartPlayer(PlayerController);
+	// APlayerController* PlayerController  = Cast<APlayerController>(C);
+	// if (!PlayerController) return;
+	//
+	// ExitSpectorMode(PlayerController);
+	//
+	// FTimerHandle RestartTimerHandle;
+	// GetWorldTimerManager().SetTimer(RestartTimerHandle, [this, PlayerController]()
+	// {
+	// 	if (IsValid(PlayerController))
+	// 	{
+	// 		RestartPlayer(PlayerController);
+	// 	}
+	// }, 0.2f, false);
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)

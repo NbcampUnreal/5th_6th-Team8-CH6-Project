@@ -151,7 +151,7 @@ void APTWGameMode::CheckAllPlayersLoaded()
 	}
 }
 
-void APTWGameMode::PlayerReadyToPlay(APlayerController* ReadyPlayer)
+void APTWGameMode::PlayerReadyToPlay(APlayerController* ReadyPlayerController)
 {
 	ReadyPlayer++;
 }

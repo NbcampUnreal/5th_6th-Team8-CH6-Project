@@ -21,25 +21,21 @@ class PTW_API UPTWServerBrowser : public UUserWidget
 {
 	GENERATED_BODY()
 
-public:
-	UPROPERTY(BlueprintAssignable, Category= "Events")
-	FOnServerBackAction OnServerBackAction;
-
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 	
 	UFUNCTION()
-	void OnClickedBackButton();			// 메인메뉴로 이동
+	void OnClickedBackButton();
 	
 	UFUNCTION()
-	void OnClickedServerMenuButton();	// 로비 생성 전, 생성 메뉴 토글
+	void OnClickedServerMenuButton();
 	
 	UFUNCTION()
-	void OnClickedCreateServerButton();	// 로비 생성
+	void OnClickedCreateServerButton();
 	
 	UFUNCTION()
-	void OnClickedFindServerButton();	// 로비 찾기
+	void OnClickedFindServerButton();
 	
 	UFUNCTION()
 	void OnClickedShortRoundButton();
@@ -86,4 +82,9 @@ protected:
 	
 private:
 	EPTWRoundLimit RoundLimit;
+	
+public:
+	UPROPERTY(BlueprintAssignable, Category= "Events")
+	FOnServerBackAction OnServerBackAction;
+	
 };

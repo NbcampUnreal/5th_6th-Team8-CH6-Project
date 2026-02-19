@@ -3,15 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FindSessionsCallbackProxy.h"
 #include "Blueprint/UserWidget.h"
+#include "OnlineSessionSettings.h"
 #include "PTWServerListRow.generated.h"
 
 class UTextBlock;
 class UButton;
-/**
- * 
- */
+
 UCLASS()
 class PTW_API UPTWServerListRow : public UUserWidget
 {
@@ -38,5 +36,6 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> JoinButton;
 	
+protected:
 	FOnlineSessionSearchResult SessionData;
 };

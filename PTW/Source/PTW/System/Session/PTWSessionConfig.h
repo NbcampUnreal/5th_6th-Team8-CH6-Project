@@ -2,7 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "SessionConfig.generated.h"
+#include "PTWSessionConfig.generated.h"
 
 UENUM(BlueprintType)
 enum class EPTWRoundLimit : uint8
@@ -24,7 +24,7 @@ static int32 GetMaxRoundsByLimit(EPTWRoundLimit Limit)
 	}
 }
 
-namespace SessionKey
+namespace PTWSessionKey
 {
 	inline const FName ServerName = FName(TEXT("SERVER_NAME"));
 	inline const FName MapName =	FName(TEXT("MAP_NAME"));
@@ -33,7 +33,7 @@ namespace SessionKey
 }
 
 USTRUCT(BlueprintType)
-struct FSessionConfig
+struct FPTWSessionConfig
 {
 	GENERATED_BODY()
 	

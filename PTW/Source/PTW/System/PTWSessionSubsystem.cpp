@@ -6,7 +6,7 @@
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Online/OnlineSessionNames.h"
-#include "System/Session/SessionConfig.h"
+#include "System/Session/PTWSessionConfig.h"
 
 bool UPTWSessionSubsystem::IsUsingSteamSubsystem()
 {
@@ -17,7 +17,7 @@ bool UPTWSessionSubsystem::IsUsingSteamSubsystem()
 	return false;
 }
 
-void UPTWSessionSubsystem::CreateGameSession(FSessionConfig SessionConfig)
+void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig)
 {
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
@@ -42,8 +42,8 @@ void UPTWSessionSubsystem::CreateGameSession(FSessionConfig SessionConfig)
     SessionSettings->bAllowJoinViaPresence = !SessionConfig.bIsDedicatedServer;	// 스팀 친구 참여
 	SessionSettings->bUseLobbiesIfAvailable = !SessionConfig.bIsDedicatedServer;
 	
-    SessionSettings->Set(SessionKey::ServerName, SessionConfig.ServerName, EOnlineDataAdvertisementType::ViaOnlineService);
-    SessionSettings->Set(SessionKey::MaxPlayers, SessionConfig.MaxPlayers, EOnlineDataAdvertisementType::ViaOnlineService);
+    SessionSettings->Set(PTWSessionKey::ServerName, SessionConfig.ServerName, EOnlineDataAdvertisementType::ViaOnlineService);
+    SessionSettings->Set(PTWSessionKey::MaxPlayers, SessionConfig.MaxPlayers, EOnlineDataAdvertisementType::ViaOnlineService);
     
     if (!SessionInterface->CreateSession(0, NAME_GameSession, *SessionSettings))
     {
@@ -143,7 +143,7 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 			FString HostName = SearchResult.Session.OwningUserName;
 			int32 Ping = SearchResult.PingInMs;
 			FString ServerName;
-			if (SearchResult.Session.SessionSettings.Get(SessionKey::ServerName, ServerName))
+			if (SearchResult.Session.SessionSettings.Get(PTWSessionKey::ServerName, ServerName))
 			{
 				UE_LOG(LogTemp, Log, TEXT("Found Server: %s (Ping: %d)"), *ServerName, Ping);
 				BPSearchResults.Add(FOnlineSessionSearchResultBP(SearchResult));
@@ -165,7 +165,7 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	}
 }
 
-void UPTWSessionSubsystem::LaunchDedicatedServer(FSessionConfig SessionConfig)
+void UPTWSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig)
 {
 	// FString ServerPath = FPaths::ConvertRelativePathToFull(FPaths::RootDir() + 
 	// 	TEXT("Engine/Binaries/Win64/UnrealEditor.exe"));
@@ -230,12 +230,12 @@ void UPTWSessionSubsystem::LaunchDedicatedServer(FSessionConfig SessionConfig)
 	// }, 15.0f, false);
 }
 
-void UPTWSessionSubsystem::CreateListenLevel(FName MapName, FSessionConfig SessionConfig)
+void UPTWSessionSubsystem::CreateListenLevel(FName MapName, FPTWSessionConfig SessionConfig)
 {
 	FString Options;
 	Options += FString::Printf(TEXT("?listen"));
-	Options += FString::Printf(TEXT("?%s=%d"), *SessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
-	Options += FString::Printf(TEXT("?%s=%d"), *SessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
+	Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
+	Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
 	UGameplayStatics::OpenLevel(this, MapName, true, Options);
 }
 
@@ -266,7 +266,7 @@ void UPTWSessionSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FSessionConfig SessionConfig)
+void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig)
 {
 	if(!SessionInterface.IsValid()) return;
 	

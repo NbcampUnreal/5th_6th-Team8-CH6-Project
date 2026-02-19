@@ -9,7 +9,7 @@
 #include "GameFramework/PlayerState.h"
 #include "PTW/UI/MainMenu/PTWServerListRow.h"
 #include "PTW/System/PTWSessionSubsystem.h"
-#include "System/Session/SessionConfig.h"
+#include "System/Session/PTWSessionConfig.h"
 
 #define LOCTEXT_NAMESPACE "ServerBrowser"
 void UPTWServerBrowser::NativeConstruct()
@@ -115,7 +115,7 @@ void UPTWServerBrowser::OnClickedServerMenuButton()
 
 void UPTWServerBrowser::OnClickedCreateServerButton()
 {
-	FSessionConfig SessionConfig;
+	FPTWSessionConfig SessionConfig;
 	if (IsValid(ServerNameEditableText))
 	{
 		SessionConfig.ServerName = ServerNameEditableText->GetText().ToString();

@@ -6,7 +6,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "Interfaces/OnlineSessionInterface.h"
-#include "Session/SessionConfig.h"
+#include "Session/PTWSessionConfig.h"
 #include "PTWSessionSubsystem.generated.h"
 
 USTRUCT(BlueprintType)
@@ -33,7 +33,7 @@ public:
 	
 	// 세셩 생성
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void CreateGameSession(FSessionConfig SessionConfig);
+	void CreateGameSession(FPTWSessionConfig SessionConfig);
 	
 	// 세션 참여
 	UFUNCTION(BlueprintCallable, Category = "Session")
@@ -45,11 +45,11 @@ public:
 	
 	// 데디케이티드 서버 생성 (unused)
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void LaunchDedicatedServer(FSessionConfig SessionConfig);
+	void LaunchDedicatedServer(FPTWSessionConfig SessionConfig);
 	
 	// 리슨서버로 레벨 이동
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void CreateListenLevel(FName MapName, FSessionConfig SessionConfig);
+	void CreateListenLevel(FName MapName, FPTWSessionConfig SessionConfig);
 	
 	// 세션 이탈 & 종료
 	void LeaveGameSession();
@@ -59,7 +59,7 @@ protected:
 	virtual void Deinitialize() override;
 	
 	// 세션 생성 성공 시 호출
-	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FSessionConfig SessionConfig);
+	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig);
 	
 	// 네트워크 오류가 발생했을 시 호출
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);

@@ -5,16 +5,16 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "PTW/System/PTWSessionSubsystem.h"
-#include "System/Session/SessionConfig.h"
+#include "System/Session/PTWSessionConfig.h"
 
 void UPTWServerListRow::Setup(const FOnlineSessionSearchResultBP& SearchResult)
 {
 	SessionData = SearchResult.OnlineSessionSearchResult;
 	const FSessionSettings& SessionSettings = SessionData.Session.SessionSettings.Settings;
 	
-	if (SessionSettings.Find(SessionKey::ServerName))
+	if (SessionSettings.Find(PTWSessionKey::ServerName))
 	{
-		FString ServerNameStr = SessionSettings.Find(SessionKey::ServerName)->ToString();
+		FString ServerNameStr = SessionSettings.Find(PTWSessionKey::ServerName)->ToString();
 		ServerName->SetText(FText::FromString(ServerNameStr));
 	}
 }

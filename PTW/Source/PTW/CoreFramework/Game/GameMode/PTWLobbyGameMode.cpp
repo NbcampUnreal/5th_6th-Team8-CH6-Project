@@ -12,7 +12,7 @@
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
 #include "System/PTWSessionSubsystem.h"
-#include "System/Session/SessionConfig.h"
+#include "System/Session/PTWSessionConfig.h"
 #include "System/Shop/PTWShopSubsystem.h"
 
 
@@ -33,8 +33,8 @@ void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options,
 			PTWGameInstance->bIsFirstLobby = false;
 		}
 	}
-	GameFlowRule.MaxPlayers = UGameplayStatics::GetIntOption(Options, SessionKey::MaxPlayers.ToString(), 16);
-	GameFlowRule.MaxRound  = UGameplayStatics::GetIntOption(Options, SessionKey::MaxRounds.ToString(), 5);
+	GameFlowRule.MaxPlayers = UGameplayStatics::GetIntOption(Options, PTWSessionKey::MaxPlayers.ToString(), 16);
+	GameFlowRule.MaxRound  = UGameplayStatics::GetIntOption(Options, PTWSessionKey::MaxRounds.ToString(), 5);
 }
 
 void APTWLobbyGameMode::InitGameState()

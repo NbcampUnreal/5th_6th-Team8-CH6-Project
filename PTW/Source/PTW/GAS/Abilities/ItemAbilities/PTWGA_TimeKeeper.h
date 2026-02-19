@@ -26,4 +26,7 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "TimeKeeper")
 	TSubclassOf<UGameplayEffect> AddTimeEffect;
+	
+private:
+	void ConsumeActiveItemIfPossible(const FGameplayAbilityActorInfo* ActorInfo) const;
 };

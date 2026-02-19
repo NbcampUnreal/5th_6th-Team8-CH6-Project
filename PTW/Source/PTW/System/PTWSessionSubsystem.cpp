@@ -274,7 +274,7 @@ void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasS
 	if (bWasSuccessful)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Steam Session Created Successfully!"));
-		CreateListenLevel("Server", SessionConfig);
+		CreateListenLevel("lobby", SessionConfig);
 	}
 	else
 	{

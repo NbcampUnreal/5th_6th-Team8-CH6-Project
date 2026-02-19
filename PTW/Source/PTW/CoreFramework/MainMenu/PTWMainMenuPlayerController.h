@@ -8,10 +8,6 @@
 
 class UPTWMainMenu;
 class UPTWLobbyBrowser;
-/**
- * 
- */
-
 
 UCLASS()
 class PTW_API APTWMainMenuPlayerController : public APlayerController

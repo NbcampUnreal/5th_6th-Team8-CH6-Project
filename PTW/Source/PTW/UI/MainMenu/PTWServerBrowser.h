@@ -4,29 +4,26 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "PTWLobbyBrowser.generated.h"
+#include "PTWServerBrowser.generated.h"
 
 class UBorder;
 class UButton;
 class UVerticalBox;
 class UEditableText;
-class UPTWLobbyListRow;
-/**
- * 
- */
+class UPTWServerListRow;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLobbyBackAction);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnServerBackAction);
 
 enum class EPTWRoundLimit : uint8;
 
 UCLASS()
-class PTW_API UPTWLobbyBrowser : public UUserWidget
+class PTW_API UPTWServerBrowser : public UUserWidget
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(BlueprintAssignable, Category= "Events")
-	FOnLobbyBackAction OnLobbyBackAction;
+	FOnServerBackAction OnServerBackAction;
 
 protected:
 	virtual void NativeConstruct() override;
@@ -36,13 +33,13 @@ protected:
 	void OnClickedBackButton();			// 메인메뉴로 이동
 	
 	UFUNCTION()
-	void OnClickedLobbyMenuButton();	// 로비 생성 전, 생성 메뉴 토글
+	void OnClickedServerMenuButton();	// 로비 생성 전, 생성 메뉴 토글
 	
 	UFUNCTION()
-	void OnClickedCreateLobbyButton();	// 로비 생성
+	void OnClickedCreateServerButton();	// 로비 생성
 	
 	UFUNCTION()
-	void OnClickedFindLobbyButton();	// 로비 찾기
+	void OnClickedFindServerButton();	// 로비 찾기
 	
 	UFUNCTION()
 	void OnClickedShortRoundButton();
@@ -51,23 +48,23 @@ protected:
 	void OnClickedLongRoundButton();
 	
 	UFUNCTION()
-	void OnFindSessionsComplete(const TArray<FBlueprintSessionResult>& SearchResults);
+	void OnFindSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults);
 	
 protected:
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UVerticalBox> LobbyListVerticalBox;
+	TObjectPtr<UVerticalBox> ServerListVerticalBox;
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UBorder> LobbyMenuBorder;
+	TObjectPtr<UBorder> ServerMenuBorder;
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UButton> LobbyMenuButton;
+	TObjectPtr<UButton> ServerMenuButton;
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UEditableText> LobbyNameEditableText;
+	TObjectPtr<UEditableText> ServerNameEditableText;
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UEditableText> LobbyMaxPlayerEditableText;
+	TObjectPtr<UEditableText> ServerMaxPlayerEditableText;
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> ShortRoundButton;
@@ -76,16 +73,16 @@ protected:
 	TObjectPtr<UButton> LongRoundButton;
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UButton> CreateLobbyButton;
+	TObjectPtr<UButton> CreateServerButton;
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UButton> FindLobbyButton;
+	TObjectPtr<UButton> FindServerButton;
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> BackButton;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Widgets")
-	TSubclassOf<UPTWLobbyListRow> LobbyListRowClass;
+	TSubclassOf<UPTWServerListRow> ServerListRowClass;
 	
 private:
 	EPTWRoundLimit RoundLimit;

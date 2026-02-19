@@ -1,17 +1,22 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
+
 #include "CoreMinimal.h"
-#include "FindSessionsCallbackProxy.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include "Session/SessionConfig.h"
 #include "PTWSessionSubsystem.generated.h"
-/**
- * 
- */
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSessionSearchComplete, const TArray<FBlueprintSessionResult>&, SearchResult);
+USTRUCT(BlueprintType)
+struct FOnlineSessionSearchResultBP
+{
+	GENERATED_USTRUCT_BODY()
+	FOnlineSessionSearchResult OnlineSessionSearchResult;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSessionSearchComplete, const TArray<FOnlineSessionSearchResultBP>&, SearchResult);
 
 UCLASS()
 class PTW_API UPTWSessionSubsystem : public UGameInstanceSubsystem
@@ -20,24 +25,25 @@ class PTW_API UPTWSessionSubsystem : public UGameInstanceSubsystem
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Session")
+	bool IsUsingSteamSubsystem();
+	
+	UFUNCTION(BlueprintCallable, Category = "Session")
 	void CreateGameSession(FSessionConfig SessionConfig);
 	
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void JoinGameSession(const FBlueprintSessionResult& SearchResult);
+	void JoinGameSession(const FOnlineSessionSearchResultBP& SearchResult);
 	
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void FindGameSession();
 	
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void LaunchDedicatedServer(const TArray<FSessionPropertyKeyPair>& LobbySettings,
-	int32 MaxPlayers, bool bIsPrivate);
+	void LaunchDedicatedServer(FSessionConfig SessionConfig);
 	
 	// 리슨서버로 레벨 생성하는 함수
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void CreateListenLevel(FName MapName, FSessionConfig SessionConfig);
 	
 	void LeaveGameSession();
-	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
@@ -59,5 +65,4 @@ protected:
 	FDelegateHandle DestroySessionDelegateHandle;
 	FDelegateHandle JoinSessionCompleteDelegateHandle;
 	FDelegateHandle FindSessionsCompleteDelegateHandle;
-	
 };

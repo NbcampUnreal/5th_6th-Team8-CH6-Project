@@ -2,7 +2,6 @@
 
 
 #include "PTWServerEntryGameMode.h"
-#include "BlueprintDataDefinitions.h"
 #include "Kismet/GameplayStatics.h"
 #include "System/PTWSessionSubsystem.h"
 
@@ -20,7 +19,6 @@ void APTWServerEntryGameMode::BeginPlay()
 				int32 MaxPlayers = UGameplayStatics::GetIntOption(OptionsString, TEXT("MaxPlayers"), 10);
 				bool bIsPrivate = UGameplayStatics::GetIntOption(OptionsString, TEXT("bIsPrivate"), 0) > 0;
 				
-				TArray<FSessionPropertyKeyPair> ReconstructedSettings;
 				
 				// FString MapSettingVal = UGameplayStatics::ParseOption(OptionsString, TEXT("LobbyName"));
 				// if (!MapSettingVal.IsEmpty())

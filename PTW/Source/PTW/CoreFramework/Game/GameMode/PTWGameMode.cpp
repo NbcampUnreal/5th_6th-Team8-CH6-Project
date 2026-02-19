@@ -91,6 +91,15 @@ void APTWGameMode::Logout(AController* Exiting)
 
 	if (!IsValid(PTWGameState)) return;
 
+	// 플레이어가 로그 아웃 했을 때 ready 상태였을 경우 ReadyPlayer 감소 
+	if (APTWPlayerState* PlayerState = Exiting->GetPlayerState<APTWPlayerState>())
+	{
+		if (PlayerState->bIsReadyToPlay)
+		{
+			PlayerState->bIsReadyToPlay = false;
+			ReadyPlayer = FMath::Max(0, ReadyPlayer - 1);
+		}
+	}
 	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
 		PTWScoreSubsystem->DecreasePlayerCount();
@@ -140,6 +149,11 @@ void APTWGameMode::CheckAllPlayersLoaded()
 	{
 		Multicast_CloseLoadingScreen();
 	}
+}
+
+void APTWGameMode::PlayerReadyToPlay(APlayerController* ReadyPlayer)
+{
+	ReadyPlayer++;
 }
 
 void APTWGameMode::Multicast_CloseLoadingScreen_Implementation()

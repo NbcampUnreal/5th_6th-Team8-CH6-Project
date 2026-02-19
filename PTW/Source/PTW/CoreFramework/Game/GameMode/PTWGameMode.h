@@ -52,10 +52,14 @@ public:
 	/** 모든 플레이어가 로딩되었는지 확인 */
 	void CheckAllPlayersLoaded();
 
+	/** 준비 완료된 플레이어 처리 **/
+	virtual void PlayerReadyToPlay(APlayerController* ReadyPlayer);
+	
 	/** 모든 클라이언트의 로딩 화면을 끄라는 RPC */
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_CloseLoadingScreen();
 
+	
 protected:
 	/** 지정한 시간(초) 기준으로 타이머를 시작 */
 	void StartTimer(float TimeDuration);
@@ -81,6 +85,7 @@ protected:
 	FTimerHandle TimerHandle;
 
 	bool bAllPlayerReady = false;
+	int32 ReadyPlayer = 0;
 	int32 AllPlayer = 0;
 private:
 	// 현재 라운드/플레이어 데이터를 Subsystem으로 저장

@@ -123,6 +123,14 @@ void APTWPlayerController::Client_OpenMainMenu_Implementation()
 	}
 }
 
+void APTWPlayerController::Server_NotifyReadyToPlay_Implementation()
+{
+	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
+	{
+		GameMode->PlayerReadyToPlay(this);
+	}
+}
+
 void APTWPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -461,6 +469,9 @@ void APTWPlayerController::PostSeamlessTravel()
 		// 위젯 재생성 및 뷰포트 재등록
 		UE_LOG(LogTemp, Error, TEXT("PTWPlayerController : PostSeamlessTravel"));
 		CreateUI();
+
+		// 서버에 SeamlessTravel을 했다고 알림
+		Server_NotifyReadyToPlay();
 	}
 }
 

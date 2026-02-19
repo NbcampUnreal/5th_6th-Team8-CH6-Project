@@ -29,7 +29,9 @@
 #include "UI/InGameUI/PTWDamageIndicator.h"
 #include "UI/MiniGame/PTWGameStartTimer.h"
 #include "Inventory/Instance/PTWItemInstance.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "System/PTWSessionSubsystem.h"
 #include "Weapon/PTWWeaponActor.h"
 
 void APTWPlayerController::StartSpectating()
@@ -107,6 +109,17 @@ void APTWPlayerController::Client_DisplayLoadingScreen_Implementation()
 	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
 	{
 		GI->DisplayLoadingScreen();
+	}
+}
+
+void APTWPlayerController::Client_OpenMainMenu_Implementation()
+{
+	UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>();
+	if (!GI) return;
+	
+	if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
+	{
+		SessionSubsystem->LeaveGameSession();
 	}
 }
 
@@ -267,10 +280,12 @@ void APTWPlayerController::BindGameStateDelegates()
 	// 델리게이트 바인드
 	GS->OnMiniGameCountdownChanged.AddDynamic(this, &ThisClass::OnMiniGameCountdownChanged);
 	GS->OnRoulettePhaseChanged.AddDynamic(this, &ThisClass::HandleRoulettePhaseChanged);
+	GS->OnGamePhaseChanged.AddDynamic(this, &ThisClass::HandleGamePhaseChanged);
 
 	// 현재상태 반영
 	OnMiniGameCountdownChanged(GS->IsMiniGameCountdown());
 	HandleRoulettePhaseChanged(GS->GetRouletteData());
+	HandleGamePhaseChanged(GS->GetCurrentGamePhase());
 }
 
 void APTWPlayerController::UnbindGameStateDelegates()
@@ -279,6 +294,7 @@ void APTWPlayerController::UnbindGameStateDelegates()
 	{
 		GS->OnMiniGameCountdownChanged.RemoveAll(this);
 		GS->OnRoulettePhaseChanged.RemoveAll(this);
+		GS->OnGamePhaseChanged.RemoveAll(this);
 	}
 }
 
@@ -341,6 +357,44 @@ void APTWPlayerController::HandleRoulettePhaseChanged(FPTWRouletteData RouletteD
 		break;
 
 	default:
+		break;
+	}
+}
+
+void APTWPlayerController::HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase)
+{
+	const UEnum* EnumPtr = StaticEnum<EPTWGamePhase>();
+	FString PhaseName = EnumPtr ? EnumPtr->GetNameStringByValue((int64)CurrentGamePhase) : TEXT("Invalid");
+
+	if (!UISubsystem)
+	{
+		return;
+	}
+
+	switch (CurrentGamePhase)
+	{
+	case EPTWGamePhase::GameResult:
+		if (RankingBoardClass)
+		{
+			UISubsystem->SetWidgetVisibility(RankingBoardClass, true);
+			bAbleRankingBoard = false;
+		}
+		break;
+
+	case EPTWGamePhase::MiniGameResult:
+		if (RankingBoardClass)
+		{
+			UISubsystem->SetWidgetVisibility(RankingBoardClass, true);
+			bAbleRankingBoard = false;
+		}
+		break;
+
+	default:
+		if (RankingBoardClass)
+		{
+			UISubsystem->SetWidgetVisibility(RankingBoardClass, false);
+			bAbleRankingBoard = true;
+		}		
 		break;
 	}
 }

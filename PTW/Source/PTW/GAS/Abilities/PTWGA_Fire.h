@@ -110,7 +110,7 @@ protected:
 	virtual bool CheckingTag(UAbilitySystemComponent* ASC);
 	
 private:
-	float MaxRange = 5000.0f;
+	float MaxRange = 10000.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "IgnoreTag")
 	FGameplayTag IgnoreTag;

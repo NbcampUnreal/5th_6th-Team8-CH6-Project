@@ -64,7 +64,10 @@ public:
 	void Client_PrepareLoadingScreen(ELoadingScreenType Type, FName MapRowName);
 	UFUNCTION(Client, Reliable)
 	void Client_DisplayLoadingScreen();
-	
+
+	/* 메인 메뉴로 이동 */
+	UFUNCTION(Client, Reliable)
+	void Client_OpenMainMenu();
 
 protected:
 	virtual void BeginPlay() override;
@@ -91,6 +94,9 @@ protected:
 	/* GameState의 룰렛 상태 변경 델리게이트 수신 함수 */
 	UFUNCTION()
 	void HandleRoulettePhaseChanged(FPTWRouletteData RouletteData);
+
+	/* 페이즈 변경 델리게이트 수신 함수 */
+	void HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase);
 
 	virtual void SetupInputComponent() override;
 	virtual void PostSeamlessTravel() override;

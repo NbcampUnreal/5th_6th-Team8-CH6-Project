@@ -47,7 +47,7 @@ APTWBombActor::APTWBombActor()
 	// GAS
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Full);
 
 	BombAttributeSet = CreateDefaultSubobject<UPTWBombAttributeSet>(TEXT("BombAttributeSet"));
 	
@@ -148,8 +148,8 @@ void APTWBombActor::SetBombOwner(APawn* NewOwnerPawn)
 
 	const FString NewName = NewOwnerPawn && NewOwnerPawn->GetPlayerState()
 		? NewOwnerPawn->GetPlayerState()->GetPlayerName() : TEXT("None");
-
-	//UE_LOG(LogTemp, Warning, TEXT("[Bomb] SetBombOwner: %s -> %s"), *OldName, *NewName);
+	
+	bTimeExpiredNotified = false;
 
 	BombOwnerPawn = NewOwnerPawn;
 	OnRep_BombOwnerPawn();
@@ -183,6 +183,18 @@ void APTWBombActor::AttachToOwnerPawn()
 	}
 }
 
+void APTWBombActor::Multicast_PlayExplosionCue_Implementation(const FVector& Loc, AActor* InstigatorActor)
+{
+	if (AbilitySystemComponent && ExplosionCueTag.IsValid())
+	{
+		FGameplayCueParameters CueParams;
+		CueParams.Location   = Loc;
+		CueParams.Instigator = InstigatorActor ? InstigatorActor : this;
+
+		AbilitySystemComponent->ExecuteGameplayCue(ExplosionCueTag, CueParams);
+	}
+}
+
 void APTWBombActor::RequestExplode(AActor* InstigatorActor)
 {
 	if (!HasAuthority())
@@ -202,17 +214,14 @@ void APTWBombActor::RequestExplode(AActor* InstigatorActor)
 	const float FinalDamage = BaseBombDamage;
 	ApplyExplosionDamage(OverlapResults, FinalDamage, InstigatorActor);
 
-	// 폭발 큐 실행
-	if (AbilitySystemComponent && ExplosionCueTag.IsValid())
-	{
-		FGameplayCueParameters CueParams;
-		CueParams.Location = GetActorLocation();
-		CueParams.Instigator = InstigatorActor ? InstigatorActor : this;
+	Multicast_PlayExplosionCue(GetActorLocation(), InstigatorActor);
+	
+	SetActorEnableCollision(false);
+	SetActorHiddenInGame(true);
 
-		AbilitySystemComponent->ExecuteGameplayCue(ExplosionCueTag, CueParams);
-	}
+	if (AudioComponent && AudioComponent->IsPlaying()) AudioComponent->Stop();
+	if (AudioLoopComponent && AudioLoopComponent->IsPlaying()) AudioLoopComponent->Stop();
 
-	Destroy();
 }
 
 void APTWBombActor::ServerRequestExplode_Implementation(AActor* InstigatorActor)
@@ -237,7 +246,6 @@ bool APTWBombActor::ExplosionOverlapSetter(TArray<FOverlapResult>& OverlapResult
 		CollisionParams
 	);
 
-	DrawDebugSphere(GetWorld(), ExplosionLocation, ExplosionRad, 32, FColor::Red, false, 2.0f);
 	return bHasOverlap;
 }
 
@@ -315,6 +323,16 @@ void APTWBombActor::UpdateBombEffects(float NewTime)
 		if (AudioComponent->IsPlaying()) AudioComponent->Stop();
 		if (AudioLoopComponent->IsPlaying()) AudioLoopComponent->Stop();
 		if (BombDynamicMat) BombDynamicMat->SetScalarParameterValue(FName("BlinkSpeed"), 0.0f);
+		
+		if (HasAuthority() && !bTimeExpiredNotified)
+		{
+			bTimeExpiredNotified = true;
+
+			AActor* InstigatorActor = BombOwnerPawn ? Cast<AActor>(BombOwnerPawn) : this;
+			OnBombTimeExpired.Broadcast(InstigatorActor);
+		}
+
+		
 		return;
 	}
 

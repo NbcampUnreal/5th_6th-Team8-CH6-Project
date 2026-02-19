@@ -69,4 +69,10 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> BombAttachEffect;
+	
+	void BindBombActorEvents();
+	
+	void HandleBombTimeExpired(AActor* InstigatorActor);
+	
+	bool bRoundEndRequested = false;
 };

@@ -49,8 +49,14 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 	{
 		GS->SetbMiniGameCountdown(false);
 	}
+	
+	CurrentRound++;
 
+	bRoundEndRequested = false;
+	
 	AssignRandomBombOwner();
+	
+	CleanupBombActor();
 
 	if (!BombActor && BombActorClass)
 	{
@@ -64,7 +70,15 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 	if (BombActor && BombOwnerPS)
 	{
 		APawn* OwnerPawn = BombOwnerPS->GetPawn();
-		BombActor->SetBombOwner(OwnerPawn);
+		if (OwnerPawn)
+		{
+			BombActor->SetBombOwner(OwnerPawn);
+		}
+	}
+	
+	if (HasAuthority() && BombActor)
+	{
+		BombActor->OnBombTimeExpired.AddUObject(this, &ThisClass::HandleBombTimeExpired);
 	}
 
 	//UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Play Start"), CurrentRound);
@@ -73,9 +87,18 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 	//GetWorldTimerManager().SetTimer(RoundTimerHandle, this, &APTWBombMiniGameMode::EndTimer, RoundPlayTime, false);
 }
 
+void APTWBombMiniGameMode::HandleBombTimeExpired(AActor* InstigatorActor)
+{
+	if (!HasAuthority()) return;
+	if (bRoundEndRequested) return;
+
+	bRoundEndRequested = true;
+	EndTimer();
+}
+
 void APTWBombMiniGameMode::EndTimer()
 {
-	//UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Explosion Timing"), CurrentRound);
+	GetWorldTimerManager().ClearTimer(RoundTimerHandle);
 
 	Super::EndTimer();
 	
@@ -122,6 +145,9 @@ void APTWBombMiniGameMode::GetAlivePlayerStates(TArray<APTWPlayerState*>& OutAli
 		if (PTWPS->IsOnlyASpectator()) continue;
 		if (PTWPS->IsInactive()) continue;
 
+		APawn* Pawn = PTWPS->GetPawn();
+		if (!Pawn) continue;
+		
 		OutAlive.Add(PTWPS);
 	}
 }

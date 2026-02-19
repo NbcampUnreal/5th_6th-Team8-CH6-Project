@@ -9,7 +9,7 @@
 
 UPTWAnimNotify_Footstep::UPTWAnimNotify_Footstep()
 {
-	NotifyColor = FColor(196, 142, 255, 255);
+
 }
 
 void UPTWAnimNotify_Footstep::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)

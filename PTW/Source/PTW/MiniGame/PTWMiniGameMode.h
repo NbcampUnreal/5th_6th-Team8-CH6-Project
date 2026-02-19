@@ -81,6 +81,13 @@ protected:
 	void StartResultSequence();
 	void FinishEndGameSequence();
 
+	// FIXME : 임시로 관전상태 해제테스트
+	/* 플레이어 관전상태 해제 */
+	void ExitSpectatorMode(AController* Controller);
+
+	/* 인벤토리 아이템에 따른 아이템 지급 함수 */
+	void SpawnPlayerSavedItems(AController* Controller);
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")
@@ -127,7 +134,7 @@ private:
 
 	/* 코인 생성 주기 (초) */
 	UPROPERTY(EditDefaultsOnly)
-	float CoinSpawnInterval = 8.0f;
+	float CoinSpawnInterval = 3.0f;
 	
 	int32 PlayerStartCount = 0;
 

@@ -81,6 +81,9 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 			return;
 		}
 	}*/
+
+	//FIXME : 임시로 난입플레이어도 관전상태해제
+	ExitSpectatorMode(NewPlayer);
 	
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	
@@ -92,16 +95,31 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	
 	//SetInputBlock(true);
 	
+
 	PTWGameState->AddRankedPlayer(PlayerState);
+
+	//FIXME : 임시로 난입플레이어도 리스타트 플레이어 시키기
+	if (NewPlayer->GetPawn() == nullptr)
+	{
+		RestartPlayer(NewPlayer);
+	}
 
 	if (PTWGameState->PlayerArray.Num() >= AllPlayer)
 	{
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
-		
+
 		FTimerHandle LoadingDelayTimer;
 		GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWMiniGameMode::StartGame, 3.f);
 	}
+	//if (PTWGameState->PlayerArray.Num() >= AllPlayer)
+	//{
+	//	if (bAllPlayerReady) return;
+	//	bAllPlayerReady = true;
+	//	
+	//	FTimerHandle LoadingDelayTimer;
+	//	GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWMiniGameMode::StartGame, 3.f);
+	//}
 	
 }
 
@@ -301,6 +319,7 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	ApplyMiniGameTag(NewPlayer);
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);
+	//SpawnPlayerSavedItems(NewPlayer);
 	
 	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
 	{
@@ -311,8 +330,9 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 
 void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	Super::HandleSeamlessTravelPlayer(C);
+	ExitSpectatorMode(C);
 	
+	Super::HandleSeamlessTravelPlayer(C);
 }
 
 void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
@@ -380,6 +400,8 @@ void APTWMiniGameMode::UpdatePlayerRoundData(APlayerState* DeadPlayerState, APla
 			DeadPlayerData->SetDeathOrder(CurrentDeathOrder++);
 		}
 	}
+	
+	if (DeadPlayerState == KillPlayerState) return;
 
 	if (IsValid(KillPlayerState))
 	{
@@ -476,7 +498,7 @@ void APTWMiniGameMode::StartResultSequence()
 {
 	UWorld* World = GetWorld();
 	if (!World) return;
-
+	
 	AActor* ResultCamera = nullptr;
 	TArray<AActor*> FoundActors;
 
@@ -490,10 +512,13 @@ void APTWMiniGameMode::StartResultSequence()
 	AActor* LoseSpot = nullptr;
 	UGameplayStatics::GetAllActorsWithTag(World, FName("LoseSpot"), FoundActors);
 	if (FoundActors.Num() > 0) LoseSpot = FoundActors[0];
-
+	
+	if (!PTWGameState) return;
+	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGameResult);
+	
 	int32 WinnerCount = 0;
 	int32 LoserCount = 0;
-
+	
 	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
 	{
 		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
@@ -563,3 +588,44 @@ void APTWMiniGameMode::FinishEndGameSequence()
 	TravelLevel();
 }
 
+// FIXME : 임시로 관전상태 해제테스트
+void APTWMiniGameMode::ExitSpectatorMode(AController* Controller)
+{
+	APlayerController* PC = Cast<APlayerController>(Controller);
+	if (!PC) return;
+
+	if (PC->GetStateName() == NAME_Spectating)
+	{
+		PC->ChangeState(NAME_Playing);
+	}
+
+	if (PC->PlayerState)
+	{
+		PC->PlayerState->SetIsSpectator(false);
+		PC->PlayerState->SetIsOnlyASpectator(false);
+	}
+
+	PC->SetViewTarget(PC);
+}
+
+
+void APTWMiniGameMode::SpawnPlayerSavedItems(AController* Controller)
+{
+	if (!Controller) return;
+
+	APTWPlayerState* PS = Controller->GetPlayerState<APTWPlayerState>();
+	APawn* Pawn = Controller->GetPawn();
+
+	if (PS && Pawn)
+	{
+		if (UPTWItemSpawnManager* SpawnSys = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+		{
+			SpawnSys->SpawnAndGiveItems(PS);
+			UE_LOG(LogTemp, Log, TEXT("[GameMode] SpawnPlayerSavedItems Success for %s"), *PS->GetPlayerName());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[GameMode] Failed to Spawn Items. PS or Pawn is invalid."));
+	}
+}

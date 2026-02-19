@@ -3,12 +3,16 @@
 
 #include "PTWLobbyGameMode.h"
 
+#include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 #include "MiniGame/PTWMiniGameMapRow.h"
 #include "MiniGame/Data/PTWRoundEvent.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
+#include "System/PTWSessionSubsystem.h"
+#include "System/Session/SessionConfig.h"
 #include "System/Shop/PTWShopSubsystem.h"
 
 
@@ -29,7 +33,8 @@ void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options,
 			PTWGameInstance->bIsFirstLobby = false;
 		}
 	}
-	
+	GameFlowRule.MaxPlayers = UGameplayStatics::GetIntOption(Options, SessionKey::MaxPlayers.ToString(), 16);
+	GameFlowRule.MaxRound  = UGameplayStatics::GetIntOption(Options, SessionKey::MaxRounds.ToString(), 5);
 }
 
 void APTWLobbyGameMode::InitGameState()
@@ -94,8 +99,7 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 	if (!PTWPlayerState) return;
 
 	PTWPlayerState->ResetInventoryItemId();
-	//RestartPlayer(NewPlayer);
-
+	
 	// 골드 지급
 	FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
 	PlayerData.Gold += RoundClearBonusGold;
@@ -113,13 +117,16 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 			GetWorldTimerManager().SetTimer(LoadingDealyTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
 		}
 	}
+
+	RestartPlayer(NewPlayer);
 }
 
 void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	ExitSpectorMode(C);
-	
 	Super::HandleSeamlessTravelPlayer(C);
+	
+	ExitSpectorMode(C);
+	RestartPlayer(C);
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)
@@ -141,6 +148,14 @@ void APTWLobbyGameMode::StartGameLobby()
 {
 	ClearTimer();
 
+	// 최대 라운드에 도달 하면 게임 종료
+	if (PTWGameState->GetCurrentRound() >= GameFlowRule.MaxRound)
+	{
+		EndGame();
+		
+		return;
+	}
+	
 	PTWGameState->AdvanceRound();
 	
 	if (!IsValid(PTWGameState)) return;
@@ -150,8 +165,6 @@ void APTWLobbyGameMode::StartGameLobby()
 	{
 		for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 		{
-			
-			
 			if (!PlayerState) continue;
 			
 			AController* Controller = PlayerState->GetOwningController();
@@ -203,6 +216,7 @@ void APTWLobbyGameMode::ExitSpectorMode(AController* Controller)
 
 	// 1. 관전 상태 및 대기 상태 강제 종료
 	PC->ChangeState(NAME_Playing);
+	PC->ClientGotoState(NAME_Playing);
 	
 	// 2. PlayerState 플래그 초기화
 	if (PC->PlayerState)
@@ -219,6 +233,40 @@ void APTWLobbyGameMode::StartRoulette()
 	
 	StartMapRoulette();
 }
+
+void APTWLobbyGameMode::EndGame()
+{
+	if (!PTWGameState) return;
+
+	PTWGameState->SetCurrentPhase(EPTWGamePhase::GameResult);
+
+	FTimerHandle EndGameTimer;
+	GetWorldTimerManager().SetTimer(EndGameTimer, this, &APTWLobbyGameMode::ReturnToMainMenu, 15.f);
+}
+
+void APTWLobbyGameMode::ReturnToMainMenu()
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		{
+			if (!PC->IsLocalController())
+			{
+				PC->Client_OpenMainMenu();
+			}
+		}
+	}
+	// 리슨 서버일 경우 호스트는 따로 구현
+	UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>();
+	if (!GI) return;
+	
+	if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
+	{
+		SessionSubsystem->LeaveGameSession();
+	}
+}
+
+
 
 void APTWLobbyGameMode::SelectedRandomMap()
 {

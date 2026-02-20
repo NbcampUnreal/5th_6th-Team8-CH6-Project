@@ -21,7 +21,7 @@ bool AGC_Stealth::OnActive_Implementation(AActor* MyTarget, const FGameplayCuePa
 		UMaterialInstanceDynamic* DynMat = Mesh->CreateDynamicMaterialInstance(i);
 		if (DynMat)
 		{
-			DynMat->SetScalarParameterValue(TEXT("Opacity"), 0.2f);
+			DynMat->SetScalarParameterValue(TEXT("Opacity"), 0.05f);
 		}
 	}
 	

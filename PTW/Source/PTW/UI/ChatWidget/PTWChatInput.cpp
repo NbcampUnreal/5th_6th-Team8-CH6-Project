@@ -16,23 +16,17 @@ void UPTWChatInput::HandleEnterPressed()
 
 	Edit_ChatInput->SetText(FText::GetEmpty());
 
+	APTWPlayerController* PC = Cast<APTWPlayerController>(GetOwningPlayer());
+	if (!PC) return;
+
 	// 메세지가 있으면 서버로 전송
 	if (!Message.IsEmpty())
 	{
-		if (APTWPlayerController* PC = Cast<APTWPlayerController>(GetOwningPlayer()))
-		{
-			PC->Server_SendChatMessage(Message);
-		}
+		PC->Server_SendChatMessage(Message);
 	}
 
 	// 전송 후 입력창 닫기
-	if (APTWPlayerController* PC = Cast<APTWPlayerController>(GetOwningPlayer()))
-	{
-		if (UPTWUISubsystem* UISub = PC->GetLocalPlayer()->GetSubsystem<UPTWUISubsystem>())
-		{
-			UISub->PopWidget();
-		}
-	}
+	PC->OnChatInputFinished();
 }
 
 void UPTWChatInput::NativeConstruct()

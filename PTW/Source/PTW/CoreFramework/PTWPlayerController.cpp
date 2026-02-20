@@ -93,7 +93,11 @@ void APTWPlayerController::OnChatInputFinished()
 		{
 			ChatList->SetInteractionMode(false);
 		}
+
+		UISubsystem->PopWidget();
 	}
+
+	bAbleChat = true;
 }
 
 void APTWPlayerController::Client_PrepareLoadingScreen_Implementation(ELoadingScreenType Type, FName MapRowName)
@@ -496,6 +500,7 @@ void APTWPlayerController::CreateUI()
 				ChatListWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 			}
 			UISubsystem->SetChatListClass(ChatListClass);
+			bAbleChat = true;
 		}
 		if (UISubsystem)
 		{
@@ -554,11 +559,7 @@ void APTWPlayerController::OnChatPressed()
 	if (!UISubsystem || !ChatInputClass || !ChatListClass) return;
 
 	/* 이미 채팅 입력창이 떠 있는지 확인 */
-	if (UISubsystem->IsWidgetInStack(ChatInputClass))
-	{
-		return;
-	}
-	else
+	if (bAbleChat)
 	{
 		/* 채팅창 새로 열기(Push) */
 		UISubsystem->PushWidget(ChatInputClass, EUIInputPolicy::GameAndUI);
@@ -568,6 +569,8 @@ void APTWPlayerController::OnChatPressed()
 		{
 			ChatList->SetInteractionMode(true);
 		}
+
+		bAbleChat = false;
 	}
 }
 

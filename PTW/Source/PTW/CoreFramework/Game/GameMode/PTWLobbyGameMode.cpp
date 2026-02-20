@@ -88,15 +88,39 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
-void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+void APTWLobbyGameMode::Logout(AController* Exiting)
 {
-	ExitSpectorMode(NewPlayer);
+	Super::Logout(Exiting);
+	
+	// 로그 아웃하면 gamestate portal 부분 수정
+}
 
-	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	Super::HandleSeamlessTravelPlayer(C);
 
-	if (!IsValid(PTWGameState) || !NewPlayer) return;
+	if (!C) return;
 
-	APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
+	APlayerController* PlayerController = Cast<APlayerController>(C);
+	if (!PlayerController) return;
+	
+	if (APawn* OldPawn = PlayerController->GetPawn())
+	{
+		OldPawn->DetachFromControllerPendingDestroy();
+		OldPawn->Destroy();
+	}
+
+	ExitSpectorMode(PlayerController);
+	RestartPlayer(PlayerController);
+}
+
+void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* ReadyPlayerController)
+{
+	Super::PlayerReadyToPlay(ReadyPlayerController);
+	
+	if (!IsValid(PTWGameState) || !ReadyPlayerController) return;
+	
+	APTWPlayerState* PTWPlayerState = ReadyPlayerController->GetPlayerState<APTWPlayerState>();
 	if (!PTWPlayerState) return;
 
 	// 데이터 초기화 및 골드 지급
@@ -105,56 +129,14 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 	PlayerData.Gold += RoundClearBonusGold;
 	PTWPlayerState->SetPlayerData(PlayerData);
 	
-	if (NewPlayer->GetPawn() == nullptr)
+	if (ReadyPlayer >= AllPlayer)
 	{
-		RestartPlayer(NewPlayer);
-	}
-	
-	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::Loading)
-	{
-		if (AllPlayer <= PTWGameState->PlayerArray.Num())
-		{
-			if (bAllPlayerReady) return;
-			bAllPlayerReady = true;
-			FTimerHandle LoadingDealyTimer;
-			GetWorldTimerManager().SetTimer(LoadingDealyTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
-		}
+		if (bAllPlayerReady) return;
+		bAllPlayerReady = true;
+		FTimerHandle LoadingDealyTimer;
+		GetWorldTimerManager().SetTimer(LoadingDealyTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
 	}
 }
-
-void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
-{
-	Super::HandleSeamlessTravelPlayer(C);
-	
-	APlayerController* PlayerController  = Cast<APlayerController>(C);
-	if (!PlayerController) return;
-	
-	ExitSpectorMode(PlayerController);
-	
-	FTimerHandle RestartTimerHandle;
-	GetWorldTimerManager().SetTimer(RestartTimerHandle, [this, PlayerController]()
-	{
-		if (PlayerController->GetPawn() == nullptr)
-		{
-			RestartPlayer(PlayerController);
-		}
-	}, 0.2f, false);
-}
-
-void APTWLobbyGameMode::Logout(AController* Exiting)
-{
-	Super::Logout(Exiting);
-	
-	if (!IsValid(PTWGameState)) return;
-
-	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
-	{
-		PTWScoreSubsystem->DecreasePlayerCount();
-	}
-
-	// 로그 아웃하면 gamestate portal 부분 수정
-}
-
 
 void APTWLobbyGameMode::StartGameLobby()
 {

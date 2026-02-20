@@ -156,7 +156,19 @@ void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* P
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Avatar); 
 	
-	GetWorld()->LineTraceSingleByChannel(HitResult, StartLoc,End, ECC_WeaponAttack, Params);
+	float SweepRad = 20.0f;
+	
+	FCollisionShape SphereShape = FCollisionShape::MakeSphere(SweepRad);
+	
+	GetWorld()->SweepSingleByChannel(
+		HitResult,
+		StartLoc,
+		End,
+		FQuat::Identity,
+		ECC_WeaponAttack,
+		SphereShape,
+		Params
+		);
 }
 
 bool UPTWGA_Fire::ValidateHitResult(FHitResult& HitResult)

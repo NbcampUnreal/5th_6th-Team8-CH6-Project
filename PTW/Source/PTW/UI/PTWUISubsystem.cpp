@@ -98,15 +98,6 @@ void UPTWUISubsystem::PopWidget()
 		TopEntry.Widget->RemoveFromParent();
 	}
 
-	// 채팅위젯 닫을때 감지
-	if (TopEntry.Widget && ChatInputClass && TopEntry.Widget->GetClass() == ChatInputClass)
-	{
-		if (UPTWChatList* ChatList = Cast<UPTWChatList>(GetOrCreateWidget(ChatListClass)))
-		{
-			ChatList->SetInteractionMode(false);
-		}
-	}
-
 	// 다음 입력 정책 결정
 	if (WidgetStack.IsEmpty())
 	{

@@ -673,6 +673,17 @@ public:
 	}
 };
 
+void FOnlineAsyncTaskManagerSteam::OnSteamServersConnectedGS(SteamServersConnected_t* CallbackData)
+{
+	FOnlineSessionSteamPtr SessionInt = StaticCastSharedPtr<FOnlineSessionSteam>(SteamSubsystem->GetSessionInterface());
+	if (SessionInt.IsValid())
+	{
+		SessionInt->bSteamworksGameServerConnected = true;
+		SessionInt->GameServerSteamId =FUniqueNetIdSteam::Create(SteamGameServer()->GetSteamID());
+		UE_LOG(LogTemp, Warning, TEXT("OnSteamServersConnectedGS: %s"), *SessionInt->GameServerSteamId->ToString());
+	}
+}
+
 /**
  *	GameServer API version of disconnected from Steam backend callback
  */

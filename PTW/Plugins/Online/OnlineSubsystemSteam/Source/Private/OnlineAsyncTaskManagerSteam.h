@@ -47,6 +47,8 @@ private:
 	STEAM_CALLBACK(FOnlineAsyncTaskManagerSteam, OnSteamServersConnected, SteamServersConnected_t, OnSteamServersConnectedCallback);
 	/** Delegate registered with Steam to trigger when a user (client API) is disconnected from the Steam servers.  All realtime services are disabled until a connect event above */
 	STEAM_CALLBACK(FOnlineAsyncTaskManagerSteam, OnSteamServersDisconnected, SteamServersDisconnected_t, OnSteamServersDisconnectedCallback);
+	/** Delegate registered with Steam to trigger when a server (gameserver API) is connected to the Steam servers.  Initiated with a LogOnAnonymous() call */
+	STEAM_GAMESERVER_CALLBACK(FOnlineAsyncTaskManagerSteam, OnSteamServersConnectedGS, SteamServersConnected_t, OnSteamServersConnectedGSCallback);
 	/** Delegate registered with Steam to trigger when a server (gameserver API) is disconnected from Steam.  Will occur on DestroySession() */
 	STEAM_GAMESERVER_CALLBACK(FOnlineAsyncTaskManagerSteam, OnSteamServersDisconnectedGS, SteamServersDisconnected_t, OnSteamServersDisconnectedGSCallback);
 	/** Delegate registered with Steam to trigger when a server (gameserver API) connection fails. */
@@ -102,6 +104,7 @@ public:
 	FOnlineAsyncTaskManagerSteam(class FOnlineSubsystemSteam* InOnlineSubsystem) :
 		OnSteamServersConnectedCallback(this, &FOnlineAsyncTaskManagerSteam::OnSteamServersConnected),
 		OnSteamServersDisconnectedCallback(this, &FOnlineAsyncTaskManagerSteam::OnSteamServersDisconnected),
+		OnSteamServersConnectedGSCallback(this, &FOnlineAsyncTaskManagerSteam::OnSteamServersConnectedGS),
 		OnSteamServersDisconnectedGSCallback(this, &FOnlineAsyncTaskManagerSteam::OnSteamServersDisconnectedGS),
 		OnSteamServersConnectFailureGSCallback(this, &FOnlineAsyncTaskManagerSteam::OnSteamServersConnectFailureGS),
 		OnPolicyResponseGSCallback(this, &FOnlineAsyncTaskManagerSteam::OnPolicyResponseGS),

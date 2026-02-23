@@ -322,14 +322,43 @@ void UPTWItemSpawnManager::SpawnCoinInRandomVolume()
 
 void UPTWItemSpawnManager::DropWeaponSpawn(UPTWWeaponInstance* WeaponInstance)
 {
+	AActor* Owner = WeaponInstance->GetTypedOuter<AActor>();
+	if (!Owner) return;
+	
+	FVector ForwardOffset = Owner->GetActorLocation() + (Owner->GetActorForwardVector() * 70.0f);
+	FVector SpawnLocation = GetGroundLocation(ForwardOffset);
+	SpawnLocation.Z += 10.0f;
+
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	
-	APTWWeaponActor* SpawnWeaponActor = GetWorld()->SpawnActor<APTWWeaponActor>(WeaponInstance->ItemDef->WeaponClass, SpawnParams);
+	APTWWeaponActor* SpawnWeaponActor = GetWorld()->SpawnActor<APTWWeaponActor>(WeaponInstance->ItemDef->WeaponClass, 
+			SpawnLocation, 
+			Owner->GetActorRotation(), 
+			SpawnParams
+		);
 	
 	if (SpawnWeaponActor && WeaponInstance)
 	{
 		WeaponInstance->Rename(nullptr, SpawnWeaponActor); //Outer 재설정
 		SpawnWeaponActor->SetWeaponItemInstance(WeaponInstance);
+		SpawnWeaponActor->SetIsDrop(true);
 	}
+}
+
+FVector UPTWItemSpawnManager::GetGroundLocation(FVector StartLocation)
+{
+	FHitResult HitResult;
+	FVector EndLocation = StartLocation + (FVector::UpVector * -500.0f);
+    
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(GetTypedOuter<AActor>()); 
+
+	// LineTrace 실행
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, Params))
+	{
+		return HitResult.Location;
+	}
+
+	return StartLocation; 
 }

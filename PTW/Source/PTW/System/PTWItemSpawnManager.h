@@ -48,6 +48,9 @@ public:
 	void SpawnCoinInRandomVolume();
 	
 	void DropWeaponSpawn(UPTWWeaponInstance* WeaponInstance);
+
+	FVector GetGroundLocation(FVector StartLocation);
+	
 protected:
 	/** 스폰 데이터 테이블 (RowName: ItemID, Value: ItemDefinition) */
 	UPROPERTY()

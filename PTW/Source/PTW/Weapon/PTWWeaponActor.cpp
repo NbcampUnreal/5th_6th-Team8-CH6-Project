@@ -1,9 +1,8 @@
 ﻿
 #include "PTWWeaponActor.h"
-
-#include "AbilitySystemComponent.h"
-#include "PTWWeaponData.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "Engine/ActorChannel.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -65,6 +64,7 @@ void APTWWeaponActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(APTWWeaponActor, bIsFirstPersonWeapon);
+	DOREPLIFETIME(APTWWeaponActor, WeaponItemInstance);
 }
 
 void APTWWeaponActor::SetFirstPersonMode(bool bIsFirstPerson)
@@ -80,6 +80,30 @@ void APTWWeaponActor::BeginPlay()
 {
 	Super::BeginPlay();
 	ApplyVisualPerspective();
+}
+
+void APTWWeaponActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (WeaponItemInstance)
+	{
+		WeaponItemInstance->SpawnedWeapon1P = nullptr;
+		WeaponItemInstance->SpawnedWeapon3P = nullptr;
+	}
+	
+	Super::EndPlay(EndPlayReason);
+}
+
+bool APTWWeaponActor::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch,
+	FReplicationFlags* RepFlags)
+{
+	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+	
+	if (WeaponItemInstance)
+	{
+		WroteSomething |= Channel->ReplicateSubobject(WeaponItemInstance, *Bunch, *RepFlags);
+	}
+	
+	return WroteSomething;
 }
 
 
@@ -99,6 +123,11 @@ float APTWWeaponActor::PlayWeaponMontage(UAnimMontage* MontageToPlay)
 		}
 	}
 	return 0.0f;
+}
+
+void APTWWeaponActor::SetWeaponItemInstance(UPTWWeaponInstance* ItemInstance)
+{
+	this->WeaponItemInstance = ItemInstance;
 }
 
 void APTWWeaponActor::HandleReloadEvent(EReloadEventAction ActionType)

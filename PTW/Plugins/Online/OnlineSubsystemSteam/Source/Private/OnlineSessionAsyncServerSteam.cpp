@@ -28,15 +28,15 @@
  * matchmaking will not work for your dedicated server
  */
 #ifndef UE_PROJECT_STEAMPRODUCTNAME
-#define UE_PROJECT_STEAMPRODUCTNAME "unrealdk"
+#define UE_PROJECT_STEAMPRODUCTNAME "P2W : The Party Show"
 #endif //UE_PROJECT_STEAMPRODUCTNAME
 
 #ifndef UE_PROJECT_STEAMGAMEDIR
-#define UE_PROJECT_STEAMGAMEDIR "unrealtest"
+#define UE_PROJECT_STEAMGAMEDIR "P2W  The Party Show"
 #endif // UE_PROJECT_STEAMGAMEDIR
 
 #ifndef UE_PROJECT_STEAMGAMEDESC
-#define UE_PROJECT_STEAMGAMEDESC "Unreal Test!"
+#define UE_PROJECT_STEAMGAMEDESC "P2W : The Party Show"
 #endif // UE_PROJECT_STEAMGAMEDESC
 
 /**

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -27,6 +27,8 @@ protected:
 	UFUNCTION()
 	void ReturnToMainMenu();
 	UFUNCTION()
+	void OnClickedOptionsButton();
+	UFUNCTION()
 	void OnClickedExitButton();
 	
 protected:
@@ -47,4 +49,7 @@ protected:
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWServerBrowser> ServerBrowser;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> OptionsMenuClass;
 };

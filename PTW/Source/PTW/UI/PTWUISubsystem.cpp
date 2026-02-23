@@ -101,7 +101,7 @@ void UPTWUISubsystem::PopWidget()
 	// 다음 입력 정책 결정
 	if (WidgetStack.IsEmpty())
 	{
-		ApplyInputPolicy(EUIInputPolicy::GameOnly);
+		ApplyInputPolicy(DefaultInputPolicy);
 	}
 	else
 	{

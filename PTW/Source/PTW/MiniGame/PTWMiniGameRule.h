@@ -17,7 +17,7 @@ struct FPTWTimerRule
 
 	/** 타이머 사용 여부*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
-	bool bUserTimer = true;
+	bool bUseTimer = true;
 	
 	/** 라운드 진행 횟수 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
@@ -34,21 +34,22 @@ struct FPTWTimerRule
 	/** 매 라운드 시작 대기 시간 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer")
 	float CountDown = 10;
+
+	
 };
 
 USTRUCT(BlueprintType)
-struct FPTWKillRule
+struct FPTWScoreRule
 {
 	GENERATED_BODY()
-
-	/** 킬 1회당 점수 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Kill")
-	int32 KillScore = 1;
 	
-	/** 데스 1회당 감점 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Kill")
-	int32 DeathPenalty = 0;
+	/** 미니게임 내의 점수 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Score")
+	int32 MiniGameScore = 1;
 	
+	/** 미니 게임 종료 후 순위/생존 여부에 따라 부여되는 점수*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Score")
+	int32 TotalScore = 1;
 };
 
 /**
@@ -190,9 +191,6 @@ enum class EPTWWinType : uint8
 	/** 기본 값 */
 	None UMETA(DisplayName = "None"),
 	
-	/** 제한 시간 종료 시 판정 */
-	TimeLimit UMETA(DisplayName="Time Limit"),
-
 	 /** 목표 달성 시 즉시 종료 */
 	Target UMETA(DisplayName="Target"),
 
@@ -202,6 +200,9 @@ enum class EPTWWinType : uint8
 	/** 마지막까지 생존한 팀이 승리 */
 	TeamSurvival UMETA(DisplayName = "Team Survival"),
 
+	/** 점령전 */
+	Control UMETA(DisplayName = "Control"),
+	
 	/** 미션 목표를 먼저 달성하면 승리 */
 	Mission UMETA(DisplayName = "Mission")
 };
@@ -255,13 +256,12 @@ struct FPTWWinConditionRule
 	EPTWWinType WinType = EPTWWinType::None;
 
 	/** 승리 판정 기준 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WinCondition",
-		meta = (EditCondition = "WinType == EPTWWinType::Target || WinType == EPTWWinType::TimeLimit"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "WinCondition")
 	EPTWWinMetric WinMetric = EPTWWinMetric::None;
-
-	/** 승리 판정 기준 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "WinCondition", meta = (EditCondition = "WinType == EPTWWinType::TimeLimit"))
-	float TimeLimitDuration = 90.f;
+	
+	/** 목표 점수 및 킬 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "WinCondition")
+	int32 TargetValue;
 	
 	/** 연장전 규칙 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WinCondition")
@@ -380,6 +380,21 @@ struct FPTWRandomEventRule
 	int32 MinSurvivorCount = 2; 
 };
 
+USTRUCT(BlueprintType)
+struct FPTWUIRule
+{
+	GENERATED_BODY()
+	
+	/** 타이머를 보이게 할 지 여부*/
+	UPROPERTY(EditAnywhere)
+	bool bShowTimer;
+
+	/** 팀 기반 랭킹 보드 사용 여부 */
+	UPROPERTY(EditAnywhere)
+	bool bUseTeamRankingBoard;
+	
+};
+
 /**
  * 미니게임 단위로 적용되는 규칙 묶음(RuleSet)
  * - 스폰/장비/전투/이동/승리조건/팀/데미지/랜덤이벤트 등을 하나의 데이터로 관리
@@ -393,9 +408,9 @@ struct FPTWMiniGameRule
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Time")
 	FPTWTimerRule TimeRule;
 	
-	/** 킬/점수/처치 관련 규칙 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Kill")
-	FPTWKillRule KillRule;
+	/** 점수 관련 규칙 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Score")
+	FPTWScoreRule ScoreRule;
 	
 	/** 스폰/리스폰 및 스폰 보호 규칙 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Spawn")
@@ -428,5 +443,9 @@ struct FPTWMiniGameRule
 	/** 랜덤 이벤트 트리거/지연/유지시간 규칙 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|RandomEvent")
 	FPTWRandomEventRule RandomEventRule;
+
+	/** 랜덤 이벤트 트리거/지연/유지시간 규칙 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|UI")
+	FPTWUIRule UIRule;
 
 };

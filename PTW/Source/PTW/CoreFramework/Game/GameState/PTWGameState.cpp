@@ -59,6 +59,7 @@ void APTWGameState::UpdateRanking(const FPTWMiniGameRule& MiniGameRule)
 		
 		if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Survival)
 		{
+			// true면 생존 false면 사망
 			const bool bAAlive = (APD.DeathOrder == 0);
 			const bool bBAlive = (BPD.DeathOrder == 0);
 
@@ -76,6 +77,21 @@ void APTWGameState::UpdateRanking(const FPTWMiniGameRule& MiniGameRule)
 					
 			}
 			return APD.Score > BPD.Score;
+		}
+		else if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Target)
+		{
+			if (MiniGameRule.WinConditionRule.WinMetric == EPTWWinMetric::KillCount)
+			{
+				return APD.KillCount > BPD.KillCount; 
+			}
+			else if (MiniGameRule.WinConditionRule.WinMetric == EPTWWinMetric::Score)
+			{
+				return APD.Score > BPD.Score;
+			}
+			else
+			{
+				return APD.Score > BPD.Score;
+			}
 		}
 		else
 		{
@@ -103,7 +119,7 @@ void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
 		for (int i = 0; i < AlivePlayers.Num(); i++)
 		{
 			FPTWPlayerData PlayerData = RankedPlayers[i]->GetPlayerData();
-			PlayerData.TotalWinPoints += 3;
+			PlayerData.TotalWinPoints += MiniGameRule.ScoreRule.TotalScore;
 			RankedPlayers[i]->SetPlayerData(PlayerData);
 		}
 	}

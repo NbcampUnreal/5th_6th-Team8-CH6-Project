@@ -265,7 +265,7 @@ void APTWMiniGameMode::WaitingToStartRound()
 
 void APTWMiniGameMode::StartRound()
 {
-	if (MiniGameRule.TimeRule.bUserTimer)
+	if (MiniGameRule.TimeRule.bUseTimer)
 	{
 		StartTimer(MiniGameRule.TimeRule.Timer);
 	}
@@ -285,6 +285,27 @@ void APTWMiniGameMode::CheckEndGameCondition()
 		if (PTWGameState->AlivePlayers.Num() <= 1)
 		{
 			EndGame();
+		}
+	}
+	else if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Target)
+	{
+		if (MiniGameRule.WinConditionRule.WinMetric == EPTWWinMetric::KillCount)
+		{
+			TArray<APTWPlayerState*> RankingPlayer =  PTWGameState->GetRankedPlayers();
+
+			if (RankingPlayer[0]->GetPlayerRoundData().KillCount >= MiniGameRule.WinConditionRule.TargetValue)
+			{
+				EndGame();
+			}
+		}
+		else if (MiniGameRule.WinConditionRule.WinMetric == EPTWWinMetric::Score)
+		{
+			TArray<APTWPlayerState*> RankingPlayer =  PTWGameState->GetRankedPlayers();
+
+			if (RankingPlayer[0]->GetPlayerRoundData().Score >= MiniGameRule.WinConditionRule.TargetValue)
+			{
+				EndGame();
+			}
 		}
 	}
 }
@@ -380,7 +401,7 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 		}
 	}
 	
-	UpdatePlayerRoundData(DeadPlayerState, KillPlayerState);
+	AddKillDeathCount(DeadPlayerState, KillPlayerState);
 	
 	if (!PTWGameState) return;
 	PTWGameState->UpdateRanking(MiniGameRule);
@@ -390,7 +411,7 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	RespawnPlayer(DeadPlayerController);
 }
 
-void APTWMiniGameMode::UpdatePlayerRoundData(APlayerState* DeadPlayerState, APlayerState* KillPlayerState)
+void APTWMiniGameMode::AddKillDeathCount(APlayerState* DeadPlayerState, APlayerState* KillPlayerState)
 {
 	if (IsValid(DeadPlayerState))
 	{
@@ -408,9 +429,26 @@ void APTWMiniGameMode::UpdatePlayerRoundData(APlayerState* DeadPlayerState, APla
 		if (IPTWPlayerRoundDataInterface* KillPlayerData = Cast<IPTWPlayerRoundDataInterface>(KillPlayerState))
 		{
 			KillPlayerData->AddKillCount();
-			KillPlayerData->AddScore(1);
 		}
 	}
+
+	CheckEndGameCondition();
+}
+
+void APTWMiniGameMode::AddRoundScore(APlayerState* ScoreTarget)
+{
+	if (IsValid(ScoreTarget))
+	{
+		if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(ScoreTarget))
+		{
+			RoundDataInterface->AddScore(MiniGameRule.ScoreRule.MiniGameScore);
+		}
+
+		if (!PTWGameState) return;
+		PTWGameState->UpdateRanking(MiniGameRule);
+	}
+
+	CheckEndGameCondition(); 
 }
 
 void APTWMiniGameMode::ApplyMiniGameTag(AController* NewPlayer)
@@ -462,14 +500,24 @@ void APTWMiniGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController
 		GetWorldTimerManager().ClearTimer(SpawnPlayerController->RespawnTimerHandle);		// 방어 코드
 		TWeakObjectPtr<ThisClass> WeakThis = this;
 		TWeakObjectPtr<APTWPlayerController> WeakDeadController = SpawnPlayerController;
-		GetWorldTimerManager().SetTimer(WeakDeadController->RespawnTimerHandle, [WeakThis, WeakDeadController]()
+		GetWorldTimerManager().SetTimer(WeakDeadController->RespawnTimerHandle, [WeakThis, WeakDeadController, this]()
 		{
 			if (WeakThis.IsValid() && WeakDeadController.IsValid())		// 파괴 방어
 			{
 				WeakThis->RestartPlayer(WeakDeadController.Get());
+
+				if (MiniGameRule.SpawnRule.bUseSpawnProtection == true)
+				{
+					APTWPlayerState* PlayerState = WeakDeadController->GetPlayerState<APTWPlayerState>();
+					if (!PlayerState) return;
+
+					PlayerState->ApplyRespawnInvincible(MiniGameRule.SpawnRule.SpawnProtectionTime);
+				}
 			}
 		}, MiniGameRule.SpawnRule.RespawnDelay, false);
 	}
+
+	
 }
 
 void APTWMiniGameMode::InitPlayerHealth(AController* Controller)

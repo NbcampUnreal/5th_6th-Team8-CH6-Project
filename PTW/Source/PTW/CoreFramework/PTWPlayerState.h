@@ -78,6 +78,8 @@ public:
 	void ApplyAdditionalAbilities();
 	void ApplyAdditionalEffects();
 
+	void ApplyRespawnInvincible(float Duration);
+
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
@@ -98,6 +100,9 @@ protected:
 	UPROPERTY(Transient)
 	TArray<TSubclassOf<UGameplayEffect>> AdditionalEffects;
 
+	//스폰 무적 이펙트
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UGameplayEffect> ReSpawnInvincibleEffectClass;
 public:
 	virtual void SetDeathOrder(int32 Order) override;
 	virtual int32 GetDeathOrder() const override {return PlayerRoundData.DeathOrder;} 

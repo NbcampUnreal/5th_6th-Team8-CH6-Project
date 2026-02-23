@@ -47,7 +47,7 @@ public:
 	
 	void ClearAndDestroyInventory();
 	
-	void SendEquipEventToASC(int32 SlotIndex, UAbilitySystemComponent* ASC);
+	void SendEquipEventToASC(int32 SlotIndex);
 	
 	void SetWeaponActorHidden(UPTWItemInstance* Weapon, bool bInHidden);
 	
@@ -73,10 +73,15 @@ public:
 	
 	void RemoveWeaponData();
 	
+	void DropItem();
+	
 	// FIXME : 테스트 코드
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void TestFunction_GiveActiveItem(UPTWItemDefinition* Def);
 	
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void TestFunction_DropItem();
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

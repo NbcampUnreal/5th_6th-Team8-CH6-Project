@@ -83,6 +83,9 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	WeaponItemInst->ItemDef = ItemDefinition;
 	WeaponItemInst->SpawnedWeapon1P = SpawnedWeapon1P;
 	WeaponItemInst->SpawnedWeapon3P = SpawnedWeapon3P;
+	
+	SpawnedWeapon1P->SetWeaponItemInstance(WeaponItemInst);
+	SpawnedWeapon3P->SetWeaponItemInstance(WeaponItemInst);
 
 	//Fix 박태웅(01.29) - (데이터 가져오기)
 	if (const UPTWWeaponData* WData = SpawnedWeapon1P->GetWeaponData())
@@ -96,6 +99,8 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	}
 
 	Inventory->AddItem(WeaponItemInst);
+	SpawnedWeapon1P->SetIsDrop(false);
+	SpawnedWeapon3P->SetIsDrop(false);
 	TargetPlayer->GetWeaponComponent()->AttachWeaponToSocket(SpawnedWeapon1P, SpawnedWeapon3P, WeaponTag);
 }
 
@@ -312,5 +317,19 @@ void UPTWItemSpawnManager::SpawnCoinInRandomVolume()
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 		World->SpawnActor<APTWPickupCoin>(CoinClass, SpawnLocation, FRotator::ZeroRotator, Params);
+	}
+}
+
+void UPTWItemSpawnManager::DropWeaponSpawn(UPTWWeaponInstance* WeaponInstance)
+{
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	
+	APTWWeaponActor* SpawnWeaponActor = GetWorld()->SpawnActor<APTWWeaponActor>(WeaponInstance->ItemDef->WeaponClass, SpawnParams);
+	
+	if (SpawnWeaponActor && WeaponInstance)
+	{
+		WeaponInstance->Rename(nullptr, SpawnWeaponActor); //Outer 재설정
+		SpawnWeaponActor->SetWeaponItemInstance(WeaponInstance);
 	}
 }

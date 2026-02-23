@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "PTWItemSpawnManager.generated.h"
 
+class UPTWWeaponInstance;
 class UPTWItemDefinition;
 class APTWWeaponActor;
 class APTWPlayerCharacter;
@@ -45,6 +46,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnCoinInRandomVolume();
+	
+	void DropWeaponSpawn(UPTWWeaponInstance* WeaponInstance);
 protected:
 	/** 스폰 데이터 테이블 (RowName: ItemID, Value: ItemDefinition) */
 	UPROPERTY()

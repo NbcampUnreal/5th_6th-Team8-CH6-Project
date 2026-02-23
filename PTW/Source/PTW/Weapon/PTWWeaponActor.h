@@ -7,6 +7,7 @@
 #include "PTWWeaponTypes.h"
 #include "PTWWeaponActor.generated.h"
 
+class UPTWWeaponInstance;
 class UPTWWeaponData;
 
 UCLASS()
@@ -39,8 +40,14 @@ public:
 
 	float PlayWeaponMontage(UAnimMontage* MontageToPlay);
 	
+	void SetWeaponItemInstance(UPTWWeaponInstance* ItemInstance);
+	
+	FORCEINLINE UPTWWeaponInstance* GetWeaponItemInstance() const {return WeaponItemInstance;}
+	
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
 	
 	UFUNCTION()
 	void OnRep_IsFirstPersonWeapon();
@@ -66,8 +73,9 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_IsFirstPersonWeapon)
 	bool bIsFirstPersonWeapon = false;
 
-
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
+	TObjectPtr<UPTWWeaponInstance> WeaponItemInstance;
+	
 	// 재장전 관련 변수
 	UPROPERTY(EditDefaultsOnly, Category = "Reload")
 	TSubclassOf<AActor> MagazineClass;

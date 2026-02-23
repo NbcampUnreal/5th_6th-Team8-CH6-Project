@@ -185,6 +185,7 @@ void APTWBombActor::AttachToOwnerPawn()
 
 void APTWBombActor::Multicast_PlayExplosionCue_Implementation(const FVector& Loc, AActor* InstigatorActor)
 {
+
 	if (AbilitySystemComponent && ExplosionCueTag.IsValid())
 	{
 		FGameplayCueParameters CueParams;
@@ -193,6 +194,7 @@ void APTWBombActor::Multicast_PlayExplosionCue_Implementation(const FVector& Loc
 
 		AbilitySystemComponent->ExecuteGameplayCue(ExplosionCueTag, CueParams);
 	}
+
 }
 
 void APTWBombActor::RequestExplode(AActor* InstigatorActor)
@@ -213,15 +215,17 @@ void APTWBombActor::RequestExplode(AActor* InstigatorActor)
 	// 데미지 적용
 	const float FinalDamage = BaseBombDamage;
 	ApplyExplosionDamage(OverlapResults, FinalDamage, InstigatorActor);
-
+	
 	Multicast_PlayExplosionCue(GetActorLocation(), InstigatorActor);
 	
 	SetActorEnableCollision(false);
-	SetActorHiddenInGame(true);
-
+	
 	if (AudioComponent && AudioComponent->IsPlaying()) AudioComponent->Stop();
 	if (AudioLoopComponent && AudioLoopComponent->IsPlaying()) AudioLoopComponent->Stop();
-
+	
+	SetLifeSpan(0.2f);
+	
+	ForceNetUpdate();
 }
 
 void APTWBombActor::ServerRequestExplode_Implementation(AActor* InstigatorActor)
@@ -329,6 +333,9 @@ void APTWBombActor::UpdateBombEffects(float NewTime)
 			bTimeExpiredNotified = true;
 
 			AActor* InstigatorActor = BombOwnerPawn ? Cast<AActor>(BombOwnerPawn) : this;
+			
+			RequestExplode(InstigatorActor);
+			
 			OnBombTimeExpired.Broadcast(InstigatorActor);
 		}
 

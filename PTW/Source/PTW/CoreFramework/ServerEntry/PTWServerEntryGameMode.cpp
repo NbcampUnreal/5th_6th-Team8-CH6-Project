@@ -16,20 +16,14 @@ void APTWServerEntryGameMode::BeginPlay()
 		{
 			if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
 			{
-				int32 MaxPlayers = UGameplayStatics::GetIntOption(OptionsString, TEXT("MaxPlayers"), 10);
-				bool bIsPrivate = UGameplayStatics::GetIntOption(OptionsString, TEXT("bIsPrivate"), 0) > 0;
-				
-				
-				// FString MapSettingVal = UGameplayStatics::ParseOption(OptionsString, TEXT("LobbyName"));
-				// if (!MapSettingVal.IsEmpty())
-				// {
-				// 	FSessionPropertyKeyPair NewSetting;
-				// 	NewSetting.Key = FName("LobbyName");
-				// 	NewSetting.Data = MapSettingVal;
-				// 	ReconstructedSettings.Add(NewSetting);
-				// }
-				
-				// SessionSubsystem->CreateGameSession(ReconstructedSettings, MaxPlayers, bIsPrivate);
+				FPTWSessionConfig SessionConfig;
+				SessionConfig.ServerName = TEXT("데디케이티드 서버");
+				SessionConfig.MaxPlayers = 16;
+				FTimerHandle TimerHandle;
+				GetWorldTimerManager().SetTimer(TimerHandle, [SessionSubsystem, SessionConfig]()
+				{
+					SessionSubsystem->CreateGameSession(SessionConfig);
+				}, 5.0f, false);
 			}
 		}
 	}

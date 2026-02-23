@@ -9,6 +9,8 @@
 #include "Session/PTWSessionConfig.h"
 #include "PTWSessionSubsystem.generated.h"
 
+#define USE_DEDICATED_SERVER 1
+
 USTRUCT(BlueprintType)
 struct FOnlineSessionSearchResultBP
 {
@@ -25,7 +27,7 @@ class PTW_API UPTWSessionSubsystem : public UGameInstanceSubsystem
 
 public:
 	FORCEINLINE IOnlineSessionPtr GetSessionInterface() const { return SessionInterface; };
-	FORCEINLINE TSharedPtr<FOnlineSessionSearch> GetSessionSearch() const {return SessionSearch; };
+	FORCEINLINE TSharedPtr<FOnlineSessionSearch> GetSessionSearch() const { return SessionSearch; };
 	
 	// 온라인 서브시스템이 스팀인지 체크
 	UFUNCTION(BlueprintCallable, Category = "Session")
@@ -49,7 +51,7 @@ public:
 	
 	// 리슨서버로 레벨 이동
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void CreateListenLevel(FName MapName, FPTWSessionConfig SessionConfig);
+	void OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig);
 	
 	// 세션 이탈 & 종료
 	void LeaveGameSession();

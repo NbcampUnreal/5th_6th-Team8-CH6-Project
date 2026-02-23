@@ -19,6 +19,13 @@ bool UPTWSessionSubsystem::IsUsingSteamSubsystem()
 
 void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig)
 {
+	
+#if USE_DEDICATED_SERVER
+	SessionConfig.bIsDedicatedServer = true;
+#else
+	SessionConfig.bIsDedicatedServer = false;
+#endif
+	
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 	
@@ -27,10 +34,9 @@ void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig)
         // 이미 세션이 생성되어 있으면 세션 정리
         SessionInterface->DestroySession(NAME_GameSession);
     }
-    
     CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(
         FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete, SessionConfig));
-    
+	
     TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
     SessionSettings->bIsLANMatch = false;							// Lan 연결 사용 여부
     SessionSettings->bShouldAdvertise = true;							// 공개 여부: 검색 노출 및 친구 초대 가능
@@ -113,8 +119,9 @@ void UPTWSessionSubsystem::FindGameSession()
 	SessionSearch->bIsLanQuery = false;
 	
 	SessionSearch->MaxSearchResults = 100;
+#if !USE_DEDICATED_SERVER
 	SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
-	
+#endif
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	if (SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef()))
 	{
@@ -167,9 +174,6 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 
 void UPTWSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig)
 {
-	// FString ServerPath = FPaths::ConvertRelativePathToFull(FPaths::RootDir() + 
-	// 	TEXT("Engine/Binaries/Win64/UnrealEditor.exe"));
-	
 	FString ServerPath = FPaths::ConvertRelativePathToFull(
 		FPaths::Combine(
 			FPaths::ProjectDir() + TEXT("Binaries/Win64/PTWServer.exe")));
@@ -191,12 +195,16 @@ void UPTWSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig
 	// 	Arguments += FString::Printf(TEXT("?%s=\"%s\""), *Key, *Value);
 	// }
 	
-	// Arguments += TEXT(" -NoSteam");
 	Arguments += TEXT(" -Server");
 	Arguments += TEXT(" -log");
 	Arguments += TEXT(" -port=7777");
 	Arguments += TEXT(" -QueryPort=27016");
 	
+	// FString Options;
+	// Options += FString::Printf(TEXT("?listen"));
+	// Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
+	// Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
+	// UGameplayStatics::OpenLevel(this, MapName, true, Options);
 	
 	uint32 ProcessID = 0;
 	
@@ -230,10 +238,13 @@ void UPTWSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig
 	// }, 15.0f, false);
 }
 
-void UPTWSessionSubsystem::CreateListenLevel(FName MapName, FPTWSessionConfig SessionConfig)
+void UPTWSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig)
 {
 	FString Options;
-	Options += FString::Printf(TEXT("?listen"));
+	if (!IsRunningDedicatedServer())
+	{
+		Options += FString::Printf(TEXT("?listen"));
+	}
 	Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
 	Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
 	UGameplayStatics::OpenLevel(this, MapName, true, Options);
@@ -274,7 +285,7 @@ void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasS
 	if (bWasSuccessful)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Steam Session Created Successfully!"));
-		CreateListenLevel("lobby", SessionConfig);
+		OpenServerLevel("lobby", SessionConfig);
 	}
 	else
 	{

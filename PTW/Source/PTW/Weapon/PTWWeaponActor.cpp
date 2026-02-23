@@ -1,5 +1,7 @@
 ﻿
 #include "PTWWeaponActor.h"
+
+#include "Components/SphereComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "Engine/ActorChannel.h"
 #include "Inventory/Instance/PTWWeaponInstance.h"
@@ -20,6 +22,9 @@ APTWWeaponActor::APTWWeaponActor()
 	
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	WeaponMesh->SetupAttachment(RootComponent);
+	
+	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+	SphereComponent->SetupAttachment(RootComponent);
 }
 
 /*
@@ -65,6 +70,7 @@ void APTWWeaponActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(APTWWeaponActor, bIsFirstPersonWeapon);
 	DOREPLIFETIME(APTWWeaponActor, WeaponItemInstance);
+	DOREPLIFETIME(APTWWeaponActor, bIsDrop);
 }
 
 void APTWWeaponActor::SetFirstPersonMode(bool bIsFirstPerson)
@@ -79,6 +85,7 @@ void APTWWeaponActor::SetFirstPersonMode(bool bIsFirstPerson)
 void APTWWeaponActor::BeginPlay()
 {
 	Super::BeginPlay();
+	SetDroppingMode();
 	ApplyVisualPerspective();
 }
 
@@ -110,6 +117,11 @@ bool APTWWeaponActor::ReplicateSubobjects(class UActorChannel* Channel, class FO
 void APTWWeaponActor::OnRep_IsFirstPersonWeapon()
 {
 	ApplyVisualPerspective();
+}
+
+void APTWWeaponActor::OnRep_IsDrop()
+{
+	SetDroppingMode();
 }
 
 float APTWWeaponActor::PlayWeaponMontage(UAnimMontage* MontageToPlay)
@@ -204,5 +216,17 @@ void APTWWeaponActor::InsertMag()
 	{
 		CurrentFakeMag->Destroy();
 		CurrentFakeMag = nullptr;
+	}
+}
+
+void APTWWeaponActor::SetDroppingMode()
+{
+	if (!bIsDrop)
+	{
+		SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	else
+	{
+		
 	}
 }

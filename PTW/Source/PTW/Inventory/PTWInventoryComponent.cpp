@@ -15,6 +15,7 @@
 #include "Instance/PTWWeaponInstance.h"
 #include "Net/UnrealNetwork.h"
 #include "PTWGameplayTag/GameplayTags.h"
+#include "System/PTWItemSpawnManager.h"
 
 
 UPTWInventoryComponent::UPTWInventoryComponent()
@@ -47,7 +48,7 @@ void UPTWInventoryComponent::EquipWeapon(int32 SlotIndex)
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn);
 	if (!ASC) return;
 	
-	SendEquipEventToASC(SlotIndex, ASC);
+	SendEquipEventToASC(SlotIndex);
 }
 
 void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -164,7 +165,7 @@ void UPTWInventoryComponent::RemoveWeaponItem()
 	{
  		int32 tempIndex = CurSelectingWeaponSlot;
 		WeaponArr[CurSelectingWeaponSlot]->DestroySpawnedActors();
-		SendEquipEventToASC(CurSelectingWeaponSlot, UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()));
+		SendEquipEventToASC(CurSelectingWeaponSlot);
 		WeaponArr.RemoveAt(tempIndex);
 	}
 }
@@ -221,6 +222,22 @@ void UPTWInventoryComponent::RemoveWeaponData()
 	}
 }
 
+void UPTWInventoryComponent::DropItem()
+{
+	if (!GetOwner()->HasAuthority()) return;
+	if (!CurrentWeapon || WeaponArr.Num() == 0) return; //장착한 무기가 없거나 무기가 없는 경우
+	
+	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
+	
+	if (SpawnManager)
+	{
+		SpawnManager->DropWeaponSpawn(Cast<UPTWWeaponInstance>(CurrentWeapon)); // Drop후 무기 스폰 함수 호출
+		int32 TempSlotIndex = CurSelectingWeaponSlot;
+		SendEquipEventToASC(CurSelectingWeaponSlot); // 장착 해제
+		WeaponArr.RemoveAt(TempSlotIndex); // WeaponArr 요소 제거
+	}
+}
+
 void UPTWInventoryComponent::TestFunction_GiveActiveItem_Implementation(UPTWItemDefinition* Def)
 {
 	if (Def->ItemType == EItemType::Active)
@@ -235,10 +252,7 @@ void UPTWInventoryComponent::TestFunction_GiveActiveItem_Implementation(UPTWItem
 		Passive->ItemDef = Def;
 		ApplyAllPassiveItems(Passive);
 	}
-	
-
 }
-
 
 // Called when the game starts
 void UPTWInventoryComponent::BeginPlay()
@@ -270,13 +284,11 @@ void UPTWInventoryComponent::ClearAndDestroyInventory()
 		{
 			WeaponItemInst->DestroySpawnedActors(); 
 		}
-		
 	}
-
 	ItemArr.Empty();
 }
 
-void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex, UAbilitySystemComponent* ASC)
+void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex)
 {
 	if (!WeaponArr.IsValidIndex(SlotIndex) || !WeaponArr[SlotIndex]) return;
 	if (!GetOwner()->HasAuthority()) return;
@@ -355,7 +367,10 @@ bool UPTWInventoryComponent::EquipActiveItem(UPTWItemInstance* ActiveItemInstanc
 	
 	return true;
 }
-
+void UPTWInventoryComponent::TestFunction_DropItem_Implementation()
+{
+	DropItem();
+}
 void UPTWInventoryComponent::ConsumeActiveItem()
 {
 	if (!CurrentActiveItemSlot->UsingActiveItem())

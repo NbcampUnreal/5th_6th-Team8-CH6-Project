@@ -7,6 +7,7 @@
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWLobbyGameMode.generated.h"
 
+class UPTWRoundEventManager;
 struct FPTWMiniGameMapRow;
 /**
  * 게임 라운드 및 진행 흐름에 대한 규칙 정의 구조체
@@ -56,6 +57,7 @@ class PTW_API APTWLobbyGameMode : public APTWGameMode
 	GENERATED_BODY()
 
 public:
+	APTWLobbyGameMode();
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
 	FPTWGameFlowRule GameFlowRule;
@@ -63,6 +65,9 @@ public:
 	/* 로비 복귀시에 지급될 골드 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
 	int32 RoundClearBonusGold = 300;
+
+	UFUNCTION()
+	void OnRouletteFinished(FName SelectedMapName);
 
 protected:
 	virtual void InitGameState() override;
@@ -78,42 +83,20 @@ protected:
 	void StartGameLobby();
 
 	virtual void EndTimer() override;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPTWRoundEventManager> RoundEventManager;
 	
 private:
 	void ExitSpectorMode(AController* Controller);
 	
-	void SelectedRandomMap();
-	void SelectedRandomEvent();
-
-	void StartMapRoulette();
-	void StartRoundEventRoulette();
-
-	void EndRoulette();
 	void StartRoulette();
-
 	void EndGame();
 	void ReturnToMainMenu();
-	
-	TArray<FName> GetSelectableMapRowNames();
-
-	UPROPERTY(EditDefaultsOnly, Category = "Roulette")
-	TObjectPtr<UDataTable> MiniGameMapTable;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Roulette")
-	TObjectPtr<UDataTable> LobbyRoundEventTable;
 	/**  */	
-	
 	UPROPERTY(EditDefaultsOnly, Category = "Test")
 	bool bSkipFirstLobby = false;
 	
 	bool bIsFirstLobby;
 	bool bWaitingTimerStarted = false;
-
-	FTimerHandle RouletteTimer;
-
-	FGameplayTag MapTag;
-	FGameplayTag EventTag;
-
-	
-	
 };

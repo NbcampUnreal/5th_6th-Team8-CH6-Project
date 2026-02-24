@@ -17,6 +17,7 @@
 #include "CoreFramework/PTWPlayerState.h"
 #include "Gameplay/PTWSpawnItemVolume.h"
 #include "Gameplay/Pickup/PTWPickupCoin.h" 
+#include "Gameplay/Pickup/PTWPickupWeapon.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 
@@ -34,10 +35,12 @@ const TCHAR* DTPath = TEXT("/Game/_PTW/Data/DT_ItemSpawnData.DT_ItemSpawnData");
 	}
 
 	FString Path = TEXT("/Game/_PTW/Blueprints/Gameplay/Pickup/BP_PTWPickupCoin.BP_PTWPickupCoin_C");
+	FString WeaponPath = TEXT("/Game/_PTW/BluePrints/Gameplay/Pickup/BP_PTWPickupWeapon.BP_PTWPickupWeapon_C");
 
 	CoinClass = LoadClass<APTWPickupCoin>(nullptr, *Path);
+	PickupWeaponClass = LoadClass<APTWPickupWeapon>(nullptr, *WeaponPath);
 
-	if (!CoinClass)
+	if (!CoinClass || !PickupWeaponClass)
 	{
 		UE_LOG(LogTemp, Error, TEXT("[PTWItemSpawnSubsystem] Failed to load DataTable at: %s"), DTPath);
 	}
@@ -99,8 +102,6 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	}
 
 	Inventory->AddItem(WeaponItemInst);
-	SpawnedWeapon1P->SetIsDrop(false);
-	SpawnedWeapon3P->SetIsDrop(false);
 	TargetPlayer->GetWeaponComponent()->AttachWeaponToSocket(SpawnedWeapon1P, SpawnedWeapon3P, WeaponTag);
 }
 
@@ -320,19 +321,20 @@ void UPTWItemSpawnManager::SpawnCoinInRandomVolume()
 	}
 }
 
+#pragma optimize( "", off )
 void UPTWItemSpawnManager::DropWeaponSpawn(UPTWWeaponInstance* WeaponInstance)
 {
 	AActor* Owner = WeaponInstance->GetTypedOuter<AActor>();
 	if (!Owner) return;
 	
-	FVector ForwardOffset = Owner->GetActorLocation() + (Owner->GetActorForwardVector() * 70.0f);
+	FVector ForwardOffset = Owner->GetActorLocation() + (Owner->GetActorForwardVector() * 250.0f);
 	FVector SpawnLocation = GetGroundLocation(ForwardOffset);
 	SpawnLocation.Z += 10.0f;
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	
-	APTWWeaponActor* SpawnWeaponActor = GetWorld()->SpawnActor<APTWWeaponActor>(WeaponInstance->ItemDef->WeaponClass, 
+	APTWPickupWeapon* SpawnWeaponActor = GetWorld()->SpawnActor<APTWPickupWeapon>(PickupWeaponClass, 
 			SpawnLocation, 
 			Owner->GetActorRotation(), 
 			SpawnParams
@@ -340,10 +342,38 @@ void UPTWItemSpawnManager::DropWeaponSpawn(UPTWWeaponInstance* WeaponInstance)
 	
 	if (SpawnWeaponActor && WeaponInstance)
 	{
+		SpawnWeaponActor->SetWeaponInstance(WeaponInstance);
 		WeaponInstance->Rename(nullptr, SpawnWeaponActor); //Outer 재설정
-		SpawnWeaponActor->SetWeaponItemInstance(WeaponInstance);
-		SpawnWeaponActor->SetIsDrop(true);
+		WeaponInstance->DestroySpawnedActors();
 	}
+}
+#pragma optimize( "", on )
+
+void UPTWItemSpawnManager::AddPickupWeapon(UPTWWeaponInstance* ItemInstance, APTWPlayerCharacter* TargetPlayer)
+{
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = TargetPlayer;
+	SpawnParams.Instigator = TargetPlayer;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	
+	UPTWItemDefinition* ItemDefinition = ItemInstance->ItemDef;
+	
+	APTWWeaponActor* SpawnedWeapon1P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+	APTWWeaponActor* SpawnedWeapon3P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+	
+	SpawnedWeapon1P->SetFirstPersonMode(true);
+	SpawnedWeapon3P->SetFirstPersonMode(false);
+	
+	ItemInstance->SpawnedWeapon1P = SpawnedWeapon1P;
+	ItemInstance->SpawnedWeapon3P = SpawnedWeapon3P;
+	
+	SpawnedWeapon1P->SetWeaponItemInstance(ItemInstance);
+	SpawnedWeapon3P->SetWeaponItemInstance(ItemInstance);
+	
+	UPTWInventoryComponent* Inventory = TargetPlayer->GetInventoryComponent();
+	
+	Inventory->AddItem(ItemInstance);
+	TargetPlayer->GetWeaponComponent()->AttachWeaponToSocket(SpawnedWeapon1P, SpawnedWeapon3P, ItemInstance->ItemDef->WeaponTag);
 }
 
 FVector UPTWItemSpawnManager::GetGroundLocation(FVector StartLocation)

@@ -7,6 +7,9 @@
 #include "GameplayTagContainer.h"
 #include "PTWItemSpawnManager.generated.h"
 
+class UPTWInventoryComponent;
+class UPTWItemInstance;
+class APTWPickupWeapon;
 class UPTWWeaponInstance;
 class UPTWItemDefinition;
 class APTWWeaponActor;
@@ -48,6 +51,8 @@ public:
 	void SpawnCoinInRandomVolume();
 	
 	void DropWeaponSpawn(UPTWWeaponInstance* WeaponInstance);
+	
+	void AddPickupWeapon(UPTWWeaponInstance* ItemInstance, APTWPlayerCharacter* TargetPlayer);
 
 	FVector GetGroundLocation(FVector StartLocation);
 	
@@ -62,4 +67,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Coin")
 	TSubclassOf<class APTWPickupCoin> CoinClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "DropWeapon")
+	TSubclassOf<APTWPickupWeapon> PickupWeaponClass;
 };

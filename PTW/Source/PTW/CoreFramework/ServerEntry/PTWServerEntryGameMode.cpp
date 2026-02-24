@@ -2,33 +2,40 @@
 
 
 #include "PTWServerEntryGameMode.h"
-#include "Kismet/GameplayStatics.h"
 #include "System/PTWSessionSubsystem.h"
+
+APTWServerEntryGameMode::APTWServerEntryGameMode()
+{
+	bUseSeamlessTravel = true;
+}
 
 void APTWServerEntryGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Display, TEXT("PTWMainMenuGameMode BeginPlay"));
 	
-	if (IsRunningDedicatedServer())
+	if (!IsRunningDedicatedServer())
+		return;
+	
+	UGameInstance* GI = GetGameInstance();
+	if (!GI) return;
+	
+	UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>();
+	if (!SessionSubsystem) return;
+	
+	FPTWSessionConfig SessionConfig;
+	SessionConfig.ServerName = TEXT("MyDedicatedServer");
+	SessionConfig.MaxPlayers = 16;
+	
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, [SessionSubsystem, SessionConfig]()
 	{
-		if (UGameInstance* GI = GetGameInstance())
-		{
-			if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
-			{
-				FPTWSessionConfig SessionConfig;
-				SessionConfig.ServerName = TEXT("데디케이티드 서버");
-				SessionConfig.MaxPlayers = 16;
-				FTimerHandle TimerHandle;
-				GetWorldTimerManager().SetTimer(TimerHandle, [SessionSubsystem, SessionConfig]()
-				{
-					SessionSubsystem->CreateGameSession(SessionConfig);
-				}, 5.0f, false);
-			}
-		}
-	}
+		SessionSubsystem->CreateGameSession(SessionConfig);
+	}, 7.0f, false);
 }
 
-
+void APTWServerEntryGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+}
 
 

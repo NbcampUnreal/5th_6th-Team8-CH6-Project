@@ -13,7 +13,11 @@ UCLASS()
 class PTW_API APTWServerEntryGameMode : public AGameMode
 {
 	GENERATED_BODY()
-	
+
+public:
+	APTWServerEntryGameMode();
+
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 };

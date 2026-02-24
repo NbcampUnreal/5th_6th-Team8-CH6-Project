@@ -9,7 +9,7 @@
 #include "Session/PTWSessionConfig.h"
 #include "PTWSessionSubsystem.generated.h"
 
-#define USE_DEDICATED_SERVER 1
+#define USE_DEDICATED_SERVER 0
 
 USTRUCT(BlueprintType)
 struct FOnlineSessionSearchResultBP

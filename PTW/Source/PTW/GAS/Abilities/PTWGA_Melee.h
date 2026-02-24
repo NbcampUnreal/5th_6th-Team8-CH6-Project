@@ -20,4 +20,7 @@ protected:
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
 	
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MeleeMontage")
+	TObjectPtr<UAnimMontage> MeleeAttackMontage;
 };

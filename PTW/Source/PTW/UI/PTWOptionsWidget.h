@@ -24,8 +24,22 @@ struct FOptionSnapshot
 	FIntPoint Resolution;
 	EWindowMode::Type WindowMode;
 	int32 ScalabilityLevel;
+	
+	int32 ViewDistanceQuality;
+	int32 ShadowQuality;
+	int32 TextureQuality;
+	int32 EffectsQuality;
+	int32 PostProcessQuality;
+	int32 FoliageQuality;
+	int32 ShadingQuality;
+	int32 AntiAliasingQuality;
+	bool bVSync;
 
 	float MasterVolume = 1.f;
+	float BGMVolume = 1.f;
+	float SFXVolume = 1.f;
+	float UIVolume = 1.f;
+
 	float MouseSensitivity = 1.f;
 };
 /**
@@ -51,11 +65,43 @@ protected:
 	// 그래픽 품질
 	UPROPERTY(meta = (BindWidget))
 	UComboBoxString* Combo_Quality;
+	// 그래픽 품질 세부사항
+	UPROPERTY(meta = (BindWidget))
+	UComboBoxString* Combo_ViewDistance; // 시야 거리
+	UPROPERTY(meta = (BindWidget))
+	UComboBoxString* Combo_Shadow; // 그림자
+	UPROPERTY(meta = (BindWidget))
+	UComboBoxString* Combo_Texture; // 텍스쳐
+	UPROPERTY(meta = (BindWidget))
+	UComboBoxString* Combo_Effects; // 이펙트
+	UPROPERTY(meta = (BindWidget))
+	UComboBoxString* Combo_PostProcess; // 후처리
+	UPROPERTY(meta = (BindWidget))
+	UComboBoxString* Combo_Foliage; // 식생
+	UPROPERTY(meta = (BindWidget))
+	UComboBoxString* Combo_Shading; // 셰이딩
+	UPROPERTY(meta = (BindWidget))
+	UComboBoxString* Combo_AntiAliasing; // 안티앨리어싱
+	UPROPERTY(meta = (BindWidget))
+	UCheckBox* CheckBox_VSync; // 수직동기화
 	// 마스터볼륨
 	UPROPERTY(meta = (BindWidget))
 	USlider* Slider_MasterVolume;
 	UPROPERTY(meta = (BindWidget))
 	UEditableText* ET_MasterVolume;
+	// 사운드 세부사항
+	UPROPERTY(meta = (BindWidget)) //BGM
+	USlider* Slider_BGMVolume;
+	UPROPERTY(meta = (BindWidget))
+	UEditableText* ET_BGMVolume;
+	UPROPERTY(meta = (BindWidget)) // SFX
+	USlider* Slider_SFXVolume;
+	UPROPERTY(meta = (BindWidget))
+	UEditableText* ET_SFXVolume;
+	UPROPERTY(meta = (BindWidget)) // UI
+	USlider* Slider_UIVolume;
+	UPROPERTY(meta = (BindWidget))
+	UEditableText* ET_UIVolume;
 	// 마우스 감도
 	UPROPERTY(meta = (BindWidget))
 	USlider* Slider_MouseSensitivity;
@@ -82,13 +128,18 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UButton* Button_Game;
 
-	/* 에디터에서 생성한 SM_Master를 할당할 변수 */
+	/* 에디터에서 할당할 SoundMix */
 	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
 	USoundMix* MasterSoundMix;
-
-	/* 에디터에서 생성한 SC_Master를 할당할 변수 */
+	/* 에디터에서 할당할 SoundClass */
 	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
 	USoundClass* MasterSoundClass;
+	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
+	USoundClass* BGMSoundClass;
+	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
+	USoundClass* SFXSoundClass;
+	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
+	USoundClass* UISoundClass;
 
 private:
 	FOptionSnapshot InitialSnapshot; // 초기값 저장
@@ -100,10 +151,14 @@ private:
 	void PopulateQualityList();
 	void InitializeUIFromCurrentSettings();
 	void CacheInitialSettings();
-	void ApplyCurrentUIToEngine();
+	void UpdateDisplaySettings(); // 해상도, 창모드, VSync
+	void UpdateAudioSettings();   // 볼륨 전용
+	void UpdateInputSettings();   // 감도 전용
+	void UpdateScalabilitySettings(); // 그래픽 세부 항목 전용
 	void RestoreInitialSettings();
 	void BindEvents();
-
+	// 텍스트 입력값을 검증하고 슬라이더 및 텍스트 박스를 동기화하는 공통 함수
+	bool ValidateAndApplyTextEntry(const FText& InText, USlider* TargetSlider, UEditableText* TargetET, float MinValue, float MaxValue);
 	// 숫자 포맷팅
 	FText FormatFloatToText(float Value) const;
 
@@ -119,9 +174,24 @@ private:
 	void OnQualityChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
 
 	UFUNCTION()
+	void OnVSyncChanged(bool bChecked);
+
+	UFUNCTION()
 	void OnMasterVolumeChanged(float Value);
 	UFUNCTION()
 	void OnMasterVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	UFUNCTION()
+	void OnBGMVolumeChanged(float Value);
+	UFUNCTION()
+	void OnBGMVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	UFUNCTION()
+	void OnSFXVolumeChanged(float Value);
+	UFUNCTION()
+	void OnSFXVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	UFUNCTION()
+	void OnUIVolumeChanged(float Value);
+	UFUNCTION()
+	void OnUIVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 
 	UFUNCTION()
 	void OnMouseSensitivityChanged(float Value);

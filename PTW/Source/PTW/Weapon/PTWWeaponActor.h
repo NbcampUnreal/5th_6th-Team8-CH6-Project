@@ -44,11 +44,7 @@ public:
 	void SetWeaponItemInstance(UPTWWeaponInstance* ItemInstance);
 	
 	FORCEINLINE UPTWWeaponInstance* GetWeaponItemInstance() const {return WeaponItemInstance;}
-	
-	FORCEINLINE bool GetIsDrop() const {return bIsDrop;}
-	
-	FORCEINLINE void SetIsDrop(bool bHasDrop) { bIsDrop = bHasDrop;}
-	
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -57,16 +53,11 @@ protected:
 	UFUNCTION()
 	void OnRep_IsFirstPersonWeapon();
 	
-	UFUNCTION()
-	void OnRep_IsDrop();
-	
 	//재장전 함수
 	void DropMag();
 	void GrabMag();
 	void InsertMag();
 	
-	void SetDroppingMode();
-
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<USceneComponent> RootScene;
@@ -86,9 +77,6 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_IsFirstPersonWeapon)
 	bool bIsFirstPersonWeapon = false;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_IsDrop)
-	bool bIsDrop = false;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
 	TObjectPtr<UPTWWeaponInstance> WeaponItemInstance;
 	

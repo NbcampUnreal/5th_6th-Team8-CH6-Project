@@ -86,11 +86,18 @@ public:
 	/* Helpers */
 	UUserWidget* GetOrCreateWidget(TSubclassOf<UUserWidget> WidgetClass);
 
+	/* 입력정책 기본값 수정 */
+	void SetDefaultInputPolicy(EUIInputPolicy NewPolicy) { DefaultInputPolicy = NewPolicy; }
+
 private:
 	/* Helpers */
 	APlayerController* GetPlayerController() const;
 
 	void ApplyInputPolicy(EUIInputPolicy Policy);
+
+	/* 입력정책 기본값 저장 */
+	UPROPERTY()
+	EUIInputPolicy DefaultInputPolicy = EUIInputPolicy::GameOnly;
 
 	/* UI 스택 */
 	UPROPERTY()

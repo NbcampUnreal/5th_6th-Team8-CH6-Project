@@ -22,9 +22,6 @@ APTWWeaponActor::APTWWeaponActor()
 	
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	WeaponMesh->SetupAttachment(RootComponent);
-	
-	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
-	SphereComponent->SetupAttachment(RootComponent);
 }
 
 /*
@@ -70,7 +67,6 @@ void APTWWeaponActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(APTWWeaponActor, bIsFirstPersonWeapon);
 	DOREPLIFETIME(APTWWeaponActor, WeaponItemInstance);
-	DOREPLIFETIME(APTWWeaponActor, bIsDrop);
 }
 
 void APTWWeaponActor::SetFirstPersonMode(bool bIsFirstPerson)
@@ -85,7 +81,6 @@ void APTWWeaponActor::SetFirstPersonMode(bool bIsFirstPerson)
 void APTWWeaponActor::BeginPlay()
 {
 	Super::BeginPlay();
-	SetDroppingMode();
 	ApplyVisualPerspective();
 }
 
@@ -93,8 +88,15 @@ void APTWWeaponActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (WeaponItemInstance)
 	{
-		WeaponItemInstance->SpawnedWeapon1P = nullptr;
-		WeaponItemInstance->SpawnedWeapon3P = nullptr;
+		if (WeaponItemInstance->SpawnedWeapon1P == this)
+		{
+			WeaponItemInstance->SpawnedWeapon1P = nullptr;
+		}
+		
+		if (WeaponItemInstance->SpawnedWeapon3P == this)
+		{
+			WeaponItemInstance->SpawnedWeapon3P = nullptr;
+		}
 	}
 	
 	Super::EndPlay(EndPlayReason);
@@ -119,10 +121,6 @@ void APTWWeaponActor::OnRep_IsFirstPersonWeapon()
 	ApplyVisualPerspective();
 }
 
-void APTWWeaponActor::OnRep_IsDrop()
-{
-	SetDroppingMode();
-}
 
 float APTWWeaponActor::PlayWeaponMontage(UAnimMontage* MontageToPlay)
 {
@@ -216,17 +214,5 @@ void APTWWeaponActor::InsertMag()
 	{
 		CurrentFakeMag->Destroy();
 		CurrentFakeMag = nullptr;
-	}
-}
-
-void APTWWeaponActor::SetDroppingMode()
-{
-	if (!bIsDrop)
-	{
-		SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-	else
-	{
-		
 	}
 }

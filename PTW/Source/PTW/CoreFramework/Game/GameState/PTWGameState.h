@@ -61,6 +61,22 @@ struct FPTWRouletteData
 	UPROPERTY(BlueprintReadOnly)
 	float RouletteDuration;
 };
+
+/** 미니 게임 팀 정보 */
+USTRUCT(Blueprintable)
+struct FPTWTeamInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 TeamID;
+
+	UPROPERTY()
+	TArray<TObjectPtr<APlayerState>> Members;
+
+	UPROPERTY()
+	int32 TeamScore;
+};
 #pragma endregion
 
 #pragma region Delegate
@@ -190,6 +206,8 @@ public:
 	void SetMiniGameCountdown(int32 NewValue);
 
 	void SetMaxMiniGameRound(int32 NewMaxRound);
+
+	void SetWinTeamId(int32 TeamId);
 #pragma endregion
 
 #pragma region Event
@@ -261,6 +279,8 @@ public:
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
 	FORCEINLINE TArray<APTWPlayerState*> GetRankedPlayers() const {return RankedPlayers;}
 	FORCEINLINE FPTWRouletteData GetRouletteData() const {return RouletteData;}
+	FORCEINLINE TArray<FPTWTeamInfo> GetTeams() const {return Teams;}
+	FORCEINLINE int32 GetWinTeamId() const {return WinTeamId;}
 #pragma endregion
 	
 protected:
@@ -335,6 +355,18 @@ protected:
 	
 	UFUNCTION()
 	void OnRep_MaxMiniGameRound();
+
+	UPROPERTY(ReplicatedUsing = OnRep_Teams)
+	TArray<FPTWTeamInfo> Teams;
+
+	UFUNCTION()
+	void OnRep_Teams();
+
+	UPROPERTY(ReplicatedUsing = OnRep_WinTeamId)
+	int32 WinTeamId = -1;
+
+	UFUNCTION()
+	void OnRep_WinTeamId();
 #pragma endregion
 
 public:
@@ -355,6 +387,8 @@ public:
 	
 	/** 순위 정렬을 위해 플레이어 추가 */
 	void AddRankedPlayer(APTWPlayerState* NewPlayerState);
+
+	void AddTeamScore(APlayerState* Player, int32 Score);
 	
 	/** 미니 게임 순위를 기준으로 승점 부여 */
 	void ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule);
@@ -373,7 +407,7 @@ public:
 	UPROPERTY()
 	TSet<TObjectPtr<APlayerState>> AlivePlayers;
 
-	UPROPERTY(ReplicatedUsing=OnRep_GlobalInputBlocked)
+	UPROPERTY(ReplicatedUsing = OnRep_GlobalInputBlocked)
 	bool bGlobalInputBlocked = false;
 
 	UFUNCTION()

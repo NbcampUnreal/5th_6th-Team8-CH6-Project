@@ -53,8 +53,13 @@ struct FPTWPlayerRoundData
 	/** 라운드에서 획득한 점수 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Score = 0;
-
+	
+	/** 플레이어 사망 순서 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 DeathOrder = 0;
+	
+	/** 몇번 팀 소속인지 확인. -1은 미배정 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 TeamId = -1;
 
 };

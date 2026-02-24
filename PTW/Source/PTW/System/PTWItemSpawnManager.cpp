@@ -321,7 +321,7 @@ void UPTWItemSpawnManager::SpawnCoinInRandomVolume()
 	}
 }
 
-#pragma optimize( "", off )
+
 void UPTWItemSpawnManager::DropWeaponSpawn(UPTWWeaponInstance* WeaponInstance)
 {
 	AActor* Owner = WeaponInstance->GetTypedOuter<AActor>();
@@ -347,7 +347,7 @@ void UPTWItemSpawnManager::DropWeaponSpawn(UPTWWeaponInstance* WeaponInstance)
 		WeaponInstance->DestroySpawnedActors();
 	}
 }
-#pragma optimize( "", on )
+
 
 void UPTWItemSpawnManager::AddPickupWeapon(UPTWWeaponInstance* ItemInstance, APTWPlayerCharacter* TargetPlayer)
 {

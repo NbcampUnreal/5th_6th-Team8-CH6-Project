@@ -17,15 +17,19 @@ class PTW_API APTWPickupWeapon : public APTWPickupItemBase
 public:
 	// Sets default values for this actor's properties
 	APTWPickupWeapon();
-	FORCEINLINE void SetWeaponInstance(UPTWWeaponInstance* Inst) {WeaponInstance = Inst;}
+	void SetWeaponInstance(UPTWWeaponInstance* Inst);
 	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnPickedUp(class APTWPlayerCharacter* Player);
+	void UpdatingWeaponMesh();
 
 protected:
 	UPROPERTY(VisibleAnywhere, Replicated)
 	TObjectPtr<UPTWWeaponInstance> WeaponInstance;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TObjectPtr<UStaticMesh>> WeaponMesh;
 };

@@ -103,24 +103,34 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	{
 		RestartPlayer(NewPlayer);
 	}
+}
 
-	if (PTWGameState->PlayerArray.Num() >= AllPlayer)
+void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	ExitSpectatorMode(C);
+	
+	Super::HandleSeamlessTravelPlayer(C);
+}
+
+void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* ReadyPlayerController)
+{
+	Super::PlayerReadyToPlay(ReadyPlayerController);
+
+	if (!IsValid(PTWGameState) || !ReadyPlayerController) return;
+	
+	APTWPlayerState* PTWPlayerState = ReadyPlayerController->GetPlayerState<APTWPlayerState>();
+	if (!PTWPlayerState) return;
+	
+	if (ReadyPlayer >= AllPlayer)
 	{
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
 
+		AssignTeam();
+		
 		FTimerHandle LoadingDelayTimer;
 		GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWMiniGameMode::StartGame, 3.f);
 	}
-	//if (PTWGameState->PlayerArray.Num() >= AllPlayer)
-	//{
-	//	if (bAllPlayerReady) return;
-	//	bAllPlayerReady = true;
-	//	
-	//	FTimerHandle LoadingDelayTimer;
-	//	GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWMiniGameMode::StartGame, 3.f);
-	//}
-	
 }
 
 void APTWMiniGameMode::StartGame()
@@ -278,34 +288,91 @@ void APTWMiniGameMode::StartRound()
 
 void APTWMiniGameMode::CheckEndGameCondition()
 {
-	if (!IsValid(PTWGameState)) return;
-	
-	if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Survival)
+	switch (MiniGameRule.WinConditionRule.WinType)
 	{
-		if (PTWGameState->AlivePlayers.Num() <= 1)
+	case EPTWWinType::Survival:
+		CheckSurvivalCondition();
+		break;
+	case EPTWWinType::Target:
+		CheckTargetCondition();
+		break;
+	default:
+		break;
+	}
+}
+
+void APTWMiniGameMode::CheckSurvivalCondition()
+{
+	if (!PTWGameState) return;
+	
+	// 팀전일 경우 생존 플레이어의 팀을 확인하고 한팀만 있으면 승리
+	if (MiniGameRule.TeamRule.bUseTeam)
+	{
+		TSet<int32> AliveTeams;
+		for (APlayerState* Player : PTWGameState->AlivePlayers)
+		{
+			if (IPTWPlayerRoundDataInterface* PlayerRoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(Player))
+			{
+				AliveTeams.Add(PlayerRoundDataInterface->GetTeamId());
+			}
+		}
+		
+		if (AliveTeams.Num() == 1)
+		{
+			PTWGameState->SetWinTeamId(*AliveTeams.begin());
+			EndGame();
+		}
+		else if (AliveTeams.IsEmpty())
+		{
+			// 생존 팀이 없을 경우 가장 마지막에 죽은 플레이어의 팀 승리
+			if (IPTWPlayerRoundDataInterface* Last = FindLastDeadPlayer())
+			{
+				PTWGameState->SetWinTeamId(Last->GetTeamId());
+				EndGame();
+			}
+		}
+	}
+	else
+	{
+		if (PTWGameState->AlivePlayers.Num() == 1)
 		{
 			EndGame();
 		}
-	}
-	else if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Target)
-	{
-		if (MiniGameRule.WinConditionRule.WinMetric == EPTWWinMetric::KillCount)
+		else if (PTWGameState->AlivePlayers.IsEmpty())
 		{
-			TArray<APTWPlayerState*> RankingPlayer =  PTWGameState->GetRankedPlayers();
-
-			if (RankingPlayer[0]->GetPlayerRoundData().KillCount >= MiniGameRule.WinConditionRule.TargetValue)
+			if (IPTWPlayerRoundDataInterface* Last = FindLastDeadPlayer())
 			{
+				PTWGameState->AlivePlayers.Add(Cast<APlayerState>(Last));
 				EndGame();
 			}
 		}
-		else if (MiniGameRule.WinConditionRule.WinMetric == EPTWWinMetric::Score)
-		{
-			TArray<APTWPlayerState*> RankingPlayer =  PTWGameState->GetRankedPlayers();
+	}
+}
 
-			if (RankingPlayer[0]->GetPlayerRoundData().Score >= MiniGameRule.WinConditionRule.TargetValue)
+void APTWMiniGameMode::CheckTargetCondition()
+{
+	if (!PTWGameState) return;
+	// 팀 및 점수 공유 사용하면 팀 점수 기준으로 승리 체크 후 승리 팀 id 전달
+	if (MiniGameRule.TeamRule.bUseTeam && MiniGameRule.TeamRule.bShareScoreWithinTeam)
+	{
+		for (const FPTWTeamInfo& TeamInfo : PTWGameState->GetTeams())
+		{
+			if (TeamInfo.TeamScore >= MiniGameRule.WinConditionRule.TargetValue)
 			{
+				PTWGameState->SetWinTeamId(TeamInfo.TeamID);
 				EndGame();
+				return;
 			}
+		}
+	}
+	else
+	{
+		TArray<APTWPlayerState*> RankedPlayers = PTWGameState->GetRankedPlayers();
+		if (RankedPlayers.IsEmpty()) return;
+
+		if (RankedPlayers[0]->GetPlayerRoundData().Score >= MiniGameRule.WinConditionRule.TargetValue)
+		{
+			EndGame();
 		}
 	}
 }
@@ -349,12 +416,6 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	}
 }
 
-void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
-{
-	ExitSpectatorMode(C);
-	
-	Super::HandleSeamlessTravelPlayer(C);
-}
 
 void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 {
@@ -413,41 +474,49 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 
 void APTWMiniGameMode::AddKillDeathCount(APlayerState* DeadPlayerState, APlayerState* KillPlayerState)
 {
-	if (IsValid(DeadPlayerState))
-	{
-		if (IPTWPlayerRoundDataInterface* DeadPlayerData = Cast<IPTWPlayerRoundDataInterface>(DeadPlayerState))
-		{
-			DeadPlayerData->AddDeathCount(1);
-			DeadPlayerData->SetDeathOrder(CurrentDeathOrder++);
-		}
-	}
+	if (!IsValid(DeadPlayerState)) return;
 	
+	if (IPTWPlayerRoundDataInterface* DeadPlayerData = Cast<IPTWPlayerRoundDataInterface>(DeadPlayerState))
+	{
+		DeadPlayerData->AddDeathCount(1);
+		DeadPlayerData->SetDeathOrder(CurrentDeathOrder++);
+	}
+
 	if (DeadPlayerState == KillPlayerState) return;
 
-	if (IsValid(KillPlayerState))
+	if (!IsValid(KillPlayerState)) return;
+	
+	if (IPTWPlayerRoundDataInterface* KillPlayerData = Cast<IPTWPlayerRoundDataInterface>(KillPlayerState))
 	{
-		if (IPTWPlayerRoundDataInterface* KillPlayerData = Cast<IPTWPlayerRoundDataInterface>(KillPlayerState))
-		{
-			KillPlayerData->AddKillCount();
-		}
+		KillPlayerData->AddKillCount();
+		AddRoundScore(KillPlayerState, MiniGameRule.KillRule.KillScore);
+		
 	}
-
-	CheckEndGameCondition();
+	//CheckEndGameCondition();
 }
 
-void APTWMiniGameMode::AddRoundScore(APlayerState* ScoreTarget)
+void APTWMiniGameMode::AddRoundScore(APlayerState* ScoreTarget, int32 ScoreValue)
 {
-	if (IsValid(ScoreTarget))
+	if (!IsValid(ScoreTarget) && ScoreValue == 0) return;
+	if (!PTWGameState) return;
+	
+	if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(ScoreTarget))
 	{
-		if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(ScoreTarget))
+		int32 killScore = MiniGameRule.KillRule.KillScore;
+		
+		if (MiniGameRule.TeamRule.bUseTeam && MiniGameRule.TeamRule.bShareScoreWithinTeam)
 		{
-			RoundDataInterface->AddScore(MiniGameRule.ScoreRule.MiniGameScore);
+			if (!PTWGameState) return;
+
+			PTWGameState->AddTeamScore(ScoreTarget, killScore);
+			RoundDataInterface->AddScore(killScore);
 		}
-
-		if (!PTWGameState) return;
-		PTWGameState->UpdateRanking(MiniGameRule);
+		else
+		{
+			RoundDataInterface->AddScore(killScore);
+		}
 	}
-
+	PTWGameState->UpdateRanking(MiniGameRule);
 	CheckEndGameCondition(); 
 }
 
@@ -464,6 +533,51 @@ void APTWMiniGameMode::ApplyMiniGameTag(AController* NewPlayer)
 		
 		PTWBaseCharacter->ApplyGameplayEffectToSelf(MiniGameEffectClass, 1, Context);
 	}
+}
+
+void APTWMiniGameMode::AssignTeam()
+{
+	if (!MiniGameRule.TeamRule.bUseTeam) return;
+	if (!PTWGameState) return;
+
+	PTWGameState->GetTeams().Empty();
+
+	int32 NumTeams = MiniGameRule.TeamRule.NumTeams;
+	for (int i = 0; i < NumTeams; i++)
+	{
+		FPTWTeamInfo NewTeam;
+		NewTeam.TeamID = i;
+
+		PTWGameState->GetTeams().Add(NewTeam);
+	}
+
+	// 플레이어 균등하게 배분
+	TArray<APlayerState*> Players = PTWGameState->PlayerArray;
+	for (int i = 0; i < Players.Num(); i++)
+	{
+		int32 AssignTeamId = i % NumTeams;
+		PTWGameState->GetTeams()[i].Members.Add(Players[i]);
+		Cast<IPTWPlayerRoundDataInterface>(Players[i])->SetTeamId(AssignTeamId); 
+	}
+}
+
+IPTWPlayerRoundDataInterface* APTWMiniGameMode::FindLastDeadPlayer()
+{
+	IPTWPlayerRoundDataInterface* LastInterface = nullptr;
+	int32 HighDeathOrder = -1;
+
+	for (APlayerState* Player : PTWGameState->PlayerArray)
+	{
+		if (IPTWPlayerRoundDataInterface* Interface = Cast<IPTWPlayerRoundDataInterface>(Player))
+		{
+			if (Interface->GetDeathOrder() > HighDeathOrder)
+			{
+				HighDeathOrder = Interface->GetDeathOrder();
+				LastInterface = Interface;
+			}
+		}
+	}
+	return LastInterface;
 }
 
 void APTWMiniGameMode::ResetPlayerRoundData()

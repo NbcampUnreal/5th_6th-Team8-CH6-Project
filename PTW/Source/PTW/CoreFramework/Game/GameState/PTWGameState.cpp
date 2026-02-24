@@ -30,6 +30,7 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(APTWGameState, MiniGameCountDown);
 	DOREPLIFETIME(APTWGameState, CurrentMiniGameRound);
 	DOREPLIFETIME(APTWGameState, MaxMiniGameRound);
+	DOREPLIFETIME(APTWGameState, Teams);
 
 }
 
@@ -80,18 +81,7 @@ void APTWGameState::UpdateRanking(const FPTWMiniGameRule& MiniGameRule)
 		}
 		else if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Target)
 		{
-			if (MiniGameRule.WinConditionRule.WinMetric == EPTWWinMetric::KillCount)
-			{
-				return APD.KillCount > BPD.KillCount; 
-			}
-			else if (MiniGameRule.WinConditionRule.WinMetric == EPTWWinMetric::Score)
-			{
-				return APD.Score > BPD.Score;
-			}
-			else
-			{
-				return APD.Score > BPD.Score;
-			}
+			return APD.Score > BPD.Score;
 		}
 		else
 		{
@@ -105,6 +95,15 @@ void APTWGameState::AddRankedPlayer(APTWPlayerState* NewPlayerState)
 	RankedPlayers.AddUnique(NewPlayerState);
 }
 
+void APTWGameState::AddTeamScore(APlayerState* Player, int32 Score)
+{
+	if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(Player))
+	{
+		int32 TeamId = RoundDataInterface->GetTeamId();
+		Teams[TeamId].TeamScore += Score;
+	}
+}
+
 void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
 {
 	// 현재 랭킹을 기준으로 승리 포인트 추가
@@ -114,13 +113,30 @@ void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
 
 	if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Survival)
 	{
-		if (AlivePlayers.Num() == 0) return;
-		
-		for (int i = 0; i < AlivePlayers.Num(); i++)
+		if (MiniGameRule.TeamRule.bUseTeam)
 		{
-			FPTWPlayerData PlayerData = RankedPlayers[i]->GetPlayerData();
-			PlayerData.TotalWinPoints += MiniGameRule.ScoreRule.TotalScore;
-			RankedPlayers[i]->SetPlayerData(PlayerData);
+			if (WinTeamId == -1) return; 
+			
+			for (APlayerState* PlayerState : Teams[WinTeamId].Members)
+			{
+				APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+				if (!PTWPlayerState) return;
+				
+				FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
+				PlayerData.TotalWinPoints += MiniGameRule.ScoreRule.TotalScore;
+				PTWPlayerState->SetPlayerData(PlayerData);
+			}
+		}
+		else
+		{
+			if (AlivePlayers.Num() == 0) return;
+		
+			for (int i = 0; i < AlivePlayers.Num(); i++)
+			{
+				FPTWPlayerData PlayerData = RankedPlayers[i]->GetPlayerData();
+				PlayerData.TotalWinPoints += MiniGameRule.ScoreRule.TotalScore;
+				RankedPlayers[i]->SetPlayerData(PlayerData);
+			}
 		}
 	}
 	else
@@ -153,6 +169,16 @@ void APTWGameState::OnRep_GlobalInputBlocked()
 	if (!PTWPC) return;
 
 	PTWPC->ApplyInputRestricted(bGlobalInputBlocked);
+}
+
+void APTWGameState::OnRep_Teams()
+{
+	
+}
+
+void APTWGameState::OnRep_WinTeamId()
+{
+	
 }
 
 void APTWGameState::DecreaseTimer()
@@ -273,6 +299,13 @@ void APTWGameState::SetMaxMiniGameRound(int32 NewMaxRound)
 
 	MaxMiniGameRound = NewMaxRound;
 	OnRep_MaxMiniGameRound();
+}
+
+void APTWGameState::SetWinTeamId(int32 TeamId)
+{
+	if (!HasAuthority()) return;
+
+	WinTeamId = TeamId;
 }
 
 void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& Message)

@@ -23,8 +23,10 @@ class PTW_API IPTWPlayerRoundDataInterface
 	
 public:
 	virtual void SetDeathOrder(int32 Order)=0;
+	/** 팀 설정 */
+	virtual void SetTeamId(int32 Id) = 0;
 	virtual int32 GetDeathOrder() const =0;
-	
+	virtual int32 GetTeamId() const = 0;
 	/** 라운드 킬 증가 */
 	virtual void AddKillCount(int32 Amount = 1) =0;
 	
@@ -32,7 +34,7 @@ public:
 	virtual void AddDeathCount(int32 Amount = 1) =0;
 	
 	/** 라운드 점수 증가 */
-	virtual void AddScore(int32 Amount)=0;
+	virtual void AddScore(int32 Amount) = 0;
 	
 	/** 라운드 더어터 초기화 */
 	virtual void ResetRoundData() = 0;

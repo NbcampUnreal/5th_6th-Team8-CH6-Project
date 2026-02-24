@@ -36,6 +36,10 @@ struct FOptionSnapshot
 	bool bVSync;
 
 	float MasterVolume = 1.f;
+	float BGMVolume = 1.f;
+	float SFXVolume = 1.f;
+	float UIVolume = 1.f;
+
 	float MouseSensitivity = 1.f;
 };
 /**
@@ -85,6 +89,19 @@ protected:
 	USlider* Slider_MasterVolume;
 	UPROPERTY(meta = (BindWidget))
 	UEditableText* ET_MasterVolume;
+	// 사운드 세부사항
+	UPROPERTY(meta = (BindWidget)) //BGM
+	USlider* Slider_BGMVolume;
+	UPROPERTY(meta = (BindWidget))
+	UEditableText* ET_BGMVolume;
+	UPROPERTY(meta = (BindWidget)) // SFX
+	USlider* Slider_SFXVolume;
+	UPROPERTY(meta = (BindWidget))
+	UEditableText* ET_SFXVolume;
+	UPROPERTY(meta = (BindWidget)) // UI
+	USlider* Slider_UIVolume;
+	UPROPERTY(meta = (BindWidget))
+	UEditableText* ET_UIVolume;
 	// 마우스 감도
 	UPROPERTY(meta = (BindWidget))
 	USlider* Slider_MouseSensitivity;
@@ -111,13 +128,18 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UButton* Button_Game;
 
-	/* 에디터에서 생성한 SM_Master를 할당할 변수 */
+	/* 에디터에서 할당할 SoundMix */
 	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
 	USoundMix* MasterSoundMix;
-
-	/* 에디터에서 생성한 SC_Master를 할당할 변수 */
+	/* 에디터에서 할당할 SoundClass */
 	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
 	USoundClass* MasterSoundClass;
+	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
+	USoundClass* BGMSoundClass;
+	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
+	USoundClass* SFXSoundClass;
+	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
+	USoundClass* UISoundClass;
 
 private:
 	FOptionSnapshot InitialSnapshot; // 초기값 저장
@@ -137,7 +159,6 @@ private:
 	void BindEvents();
 	// 텍스트 입력값을 검증하고 슬라이더 및 텍스트 박스를 동기화하는 공통 함수
 	bool ValidateAndApplyTextEntry(const FText& InText, USlider* TargetSlider, UEditableText* TargetET, float MinValue, float MaxValue);
-
 	// 숫자 포맷팅
 	FText FormatFloatToText(float Value) const;
 
@@ -159,6 +180,18 @@ private:
 	void OnMasterVolumeChanged(float Value);
 	UFUNCTION()
 	void OnMasterVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	UFUNCTION()
+	void OnBGMVolumeChanged(float Value);
+	UFUNCTION()
+	void OnBGMVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	UFUNCTION()
+	void OnSFXVolumeChanged(float Value);
+	UFUNCTION()
+	void OnSFXVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	UFUNCTION()
+	void OnUIVolumeChanged(float Value);
+	UFUNCTION()
+	void OnUIVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 
 	UFUNCTION()
 	void OnMouseSensitivityChanged(float Value);

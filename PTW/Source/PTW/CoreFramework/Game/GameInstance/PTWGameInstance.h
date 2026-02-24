@@ -6,6 +6,8 @@
 #include "PTWGameInstance.generated.h"
 
 class UPTWLoadingWidgetBase;
+class USoundMix;
+class USoundClass;
 
 UENUM(BlueprintType)
 enum class ELoadingScreenType : uint8
@@ -44,6 +46,18 @@ public:
 
 	/* MoviePlayer 로딩 화면 수동 종료 */
 	void StopLoadingScreen();
+
+	/* 게임 시작 시 사운드 설정 저장값 자동 적용 */
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	USoundMix* MasterSoundMix;
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	USoundClass* MasterSoundClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	USoundClass* BGMSoundClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	USoundClass* SFXSoundClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	USoundClass* UISoundClass;
 
 protected:
 	UPROPERTY()

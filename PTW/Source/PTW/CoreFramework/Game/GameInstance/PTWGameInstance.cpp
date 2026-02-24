@@ -7,6 +7,7 @@
 #include "MiniGame/PTWMiniGameMapRow.h"
 #include "UI/LoadingScreen/PTWLoadingMiniGame.h"
 #include "UI/LoadingScreen/PTWLoadingWidgetBase.h"
+#include "CoreFramework/PTWGameUserSettings.h"
 
 UPTWGameInstance::UPTWGameInstance(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -18,6 +19,25 @@ void UPTWGameInstance::Init()
 	Super::Init();
 
 	FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &UPTWGameInstance::BeginLoadingScreen);
+
+	/* 사운드 저장값 자동 적용 */
+	if (!GEngine) return;
+
+	UPTWGameUserSettings* Settings = Cast<UPTWGameUserSettings>(GEngine->GetGameUserSettings());
+	if (!Settings) return;
+
+	// 저장된 설정 로드
+	Settings->LoadSettings(false);
+
+	// 오디오 적용
+	Settings->ApplyAudioSettings(
+		GetWorld(),
+		MasterSoundMix,
+		MasterSoundClass,
+		BGMSoundClass,
+		SFXSoundClass,
+		UISoundClass
+	);
 }
 
 void UPTWGameInstance::PrepareLoadingScreen(ELoadingScreenType InType, FName InMapRowName)

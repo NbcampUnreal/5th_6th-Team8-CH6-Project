@@ -168,10 +168,28 @@ void UPTWOptionsWidget::InitializeUIFromCurrentSettings()
 		ET_MasterVolume->SetText(FormatFloatToText(Settings->MasterVolume)); // 초기 텍스트 세팅
 	}
 
+	if (Slider_BGMVolume && ET_BGMVolume)
+	{
+		Slider_BGMVolume->SetValue(Settings->BGMVolume);
+		ET_BGMVolume->SetText(FormatFloatToText(Settings->BGMVolume));
+	}
+
+	if (Slider_SFXVolume && ET_SFXVolume)
+	{
+		Slider_SFXVolume->SetValue(Settings->SFXVolume);
+		ET_SFXVolume->SetText(FormatFloatToText(Settings->SFXVolume));
+	}
+
+	if (Slider_UIVolume && ET_UIVolume)
+	{
+		Slider_UIVolume->SetValue(Settings->UIVolume);
+		ET_UIVolume->SetText(FormatFloatToText(Settings->UIVolume));
+	}
+
 	if (Slider_MouseSensitivity && ET_MouseSensitivity)
 	{
 		Slider_MouseSensitivity->SetValue(Settings->MouseSensitivity);
-		ET_MouseSensitivity->SetText(FormatFloatToText(Settings->MouseSensitivity)); // 초기 텍스트 세팅
+		ET_MouseSensitivity->SetText(FormatFloatToText(Settings->MouseSensitivity));
 	}
 }
 
@@ -195,6 +213,9 @@ void UPTWOptionsWidget::CacheInitialSettings()
 	InitialSnapshot.AntiAliasingQuality = Settings->GetAntiAliasingQuality();
 	InitialSnapshot.bVSync = Settings->bUseVSync;
 	InitialSnapshot.MasterVolume = Settings->MasterVolume;
+	InitialSnapshot.BGMVolume = Settings->BGMVolume;
+	InitialSnapshot.SFXVolume = Settings->SFXVolume;
+	InitialSnapshot.UIVolume = Settings->UIVolume;
 	InitialSnapshot.MouseSensitivity = Settings->MouseSensitivity;
 
 	bIsDirty = false;
@@ -222,28 +243,87 @@ void UPTWOptionsWidget::UpdateDisplaySettings()
 void UPTWOptionsWidget::UpdateAudioSettings()
 {
 	UPTWGameUserSettings* Settings = Cast<UPTWGameUserSettings>(GEngine->GetGameUserSettings());
-	if (!Settings || !Slider_MasterVolume) return;
+	if (!Settings) return;
 
-	//  설정값 업데이트
-	float NewVolume = Slider_MasterVolume->GetValue();
-	Settings->MasterVolume = NewVolume;
+	// 현재 UI 값 가져오기
+	const float Master = Slider_MasterVolume ? Slider_MasterVolume->GetValue() : 1.f;
+	const float BGM = Slider_BGMVolume ? Slider_BGMVolume->GetValue() : 1.f;
+	const float SFX = Slider_SFXVolume ? Slider_SFXVolume->GetValue() : 1.f;
+	const float UI = Slider_UIVolume ? Slider_UIVolume->GetValue() : 1.f;
 
-	// 사운드 믹스를 통한 실시간 볼륨 조절
-	if (MasterSoundMix && MasterSoundClass)
+	// Settings 저장
+	Settings->MasterVolume = Master;
+	Settings->BGMVolume = BGM;
+	Settings->SFXVolume = SFX;
+	Settings->UIVolume = UI;
+
+	UWorld* World = GetWorld();
+	if (!World || !MasterSoundMix) return;
+
+	// Master × 세부 볼륨 (곱연산)
+	const float FinalMaster = Master;
+	const float FinalBGM = Master * BGM;
+	const float FinalSFX = Master * SFX;
+	const float FinalUI = Master * UI;
+
+	// Master 적용
+	if (MasterSoundClass)
 	{
 		UGameplayStatics::SetSoundMixClassOverride(
-			GetWorld(),
+			World,
 			MasterSoundMix,
 			MasterSoundClass,
-			NewVolume, // 볼륨 (0.0 ~ 1.0)
-			1.0f,      // 피치
-			0.0f,      // 페이드 인 시간 (0 = 즉시 반영)
-			true       // 기존 설정을 무시하고 강제 적용
+			FinalMaster,
+			1.0f,
+			0.0f,
+			true
 		);
-
-		// 변경된 믹스 푸시
-		UGameplayStatics::PushSoundMixModifier(GetWorld(), MasterSoundMix);
 	}
+
+	// BGM 적용
+	if (BGMSoundClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(
+			World,
+			MasterSoundMix,
+			BGMSoundClass,
+			FinalBGM,
+			1.0f,
+			0.0f,
+			true
+		);
+	}
+
+	// SFX 적용
+	if (SFXSoundClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(
+			World,
+			MasterSoundMix,
+			SFXSoundClass,
+			FinalSFX,
+			1.0f,
+			0.0f,
+			true
+		);
+	}
+
+	// UI 적용
+	if (UISoundClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(
+			World,
+			MasterSoundMix,
+			UISoundClass,
+			FinalUI,
+			1.0f,
+			0.0f,
+			true
+		);
+	}
+
+	// 한 번만 Push (성능 + 안정성)
+	UGameplayStatics::PushSoundMixModifier(World, MasterSoundMix);
 
 	bIsDirty = true;
 }
@@ -393,6 +473,7 @@ void UPTWOptionsWidget::RestoreInitialSettings()
 
 void UPTWOptionsWidget::BindEvents()
 {
+	/* 그래픽 */
 	if (CheckBox_Windowed)
 	{
 		CheckBox_Windowed->OnCheckStateChanged.AddDynamic(this, &UPTWOptionsWidget::OnCheckWindowedChanged);
@@ -427,6 +508,7 @@ void UPTWOptionsWidget::BindEvents()
 		CheckBox_VSync->OnCheckStateChanged.AddDynamic(this, &UPTWOptionsWidget::OnVSyncChanged);
 	}
 
+	 /* 사운드 */
 	if (Slider_MasterVolume)
 	{
 		Slider_MasterVolume->OnValueChanged.AddDynamic(this, &UPTWOptionsWidget::OnMasterVolumeChanged);
@@ -435,7 +517,32 @@ void UPTWOptionsWidget::BindEvents()
 	{
 		ET_MasterVolume->OnTextCommitted.AddDynamic(this, &UPTWOptionsWidget::OnMasterVolumeTextCommitted);
 	}
+	if (Slider_BGMVolume)
+	{
+		Slider_BGMVolume->OnValueChanged.AddDynamic(this, &UPTWOptionsWidget::OnBGMVolumeChanged);
+	}
+	if (ET_BGMVolume)
+	{
+		ET_BGMVolume->OnTextCommitted.AddDynamic(this, &UPTWOptionsWidget::OnBGMVolumeTextCommitted);
+	}
+	if (Slider_SFXVolume)
+	{
+		Slider_SFXVolume->OnValueChanged.AddDynamic(this, &UPTWOptionsWidget::OnSFXVolumeChanged);
+	}
+	if (ET_SFXVolume)
+	{
+		ET_SFXVolume->OnTextCommitted.AddDynamic(this, &UPTWOptionsWidget::OnSFXVolumeTextCommitted);
+	}
+	if (Slider_UIVolume)
+	{
+		Slider_UIVolume->OnValueChanged.AddDynamic(this, &UPTWOptionsWidget::OnUIVolumeChanged);
+	}
+	if (ET_UIVolume)
+	{
+		ET_UIVolume->OnTextCommitted.AddDynamic(this, &UPTWOptionsWidget::OnUIVolumeTextCommitted);
+	}
 
+	/* 게임 세팅 */
 	if (Slider_MouseSensitivity)
 	{
 		// 드래그 중에는 값만 업데이트
@@ -449,34 +556,33 @@ void UPTWOptionsWidget::BindEvents()
 		ET_MouseSensitivity->OnTextCommitted.AddDynamic(this, &UPTWOptionsWidget::OnMouseSensitivityTextCommitted);
 	}
 
-	if (Button_Save)
-	{
-		Button_Save->OnClicked.AddDynamic(
-			this, &UPTWOptionsWidget::OnClickedSave);
-	}
-
-	if (Button_Cancel)
-	{
-		Button_Cancel->OnClicked.AddDynamic(
-			this, &UPTWOptionsWidget::OnClickedCancel);
-	}
-
+	/* 카테고리 버튼 */
 	if (Button_Graphics)
 	{
 		Button_Graphics->OnClicked.AddDynamic(
 			this, &UPTWOptionsWidget::OnClickedGraphics);
 	}
-
 	if (Button_Sound)
 	{
 		Button_Sound->OnClicked.AddDynamic(
 			this, &UPTWOptionsWidget::OnClickedSound);
 	}
-
 	if (Button_Game)
 	{
 		Button_Game->OnClicked.AddDynamic(
 			this, &UPTWOptionsWidget::OnClickedGame);
+	}
+
+	/* 버튼 */
+	if (Button_Save)
+	{
+		Button_Save->OnClicked.AddDynamic(
+			this, &UPTWOptionsWidget::OnClickedSave);
+	}
+	if (Button_Cancel)
+	{
+		Button_Cancel->OnClicked.AddDynamic(
+			this, &UPTWOptionsWidget::OnClickedCancel);
 	}
 }
 
@@ -591,6 +697,57 @@ void UPTWOptionsWidget::OnMasterVolumeTextCommitted(const FText& Text, ETextComm
 	if (ValidateAndApplyTextEntry(Text, Slider_MasterVolume, ET_MasterVolume, 0.0f, 1.0f))
 	{
 		// 유효한 입력이었을 때만 엔진 설정 업데이트
+		UpdateAudioSettings();
+	}
+}
+
+void UPTWOptionsWidget::OnBGMVolumeChanged(float Value)
+{
+	if (ET_BGMVolume)
+	{
+		ET_BGMVolume->SetText(FormatFloatToText(Value));
+	}
+	UpdateAudioSettings();
+}
+
+void UPTWOptionsWidget::OnBGMVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod)
+{
+	if (ValidateAndApplyTextEntry(Text, Slider_BGMVolume, ET_BGMVolume, 0.0f, 1.0f))
+	{
+		UpdateAudioSettings();
+	}
+}
+
+void UPTWOptionsWidget::OnSFXVolumeChanged(float Value)
+{
+	if (ET_SFXVolume)
+	{
+		ET_SFXVolume->SetText(FormatFloatToText(Value));
+	}
+	UpdateAudioSettings();
+}
+
+void UPTWOptionsWidget::OnSFXVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod)
+{
+	if (ValidateAndApplyTextEntry(Text, Slider_SFXVolume, ET_SFXVolume, 0.0f, 1.0f))
+	{
+		UpdateAudioSettings();
+	}
+}
+
+void UPTWOptionsWidget::OnUIVolumeChanged(float Value)
+{
+	if (ET_UIVolume)
+	{
+		ET_UIVolume->SetText(FormatFloatToText(Value));
+	}
+	UpdateAudioSettings();
+}
+
+void UPTWOptionsWidget::OnUIVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod)
+{
+	if (ValidateAndApplyTextEntry(Text, Slider_UIVolume, ET_UIVolume, 0.0f, 1.0f))
+	{
 		UpdateAudioSettings();
 	}
 }

@@ -364,6 +364,7 @@ void APTWMiniGameMode::CheckTargetCondition()
 				return;
 			}
 		}
+		
 	}
 	else
 	{
@@ -372,6 +373,10 @@ void APTWMiniGameMode::CheckTargetCondition()
 
 		if (RankedPlayers[0]->GetPlayerRoundData().Score >= MiniGameRule.WinConditionRule.TargetValue)
 		{
+			if (MiniGameRule.TeamRule.bUseTeam && !MiniGameRule.TeamRule.bShareScoreWithinTeam)
+			{
+				PTWGameState->SetWinTeamId(RankedPlayers[0]->GetTeamId());
+			}
 			EndGame();
 		}
 	}
@@ -498,7 +503,8 @@ void APTWMiniGameMode::AddKillDeathCount(APlayerState* DeadPlayerState, APlayerS
 void APTWMiniGameMode::AddRoundScore(APlayerState* ScoreTarget, int32 ScoreValue)
 {
 	if (!IsValid(ScoreTarget) && ScoreValue == 0) return;
-	if (!PTWGameState) return;
+	// 미니 게임 진행 중이 아니면 점수 부여 X
+	if (!PTWGameState && PTWGameState->GetCurrentGamePhase() != EPTWGamePhase::MiniGame) return;
 	
 	if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(ScoreTarget))
 	{

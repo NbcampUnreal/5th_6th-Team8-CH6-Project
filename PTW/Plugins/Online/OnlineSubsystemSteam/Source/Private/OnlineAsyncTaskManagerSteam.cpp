@@ -681,6 +681,7 @@ void FOnlineAsyncTaskManagerSteam::OnSteamServersConnectedGS(SteamServersConnect
 		SessionInt->bSteamworksGameServerConnected = true;
 		SessionInt->GameServerSteamId =FUniqueNetIdSteam::Create(SteamGameServer()->GetSteamID());
 		UE_LOG(LogTemp, Warning, TEXT("OnSteamServersConnectedGS: %s"), *SessionInt->GameServerSteamId->ToString());
+		SteamSubsystem->TriggerOnSteamServerLoginCompletedDelegates(true);
 	}
 }
 

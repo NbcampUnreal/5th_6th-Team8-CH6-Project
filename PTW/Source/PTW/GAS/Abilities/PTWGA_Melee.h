@@ -23,8 +23,12 @@ protected:
 	UFUNCTION()
 	void OnMeleeHitReceived(FGameplayEventData Payload);
 	
+	void ApplyKnockBack(ACharacter* Vic);
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MeleeMontage")
 	TObjectPtr<UAnimMontage> MeleeAttackMontage;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bApplyKnockBack = true;
 };

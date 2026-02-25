@@ -80,6 +80,11 @@ namespace GameplayTags
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(ReflectShield);
 		}
+
+		namespace Chaos
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Test);
+		}
 	}
 	
 	namespace Weapon

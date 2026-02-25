@@ -79,6 +79,12 @@ namespace GameplayTags
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(ReflectShield, "Item.Passive.ReflectShield");
 		}
+
+		namespace Chaos
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Test, "Item.Chaos.Test");
+
+		}
 	}
 	namespace Weapon
 	{

@@ -56,8 +56,8 @@ void APTWMiniGameMode::BeginPlay()
 	
 	// 카오스 이벤트 태그 적용 테스트
 	if (!PTWGameState) return;
-	ChaosEventManager->InitGameState(PTWGameState);
-	ChaosEventManager->ApplyChaosEvent();
+	ChaosEventManager->InitChaosEventManager(PTWGameState, MiniGameRule.ChaosEventRule);
+	//ChaosEventManager->ApplyChaosEvent();
 }
 
 void APTWMiniGameMode::Logout(AController* Exiting)
@@ -110,22 +110,27 @@ void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	ExitSpectatorMode(C);
 	
 	Super::HandleSeamlessTravelPlayer(C);
+	
+	PlayerReadyToPlay(C);
 }
 
-void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* ReadyPlayerController)
+void APTWMiniGameMode::PlayerReadyToPlay(AController* Controller)
 {
-	Super::PlayerReadyToPlay(ReadyPlayerController);
+	Super::PlayerReadyToPlay(Controller);
 
-	if (!IsValid(PTWGameState) || !ReadyPlayerController) return;
+	if (!IsValid(PTWGameState) || !Controller) return;
+
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (!PlayerController) return;
 	
-	APTWPlayerState* PTWPlayerState = ReadyPlayerController->GetPlayerState<APTWPlayerState>();
+	APTWPlayerState* PTWPlayerState = Controller->GetPlayerState<APTWPlayerState>();
 	if (!PTWPlayerState) return;
 	
 	if (ReadyPlayer >= AllPlayer)
 	{
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
-
+	
 		AssignTeam();
 		
 		FTimerHandle LoadingDelayTimer;

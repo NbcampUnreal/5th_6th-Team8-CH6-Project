@@ -4,26 +4,33 @@
 #include "PTWGA_Melee.h"
 
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
+
 
 void UPTWGA_Melee::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
                                    const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	
-	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-		this, GameplayTags::Event::Melee::Hit);
-	
+	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, GameplayTags::Event::Melee::Hit);
 	WaitEventTask->EventReceived.AddDynamic(this, &ThisClass::OnMeleeHitReceived);
 	WaitEventTask->ReadyForActivation();
 	
-	UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this, NAME_None, MeleeAttackMontage);
+	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
+	if (PC)
+	{
+		PC->GetWeaponComponent()->PlayMontage1P(MeleeAttackMontage);
+		PC->GetMesh3P()->GetAnimInstance()->Montage_Play(MeleeAttackMontage);
+	}
 	
-	MontageTask->OnCompleted.AddDynamic(this, &ThisClass::K2_EndAbility);
-	MontageTask->OnInterrupted.AddDynamic(this, &ThisClass::K2_EndAbility);
-	MontageTask->ReadyForActivation();
+	float Duration = MeleeAttackMontage->GetPlayLength();
+	UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, Duration);
+	DelayTask->OnFinish.AddDynamic(this, &ThisClass::K2_EndAbility);
+	DelayTask->ReadyForActivation();
 }
 
 void UPTWGA_Melee::OnMeleeHitReceived(FGameplayEventData Payload)
@@ -33,3 +40,4 @@ void UPTWGA_Melee::OnMeleeHitReceived(FGameplayEventData Payload)
 		UE_LOG(LogTemp, Warning, TEXT("Hit"));
 	}
 }
+

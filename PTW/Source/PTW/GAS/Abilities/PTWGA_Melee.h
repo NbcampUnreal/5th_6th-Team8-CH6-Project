@@ -20,6 +20,7 @@ protected:
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
 	
+	UFUNCTION()
 	void OnMeleeHitReceived(FGameplayEventData Payload);
 	
 protected:

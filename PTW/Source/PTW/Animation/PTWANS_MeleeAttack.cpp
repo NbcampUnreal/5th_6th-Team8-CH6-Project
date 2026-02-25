@@ -4,9 +4,12 @@
 #include "PTWANS_MeleeAttack.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
+#include "PTW.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Inventory/PTWInventoryComponent.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
 #include "PTWGameplayTag/GameplayTags.h"
 #include "Weapon/PTWWeaponActor.h"
 
@@ -22,29 +25,31 @@ void UPTWANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 	APTWPlayerCharacter* Owner = Cast<APTWPlayerCharacter>(MeshComp->GetOwner());
 	if (!Owner) return;
 	
-	UPTWWeaponComponent* WeaponComponent = Owner->GetWeaponComponent();
-	if (!WeaponComponent) return;
+	UPTWInventoryComponent* InvenComp = Owner->GetInventoryComponent();
+	if (!InvenComp) return;
 	
-	APTWWeaponActor* WeaponActor = WeaponComponent->CurrentWeapon;
-	if (!WeaponActor) return;
+	UPTWWeaponInstance* WeaponInst =  Cast<UPTWWeaponInstance>(InvenComp->GetCurrentWeaponInst());
+	if (!WeaponInst) return;
+	
+	APTWWeaponActor* MeleeWeapon = WeaponInst->SpawnedWeapon3P;
 	
 	//FIXME : 테스트 코드
-	FVector StartPos = MeshComp->GetSocketLocation(TEXT("WeaponStart"));
-	FVector EndPos = MeshComp->GetSocketLocation(TEXT("WeaponEnd"));
+	FVector StartPos = MeleeWeapon->GetWeaponMesh()->GetSocketLocation(TEXT("StartPos"));
+	FVector EndPos = MeleeWeapon->GetWeaponMesh()->GetSocketLocation(TEXT("EndPos"));
 	
 	float SphereRad = 20.0f;
 	TArray<FHitResult> OutHits;
 	
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(Owner);
-	CollisionParams.AddIgnoredActor(WeaponActor);
+	CollisionParams.AddIgnoredActor(MeleeWeapon);
 	
 	bool bHit = Owner->GetWorld()->SweepMultiByChannel(
 		OutHits,
 		StartPos,
 		EndPos,
 		FQuat::Identity,
-		ECC_Visibility, 
+		ECC_WeaponAttack, 
 		FCollisionShape::MakeSphere(SphereRad),
 		CollisionParams
 	);
@@ -71,6 +76,8 @@ void UPTWANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 			}
 		}
 	}
+	
+	
 	
 }
 

@@ -20,6 +20,8 @@ protected:
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
 	
+	void OnMeleeHitReceived(FGameplayEventData Payload);
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MeleeMontage")
 	TObjectPtr<UAnimMontage> MeleeAttackMontage;

@@ -41,7 +41,8 @@ public class PTW : ModuleRules
         PublicDependencyModuleNames.AddRange(new string[] {
             "OnlineSubsystem",
             "OnlineSubsystemUtils",
-			"OnlineSubsystemSteam"
+			"OnlineSubsystemSteam",
+			"GameLiftServerSDK"
         });
         
         // 5. Niagara 이펙트 모듈

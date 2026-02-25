@@ -52,6 +52,7 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Jump, "Input.Action.Jump");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Reload, "Input.Action.Reload");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Sprint, "Input.Action.Sprint");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Drop, "Input.Action.Drop");
 	}
 	
 	namespace State

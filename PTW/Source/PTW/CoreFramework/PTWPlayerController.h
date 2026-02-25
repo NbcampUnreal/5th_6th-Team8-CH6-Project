@@ -23,6 +23,8 @@ class UPTWDamageIndicator;
 class UPTWChatList;
 class UPTWChatInput;
 class UPTWGameStartTimer;
+class APTWBombActor;
+class UPTWBombWarning;
 /**
  * 
  */
@@ -72,6 +74,11 @@ public:
 	/* 서버에 플레이어가 준비 상태인 것을 알림 */
 	UFUNCTION(Server, Reliable)
 	void Server_NotifyReadyToPlay();
+
+	/* (폭탄넘기기 미니게임) BombActor 델리게이트 바인딩 */
+	void BindBombDelegate();
+	void UnBindBombDelegate();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -129,6 +136,11 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_ReportLoadingComplete();
 
+	/* (폭탄넘기기 미니게임) 폭발 경고 UI */
+	void HandleBombOwnerChanged(APawn* NewOwnerPawn);
+	void ShowBombUI();
+	void HideBombUI();
+
 public:
 	/* KillLog 델리게이트 */
 	FOnKillLog OnKillLog;
@@ -148,14 +160,18 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UPTWUISubsystem> UISubsystem;
 
+	/* (폭탄넘기기 미니게임) 폭탄액터 캐싱 */
+	UPROPERTY()
+	APTWBombActor* CachedBombActor;
+
 	/* 닉네임 업데이트용 타이머 핸들 */
 	FTimerHandle NameTagTimerHandle;
 
-	/* 위젯 토글 가능 유무 */
+	/* 위젯 Open 가능 유무 */
 	bool bAbleRankingBoard; // 랭킹보드
-	bool bAbleChat;
+	bool bAbleChat; // 채팅창
 
-	/* 키가이드 토글 */
+	/* 키가이드 토글 상태 */
 	bool bKeyGuideOn;
 
 	/* 닉네임 표시 제한거리 */
@@ -214,4 +230,7 @@ protected:
 	// 키가이드
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> KeyGuideWidgetClass;
+	// 폭탄 경고 위젯
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Bomb")
+	TSubclassOf<UPTWBombWarning> BombWarningWidgetClass;
 };

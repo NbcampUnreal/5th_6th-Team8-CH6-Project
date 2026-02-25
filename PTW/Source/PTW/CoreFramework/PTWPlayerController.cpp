@@ -28,11 +28,13 @@
 #include "UI/ChatWidget/PTWChatInput.h"
 #include "UI/InGameUI/PTWDamageIndicator.h"
 #include "UI/MiniGame/PTWGameStartTimer.h"
+#include "UI/MiniGame/Bomb/PTWBombWarning.h"
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "System/PTWSessionSubsystem.h"
 #include "Weapon/PTWWeaponActor.h"
+#include "MiniGame/Item/BombItem/PTWBombActor.h"
 
 void APTWPlayerController::StartSpectating()
 {
@@ -133,6 +135,32 @@ void APTWPlayerController::Server_NotifyReadyToPlay_Implementation()
 	{
 		GameMode->PlayerReadyToPlay(this);
 	}
+}
+
+void APTWPlayerController::BindBombDelegate()
+{
+	// 중복 바인드 방지
+	UnBindBombDelegate();
+
+	for (TActorIterator<APTWBombActor> It(GetWorld()); It; ++It)
+	{
+		CachedBombActor = *It;
+		break;
+	}
+
+	if (CachedBombActor)
+	{
+		CachedBombActor->OnBombOwnerChanged.AddUObject(this, &APTWPlayerController::HandleBombOwnerChanged);
+	}
+}
+
+void APTWPlayerController::UnBindBombDelegate()
+{
+	if (CachedBombActor)
+	{
+		CachedBombActor->OnBombOwnerChanged.RemoveAll(this);
+	}
+	HideBombUI();
 }
 
 void APTWPlayerController::BeginPlay()
@@ -678,6 +706,40 @@ void APTWPlayerController::UpdateNameTagsVisibility()
 			WidgetComp->SetVisibility(false);
 		}
 	}
+}
+
+void APTWPlayerController::HandleBombOwnerChanged(APawn* NewOwnerPawn)
+{
+	if (!IsLocalController()) return;
+
+	if (NewOwnerPawn == GetPawn())
+	{
+		ShowBombUI();
+	}
+	else
+	{
+		HideBombUI();
+	}
+}
+
+void APTWPlayerController::ShowBombUI()
+{
+	if (!BombWarningWidgetClass) return;
+
+	UISubsystem->ShowSystemWidget(BombWarningWidgetClass, 70);
+
+	UUserWidget* Widget = UISubsystem->GetOrCreateWidget(BombWarningWidgetClass);
+	if (UPTWBombWarning* BombWidget = Cast<UPTWBombWarning>(Widget))
+	{
+		BombWidget->SetTargetBomb(CachedBombActor);
+	}
+}
+
+void APTWPlayerController::HideBombUI()
+{
+	if (!BombWarningWidgetClass) return;
+
+	UISubsystem->HideSystemWidget(BombWarningWidgetClass);
 }
 
 void APTWPlayerController::Server_ReportLoadingComplete_Implementation()

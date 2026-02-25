@@ -335,10 +335,10 @@ enum class EPTWRandomEventType : uint8
 	/** 일정 주기 마다 반복 */
 	Interval UMETA(DisplayName = "Interval"),
 	
-	/** 게임 종료까지 남은 시간이 특정 값 이하일 때 이벤트 발생 */
+	/** 라운드 종료까지 남은 시간이 특정 값 이하일 때 이벤트 발생 */
 	TimeRemain UMETA(DisplayName = "TimeRemain"),
 	
-	/** 생존 인원 수가 특정 임계값 이하가 되었을 때 이벤트 발생 */
+	/** 생존 인원 수가 특정 값 이하가 되었을 때 이벤트 발생 */
 	SurvivalThreshold UMETA(DisplayName = "SurvivalThreshold")
 };
 
@@ -348,7 +348,7 @@ enum class EPTWRandomEventType : uint8
  * - 적용 지연, 반복 주기, 유지 시간 설정
  */
 USTRUCT(BlueprintType)
-struct FPTWRandomEventRule
+struct FPTWChaosEventRule
 {
 	GENERATED_BODY()
 	
@@ -405,7 +405,7 @@ struct FPTWMiniGameRule
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Time")
 	FPTWTimerRule TimeRule;
 
-	/** 점수 관련 규칙 */
+	/** 킬 관련 규칙 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Kill")
 	FPTWKillRule KillRule;
 	
@@ -424,10 +424,10 @@ struct FPTWMiniGameRule
 	/** 전투 수단 사용 제한 및 탄약/재장전/스왑 규칙 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Combat")
 	FPTWCombatRule CombatRule;
-
+	
 	/** 이동 행동 및 이동/중력 스케일, 충돌 규칙 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Movement")
-	FPTWCombatRule MovementRule;
+	FPTWMovementRule MovementRule;
 
 	/** 승리 조건 및 연장전 규칙 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|WinCondition")
@@ -441,9 +441,9 @@ struct FPTWMiniGameRule
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|Damage")
 	FPTWDamageRule DamageRule;
 
-	/** 랜덤 이벤트 트리거/지연/유지시간 규칙 */
+	/** 카오스 이벤트 트리거/지연/유지시간 규칙 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|RandomEvent")
-	FPTWRandomEventRule RandomEventRule;
+	FPTWChaosEventRule ChaosEventRule;
 
 	/** 랜덤 이벤트 트리거/지연/유지시간 규칙 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule|UI")

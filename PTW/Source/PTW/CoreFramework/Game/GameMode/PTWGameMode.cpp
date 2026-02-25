@@ -24,7 +24,7 @@ void APTWGameMode::InitGame(const FString& MapName, const FString& Options, FStr
 	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
 		CurrentRound = PTWScoreSubsystem->GetCurrentGameRound(); // GameInstance 라운드 값 받아서 GameMode에 저장
-		AllPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
+		//AllPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
 	}
 }
 
@@ -103,7 +103,7 @@ void APTWGameMode::Logout(AController* Exiting)
 	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
 		PTWScoreSubsystem->DecreasePlayerCount();
-		AllPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
+		//AllPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
 	}
 	if (PTWGameState)
 	{
@@ -127,6 +127,8 @@ void APTWGameMode::PostSeamlessTravel()
 	{
 		GS->LoadedPlayerCount = 0;
 		GS->TotalPlayerCount = GetNumPlayers();
+
+		AllPlayer = GetNumPlayers();
 	}
 }
 
@@ -151,7 +153,7 @@ void APTWGameMode::CheckAllPlayersLoaded()
 	}
 }
 
-void APTWGameMode::PlayerReadyToPlay(APlayerController* ReadyPlayerController)
+void APTWGameMode::PlayerReadyToPlay(AController* Controller)
 {
 	ReadyPlayer++;
 }

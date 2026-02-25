@@ -37,7 +37,7 @@ protected:
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 
-	virtual void PlayerReadyToPlay(APlayerController* ReadyPlayerController) override;
+	virtual void PlayerReadyToPlay(AController* Controller) override;
 	
 	//* 미니 게임 시작 */
 	UFUNCTION()

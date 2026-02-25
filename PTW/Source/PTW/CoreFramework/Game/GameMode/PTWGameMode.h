@@ -53,7 +53,7 @@ public:
 	void CheckAllPlayersLoaded();
 
 	/** 준비 완료된 플레이어 처리 **/
-	virtual void PlayerReadyToPlay(APlayerController* ReadyPlayerController);
+	virtual void PlayerReadyToPlay(AController* Controller);
 	
 	/** 모든 클라이언트의 로딩 화면을 끄라는 RPC */
 	UFUNCTION(NetMulticast, Reliable)

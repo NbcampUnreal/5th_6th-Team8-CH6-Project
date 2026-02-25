@@ -77,7 +77,7 @@ protected:
 	
 	virtual void Logout(AController* Exiting) override;
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
-	virtual void PlayerReadyToPlay(APlayerController* ReadyPlayerController) override;
+	virtual void PlayerReadyToPlay(AController* Controller) override;
 	
 	//* PreGameLobby 상태에서 타이머가 종료되면 게임 시작 /
 	void StartGameLobby();

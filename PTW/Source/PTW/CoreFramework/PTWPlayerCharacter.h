@@ -126,6 +126,8 @@ protected:
 	TObjectPtr<UInputAction> EquipSecondWeaponAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> UseActiveItemAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> DropItemAction;
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	TObjectPtr<USoundBase> LandSound;
 	//FIXME : 테스트 용도

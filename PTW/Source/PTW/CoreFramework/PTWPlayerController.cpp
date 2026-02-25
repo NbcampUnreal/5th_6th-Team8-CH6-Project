@@ -477,7 +477,7 @@ void APTWPlayerController::PostSeamlessTravel()
 		CreateUI();
 
 		// 서버에 SeamlessTravel을 했다고 알림
-		Server_NotifyReadyToPlay();
+		//Server_NotifyReadyToPlay();
 	}
 }
 

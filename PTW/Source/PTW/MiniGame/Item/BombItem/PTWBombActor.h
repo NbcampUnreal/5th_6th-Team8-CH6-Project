@@ -17,6 +17,7 @@ class UGameplayAbility;
 class APawn;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBombTimeExpired, AActor* /*InstigatorActor*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBombOwnerChanged, APawn*);
 
 UCLASS()
 class PTW_API APTWBombActor : public AActor, public IAbilitySystemInterface
@@ -33,9 +34,11 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	FOnBombTimeExpired OnBombTimeExpired;
-	
+	FOnBombOwnerChanged OnBombOwnerChanged;
+
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	/** Components */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
@@ -105,6 +108,11 @@ protected:
 
 	//연출효과 변수
 	void UpdateBombEffects(float NewTime);
+
+	// 컨트롤러에게 델리게이트 바인딩 요청
+	void BindToLocalPlayerController();
+	void UnBindToLocalPlayerController();
+
 protected:
 	/** 소유자 */
 	UPROPERTY(ReplicatedUsing=OnRep_BombOwnerPawn)

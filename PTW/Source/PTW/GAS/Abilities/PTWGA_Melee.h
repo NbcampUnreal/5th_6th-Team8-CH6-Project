@@ -26,4 +26,5 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MeleeMontage")
 	TObjectPtr<UAnimMontage> MeleeAttackMontage;
+	
 };

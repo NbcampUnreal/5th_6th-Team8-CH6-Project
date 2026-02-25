@@ -8,7 +8,7 @@
 #include "PTWChaosEventManager.generated.h"
 
 class APTWGameState;
-class UPTWChaosEventDefinition;
+class UPTWChaosItemDefinition;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PTW_API UPTWChaosEventManager : public UActorComponent
@@ -17,21 +17,27 @@ class PTW_API UPTWChaosEventManager : public UActorComponent
 
 public:
 	void InitChaosEventManager(APTWGameState* InGameState, const FPTWChaosEventRule& Rule);
-	void ApplyChaosEvent();
+	void TriggerChaosEvent();
 
-	
+	UFUNCTION()
+	void AddChaosItemPool(FName ItemID);
 private:
+	virtual void BeginPlay() override;
+	
 	void InitGameState(APTWGameState* InGameState);
 	void InitChaosEventRule(const FPTWChaosEventRule& Rule);
 	
-	UPTWChaosEventDefinition* SelectRandomChaosEvent();
+	FName SelectRandomChaosItem();
 	
-	UPROPERTY(EditDefaultsOnly)
-	TArray<TObjectPtr<UPTWChaosEventDefinition>> ChaosEventDefinitions;
-
 	UPROPERTY()
 	TObjectPtr<APTWGameState> PTWGameState;
-
+	
+	UPROPERTY()
+	TObjectPtr<UDataTable> ChaosItemTable;
+	
 	FPTWChaosEventRule ChaosEventRule;
+	
+	//* 플레이어가 구매한 카오스 아이템 보관 */
+	TMap<FName, int32> ChaosItemPool;
 	
 };

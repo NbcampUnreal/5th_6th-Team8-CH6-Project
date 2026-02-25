@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MiniGame/Data/PTWChaosItemDefinition.h"
+#include "MiniGame/Data/PTWChaosItemRow.h"
 
 

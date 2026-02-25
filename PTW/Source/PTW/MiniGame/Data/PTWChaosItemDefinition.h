@@ -3,7 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PTWChaosEventDefinition.generated.h"
+#include "GameplayTagContainer.h"
+#include "PTWChaosItemDefinition.generated.h"
 
 /**
  * 
@@ -12,13 +13,16 @@
 class UGameplayEffect;
 
 UCLASS(BlueprintType)
-class PTW_API UPTWChaosEventDefinition : public UPrimaryDataAsset
+class PTW_API UPTWChaosItemDefinition : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Event")
-	FName EventId;
+	FName ItemId;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Event")
+	FGameplayTag ItemTag;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="UI")
 	FText DisplayName;
@@ -31,9 +35,5 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GAS")
 	TSubclassOf<UGameplayEffect> GameplayEffectClass;
-
-	//* 지속 시간이 설정되어 있으면 카오스 이벤트 지속 시간 보다 우선적으로 적용 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Event")
-	float Duration = -1.f;
 	
 };

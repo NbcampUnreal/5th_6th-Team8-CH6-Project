@@ -34,6 +34,10 @@ namespace GameplayTags
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Economy_Depression);
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Economy_Inflation);
 		}
+		namespace Melee
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Hit);
+		}
 	}
 	
 	namespace MiniGame

@@ -177,6 +177,14 @@ void APTWPlayerState::SetDeathOrder(int32 Order)
 	}
 }
 
+void APTWPlayerState::SetTeamId(int32 TeamId)
+{
+	if (HasAuthority())
+	{
+		PlayerRoundData.TeamId = TeamId;
+	}
+}
+
 void APTWPlayerState::AddKillCount(int32 KillCount)
 {
 	if (HasAuthority())

@@ -24,6 +24,9 @@
 
 #include "Components/AudioComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
+
+#include "CoreFramework/PTWPlayerController.h"
 
 APTWBombActor::APTWBombActor()
 {
@@ -116,6 +119,19 @@ void APTWBombActor::BeginPlay()
 		AudioLoopComponent->SetSound(AudioLoopSound);
 		AudioLoopComponent->Play();
 	}
+
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		BindToLocalPlayerController();
+	}
+}
+
+void APTWBombActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		UnBindToLocalPlayerController();
+	}
 }
 
 void APTWBombActor::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> EffectClass)
@@ -153,6 +169,8 @@ void APTWBombActor::SetBombOwner(APawn* NewOwnerPawn)
 
 	BombOwnerPawn = NewOwnerPawn;
 	OnRep_BombOwnerPawn();
+
+	OnBombOwnerChanged.Broadcast(BombOwnerPawn);
 }
 
 void APTWBombActor::OnRep_BombOwnerPawn()
@@ -165,6 +183,8 @@ void APTWBombActor::OnRep_BombOwnerPawn()
 	}
 
 	AttachToOwnerPawn();
+
+	OnBombOwnerChanged.Broadcast(BombOwnerPawn);
 }
 
 void APTWBombActor::AttachToOwnerPawn()
@@ -381,4 +401,30 @@ void APTWBombActor::UpdateBombEffects(float NewTime)
 		float BlinkSpeed = FMath::GetMappedRangeValueClamped(FVector2D(10.f, 0.f), FVector2D(2.0f, 16.0f), NewTime);
 		BombDynamicMat->SetScalarParameterValue(FName("BlinkSpeed"), BlinkSpeed);
 	}
+}
+
+void APTWBombActor::BindToLocalPlayerController()
+{
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	if (!PC) return;
+
+	APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC);
+	if (!PTWPC) return;
+
+	PTWPC->BindBombDelegate();
+	
+
+	// 현재 오너 즉시 동기화
+	OnBombOwnerChanged.Broadcast(BombOwnerPawn);
+}
+
+void APTWBombActor::UnBindToLocalPlayerController()
+{
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	if (!PC) return;
+
+	APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC);
+	if (!PTWPC) return;
+
+	PTWPC->UnBindBombDelegate();
 }

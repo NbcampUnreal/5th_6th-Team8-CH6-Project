@@ -92,7 +92,7 @@ void UPTWSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessi
 		if (APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Executing ClientTravel to: %s"), *ConnectString);
-			PlayerController->ClientTravel(ConnectString, ETravelType::TRAVEL_Absolute);
+			PlayerController->ClientTravel(ConnectString, TRAVEL_Absolute);
 		}
 		else
 		{
@@ -119,7 +119,11 @@ void UPTWSessionSubsystem::FindGameSession()
 	SessionSearch->bIsLanQuery = false;
 	
 	SessionSearch->MaxSearchResults = 100;
-#if !USE_DEDICATED_SERVER
+#if USE_DEDICATED_SERVER
+	SessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, true, EOnlineComparisonOp::Equals);
+	SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, false, EOnlineComparisonOp::Equals);
+#else
+	SessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, false, EOnlineComparisonOp::Equals);
 	SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
 #endif
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
@@ -186,33 +190,12 @@ void UPTWSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig
 	Arguments += FString::Printf(TEXT(" ServerEntry"));
 	Arguments += FString::Printf(TEXT("?MaxPlayers=%d"), SessionConfig.MaxPlayers);
 	
-	// for (const FSessionPropertyKeyPair& ServerSetting : ServerSettings)
-	// {
-	// 	// FName Key;
-	// 	// FVariantData Data;
-	// 	FString Key = ServerSetting.Key.ToString();
-	// 	FString Value = ServerSetting.Data.ToString();
-	// 	Arguments += FString::Printf(TEXT("?%s=\"%s\""), *Key, *Value);
-	// }
-	
 	Arguments += TEXT(" -Server");
 	Arguments += TEXT(" -log");
 	Arguments += TEXT(" -port=7777");
 	Arguments += TEXT(" -QueryPort=27016");
 	
-	// FString Options;
-	// Options += FString::Printf(TEXT("?listen"));
-	// Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
-	// Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
-	// UGameplayStatics::OpenLevel(this, MapName, true, Options);
-	
 	uint32 ProcessID = 0;
-	
-	// FString AppID = TEXT("480");
-	// FPlatformMisc::SetEnvironmentVar(TEXT("SteamAppId"), *AppID);
-	
-	// FPlatformMisc::SetEnvironmentVar(TEXT("SteamGameId"), *AppID);
-	// FPlatformMisc::SetEnvironmentVar(TEXT("IsDedicatedServerContext"), TEXT("True"));
 	
 	FProcHandle ProcHandle = FPlatformProcess::CreateProc(
 		*ServerPath,	// 데디케이티드 서버 실행파일 경로
@@ -231,11 +214,6 @@ void UPTWSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig
 		UE_LOG(LogTemp, Log, TEXT("Server Create Succeeded! PID: %d"), ProcessID);
 		FPlatformProcess::CloseProc(ProcHandle);
 	}
-	// FTimerHandle TimerHandle;
-	// GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
-	// {
-	// 	GetWorld()->GetFirstPlayerController()->ClientTravel("127.0.0.1:7777", TRAVEL_Absolute);
-	// }, 15.0f, false);
 }
 
 void UPTWSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig)
@@ -247,15 +225,23 @@ void UPTWSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig Sess
 	}
 	Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
 	Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
-	UGameplayStatics::OpenLevel(this, MapName, true, Options);
+	
+	if (IsRunningDedicatedServer())
+	{
+		GetWorld()->ServerTravel(MapName.ToString() + Options);
+	}
+	else
+	{
+		UGameplayStatics::OpenLevel(this, MapName, true, Options);
+	}
+	
 }
-
+#include "OnlineSubsystemSteam.h"
 void UPTWSessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	
-	IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
-	if (OnlineSubsystem)
+	if (IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get())
 	{
 		SessionInterface = OnlineSubsystem->GetSessionInterface();
 	}

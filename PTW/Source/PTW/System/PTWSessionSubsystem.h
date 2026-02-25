@@ -74,10 +74,14 @@ protected:
 	
 	// 세션 탐색이 완료됐을 시 호출
 	void OnFindSessionsComplete(bool bWasSuccessful);
-
+	
+public:
+	
 protected:
 	IOnlineSessionPtr SessionInterface;
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+	
+private:
 	
 public:
 	FOnSessionSearchComplete OnSessionSearchComplete;
@@ -87,4 +91,7 @@ protected:
 	FDelegateHandle DestroySessionDelegateHandle;
 	FDelegateHandle JoinSessionCompleteDelegateHandle;
 	FDelegateHandle FindSessionsCompleteDelegateHandle;
+	FDelegateHandle SteamLoginCompletedHandle;
+	
+private:
 };

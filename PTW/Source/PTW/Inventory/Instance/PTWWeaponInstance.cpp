@@ -35,13 +35,17 @@ void UPTWWeaponInstance::OnRep_SpawnedWeapon3P()
 	
 }
 
+
 void UPTWWeaponInstance::DestroySpawnedActors()
 {
-	SpawnedWeapon1P->Destroy();
-	SpawnedWeapon3P->Destroy();
+	if (SpawnedWeapon1P && SpawnedWeapon3P)
+	{
+		SpawnedWeapon1P->Destroy();
+		SpawnedWeapon3P->Destroy();
 	
-	SpawnedWeapon1P = nullptr;
-	SpawnedWeapon3P = nullptr;
+		SpawnedWeapon1P = nullptr;
+		SpawnedWeapon3P = nullptr;
+	}
 }
 
 void UPTWWeaponInstance::SetCurrentAmmo(int32 NewAmmo)
@@ -59,11 +63,6 @@ void UPTWWeaponInstance::SetCurrentAmmo(int32 NewAmmo)
 
 int32 UPTWWeaponInstance::GetMaxAmmo()
 {
-	// if (SpawnedWeapon1P && SpawnedWeapon1P->GetWeaponData())
-	// {
-	// 	return SpawnedWeapon1P->GetWeaponData()->MaxAmmo;
-	// }
-
 	if (APTWPlayerCharacter* PlayerCharacter = GetItemInstanceOwner())
 	{
 		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PlayerCharacter))

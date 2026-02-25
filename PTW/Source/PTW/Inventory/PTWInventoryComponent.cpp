@@ -10,6 +10,7 @@
 #include "CoreFramework/PTWCombatInterface.h"
 #include "Engine/ActorChannel.h"
 #include "GAS/PTWGameplayAbility.h"
+#include "GAS/PTWWeaponAttributeSet.h"
 #include "Instance/PTWActiveItemInstance.h"
 #include "Instance/PTWPassiveItemInstance.h"
 #include "Instance/PTWWeaponInstance.h"
@@ -231,9 +232,16 @@ void UPTWInventoryComponent::DropItem()
 	
 	if (SpawnManager)
 	{
-		SpawnManager->DropWeaponSpawn(Cast<UPTWWeaponInstance>(CurrentWeapon)); // Drop후 무기 스폰 함수 호출
+		UPTWWeaponInstance* WeaponInstance = Cast<UPTWWeaponInstance>(CurrentWeapon);
+		UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+		if (!ASC) return;
+
+		UPTWWeaponInstance* TempInst = Cast<UPTWWeaponInstance>(CurrentWeapon);
 		int32 TempSlotIndex = CurSelectingWeaponSlot;
+		
 		SendEquipEventToASC(CurSelectingWeaponSlot); // 장착 해제
+		SpawnManager->DropWeaponSpawn(TempInst); // Drop후 무기 스폰 함수 호출
+		ItemArr.Remove(CurrentWeapon);
 		WeaponArr.RemoveAt(TempSlotIndex); // WeaponArr 요소 제거
 	}
 }

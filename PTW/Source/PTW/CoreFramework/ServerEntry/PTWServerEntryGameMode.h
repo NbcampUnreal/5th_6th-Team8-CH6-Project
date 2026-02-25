@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "PTWServerEntryGameMode.generated.h"
-
 /**
  * 
  */
@@ -13,7 +12,8 @@ UCLASS()
 class PTW_API APTWServerEntryGameMode : public AGameMode
 {
 	GENERATED_BODY()
+
+public:
+	APTWServerEntryGameMode();
 	
-protected:
-	virtual void BeginPlay() override;
 };

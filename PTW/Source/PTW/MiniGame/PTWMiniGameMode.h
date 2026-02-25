@@ -8,6 +8,7 @@
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWMiniGameMode.generated.h"
 
+class IPTWPlayerRoundDataInterface;
 class UPTWChaosEventManager;
 class UGameplayEffect;
 class APTWPlayerController;
@@ -35,6 +36,8 @@ protected:
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
+
+	virtual void PlayerReadyToPlay(AController* Controller) override;
 	
 	//* 미니 게임 시작 */
 	UFUNCTION()
@@ -57,7 +60,7 @@ protected:
 	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
 	void AddKillDeathCount(APlayerState* DeadPlayerState, APlayerState* KillPlayerState);
 	/** 설정된 점수 부여. */
-	void AddRoundScore(APlayerState* ScoreTarget);
+	void AddRoundScore(APlayerState* ScoreTarget, int32 ScoreValue = 1);
 	
 	void SpawnDefaultWeapon(AController* NewPlayer);
 
@@ -76,6 +79,9 @@ protected:
 	/** 승리 조건 체크 */
 	virtual void CheckEndGameCondition();
 
+	virtual void CheckSurvivalCondition();
+	virtual void CheckTargetCondition();
+	
 	/* 코인 스폰 타이머용 함수 */ 
 	void OnCoinSpawnTimerElapsed();
 	
@@ -113,6 +119,12 @@ protected:
 private:
 	/** 플레이어에게 미니 게임 태그 적용 */
 	void ApplyMiniGameTag(AController* NewPlayer);
+	
+	/** 팀 결정 */
+	void AssignTeam();
+	
+	/** 마지막으로 사망한 플레이어 찾기 */
+	IPTWPlayerRoundDataInterface* FindLastDeadPlayer();
 	
 	/** 라운드 종료 시 플레이어의 라운드 전용 데이터 초기화*/
 	void ResetPlayerRoundData();

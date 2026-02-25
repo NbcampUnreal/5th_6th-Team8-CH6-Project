@@ -119,15 +119,16 @@ void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 
 	ExitSpectorMode(PlayerController);
 	RestartPlayer(PlayerController);
+	PlayerReadyToPlay(C);
 }
 
-void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* ReadyPlayerController)
+void APTWLobbyGameMode::PlayerReadyToPlay(AController* Controller)
 {
-	Super::PlayerReadyToPlay(ReadyPlayerController);
+	Super::PlayerReadyToPlay(Controller);
 	
-	if (!IsValid(PTWGameState) || !ReadyPlayerController) return;
+	if (!IsValid(PTWGameState) || !Controller) return;
 	
-	APTWPlayerState* PTWPlayerState = ReadyPlayerController->GetPlayerState<APTWPlayerState>();
+	APTWPlayerState* PTWPlayerState = Controller->GetPlayerState<APTWPlayerState>();
 	if (!PTWPlayerState) return;
 
 	// 데이터 초기화 및 골드 지급

@@ -5,10 +5,20 @@
 
 #include "PTWChaosEventApply.h"
 
-// Sets default values for this component's properties
+
+void UPTWChaosEventManager::InitChaosEventManager(APTWGameState* InGameState, const FPTWChaosEventRule& Rule)
+{
+	InitGameState(InGameState);
+	InitChaosEventRule(Rule);
+}
 void UPTWChaosEventManager::InitGameState(APTWGameState* InGameState)
 {
 	PTWGameState = InGameState;
+}
+
+void UPTWChaosEventManager::InitChaosEventRule(const FPTWChaosEventRule& Rule)
+{
+	ChaosEventRule = Rule;
 }
 
 UPTWChaosEventDefinition* UPTWChaosEventManager::SelectRandomChaosEvent()
@@ -19,6 +29,8 @@ UPTWChaosEventDefinition* UPTWChaosEventManager::SelectRandomChaosEvent()
 	
 	return ChaosEventDefinitions[RandInt]; 
 }
+
+
 
 void UPTWChaosEventManager::ApplyChaosEvent()
 {

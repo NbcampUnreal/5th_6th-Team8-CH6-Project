@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "MiniGame/PTWMiniGameRule.h"
 #include "PTWChaosEventManager.generated.h"
-
 
 class APTWGameState;
 class UPTWChaosEventDefinition;
@@ -16,11 +16,14 @@ class PTW_API UPTWChaosEventManager : public UActorComponent
 	GENERATED_BODY()
 
 public:
+	void InitChaosEventManager(APTWGameState* InGameState, const FPTWChaosEventRule& Rule);
 	void ApplyChaosEvent();
 
-	void InitGameState(APTWGameState* InGameState);
+	
 private:
-
+	void InitGameState(APTWGameState* InGameState);
+	void InitChaosEventRule(const FPTWChaosEventRule& Rule);
+	
 	UPTWChaosEventDefinition* SelectRandomChaosEvent();
 	
 	UPROPERTY(EditDefaultsOnly)
@@ -28,5 +31,7 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<APTWGameState> PTWGameState;
+
+	FPTWChaosEventRule ChaosEventRule;
 	
 };

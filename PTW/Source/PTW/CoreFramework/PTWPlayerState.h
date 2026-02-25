@@ -105,7 +105,9 @@ protected:
 	TSubclassOf<UGameplayEffect> ReSpawnInvincibleEffectClass;
 public:
 	virtual void SetDeathOrder(int32 Order) override;
+	virtual void SetTeamId(int32 TeamId) override;
 	virtual int32 GetDeathOrder() const override {return PlayerRoundData.DeathOrder;} 
+	virtual int32 GetTeamId() const override {return PlayerRoundData.TeamId;}
 	
 	virtual void AddKillCount(int32 AddKillCount = 1) override;
 	virtual void AddDeathCount(int32 AddDeathCount = 1) override;

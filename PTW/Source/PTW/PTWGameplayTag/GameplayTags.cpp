@@ -32,6 +32,11 @@ namespace GameplayTags
 			UE_DEFINE_GAMEPLAY_TAG(Economy_Depression, "Event.Round.Economy.Depression");
 			UE_DEFINE_GAMEPLAY_TAG(Economy_Inflation, "Event.Round.Economy.Inflation");
 		}
+
+		namespace Melee
+		{
+			UE_DEFINE_GAMEPLAY_TAG(Hit, "Event.Melee.Hit");
+		}
 	}
 	
 	namespace MiniGame

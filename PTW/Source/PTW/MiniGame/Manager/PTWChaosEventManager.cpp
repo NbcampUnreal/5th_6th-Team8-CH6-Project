@@ -7,10 +7,6 @@
 #include "MiniGame/Data/PTWChaosItemRow.h"
 
 
-UPTWChaosEventManager::UPTWChaosEventManager()
-{
-	
-}
 
 void UPTWChaosEventManager::InitChaosEventManager(APTWGameState* InGameState, const FPTWChaosEventRule& Rule)
 {

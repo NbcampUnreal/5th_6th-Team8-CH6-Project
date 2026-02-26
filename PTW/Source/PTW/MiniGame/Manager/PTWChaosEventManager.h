@@ -8,7 +8,6 @@
 #include "PTWChaosEventManager.generated.h"
 
 class APTWGameState;
-class UPTWChaosItemDefinition;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PTW_API UPTWChaosEventManager : public UActorComponent

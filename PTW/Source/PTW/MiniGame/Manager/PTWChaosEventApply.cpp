@@ -23,7 +23,7 @@ void UPTWChaosEventApply::InitHandles()
 
 void UPTWChaosEventApply::Test()
 {
-	//GEngine->AddOnScreenDebugMessage(0, 10.f, )
+	GEngine->AddOnScreenDebugMessage(0, 10.f, FColor::Black, FString(TEXT("TEST FUNCTION")));
 }
 
 void UPTWChaosEventApply::ApplyChaosEffect(APTWGameState* GameState)

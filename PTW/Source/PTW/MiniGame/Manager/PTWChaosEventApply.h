@@ -5,12 +5,13 @@
 #include "CoreMinimal.h"
 #include "ActiveGameplayEffectHandle.h"
 #include "GameplayTagContainer.h"
+#include "MiniGame/Data/PTWChaosItemDefinition.h"
 #include "UObject/Object.h"
 #include "PTWChaosEventApply.generated.h"
 
 class UAbilitySystemComponent;
 class APTWGameState;
-class UPTWChaosItemDefinition;
+
 /**
  * 
  */

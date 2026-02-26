@@ -9,6 +9,7 @@
 #include "CoreFramework/PTWPlayerData.h"
 #include "PTWPlayerCharacter.generated.h"
 
+class USphereComponent;
 class APTWPlayerState;
 class UPTWItemDefinition;
 class UCameraComponent;
@@ -44,6 +45,7 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
 	FORCEINLINE UPTWInteractComponent* GetInteractComponent() const { return InteractComponent; }
 	FORCEINLINE bool GetStealthMode() const { return bIsStealth; }
+	FORCEINLINE USphereComponent* GetPushCollision() const {return PushCollision; }
 
 protected:
 	// 4. [Protected] 오버라이드 함수 (LifeCycle) - BeginPlay, EndPlay 등
@@ -156,6 +158,8 @@ protected:
 	TObjectPtr<UPTWWeaponComponent> WeaponComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UPTWInteractComponent> InteractComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<USphereComponent> PushCollision;
 
 	
 	//Stealth 모드 전용(현정석)

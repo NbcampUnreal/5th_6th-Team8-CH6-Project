@@ -156,7 +156,7 @@ void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* P
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Avatar); 
 	
-	float SweepRad = 20.0f;
+	float SweepRad = 35.0f;
 	
 	FCollisionShape SphereShape = FCollisionShape::MakeSphere(SweepRad);
 	

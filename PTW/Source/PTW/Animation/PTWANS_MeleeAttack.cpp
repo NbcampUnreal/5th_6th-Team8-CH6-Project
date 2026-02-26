@@ -17,12 +17,8 @@ void UPTWANS_MeleeAttack::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeq
                                       float TotalDuration)
 {
 	HitActors.Empty();
-}
-
-void UPTWANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
-	float FrameDeltaTime)
-{
-	APTWPlayerCharacter* Owner = Cast<APTWPlayerCharacter>(MeshComp->GetOwner());
+	
+	Owner = Cast<APTWPlayerCharacter>(MeshComp->GetOwner());
 	if (!Owner) return;
 	
 	UPTWInventoryComponent* InvenComp = Owner->GetInventoryComponent();
@@ -31,11 +27,20 @@ void UPTWANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequ
 	UPTWWeaponInstance* WeaponInst =  Cast<UPTWWeaponInstance>(InvenComp->GetCurrentWeaponInst());
 	if (!WeaponInst) return;
 	
-	APTWWeaponActor* MeleeWeapon = WeaponInst->SpawnedWeapon3P;
+	MeleeWeapon = WeaponInst->SpawnedWeapon3P;
+}
+
+void UPTWANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+	float FrameDeltaTime)
+{
+	FVector StartPos;
+	FVector EndPos;
 	
-	//FIXME : 테스트 코드
-	FVector StartPos = MeleeWeapon->GetWeaponMesh()->GetSocketLocation(TEXT("StartPos"));
-	FVector EndPos = MeleeWeapon->GetWeaponMesh()->GetSocketLocation(TEXT("EndPos"));
+	if (MeleeWeapon)
+	{
+		StartPos = MeleeWeapon->GetWeaponMesh()->GetSocketLocation(TEXT("StartPos"));
+		EndPos = MeleeWeapon->GetWeaponMesh()->GetSocketLocation(TEXT("EndPos"));
+	}
 	
 	float SphereRad = 20.0f;
 	TArray<FHitResult> OutHits;

@@ -79,6 +79,8 @@ public:
 	void BindBombDelegate();
 	void UnBindBombDelegate();
 
+	void OnVoicePressed();
+	void OnVoiceReleased();
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -202,6 +204,10 @@ protected:
 	// 키가이드 (K)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> KeyGuideAction;
+	
+	// 마이크 입력 (V)
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> VoiceAction;
 	
 	/* ---------- UI ---------- */
 	// HUD

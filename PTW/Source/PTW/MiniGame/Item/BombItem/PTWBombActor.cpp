@@ -132,6 +132,8 @@ void APTWBombActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		UnBindToLocalPlayerController();
 	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void APTWBombActor::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> EffectClass)
@@ -411,11 +413,13 @@ void APTWBombActor::BindToLocalPlayerController()
 	APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC);
 	if (!PTWPC) return;
 
-	PTWPC->BindBombDelegate();
+	PTWPC->BindBombDelegate(this);
 	
-
 	// 현재 오너 즉시 동기화
-	OnBombOwnerChanged.Broadcast(BombOwnerPawn);
+	if (BombOwnerPawn)
+	{
+		OnBombOwnerChanged.Broadcast(BombOwnerPawn);
+	}
 }
 
 void APTWBombActor::UnBindToLocalPlayerController()

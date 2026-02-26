@@ -137,30 +137,47 @@ void APTWPlayerController::Server_NotifyReadyToPlay_Implementation()
 	}
 }
 
-void APTWPlayerController::BindBombDelegate()
+void APTWPlayerController::BindBombDelegate(APTWBombActor* NewBomb)
 {
 	// 중복 바인드 방지
 	UnBindBombDelegate();
 
-	for (TActorIterator<APTWBombActor> It(GetWorld()); It; ++It)
-	{
-		CachedBombActor = *It;
-		break;
-	}
+	CachedBombActor = NewBomb;
 
 	if (CachedBombActor)
 	{
 		CachedBombActor->OnBombOwnerChanged.AddUObject(this, &APTWPlayerController::HandleBombOwnerChanged);
 	}
+
+	// UI 생성
+	if (!BombWarningWidgetClass) return;
+
+	UUserWidget* Widget = UISubsystem->ShowSystemWidget(BombWarningWidgetClass, 70);
+	if (UPTWBombWarning* BombWidget = Cast<UPTWBombWarning>(Widget))
+	{
+		BombWidget->SetTargetBomb(CachedBombActor);
+	}
+	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, false);
+
+	// 바인딩 시점에 이미 폭탄 주인이 결정되어 있다면 UI에 전달
+	if (CachedBombActor->GetBombOwnerPawn())
+	{
+		HandleBombOwnerChanged(CachedBombActor->GetBombOwnerPawn());
+	}
 }
 
 void APTWPlayerController::UnBindBombDelegate()
 {
+	// 델리게이트 제거
 	if (CachedBombActor)
 	{
 		CachedBombActor->OnBombOwnerChanged.RemoveAll(this);
 	}
-	HideBombUI();
+
+	// UI 제거
+	if (!BombWarningWidgetClass) return;
+
+	UISubsystem->HideSystemWidget(BombWarningWidgetClass);
 }
 
 void APTWPlayerController::BeginPlay()
@@ -213,6 +230,7 @@ void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	if (HasAuthority())
 	{
 		GetWorldTimerManager().ClearTimer(RespawnTimerHandle);
+		GetWorldTimerManager().ClearTimer(GameStateBindRetryHandle);
 	}
 	
 	Super::EndPlay(EndPlayReason);
@@ -227,7 +245,7 @@ void APTWPlayerController::OnRep_PlayerState()
 		return;
 	}
 
-	BindGameStateDelegates();
+	// BindGameStateDelegates();
 
 	CreateUI();
 }
@@ -314,7 +332,19 @@ ASpectatorPawn* APTWPlayerController::SpawnSpectatorPawn()
 void APTWPlayerController::BindGameStateDelegates()
 {
 	APTWGameState* GS = GetWorld() ? GetWorld()->GetGameState<APTWGameState>() : nullptr;
-	if (!GS) return;
+	if (!GS)
+	{
+		// 아직 GameState 안 왔으면 0.2초 후 재시도
+		GetWorldTimerManager().SetTimer(
+			GameStateBindRetryHandle,
+			this,
+			&APTWPlayerController::BindGameStateDelegates,
+			0.2f,
+			false
+		);
+		return;
+	}
+	GetWorldTimerManager().ClearTimer(GameStateBindRetryHandle);
 
 	// 중복 바인딩 방지
 	UnbindGameStateDelegates();
@@ -726,20 +756,14 @@ void APTWPlayerController::ShowBombUI()
 {
 	if (!BombWarningWidgetClass) return;
 
-	UISubsystem->ShowSystemWidget(BombWarningWidgetClass, 70);
-
-	UUserWidget* Widget = UISubsystem->GetOrCreateWidget(BombWarningWidgetClass);
-	if (UPTWBombWarning* BombWidget = Cast<UPTWBombWarning>(Widget))
-	{
-		BombWidget->SetTargetBomb(CachedBombActor);
-	}
+	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, true);
 }
 
 void APTWPlayerController::HideBombUI()
 {
 	if (!BombWarningWidgetClass) return;
 
-	UISubsystem->HideSystemWidget(BombWarningWidgetClass);
+	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, false);
 }
 
 void APTWPlayerController::Server_ReportLoadingComplete_Implementation()

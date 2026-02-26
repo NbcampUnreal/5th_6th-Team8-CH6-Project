@@ -208,6 +208,8 @@ void APTWMiniGameMode::OnCountDownFinished()
 
 void APTWMiniGameMode::EndTimer()
 {
+	if (bIsGameEnded) return;
+	
 	Super::EndTimer();
 	
 	EndRound();
@@ -216,6 +218,8 @@ void APTWMiniGameMode::EndTimer()
 
 void APTWMiniGameMode::EndRound()
 {
+	if (bIsGameEnded) return;
+	
 	GetWorldTimerManager().ClearTimer(CoinSpawnTimerHandle);
 
 	if (!PTWGameState) return;

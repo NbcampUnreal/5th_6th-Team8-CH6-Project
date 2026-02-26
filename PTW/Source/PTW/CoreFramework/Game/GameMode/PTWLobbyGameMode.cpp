@@ -66,6 +66,15 @@ void APTWLobbyGameMode::BeginPlay()
 	{
 		RoundEventManager->OnRouletteFinished.AddDynamic(this, &APTWLobbyGameMode::OnRouletteFinished);
 	}
+
+	if (PTWGameState->GetCurrentGamePhase() != EPTWGamePhase::PreGameLobby)
+	{
+#if WITH_EDITOR
+		// PIE에서는 딜레이 후 강제 시작
+		FTimerHandle PIEStartTimer;
+		GetWorldTimerManager().SetTimer(PIEStartTimer, this, &APTWLobbyGameMode::StartGameLobby, 2.f, false);
+#endif
+	}
 }
 
 void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)

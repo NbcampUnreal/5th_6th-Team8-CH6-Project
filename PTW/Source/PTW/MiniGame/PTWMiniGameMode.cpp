@@ -53,7 +53,11 @@ void APTWMiniGameMode::BeginPlay()
 	//	PlayerStarts.Add(*It);
 	//}
 	//StartGame();
-	
+#if WITH_EDITOR
+	// PIE에서는 딜레이 후 강제 시작
+	FTimerHandle PIEStartTimer;
+	GetWorldTimerManager().SetTimer(PIEStartTimer, this, &APTWMiniGameMode::StartGame, 2.f, false);
+#endif
 	// 카오스 이벤트 태그 적용 테스트
 	if (!PTWGameState) return;
 	ChaosEventManager->InitChaosEventManager(PTWGameState, MiniGameRule.ChaosEventRule);

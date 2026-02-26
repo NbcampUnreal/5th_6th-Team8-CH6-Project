@@ -42,7 +42,6 @@ public class PTW : ModuleRules
             "OnlineSubsystem",
             "OnlineSubsystemUtils",
 			"OnlineSubsystemSteam",
-			"GameLiftServerSDK"
         });
         
         // 5. Niagara 이펙트 모듈
@@ -59,5 +58,16 @@ public class PTW : ModuleRules
 			"NetCore"
 
 		});
+        
+        // AWS GameLift
+		if (Target.Type == TargetType.Server)
+		{
+			PublicDependencyModuleNames.Add("GameLiftServerSDK");
+			PublicDefinitions.Add("WITH_GAMELIFT=1");
+		}
+		else
+		{
+			PublicDefinitions.Add("WITH_GAMELIFT=0");
+		}
     }
 }

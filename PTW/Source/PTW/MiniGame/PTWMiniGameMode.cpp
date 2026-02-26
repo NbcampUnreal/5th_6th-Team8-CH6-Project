@@ -53,7 +53,11 @@ void APTWMiniGameMode::BeginPlay()
 	//	PlayerStarts.Add(*It);
 	//}
 	//StartGame();
-	
+#if WITH_EDITOR
+	// PIE에서는 딜레이 후 강제 시작
+	FTimerHandle PIEStartTimer;
+	GetWorldTimerManager().SetTimer(PIEStartTimer, this, &APTWMiniGameMode::StartGame, 2.f, false);
+#endif
 	// 카오스 이벤트 태그 적용 테스트
 	if (!PTWGameState) return;
 	ChaosEventManager->InitChaosEventManager(PTWGameState, MiniGameRule.ChaosEventRule);
@@ -208,6 +212,8 @@ void APTWMiniGameMode::OnCountDownFinished()
 
 void APTWMiniGameMode::EndTimer()
 {
+	if (bIsGameEnded) return;
+	
 	Super::EndTimer();
 	
 	EndRound();
@@ -216,6 +222,8 @@ void APTWMiniGameMode::EndTimer()
 
 void APTWMiniGameMode::EndRound()
 {
+	if (bIsGameEnded) return;
+	
 	GetWorldTimerManager().ClearTimer(CoinSpawnTimerHandle);
 
 	if (!PTWGameState) return;

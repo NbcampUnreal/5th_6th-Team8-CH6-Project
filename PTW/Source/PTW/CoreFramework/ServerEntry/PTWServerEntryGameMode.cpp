@@ -20,7 +20,7 @@ void APTWServerEntryGameMode::BeginPlay()
 	InitGameLift();
 #endif
 }
-
+#if WITH_GAMELIFT
 void APTWServerEntryGameMode::InitGameLift()
 {
 	UE_LOG(GameServerLog, Log, TEXT("Calling InitGameLift..."));
@@ -160,9 +160,7 @@ void APTWServerEntryGameMode::InitGameLift()
     //OnProcessTerminate callback. Amazon GameLift Servers will invoke this callback before shutting down an instance hosting this game server.
     //It gives this game server a chance to save its state, communicate with services, etc., before being shut down.
     //In this case, we simply tell Amazon GameLift Servers we are indeed going to shutdown.
-	// OnProcessTerminate 콜백.
-	// Amazon GameLift Servers는 이 게임 서버를 호스팅 중인 인스턴스를 종료하기 전에
-	// 이 콜백을 호출합니다.
+	// OnProcessTerminate 콜백. Amazon GameLift Servers는 이 게임 서버를 호스팅 중인 인스턴스를 종료하기 전에 이 콜백을 호출합니다.
 	// 게임 서버가 종료되기 전에 상태를 저장하거나, 서비스에 알리거나 하는 등의 작업을 할 기회를 줍니다.
 	// 여기서는 단순히 Amazon GameLift Servers에 “종료하겠다”는 것을 알립니다.
     ProcessParameters->OnTerminate.BindLambda([=]()
@@ -226,7 +224,7 @@ void APTWServerEntryGameMode::InitGameLift()
 
         if (SwitchStr.Split("=", &Key, &Value))
         {
-            if (Key.Equals("port"))
+            if (Key.Equals(TEXT("port"), ESearchCase::IgnoreCase))
             {
                 ProcessParameters->port = FCString::Atoi(*Value);
             }
@@ -241,7 +239,7 @@ void APTWServerEntryGameMode::InitGameLift()
 	// 게임 세션이 끝나면 Amazon GameLift Servers가 지정된 경로의 로그를 업로드하여
 	// 클라우드에 저장하고, 이후 접근할 수 있게 합니다.
     TArray<FString> Logfiles;
-    Logfiles.Add(TEXT("PTW/Saved/Logs/server.log"));
+    Logfiles.Add(TEXT("PTW/Saved/Logs/PTW.log"));
     ProcessParameters->logParameters = Logfiles;
 
     //The game server calls ProcessReady() to tell Amazon GameLift Servers it's ready to host game sessions.
@@ -266,3 +264,4 @@ void APTWServerEntryGameMode::InitGameLift()
 
     UE_LOG(GameServerLog, Log, TEXT("InitGameLift completed!"));
 }
+#endif

@@ -6,6 +6,7 @@
 #include "GameplayCueNotify_Static.h"
 #include "GC_WeaponFire.generated.h"
 
+class UPTWWeaponSoundTable;
 class APTWWeaponActor;
 class UNiagaraSystem;
 /**
@@ -26,6 +27,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VFX")
 	TObjectPtr<UNiagaraSystem> FireVFX;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SFX")
-	TObjectPtr<USoundBase> FireSFX;
+	// UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SFX")
+	// TArray<TObjectPtr<USoundCue>> FireSFX;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data")
+	TObjectPtr<UPTWWeaponSoundTable> WeaponSoundTable;
 };

@@ -35,6 +35,7 @@
 #include "System/PTWSessionSubsystem.h"
 #include "Weapon/PTWWeaponActor.h"
 #include "MiniGame/Item/BombItem/PTWBombActor.h"
+#include "OnlineSubsystemUtils.h"
 
 void APTWPlayerController::StartSpectating()
 {
@@ -178,6 +179,39 @@ void APTWPlayerController::UnBindBombDelegate()
 	if (!BombWarningWidgetClass) return;
 
 	UISubsystem->HideSystemWidget(BombWarningWidgetClass);
+}
+
+void APTWPlayerController::OnVoicePressed()
+{
+	if (IsLocalPlayerController())
+	{
+		IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+		if (Subsystem)
+		{
+			IOnlineVoicePtr VoiceInterface = Subsystem->GetVoiceInterface();
+			if (VoiceInterface.IsValid())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("OnVoicePressed"))
+				VoiceInterface->StartNetworkedVoice(0);
+			}
+		}
+	}
+}
+
+void APTWPlayerController::OnVoiceReleased()
+{
+	if (IsLocalPlayerController())
+	{
+		IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+		if (Subsystem)
+		{
+			IOnlineVoicePtr VoiceInterface = Subsystem->GetVoiceInterface();
+			if (VoiceInterface.IsValid())
+			{
+				VoiceInterface->StopNetworkedVoice(0);
+			}
+		}
+	}
 }
 
 void APTWPlayerController::BeginPlay()
@@ -513,6 +547,20 @@ void APTWPlayerController::SetupInputComponent()
 			ETriggerEvent::Started,
 			this,
 			&APTWPlayerController::OnKeyGuidePressed
+		);
+		
+		// 마이크 (V)
+		EIC->BindAction(
+			VoiceAction,
+			ETriggerEvent::Started,
+			this,
+			&ThisClass::OnVoicePressed
+		);
+		EIC->BindAction(
+			VoiceAction,
+			ETriggerEvent::Completed,
+			this,
+			&ThisClass::OnVoiceReleased
 		);
 	}
 }

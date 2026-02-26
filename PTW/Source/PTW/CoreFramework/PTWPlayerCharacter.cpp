@@ -28,6 +28,7 @@
 #include "CoreFramework/Character/Component/PTWInteractComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/VoiceConfig.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -73,6 +74,8 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 	PushCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PushCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
 	PushCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	
+	VOIPTalkerComponent = CreateDefaultSubobject<UVOIPTalker>(TEXT("VOIPTalker"));
 }
 
 void APTWPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -345,8 +348,12 @@ void APTWPlayerCharacter::InitCharacterState()
 	GiveDefaultAbilities();
 	ApplyDefaultEffects();
 	UpdateNameTagText();
-
 	bIsAbilitiesInitialized = true;
+	
+	if (VOIPTalkerComponent && GetPlayerState())
+	{
+		VOIPTalkerComponent->RegisterWithPlayerState(GetPlayerState());
+	}
 }
 
 void APTWPlayerCharacter::OnInputTriggered()

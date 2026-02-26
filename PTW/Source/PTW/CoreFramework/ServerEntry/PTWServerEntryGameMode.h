@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#if WITH_GAMELIFT
 #include "GameLiftServerSDK.h"
+#endif
 #include "PTWServerEntryGameMode.generated.h"
 /**
  * 
@@ -24,7 +26,8 @@ protected:
 	virtual void BeginPlay() override;
 	
 private:
-	TSharedPtr<FProcessParameters> ProcessParameters;
-	
+#if WITH_GAMELIFT
 	void InitGameLift();
+	TSharedPtr<FProcessParameters> ProcessParameters;
+#endif
 };

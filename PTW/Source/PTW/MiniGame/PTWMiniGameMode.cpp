@@ -758,6 +758,22 @@ void APTWMiniGameMode::FinishEndGameSequence()
 {
 	ResetPlayerRoundData();
 	ResetPlayerInventoryID();
+	
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (!PC) continue;
+
+		PC->ChangeState(NAME_Playing);
+		PC->ClientGotoState(NAME_Playing);
+
+		if (PC->PlayerState)
+		{
+			PC->PlayerState->SetIsSpectator(false);
+			PC->PlayerState->SetIsOnlyASpectator(false);
+		}
+	}
+	
 	TravelLevel();
 }
 

@@ -7,15 +7,26 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
-#include "MiniGame/Data/PTWChaosEventDefinition.h"
+#include "MiniGame/Data/PTWChaosItemDefinition.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 
-void UPTWChaosEventApply::InitDefinition(UPTWChaosEventDefinition* InDefinition)
+void UPTWChaosEventApply::InitDefinition(UPTWChaosItemDefinition* InDefinition)
 {
 	Definition = InDefinition;
 }
 
-void UPTWChaosEventApply::ChaosEventApply(APTWGameState* GameState)
+void UPTWChaosEventApply::InitHandles()
+{
+	ChaosHandle.Add(GameplayTags::Item::Chaos::Test, [this]() {Test();});
+}
+
+void UPTWChaosEventApply::Test()
+{
+	GEngine->AddOnScreenDebugMessage(0, 10.f, FColor::Black, FString(TEXT("TEST FUNCTION")));
+}
+
+void UPTWChaosEventApply::ApplyChaosEffect(APTWGameState* GameState)
 {
 	if (!IsValid(GameState) || !IsValid(Definition)) return;
 
@@ -44,6 +55,19 @@ void UPTWChaosEventApply::ChaosEventApply(APTWGameState* GameState)
 		if (!ActiveHandle.IsValid()) return;
 
 		ApplyEffectHandles.Add(ASC, ActiveHandle);
+	}
+}
+
+void UPTWChaosEventApply::ChaosEventApply(APTWGameState* GameState)
+{
+	if (Definition->GameplayEffectClass)
+	{
+		ApplyChaosEffect(GameState);
+	}
+
+	if (auto* Handle = ChaosHandle.Find(Definition->ItemTag))
+	{
+		(*Handle)();
 	}
 }
 

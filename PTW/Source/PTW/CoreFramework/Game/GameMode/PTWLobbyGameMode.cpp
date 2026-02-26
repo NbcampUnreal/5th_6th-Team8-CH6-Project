@@ -116,10 +116,23 @@ void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		OldPawn->DetachFromControllerPendingDestroy();
 		OldPawn->Destroy();
 	}
-
 	ExitSpectorMode(PlayerController);
 	RestartPlayer(PlayerController);
 	PlayerReadyToPlay(C);
+}
+
+void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+
+	APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
+	if (!PTWPlayerState) return;
+	
+	// 데이터 초기화 및 골드 지급
+	PTWPlayerState->ResetInventoryItemId();
+	FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
+	PlayerData.Gold += RoundClearBonusGold;
+	PTWPlayerState->SetPlayerData(PlayerData);
 }
 
 void APTWLobbyGameMode::PlayerReadyToPlay(AController* Controller)
@@ -130,17 +143,12 @@ void APTWLobbyGameMode::PlayerReadyToPlay(AController* Controller)
 	
 	APTWPlayerState* PTWPlayerState = Controller->GetPlayerState<APTWPlayerState>();
 	if (!PTWPlayerState) return;
-
-	// 데이터 초기화 및 골드 지급
-	PTWPlayerState->ResetInventoryItemId();
-	FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
-	PlayerData.Gold += RoundClearBonusGold;
-	PTWPlayerState->SetPlayerData(PlayerData);
 	
 	if (ReadyPlayer >= AllPlayer)
 	{
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
+		ReadyPlayer = 0;
 		FTimerHandle LoadingDealyTimer;
 		GetWorldTimerManager().SetTimer(LoadingDealyTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
 	}
@@ -184,7 +192,7 @@ void APTWLobbyGameMode::StartGameLobby()
 		AController* PC = PS->GetPlayerController();
 		if (!PC) continue;
 		
-		SetInputBlock(false);
+		//SetInputBlock(false);
 	}
 	
 	// 게임 로비 진입 5초 후 룰렛 시작
@@ -207,8 +215,6 @@ void APTWLobbyGameMode::EndTimer()
 		
 		return;
 	}
-
-	
 	
 	Super::EndTimer();
 }

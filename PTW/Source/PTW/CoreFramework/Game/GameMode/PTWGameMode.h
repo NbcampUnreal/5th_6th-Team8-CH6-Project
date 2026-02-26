@@ -73,6 +73,9 @@ protected:
 	/** 플레이어를 시작 위치로 이동시키는 함수 */
 	void MovePlayerToStart(AController* Controller);
 
+	// 타이머 틱 처리(종료 시 EndTimer 트리거)
+	virtual void UpdateTimer();
+	
 	void SetInputBlock(bool bInputBlock);
 	// 이동할 레벨 이름(TravelLevel에서 사용)
 	FString TravelLevelName;
@@ -94,8 +97,7 @@ private:
 	// 로그인한 플레이어에게 Subsystem 저장 데이터를 적용
 	void ApplyPlayerDataFromSubsystem(APlayerController* NewPlayer);
 
-	// 타이머 틱 처리(종료 시 EndTimer 트리거)
-	void UpdateTimer();
+	
 	
 	int32 CurrentRound;
 	

@@ -21,27 +21,26 @@ class PTW_API UPTWChaosEventApply : public UObject
 	GENERATED_BODY()
 
 public:
-	void ApplyChaosEffect(APTWGameState* GameState);
-	
-	void ChaosEventApply(APTWGameState* GameState);
-	
-	void ChaosEventEnd();
-
 	void InitDefinition(UPTWChaosItemDefinition* InDefinition);
-	void InitHandles();
+
+	void SetStackCount(int32 Count);
+	
+	void ApplyChaosEvent(APTWGameState* GameState);
+	void ChaosEventEnd();
+	
 	
 protected:
 	UPROPERTY()
 	TObjectPtr<UPTWChaosItemDefinition> Definition;
-	
-private:
 
-	void Test();
-	
-	// 태그에 맞는 함수 저장
-	TMap<FGameplayTag, TFunction<void()>> ChaosHandle;
+	int32 StackCount = 1;
 	
 	//* 적용된 이펙트 제거를 위해 저장*/
 	TMap<TObjectPtr<UAbilitySystemComponent>, FActiveGameplayEffectHandle> ApplyEffectHandles;
+	
+private:
+	void ApplyChaosEffect(APTWGameState* GameState);
+	void ChaosEffectEnd();
+	
 	
 };

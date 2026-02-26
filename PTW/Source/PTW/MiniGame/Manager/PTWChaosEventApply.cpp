@@ -16,19 +16,14 @@ void UPTWChaosEventApply::InitDefinition(UPTWChaosItemDefinition* InDefinition)
 	Definition = InDefinition;
 }
 
-void UPTWChaosEventApply::InitHandles()
+void UPTWChaosEventApply::SetStackCount(int32 Count)
 {
-	ChaosHandle.Add(GameplayTags::Item::Chaos::Test, [this]() {Test();});
-}
-
-void UPTWChaosEventApply::Test()
-{
-	GEngine->AddOnScreenDebugMessage(0, 10.f, FColor::Black, FString(TEXT("TEST FUNCTION")));
+	StackCount = Count;
 }
 
 void UPTWChaosEventApply::ApplyChaosEffect(APTWGameState* GameState)
 {
-	if (!IsValid(GameState) || !IsValid(Definition)) return;
+	if (!IsValid(GameState) || !IsValid(Definition) || !Definition->GameplayEffectClass) return;
 
 	for (APlayerState* PlayerState : GameState->PlayerArray)
 	{
@@ -41,37 +36,39 @@ void UPTWChaosEventApply::ApplyChaosEffect(APTWGameState* GameState)
 			ASC = ASI->GetAbilitySystemComponent();
 		}
 		
-		if (!IsValid(ASC) || !Definition->GameplayEffectClass) continue;
+		if (!IsValid(ASC)) continue;
 
 		FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
-        
+		
+		int32 Level = Definition->bUseStack ? StackCount : 1;
+		
 		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(
-			Definition->GameplayEffectClass, 1, ContextHandle);
+			Definition->GameplayEffectClass, Level, ContextHandle);
 		
 		if (!SpecHandle.IsValid()) continue;
 		
 		FActiveGameplayEffectHandle ActiveHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
-		if (!ActiveHandle.IsValid()) return;
+		if (!ActiveHandle.IsValid()) continue;
 
 		ApplyEffectHandles.Add(ASC, ActiveHandle);
 	}
 }
 
-void UPTWChaosEventApply::ChaosEventApply(APTWGameState* GameState)
+void UPTWChaosEventApply::ApplyChaosEvent(APTWGameState* GameState)
 {
 	if (Definition->GameplayEffectClass)
 	{
 		ApplyChaosEffect(GameState);
 	}
-
-	if (auto* Handle = ChaosHandle.Find(Definition->ItemTag))
-	{
-		(*Handle)();
-	}
 }
 
 void UPTWChaosEventApply::ChaosEventEnd()
+{
+	ChaosEffectEnd();
+}
+
+void UPTWChaosEventApply::ChaosEffectEnd()
 {
 	for (auto pair : ApplyEffectHandles)
 	{
@@ -84,5 +81,4 @@ void UPTWChaosEventApply::ChaosEventEnd()
 		ASC->RemoveActiveGameplayEffect(ActiveHandle);
 	}
 	ApplyEffectHandles.Empty();
-	
 }

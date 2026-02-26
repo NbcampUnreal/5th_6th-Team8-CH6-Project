@@ -48,20 +48,16 @@ void APTWMiniGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
-	//{
-	//	PlayerStarts.Add(*It);
-	//}
-	//StartGame();
 #if WITH_EDITOR
 	// PIE에서는 딜레이 후 강제 시작
 	FTimerHandle PIEStartTimer;
 	GetWorldTimerManager().SetTimer(PIEStartTimer, this, &APTWMiniGameMode::StartGame, 2.f, false);
 #endif
+	
 	// 카오스 이벤트 태그 적용 테스트
 	if (!PTWGameState) return;
 	ChaosEventManager->InitChaosEventManager(PTWGameState, MiniGameRule.ChaosEventRule);
-	//ChaosEventManager->ApplyChaosEvent();
+	
 }
 
 void APTWMiniGameMode::Logout(AController* Exiting)
@@ -153,6 +149,30 @@ void APTWMiniGameMode::StartGame()
 	WaitingToStartRound();
 }
 
+void APTWMiniGameMode::WaitingToStartRound()
+{
+	if (!PTWGameState) return;
+
+	// MiniGame 레벨 진입 → 카운트다운 시작
+	PTWGameState->AdvanceMiniGameRound();
+	
+	// 카운트 다운 사용 안하면 바로 라운드 시작
+	if (!MiniGameRule.TimeRule.bUseCountDown)
+	{
+		StartRound();
+
+		return;
+	}
+	
+	if (!PTWGameState->OnCountDownFinished.IsAlreadyBound(this, &APTWMiniGameMode::OnCountDownFinished))
+	{
+		PTWGameState->OnCountDownFinished.AddDynamic(this, &APTWMiniGameMode::OnCountDownFinished);
+	}
+	
+	StartCountDown();
+	PrepareAllPlayersLoadingScreen(ELoadingScreenType::Lobby, NAME_None);
+}
+
 void APTWMiniGameMode::StartCountDown()
 {
 	// CurrentCountDown = StartCountDownTime;
@@ -225,7 +245,9 @@ void APTWMiniGameMode::EndRound()
 	if (bIsGameEnded) return;
 	
 	GetWorldTimerManager().ClearTimer(CoinSpawnTimerHandle);
-
+	
+	ChaosEventManager->EndChaosEvent();
+	
 	if (!PTWGameState) return;
 	
 	if (PTWGameState->GetCurrentMiniGameRound() >= PTWGameState->GetMaxMiniGameRound())
@@ -255,34 +277,10 @@ void APTWMiniGameMode::EndGame()
 	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
 	GetWorldTimerManager().ClearTimer(CoinSpawnTimerHandle);
 
+	ChaosEventManager->EndChaosEvent();
+	
 	FTimerHandle ResultSequenceTimerHandle;
 	GetWorldTimerManager().SetTimer(ResultSequenceTimerHandle, this, &ThisClass::StartResultSequence, 3.0f, false);
-}
-
-
-
-void APTWMiniGameMode::WaitingToStartRound()
-{
-	if (!PTWGameState) return;
-
-	// MiniGame 레벨 진입 → 카운트다운 시작
-	PTWGameState->AdvanceMiniGameRound();
-	
-	// 카운트 다운 사용 안하면 바로 라운드 시작
-	if (!MiniGameRule.TimeRule.bUseCountDown)
-	{
-		StartRound();
-
-		return;
-	}
-	
-	if (!PTWGameState->OnCountDownFinished.IsAlreadyBound(this, &APTWMiniGameMode::OnCountDownFinished))
-	{
-		PTWGameState->OnCountDownFinished.AddDynamic(this, &APTWMiniGameMode::OnCountDownFinished);
-	}
-	
-	StartCountDown();
-	PrepareAllPlayersLoadingScreen(ELoadingScreenType::Lobby, NAME_None);
 }
 
 
@@ -293,10 +291,19 @@ void APTWMiniGameMode::StartRound()
 		StartTimer(MiniGameRule.TimeRule.Timer);
 	}
 
+	StartChaosEvent();
+	
 	if (GetWorld())
 	{
 		GetWorldTimerManager().SetTimer(CoinSpawnTimerHandle, this, &APTWMiniGameMode::OnCoinSpawnTimerElapsed, CoinSpawnInterval, true);
 	}
+}
+
+void APTWMiniGameMode::UpdateTimer()
+{
+	Super::UpdateTimer();
+
+	StartChaosEvent();
 }
 
 void APTWMiniGameMode::CheckEndGameCondition()
@@ -486,6 +493,8 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	PTWGameState->UpdateRanking(MiniGameRule);
 	PTWGameState->AlivePlayers.Remove(DeadPlayerState);
 
+	StartChaosEvent();
+	
 	CheckEndGameCondition();
 	RespawnPlayer(DeadPlayerController);
 }
@@ -814,6 +823,7 @@ void APTWMiniGameMode::SpawnPlayerSavedItems(AController* Controller)
 	APawn* Pawn = Controller->GetPawn();
 
 	if (PS && Pawn)
+	if (PS && Pawn)
 	{
 		if (UPTWItemSpawnManager* SpawnSys = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
 		{
@@ -825,4 +835,9 @@ void APTWMiniGameMode::SpawnPlayerSavedItems(AController* Controller)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[GameMode] Failed to Spawn Items. PS or Pawn is invalid."));
 	}
+}
+
+void APTWMiniGameMode::StartChaosEvent()
+{
+	ChaosEventManager->StartChaosEvent();
 }

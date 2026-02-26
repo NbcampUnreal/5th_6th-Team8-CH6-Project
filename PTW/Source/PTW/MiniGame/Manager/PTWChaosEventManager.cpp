@@ -4,8 +4,9 @@
 #include "MiniGame/Manager/PTWChaosEventManager.h"
 
 #include "PTWChaosEventApply.h"
+#include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "MiniGame/Data/PTWChaosItemRow.h"
-
+#include "System/PTWScoreSubsystem.h"
 
 
 void UPTWChaosEventManager::InitChaosEventManager(APTWGameState* InGameState, const FPTWChaosEventRule& Rule)
@@ -23,9 +24,9 @@ void UPTWChaosEventManager::BeginPlay()
 	
 }
 
-FName UPTWChaosEventManager::SelectRandomChaosItem()
+TPair<FName, int32>  UPTWChaosEventManager::SelectRandomChaosItem()
 {
-	if (ChaosItemPool.Num() == 0 ) return NAME_None;
+	if (ChaosItemPool.Num() == 0 )  return TPair<FName, int32>(NAME_None, 0);
 
 	// 카오스 아이템 총 개수 저장
 	int32 TotalCount = 0;
@@ -43,30 +44,100 @@ FName UPTWChaosEventManager::SelectRandomChaosItem()
 		AccumulateValue += Pair.Value;
 		if (AccumulateValue > RandomValue)
 		{
-			return Pair.Key;
+			return TPair<FName, int32>(Pair.Key, Pair.Value); // 중첩 구현을 위해 id 개수도 함께 리턴
 		}
 	}
 
-	return NAME_None;
+	return TPair<FName, int32>(NAME_None, 0);
 }
 
+void UPTWChaosEventManager::StartChaosEvent()
+{
+	if (IsValid(CurrentApplyEvent)) return;
+	
+	switch (ChaosEventRule.RandomEventType)
+	{
+	case EPTWRandomEventType::Interval:
+		if (!GetWorld()->GetTimerManager().IsTimerActive(ChaosEventTimerHandle))
+		{
+			GetWorld()->GetTimerManager().SetTimer(
+				ChaosEventTimerHandle, this,
+				&UPTWChaosEventManager::TriggerChaosEvent,
+				ChaosEventRule.IntervalTime, false);
+		}
+		break;
 
+	case EPTWRandomEventType::TimeRemain:
+		if (PTWGameState->GetRemainTime() <= ChaosEventRule.RemainTimeThreshold)
+		{
+			TriggerChaosEvent();
+		}
+		break;
+
+	case EPTWRandomEventType::SurvivalThreshold:
+		if (PTWGameState && ChaosEventRule.MinSurvivorCount >= PTWGameState->AlivePlayers.Num())
+		{
+			TriggerChaosEvent();
+		}
+		break;
+
+	default:
+		break;
+	}
+}
 
 void UPTWChaosEventManager::TriggerChaosEvent()
 {
-	FName RandChaosItemId = SelectRandomChaosItem();
+	TPair<FName, int32> RandChaosItemId = SelectRandomChaosItem();
+	if (RandChaosItemId.Key == NAME_None) return;
 	
-	FPTWChaosItemRow* Row = ChaosItemTable->FindRow<FPTWChaosItemRow>(RandChaosItemId, "");
+	FPTWChaosItemRow* Row = ChaosItemTable->FindRow<FPTWChaosItemRow>(RandChaosItemId.Key, "");
 	if (!Row) return;
 
 	UPTWChaosItemDefinition* Definition = Row->ChaosItemDefinition.LoadSynchronous();
 	if (!Definition) return;
 
-	UPTWChaosEventApply* ApplyEvent = NewObject<UPTWChaosEventApply>(this);
-	if (!IsValid(ApplyEvent)) return;
+	CurrentApplyEvent = NewObject<UPTWChaosEventApply>(this, Definition->ChaosEventApplyClass);
+	if (!IsValid(CurrentApplyEvent)) return;
 
-	ApplyEvent->InitDefinition(Definition);
-	ApplyEvent->ChaosEventApply(PTWGameState);
+	CurrentApplyEvent->InitDefinition(Definition);
+	CurrentApplyEvent->SetStackCount(RandChaosItemId.Value);
+	// 적용 딜레이 후 카오스 이벤트 적용
+	GetWorld()->GetTimerManager().SetTimer(ChaosEventApplyDelayHandle, [this]()
+ {
+	 if (!IsValid(CurrentApplyEvent)) return;
+	 CurrentApplyEvent->ApplyChaosEvent(PTWGameState);
+
+	 GetWorld()->GetTimerManager().SetTimer(ChaosEventDurationHandle, [this]()
+	 {
+		 EndChaosEvent();
+
+	 }, ChaosEventRule.ApplyDuration, false);
+
+ }, ChaosEventRule.ApplyDelayTime, false);
+	
+}
+
+
+void UPTWChaosEventManager::EndChaosEvent()
+{
+	ClearAllTimer();
+	
+	if (!IsValid(CurrentApplyEvent)) return;
+	CurrentApplyEvent->ChaosEventEnd();
+	CurrentApplyEvent = nullptr;
+
+	if (ChaosEventRule.RandomEventType == EPTWRandomEventType::Interval)
+	{
+		StartChaosEvent();
+	}
+}
+
+void UPTWChaosEventManager::ClearAllTimer()
+{
+	GetWorld()->GetTimerManager().ClearTimer(ChaosEventTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(ChaosEventApplyDelayHandle);
+	GetWorld()->GetTimerManager().ClearTimer(ChaosEventDurationHandle);
 }
 
 void UPTWChaosEventManager::AddChaosItemPool(FName ItemID)

@@ -14,6 +14,7 @@
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "GAS/PTWWeaponAttributeSet.h"
 #include "Inventory/PTWInventoryComponent.h"
+#include "Inventory/PTWItemDefinition.h"
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "Weapon/PTWProjectile.h"
 #include "Weapon/PTWWeaponActor.h"
@@ -101,7 +102,8 @@ void UPTWGA_Fire::MakeGameplayCue(FPTWGameplayCueMakingInfo Infos)
 {
 	FGameplayCueParameters Params;
 	Params.Instigator = CurrentActorInfo->OwnerActor.Get();
-	Params.SourceObject = Infos.Weapon1P; 
+	Params.SourceObject = Infos.Weapon1P;
+	Params.AggregatedSourceTags = FGameplayTagContainer(Infos.Weapon1P->GetWeaponItemInstance()->ItemDef->WeaponTag);
 	
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(
 		GameplayTags::GameplayCue::Weapon::Fire, 

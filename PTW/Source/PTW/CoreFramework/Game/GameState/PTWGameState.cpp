@@ -6,6 +6,7 @@
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "MiniGame/PTWMiniGameRule.h"
+#include "System/Prop/PTWPropSubsystem.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -31,6 +32,7 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(APTWGameState, CurrentMiniGameRound);
 	DOREPLIFETIME(APTWGameState, MaxMiniGameRound);
 	DOREPLIFETIME(APTWGameState, Teams);
+	DOREPLIFETIME(APTWGameState, PropSeed);
 
 }
 
@@ -308,6 +310,15 @@ void APTWGameState::SetWinTeamId(int32 TeamId)
 	WinTeamId = TeamId;
 }
 
+void APTWGameState::Server_SetPropSeed(int32 NewSeed)
+{
+	if (!HasAuthority()) return;
+
+	PropSeed = NewSeed;
+	
+	OnRep_PropSeed();
+}
+
 void APTWGameState::BroadcastChatMessage(const FString& Sender, const FString& Message)
 {
 	// 서버 전용
@@ -400,4 +411,15 @@ void APTWGameState::OnRep_CurrentMiniGameRound()
 void APTWGameState::OnRep_MaxMiniGameRound()
 {
 	
+}
+
+void APTWGameState::OnRep_PropSeed()
+{
+	if (UWorld* World = GetWorld())
+	{
+		if (auto* PropSubsys = World->GetSubsystem<UPTWPropSubsystem>())
+		{
+			PropSubsys->ApplyRoundPropSeed(PropSeed); 
+		}
+	}
 }

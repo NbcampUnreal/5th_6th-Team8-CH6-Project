@@ -19,7 +19,10 @@ public:
 	void SetGroupEnabled(FName GroupTag, bool bEnabled);
 	
 	UFUNCTION(BlueprintCallable)
-	void RandomizeByActorTag(FName GroupTag, float EnableChance);
+	void ApplySeededRandomByActorTag(FName GroupTag, int32 Seed, float EnableChance);
+	
+	UFUNCTION(BlueprintCallable)
+	void ApplyRoundPropSeed(int32 Seed);
 
 private:
 	TMap<FName, TArray<TWeakObjectPtr<AActor>>> GroupToActors;

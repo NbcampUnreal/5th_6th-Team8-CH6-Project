@@ -52,21 +52,41 @@ void UPTWPropSubsystem::ApplyActorEnabled(AActor* Actor, bool bEnabled)
 	}
 }
 
-void UPTWPropSubsystem::RandomizeByActorTag(FName GroupTag, float EnableChance)
+void UPTWPropSubsystem::ApplySeededRandomByActorTag(FName GroupTag, int32 Seed, float EnableChance)
 {
 	EnableChance = FMath::Clamp(EnableChance, 0.f, 1.f);
-	
-	RegisterByActorTag(GroupTag);
 
-	TArray<TWeakObjectPtr<AActor>>* ListPtr = GroupToActors.Find(GroupTag);
-	if (!ListPtr) return;
-
-	for (TWeakObjectPtr<AActor>& WeakActor : *ListPtr)
+	TArray<AActor*> Actors;
+	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
 	{
-		AActor* Actor = WeakActor.Get();
-		if (!IsValid(Actor)) continue;
+		AActor* Actor = *It;
+		if (IsValid(Actor) && Actor->ActorHasTag(GroupTag))
+		{
+			Actors.Add(Actor);
+		}
+	}
+	
+	Actors.Sort([](const AActor& A, const AActor& B)
+	{
+		return A.GetPathName() < B.GetPathName();
+	});
 
-		const bool bEnable = (FMath::FRand() < EnableChance);
+	FRandomStream Stream(Seed);
+
+	for (AActor* Actor : Actors)
+	{
+		const bool bEnable = (Stream.FRand() < EnableChance);
 		ApplyActorEnabled(Actor, bEnable);
 	}
+}
+
+void UPTWPropSubsystem::ApplyRoundPropSeed(int32 Seed)
+{
+	ApplySeededRandomByActorTag("Group_A", Seed, 0.5f);
+	ApplySeededRandomByActorTag("Group_B", Seed, 0.5f);
+	ApplySeededRandomByActorTag("Group_C", Seed, 0.5f);
+	ApplySeededRandomByActorTag("Group_D", Seed, 0.5f);
+
+	// 추가 그룹 설정
+	// ApplySeededRandomByActorTag("Group_B", Seed + 1, 0.3f);
 }

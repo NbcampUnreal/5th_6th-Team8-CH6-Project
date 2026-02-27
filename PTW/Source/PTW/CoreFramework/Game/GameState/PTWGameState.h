@@ -208,6 +208,8 @@ public:
 	void SetMaxMiniGameRound(int32 NewMaxRound);
 
 	void SetWinTeamId(int32 TeamId);
+	
+	void Server_SetPropSeed(int32 NewSeed);
 #pragma endregion
 
 #pragma region Event
@@ -367,6 +369,12 @@ protected:
 
 	UFUNCTION()
 	void OnRep_WinTeamId();
+	
+	UPROPERTY(ReplicatedUsing = OnRep_PropSeed)
+	int32 PropSeed = 0;
+
+	UFUNCTION()
+	void OnRep_PropSeed();
 #pragma endregion
 
 public:

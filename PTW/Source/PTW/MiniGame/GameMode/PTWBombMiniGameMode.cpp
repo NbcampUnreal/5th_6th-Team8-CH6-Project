@@ -84,13 +84,9 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 	
 	if (HasAuthority())
 	{
-		if (auto* PropSubsys = GetWorld()->GetSubsystem<UPTWPropSubsystem>())
+		if (APTWGameState* GS = GetGameState<APTWGameState>())
 		{
-			PropSubsys->RegisterByActorTag("Group_A");
-			
-			PropSubsys->SetGroupEnabled("Group_A", false);
-			
-			//PropSubsys->RandomizeByActorTag("Group_A", 0.6f);
+			GS->Server_SetPropSeed(FMath::Rand());
 		}
 	}
 

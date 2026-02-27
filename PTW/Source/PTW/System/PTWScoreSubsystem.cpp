@@ -16,9 +16,9 @@ void UPTWScoreSubsystem::SaveGameRound(int32 NewGameRound)
 	SavedGameRound = NewGameRound;
 }
 
-void UPTWScoreSubsystem::SavePlayerCount(int32 NewPlayerCount)
+void UPTWScoreSubsystem::SaveAllPlayerCount(int32 NewPlayerCount)
 {
-	SavedPlayerCount = NewPlayerCount;
+	SavedAllPlayerCount = NewPlayerCount;
 }
 
 void UPTWScoreSubsystem::SaveGameData(const FPTWGameData& GameData)
@@ -28,12 +28,12 @@ void UPTWScoreSubsystem::SaveGameData(const FPTWGameData& GameData)
 
 void UPTWScoreSubsystem::IncreasePlayerCount()
 {
-	++SavedPlayerCount;
+	++SavedAllPlayerCount;
 }
 
 void UPTWScoreSubsystem::DecreasePlayerCount()
 {
-	--SavedPlayerCount;
+	--SavedAllPlayerCount;
 }
 
 FPTWPlayerData* UPTWScoreSubsystem::FindPlayerData(const FString& PlayerName)

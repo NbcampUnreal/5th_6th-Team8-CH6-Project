@@ -129,7 +129,7 @@ void APTWMiniGameMode::PlayerReadyToPlay(AController* Controller)
 	{
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
-	
+		
 		AssignTeam();
 		
 		FTimerHandle LoadingDelayTimer;
@@ -143,7 +143,7 @@ void APTWMiniGameMode::StartGame()
 	
 	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
 	
-	SetInputBlock(false);
+	//SetInputBlock(false);
 	
 	WaitingToStartRound();
 }

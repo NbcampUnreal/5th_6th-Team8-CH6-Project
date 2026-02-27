@@ -16,10 +16,11 @@ void APTWServerEntryGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 	
-#if WITH_GAMELIFT && 0
+#if WITH_GAMELIFT
 	InitGameLift();
 #endif
 }
+
 #if WITH_GAMELIFT
 void APTWServerEntryGameMode::InitGameLift()
 {

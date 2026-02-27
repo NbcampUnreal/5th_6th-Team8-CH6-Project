@@ -56,8 +56,7 @@ void APTWMiniGameMode::BeginPlay()
 	
 	// 카오스 이벤트 태그 적용 테스트
 	if (!PTWGameState) return;
-	ChaosEventManager->InitChaosEventManager(PTWGameState, MiniGameRule.ChaosEventRule);
-	
+	ChaosEventManager->InitChaosEventManager(PTWGameState, MiniGameRule.ChaosEventRule, CachedGameData.ChaosItemEntries);
 }
 
 void APTWMiniGameMode::Logout(AController* Exiting)
@@ -530,18 +529,16 @@ void APTWMiniGameMode::AddRoundScore(APlayerState* ScoreTarget, int32 ScoreValue
 	
 	if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(ScoreTarget))
 	{
-		int32 killScore = MiniGameRule.KillRule.KillScore;
-		
 		if (MiniGameRule.TeamRule.bUseTeam && MiniGameRule.TeamRule.bShareScoreWithinTeam)
 		{
 			if (!PTWGameState) return;
 
-			PTWGameState->AddTeamScore(ScoreTarget, killScore);
-			RoundDataInterface->AddScore(killScore);
+			PTWGameState->AddTeamScore(ScoreTarget, ScoreValue);
+			RoundDataInterface->AddScore(ScoreValue);
 		}
 		else
 		{
-			RoundDataInterface->AddScore(killScore);
+			RoundDataInterface->AddScore(ScoreValue);
 		}
 	}
 	PTWGameState->UpdateRanking(MiniGameRule);
@@ -790,6 +787,10 @@ void APTWMiniGameMode::FinishEndGameSequence()
 			PC->PlayerState->SetIsOnlyASpectator(false);
 		}
 	}
+
+	// 로비로 이동 전 구매한 카오스 아이템 목록 삭제
+	if (!PTWGameState) return;
+	PTWGameState->ResetChaosItemEntries();
 	
 	TravelLevel();
 }

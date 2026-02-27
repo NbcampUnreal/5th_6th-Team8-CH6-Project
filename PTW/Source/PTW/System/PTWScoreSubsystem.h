@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CoreFramework/PTWPlayerData.h"
+#include "CoreFramework/Game/GameState/PTWGameData.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "PTWScoreSubsystem.generated.h"
 
@@ -34,7 +35,8 @@ public:
 	 */
 	void SaveGameRound(int32 NewGameRound);
 	void SavePlayerCount(int32 NewPlayerCount);
-
+	void SaveGameData(const FPTWGameData& GameData);
+	
 	void IncreasePlayerCount();
 	void DecreasePlayerCount();
 	
@@ -46,6 +48,7 @@ public:
 	/** 저장된 라운드 반환 */
 	FORCEINLINE int32 GetCurrentGameRound() const { return SavedGameRound; }
 	FORCEINLINE int32 GetSavedPlayerCount() const { return SavedPlayerCount; }
+	FORCEINLINE FPTWGameData GetSavedGameData() const { return SavedGameData; }
 private:
 	// 현재 저장 게임 라운드 번호
 	int32 SavedGameRound = 0;
@@ -53,4 +56,6 @@ private:
 	
 	// 플레이어 ID를 키로 하는 플레이어 데이터 저장소
 	TMap<FString, FPTWPlayerData> SavedPlayersData;
+	
+	FPTWGameData SavedGameData;
 };

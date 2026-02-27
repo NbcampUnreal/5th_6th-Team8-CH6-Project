@@ -108,43 +108,47 @@ void APTWGameState::AddTeamScore(APlayerState* Player, int32 Score)
 
 void APTWGameState::ApplyMiniGameRankScore(const FPTWMiniGameRule& MiniGameRule)
 {
-	// 현재 랭킹을 기준으로 승리 포인트 추가
-	
-	// 승리 포인트는 임시로 플레이어 인원 수만큼 지급
-	// 동점 계산 X
-
 	if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Survival)
 	{
+		// 팀전 우선
 		if (MiniGameRule.TeamRule.bUseTeam)
 		{
-			if (WinTeamId == -1) return; 
-			
-			for (APlayerState* PlayerState : Teams[WinTeamId].Members)
+			// 이긴 팀 전원에게 점수
+			for (FPTWTeamInfo& Team : Teams)
 			{
-				APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
-				if (!PTWPlayerState) return;
-				
-				FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
-				PlayerData.TotalWinPoints += MiniGameRule.ScoreRule.TotalScore;
-				PTWPlayerState->SetPlayerData(PlayerData);
+				if (Team.TeamID != WinTeamId) continue;
+                
+				for (APlayerState* Member : Team.Members)
+				{
+					APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(Member);
+					if (!PTWPlayerState) continue;
+
+					FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
+					PlayerData.TotalWinPoints += MiniGameRule.ScoreRule.TotalScore;
+					PTWPlayerState->SetPlayerData(PlayerData);
+				}
 			}
 		}
 		else
 		{
+			// 생존자에게만 점수
 			if (AlivePlayers.Num() == 0) return;
-		
-			for (int i = 0; i < AlivePlayers.Num(); i++)
+            
+			for (APlayerState* PlayerState : AlivePlayers)
 			{
-				FPTWPlayerData PlayerData = RankedPlayers[i]->GetPlayerData();
+				APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+				if (!PTWPlayerState) continue;
+
+				FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
 				PlayerData.TotalWinPoints += MiniGameRule.ScoreRule.TotalScore;
-				RankedPlayers[i]->SetPlayerData(PlayerData);
+				PTWPlayerState->SetPlayerData(PlayerData);
 			}
 		}
 	}
 	else
 	{
 		if (RankedPlayers.Num() == 0) return;
-		
+        
 		for (int i = 0; i < RankedPlayers.Num(); i++)
 		{
 			FPTWPlayerData PlayerData = RankedPlayers[i]->GetPlayerData();
@@ -228,6 +232,21 @@ void APTWGameState::AdvanceRound()
 void APTWGameState::AdvanceMiniGameRound()
 {
 	CurrentMiniGameRound++;
+}
+
+void APTWGameState::AddChaosItemEntry(const FPTWChaosItemEntry& Entry)
+{
+	GameData.ChaosItemEntries.Add(Entry);
+}
+
+void APTWGameState::ResetChaosItemEntries()
+{
+	GameData.ChaosItemEntries.Empty();
+}
+
+void APTWGameState::AddPlayedMap(FName MapRowName)
+{
+	GameData.PlayedMapRowNames.Add(MapRowName);
 }
 
 void APTWGameState::SetRemainTime(int32 NewTime)

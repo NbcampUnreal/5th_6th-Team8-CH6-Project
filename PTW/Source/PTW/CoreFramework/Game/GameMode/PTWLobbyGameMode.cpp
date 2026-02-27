@@ -113,23 +113,22 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 
 void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	Super::HandleSeamlessTravelPlayer(C);
-
-	if (!C) return;
-
-	APlayerController* PlayerController = Cast<APlayerController>(C);
-	if (!PlayerController) return;
-	
-	if (APawn* OldPawn = PlayerController->GetPawn())
+	UE_LOG(LogTemp, Warning, TEXT("HandleSeamlessTravelPlayer: %s"), *C->GetName());
+    
+	if (APlayerController* PC = Cast<APlayerController>(C))
 	{
-		OldPawn->DetachFromControllerPendingDestroy();
-		OldPawn->Destroy();
+		if (APawn* OldPawn = PC->GetPawn())
+		{
+			OldPawn->DetachFromControllerPendingDestroy();
+			OldPawn->Destroy();
+		}
+		ExitSpectorMode(PC);
 	}
-	ExitSpectorMode(PlayerController);
-	RestartPlayer(PlayerController);
+
+	Super::HandleSeamlessTravelPlayer(C);
+	
 	PlayerReadyToPlay(C);
 }
-
 void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
@@ -153,11 +152,13 @@ void APTWLobbyGameMode::PlayerReadyToPlay(AController* Controller)
 	APTWPlayerState* PTWPlayerState = Controller->GetPlayerState<APTWPlayerState>();
 	if (!PTWPlayerState) return;
 	
+	PTWPlayerState->bIsReadyToPlay = true;
+	
 	if (ReadyPlayer >= AllPlayer)
 	{
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
-		ReadyPlayer = 0;
+		
 		FTimerHandle LoadingDealyTimer;
 		GetWorldTimerManager().SetTimer(LoadingDealyTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
 	}
@@ -233,16 +234,14 @@ void APTWLobbyGameMode::ExitSpectorMode(AController* Controller)
 	APlayerController* PC = Cast<APlayerController>(Controller);
 	if (!PC) return;
 
-	// 1. 관전 상태 및 대기 상태 강제 종료
+	// 관전 상태일 때만 처리
+	if (!PC->PlayerState || !PC->PlayerState->IsSpectator()) return;
+
 	PC->ChangeState(NAME_Playing);
 	PC->ClientGotoState(NAME_Playing);
-	
-	// 2. PlayerState 플래그 초기화
-	if (PC->PlayerState)
-	{
-		PC->PlayerState->SetIsSpectator(false);
-		PC->PlayerState->SetIsOnlyASpectator(false);
-	}
+
+	PC->PlayerState->SetIsSpectator(false);
+	PC->PlayerState->SetIsOnlyASpectator(false);
 }
 
 void APTWLobbyGameMode::StartRoulette()

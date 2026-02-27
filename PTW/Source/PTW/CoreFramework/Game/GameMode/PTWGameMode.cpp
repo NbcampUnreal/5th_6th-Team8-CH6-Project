@@ -25,6 +25,7 @@ void APTWGameMode::InitGame(const FString& MapName, const FString& Options, FStr
 	{
 		CurrentRound = PTWScoreSubsystem->GetCurrentGameRound(); // GameInstance 라운드 값 받아서 GameMode에 저장
 		CachedGameData = PTWScoreSubsystem->GetSavedGameData();
+		AllPlayer = PTWScoreSubsystem->GetSavedAllPlayerCount();
 	}
 }
 
@@ -101,11 +102,9 @@ void APTWGameMode::Logout(AController* Exiting)
 			ReadyPlayer = FMath::Max(0, ReadyPlayer - 1);
 		}
 	}
-	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
-	{
-		PTWScoreSubsystem->DecreasePlayerCount();
-		//AllPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
-	}
+	
+	AllPlayer--;
+	
 	if (PTWGameState)
 	{
 		FString LeaveMsg = FString::Printf(TEXT("Player '%s' has left the game."), *PlayerName);
@@ -123,13 +122,24 @@ void APTWGameMode::GetSeamlessTravelActorList(bool bToTransition, TArray<AActor*
 void APTWGameMode::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
+	
+	
+	ReadyPlayer = 0;
+	AllPlayer = GetNumPlayers();
 
+	// 모든 플레이어 준비 상태 초기화
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerState* PlayerState = (*It)->GetPlayerState<APTWPlayerState>())
+		{
+			PlayerState->bIsReadyToPlay = false;
+		}
+	}
+	
 	if (APTWGameState* GS = GetGameState<APTWGameState>())
 	{
 		GS->LoadedPlayerCount = 0;
 		GS->TotalPlayerCount = GetNumPlayers();
-
-		AllPlayer = GetNumPlayers();
 	}
 }
 
@@ -247,7 +257,7 @@ void APTWGameMode::SaveGameDataToSubsystem()
 	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
 		PTWScoreSubsystem->SaveGameRound(PTWGameState->GetCurrentRound());
-		PTWScoreSubsystem->SavePlayerCount(PTWGameState->PlayerArray.Num());
+		PTWScoreSubsystem->SaveAllPlayerCount(GetNumPlayers());
 		PTWScoreSubsystem->SaveGameData(PTWGameState->GameData);
 
 		for (APlayerState* PlayerState : PTWGameState->PlayerArray)

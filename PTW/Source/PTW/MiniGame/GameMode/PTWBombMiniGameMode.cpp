@@ -13,6 +13,7 @@
 #include "GameFramework/PlayerState.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "System/PTWItemSpawnManager.h"
+#include "System/Prop/PTWPropSubsystem.h"
 
 class UPTWItemSpawnManager;
 
@@ -79,6 +80,14 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 	if (HasAuthority() && BombActor)
 	{
 		BombActor->OnBombTimeExpired.AddUObject(this, &ThisClass::HandleBombTimeExpired);
+	}
+	
+	if (HasAuthority())
+	{
+		if (APTWGameState* GS = GetGameState<APTWGameState>())
+		{
+			GS->Server_SetPropSeed(FMath::Rand());
+		}
 	}
 
 	//UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Play Start"), CurrentRound);

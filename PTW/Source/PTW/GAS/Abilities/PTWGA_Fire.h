@@ -62,11 +62,13 @@ public:
 		const FGameplayAbilityActivationInfo ActivationInfo, 
 		const FGameplayEventData* TriggerEventData) override;
 	
+	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
+	
 	virtual void StartFire();
 	
 	virtual void AutoFire();
 	
-	virtual void MakeGameplayCue(FPTWGameplayCueMakingInfo Infos);
+	virtual void MakeGameplayCue(FPTWGameplayCueMakingInfo Infos, FGameplayTag ExecuteTag);
 	
 	virtual void StopFire();
 	
@@ -108,6 +110,8 @@ protected:
 	virtual void ExecuteHitImpactCue(const FHitResult& HitResult);
 	
 	virtual bool CheckingTag(UAbilitySystemComponent* ASC);
+	
+	virtual void PlayEmptyClickCue();
 	
 private:
 	float MaxRange = 10000.0f;

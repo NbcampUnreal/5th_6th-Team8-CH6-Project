@@ -54,7 +54,7 @@ APTWSpectatorPawn::APTWSpectatorPawn()
 	SpringArmComponent->CameraRotationLagSpeed = 15.0f;
 }
 
-void APTWSpectatorPawn::SetViewTarget()
+void APTWSpectatorPawn::SetViewTarget(bool bIsSameViewTarget)
 {
 	APlayerController* PC = GetController<APlayerController>();
 	if (!IsValid(PC)) return;
@@ -69,7 +69,15 @@ void APTWSpectatorPawn::SetViewTarget()
 		{
 			NewViewTarget = PC;
 		}
-		PC->SetViewTargetWithBlend(NewViewTarget, 1.0f, VTBlend_Cubic);
+		
+		if (bIsSameViewTarget)
+		{
+			PC->SetViewTarget(NewViewTarget);
+		}
+		else
+		{
+			PC->SetViewTargetWithBlend(NewViewTarget, 1.0f, VTBlend_Cubic);
+		}
 	}
 	else
 	{
@@ -225,7 +233,7 @@ void APTWSpectatorPawn::SetSpectatorTarget(APawn* NewViewTarget)
 		TargetCapsule->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	}
 	
-	SetViewTarget();
+	SetViewTarget(false);
 }
 
 void APTWSpectatorPawn::OnInputSpectateNext()
@@ -257,7 +265,7 @@ void APTWSpectatorPawn::SwitchToFirstThirdPerson()
 		bIsFirstPerson = !bIsFirstPerson;
 	}
 	
-	SetViewTarget();
+	SetViewTarget(true);
 }
 
 void APTWSpectatorPawn::OnTargetDeath(AActor* DeadActor, AActor* KillerActor)

@@ -17,6 +17,7 @@ void APTWGameSession::RegisterServer()
 			FPTWSessionConfig SessionConfig;
 			SessionConfig.ServerName = TEXT("MyDedicatedServer");
 			SessionConfig.MaxPlayers = 16;
+			SessionConfig.bIsDedicatedServer = UE_SERVER;
 			
 			const TCHAR* CommandLine = FCommandLine::Get();
 			

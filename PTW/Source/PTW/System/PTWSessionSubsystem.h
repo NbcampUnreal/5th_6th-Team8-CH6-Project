@@ -9,8 +9,6 @@
 #include "Session/PTWSessionConfig.h"
 #include "PTWSessionSubsystem.generated.h"
 
-#define USE_DEDICATED_SERVER 0
-
 USTRUCT(BlueprintType)
 struct FOnlineSessionSearchResultBP
 {
@@ -43,7 +41,7 @@ public:
 	
 	// 세션 탐색
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void FindGameSession();
+	void FindGameSession(int Count = 2);
 	
 	// 데디케이티드 서버 생성 (unused)
 	UFUNCTION(BlueprintCallable, Category = "Session")
@@ -73,7 +71,7 @@ protected:
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	
 	// 세션 탐색이 완료됐을 시 호출
-	void OnFindSessionsComplete(bool bWasSuccessful);
+	void OnFindSessionsComplete(bool bWasSuccessful, int32 Count);
 	
 public:
 	

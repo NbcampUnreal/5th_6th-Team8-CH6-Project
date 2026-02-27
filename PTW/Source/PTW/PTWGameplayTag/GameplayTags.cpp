@@ -136,6 +136,7 @@ namespace GameplayTags
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Fire, "GameplayCue.Weapon.Fire");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(HitImpact, "GameplayCue.Weapon.HitImpact");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Water, "GameplayCue.Weapon.Water");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Empty, "GameplayCue.Weapon.Empty");
 		}
 		
 		namespace Item

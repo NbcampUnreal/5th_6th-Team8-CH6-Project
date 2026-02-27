@@ -43,6 +43,7 @@ void UPTWGA_Fire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 	
 	if (!CommitCheck(Handle,ActorInfo, ActivationInfo))
 	{
+		PlayEmptyClickCue();
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
@@ -54,6 +55,22 @@ void UPTWGA_Fire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 	}
 	
 	StartFire();
+}
+
+bool UPTWGA_Fire::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags,
+	const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
+{
+	if (!Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags))
+	{
+		if (!CheckCost(Handle, ActorInfo, OptionalRelevantTags))
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	return true;
 }
 
 void UPTWGA_Fire::StartFire()
@@ -98,15 +115,14 @@ FPTWFireConext UPTWGA_Fire::GetFireContext() const
 	return Context;
 }
 
-void UPTWGA_Fire::MakeGameplayCue(FPTWGameplayCueMakingInfo Infos)
+void UPTWGA_Fire::MakeGameplayCue(FPTWGameplayCueMakingInfo Infos, FGameplayTag ExecuteTag)
 {
 	FGameplayCueParameters Params;
 	Params.Instigator = CurrentActorInfo->OwnerActor.Get();
 	Params.SourceObject = Infos.Weapon1P;
-	Params.AggregatedSourceTags = FGameplayTagContainer(Infos.Weapon1P->GetWeaponItemInstance()->ItemDef->WeaponTag);
 	
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(
-		GameplayTags::GameplayCue::Weapon::Fire, 
+		ExecuteTag, 
 		Params
 	);
 }
@@ -116,6 +132,7 @@ void UPTWGA_Fire::AutoFire()
 	const FPTWFireConext Context = GetFireContext();
 	if (!Context.IsValid() || !CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo))
 	{
+		PlayEmptyClickCue();
 		StopFire();
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 		return;
@@ -125,7 +142,7 @@ void UPTWGA_Fire::AutoFire()
 	FPTWGameplayCueMakingInfo CueInfos;
 	CueInfos.PlayerCharacter = Context.PC;
 	CueInfos.Weapon1P = Context.WeaponInst->SpawnedWeapon1P;
-	MakeGameplayCue(CueInfos);
+	MakeGameplayCue(CueInfos, GameplayTags::GameplayCue::Weapon::Fire);
 	
 	EHitType CurrentWeponHitType = Context.WeaponInst->GetWeaponHitType();
 	
@@ -347,4 +364,13 @@ void UPTWGA_Fire::ExecuteHitImpactCue(const FHitResult& HitResult)
 bool UPTWGA_Fire::CheckingTag(UAbilitySystemComponent* ASC)
 {
 	return ASC->HasMatchingGameplayTag(IgnoreTag);
+}
+
+void UPTWGA_Fire::PlayEmptyClickCue()
+{
+	FPTWGameplayCueMakingInfo Infos;
+	FPTWFireConext Context = GetFireContext();
+	Infos.PlayerCharacter = Context.PC;
+	Infos.Weapon1P = Context.WeaponInst->SpawnedWeapon1P;
+	MakeGameplayCue(Infos, GameplayTags::GameplayCue::Weapon::Empty);
 }

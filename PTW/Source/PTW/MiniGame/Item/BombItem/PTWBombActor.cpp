@@ -305,6 +305,11 @@ void APTWBombActor::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults,
 		if (!HitActor || ProcessedActors.Contains(HitActor)) continue;
 
 		if (HitActor == this) continue;
+		
+		APawn* HitPawn = Cast<APawn>(HitActor);
+		if (!HitPawn) continue;
+		
+		if (!HitPawn->GetPlayerState()) continue;
 
 		ProcessedActors.Add(HitActor);
 

@@ -82,11 +82,24 @@ void UPTWPropSubsystem::ApplySeededRandomByActorTag(FName GroupTag, int32 Seed, 
 
 void UPTWPropSubsystem::ApplyRoundPropSeed(int32 Seed)
 {
-	ApplySeededRandomByActorTag("Group_A", Seed, 0.5f);
-	ApplySeededRandomByActorTag("Group_B", Seed, 0.5f);
-	ApplySeededRandomByActorTag("Group_C", Seed, 0.5f);
-	ApplySeededRandomByActorTag("Group_D", Seed, 0.5f);
+	ApplySeededRandomGroupEnabled("Group_A", Seed, 0.3f);
+	ApplySeededRandomGroupEnabled("Group_B", Seed, 0.4f);
+	ApplySeededRandomGroupEnabled("Group_C", Seed, 0.3f);
+	ApplySeededRandomGroupEnabled("Group_D", Seed, 0.4f);
 
 	// 추가 그룹 설정
-	// ApplySeededRandomByActorTag("Group_B", Seed + 1, 0.3f);
+	// ApplySeededRandomByActorTag("Group_B", Seed + 1, 0.3f); 그룹 내 모든 액터 랜덤
+	//ApplySeededRandomGroupEnabled("Group_B", Seed, 0.5f); 그룹 자체를 랜덤
 }
+
+void UPTWPropSubsystem::ApplySeededRandomGroupEnabled(FName GroupTag, int32 Seed, float EnableChance)
+{
+	EnableChance = FMath::Clamp(EnableChance, 0.f, 1.f);
+	
+	FRandomStream Stream(Seed);
+	const bool bEnableGroup = (Stream.FRand() < EnableChance);
+	
+	RegisterByActorTag(GroupTag);
+	SetGroupEnabled(GroupTag, bEnableGroup);
+}
+

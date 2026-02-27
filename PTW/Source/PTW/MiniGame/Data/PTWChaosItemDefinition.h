@@ -11,6 +11,7 @@
  */
 
 class UGameplayEffect;
+class UPTWChaosEventApply;
 
 UCLASS(BlueprintType)
 class PTW_API UPTWChaosItemDefinition : public UPrimaryDataAsset
@@ -32,6 +33,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="UI")
 	TObjectPtr<UTexture2D> Icon;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Play")
+	bool bUseStack;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Function")
+	TSubclassOf<UPTWChaosEventApply> ChaosEventApplyClass;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GAS")
 	TSubclassOf<UGameplayEffect> GameplayEffectClass;

@@ -43,6 +43,8 @@ protected:
 	UFUNCTION()
 	virtual void StartGame();
 	virtual void StartRound();
+
+	virtual void UpdateTimer() override;
 	
 	//* 타이머기 종료되면 호출되는 함수 */
 	virtual void EndTimer() override;
@@ -96,6 +98,7 @@ protected:
 	/* 인벤토리 아이템에 따른 아이템 지급 함수 */
 	void SpawnPlayerSavedItems(AController* Controller);
 
+	void StartChaosEvent();
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")

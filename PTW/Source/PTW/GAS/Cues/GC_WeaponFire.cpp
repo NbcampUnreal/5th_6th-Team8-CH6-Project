@@ -6,6 +6,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
+#include "Inventory/PTWItemDefinition.h"
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "Weapon/PTWWeaponActor.h"
 #include "Inventory/Instance/PTWWeaponInstance.h"
@@ -64,7 +65,7 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 	if (WeaponSoundTable)
 	{
 		FGameplayTagContainer WeaponTags = Parameters.AggregatedSourceTags;
-		USoundCue* Cue = WeaponSoundTable->GetSoundForTag(WeaponTags.First());
+		USoundCue* Cue = WeaponSoundTable->GetSoundForTag(TargetWeapon->GetWeaponItemInstance()->ItemDef->WeaponTag);
 		
 		if (Cue)
 		{

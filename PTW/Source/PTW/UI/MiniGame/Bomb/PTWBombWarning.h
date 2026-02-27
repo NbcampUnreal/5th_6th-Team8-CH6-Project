@@ -34,7 +34,7 @@ protected:
 
 	/* 점멸 기본 속도 */
 	UPROPERTY(EditAnywhere, Category = "BombUI")
-	float BaseBlinkSpeed = 2.0f;
+	float BaseBlinkSpeed = 1.f;
 
 private:
 	UPROPERTY()

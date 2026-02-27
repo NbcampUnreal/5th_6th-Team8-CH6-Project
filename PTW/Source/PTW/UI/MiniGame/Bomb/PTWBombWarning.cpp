@@ -79,7 +79,7 @@ void UPTWBombWarning::OnBombTimeChanged(const FOnAttributeChangeData& Data)
 
 	// 점멸 속도 계산 (이벤트가 발생할 때만 1번 계산)
 	// 시간이 줄어들수록 속도가 빨라지게 매핑
-	float SpeedMultiplier = FMath::Clamp(10.0f / (RemainingTime + 1.0f), 1.0f, 10.0f);
+	float SpeedMultiplier = FMath::Clamp(20.0f / (RemainingTime + 1.0f), 1.0f, 20.0f);
 	float CurrentSpeed = BaseBlinkSpeed * SpeedMultiplier;
 
 	// 머터리얼의 Scalar Parameter 업데이트

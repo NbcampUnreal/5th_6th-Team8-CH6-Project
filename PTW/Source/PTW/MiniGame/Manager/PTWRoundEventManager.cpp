@@ -104,8 +104,9 @@ TArray<FName> UPTWRoundEventManager::GetSelectableMapRowNames()
 	{
 		const FPTWMiniGameMapRow* Row = MiniGameMapTable->FindRow<FPTWMiniGameMapRow>(RowName, TEXT("Map"));
 		if (!Row) continue;
-	
-		if (PTWGameState->GameData.PlayedMapRowNames.Contains(RowName)) continue;
+
+		// 맵 중복 안되게 하는 코드 임시 주석 
+		//if (PTWGameState->GameData.PlayedMapRowNames.Contains(RowName)) continue;
 		
 		if (Row->MinPlayers <= PlayerCount && Row->MaxPlayers >= PlayerCount)
 		{

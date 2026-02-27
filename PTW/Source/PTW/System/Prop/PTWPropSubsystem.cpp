@@ -80,16 +80,18 @@ void UPTWPropSubsystem::ApplySeededRandomByActorTag(FName GroupTag, int32 Seed, 
 	}
 }
 
+static int32 MixSeed(int32 BaseSeed, FName GroupTag)
+{
+	return HashCombineFast(BaseSeed, GetTypeHash(GroupTag));
+}
+
 void UPTWPropSubsystem::ApplyRoundPropSeed(int32 Seed)
 {
-	ApplySeededRandomGroupEnabled("Group_A", Seed, 0.3f);
-	ApplySeededRandomGroupEnabled("Group_B", Seed, 0.4f);
-	ApplySeededRandomGroupEnabled("Group_C", Seed, 0.3f);
-	ApplySeededRandomGroupEnabled("Group_D", Seed, 0.4f);
+	ApplySeededRandomGroupEnabled("Group_A", MixSeed(Seed, "Group_A"), 0.5f);
+	ApplySeededRandomGroupEnabled("Group_B", MixSeed(Seed, "Group_B"), 0.5f);
+	ApplySeededRandomGroupEnabled("Group_C", MixSeed(Seed, "Group_C"), 0.5f);
+	ApplySeededRandomGroupEnabled("Group_D", MixSeed(Seed, "Group_D"), 0.5f);
 
-	// 추가 그룹 설정
-	// ApplySeededRandomByActorTag("Group_B", Seed + 1, 0.3f); 그룹 내 모든 액터 랜덤
-	//ApplySeededRandomGroupEnabled("Group_B", Seed, 0.5f); 그룹 자체를 랜덤
 }
 
 void UPTWPropSubsystem::ApplySeededRandomGroupEnabled(FName GroupTag, int32 Seed, float EnableChance)

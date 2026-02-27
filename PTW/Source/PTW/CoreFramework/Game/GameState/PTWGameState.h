@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PTWGameData.h"
 #include "GameFramework/GameState.h"
 #include "MiniGame/PTWMiniGameRule.h"
 #include "PTWGameState.generated.h"
@@ -76,6 +77,21 @@ struct FPTWTeamInfo
 
 	UPROPERTY()
 	int32 TeamScore;
+};
+/** 카오스 이벤트 UI로 사용할 데이터 */
+USTRUCT(BlueprintType)
+struct FPTWChaosEventUIData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	FString BuyerName;
+
+	UPROPERTY(BlueprintReadOnly)
+	FText ItemDisplayName;
+
+	UPROPERTY(BlueprintReadOnly)
+	UTexture2D* ItemIcon;
 };
 #pragma endregion
 
@@ -190,6 +206,13 @@ public:
 	
 	/* 미니게임 카운트다운 */
 	bool IsMiniGameCountdown() const { return bMiniGameCountdown; }
+
+	void AddChaosItemEntry(const FPTWChaosItemEntry& Entry);
+	void ResetChaosItemEntries();
+	void AddPlayedMap(FName MapRowName);
+	
+	FPTWGameData GameData;
+	
 #pragma region Setter
 	/** 남은 시간 설정 */
 	void SetRemainTime(int32 NewTime);

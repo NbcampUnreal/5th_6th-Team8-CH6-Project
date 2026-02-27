@@ -24,7 +24,7 @@ void APTWGameMode::InitGame(const FString& MapName, const FString& Options, FStr
 	if (UPTWScoreSubsystem* PTWScoreSubsystem = GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>())
 	{
 		CurrentRound = PTWScoreSubsystem->GetCurrentGameRound(); // GameInstance 라운드 값 받아서 GameMode에 저장
-		//AllPlayer = PTWScoreSubsystem->GetSavedPlayerCount();
+		CachedGameData = PTWScoreSubsystem->GetSavedGameData();
 	}
 }
 
@@ -37,6 +37,7 @@ void APTWGameMode::InitGameState()
 	if (PTWGameState)
 	{
 		PTWGameState->SetCurrentRound(CurrentRound); // GameMode 라운드 값 받아서 GameState에 전달
+		PTWGameState->GameData = CachedGameData;
 	}
 }
 
@@ -247,6 +248,7 @@ void APTWGameMode::SaveGameDataToSubsystem()
 	{
 		PTWScoreSubsystem->SaveGameRound(PTWGameState->GetCurrentRound());
 		PTWScoreSubsystem->SavePlayerCount(PTWGameState->PlayerArray.Num());
+		PTWScoreSubsystem->SaveGameData(PTWGameState->GameData);
 
 		for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 		{

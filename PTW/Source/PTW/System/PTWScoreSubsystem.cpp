@@ -20,6 +20,12 @@ void UPTWScoreSubsystem::SavePlayerCount(int32 NewPlayerCount)
 {
 	SavedPlayerCount = NewPlayerCount;
 }
+
+void UPTWScoreSubsystem::SaveGameData(const FPTWGameData& GameData)
+{
+	SavedGameData = GameData;
+}
+
 void UPTWScoreSubsystem::IncreasePlayerCount()
 {
 	++SavedPlayerCount;

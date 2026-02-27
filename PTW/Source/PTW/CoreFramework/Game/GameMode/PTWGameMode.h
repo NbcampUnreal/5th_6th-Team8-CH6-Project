@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
+#include "CoreFramework/Game/GameState/PTWGameData.h"
 #include "PTWGameMode.generated.h"
 
 
@@ -90,6 +91,8 @@ protected:
 	bool bAllPlayerReady = false;
 	int32 ReadyPlayer = 0;
 	int32 AllPlayer = 0;
+
+	FPTWGameData CachedGameData;
 private:
 	// 현재 라운드/플레이어 데이터를 Subsystem으로 저장
 	void SaveGameDataToSubsystem();
@@ -100,6 +103,6 @@ private:
 	
 	
 	int32 CurrentRound;
-	
+
 	
 };

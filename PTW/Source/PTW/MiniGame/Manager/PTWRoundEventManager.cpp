@@ -52,6 +52,8 @@ void UPTWRoundEventManager::SelectedRandomMap()
 	FPTWRouletteData RouletteData = PTWGameState->GetRouletteData();
 	RouletteData.MapRowName = SelectedRowName;
 	PTWGameState->SetRouletteData(RouletteData); // GameState에 전달
+	
+	PTWGameState->AddPlayedMap(SelectedRowName);
 }
 
 void UPTWRoundEventManager::SelectedRandomEvent()
@@ -101,8 +103,9 @@ TArray<FName> UPTWRoundEventManager::GetSelectableMapRowNames()
 	for (const FName& RowName : RowNames)
 	{
 		const FPTWMiniGameMapRow* Row = MiniGameMapTable->FindRow<FPTWMiniGameMapRow>(RowName, TEXT("Map"));
-
 		if (!Row) continue;
+	
+		if (PTWGameState->GameData.PlayedMapRowNames.Contains(RowName)) continue;
 		
 		if (Row->MinPlayers <= PlayerCount && Row->MaxPlayers >= PlayerCount)
 		{

@@ -13,6 +13,7 @@
 #include "GameFramework/PlayerState.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "System/PTWItemSpawnManager.h"
+#include "System/Prop/PTWPropSubsystem.h"
 
 class UPTWItemSpawnManager;
 
@@ -79,6 +80,18 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 	if (HasAuthority() && BombActor)
 	{
 		BombActor->OnBombTimeExpired.AddUObject(this, &ThisClass::HandleBombTimeExpired);
+	}
+	
+	if (HasAuthority())
+	{
+		if (auto* PropSubsys = GetWorld()->GetSubsystem<UPTWPropSubsystem>())
+		{
+			PropSubsys->RegisterByActorTag("Group_A");
+			
+			PropSubsys->SetGroupEnabled("Group_A", false);
+			
+			//PropSubsys->RandomizeByActorTag("Group_A", 0.6f);
+		}
 	}
 
 	//UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Play Start"), CurrentRound);

@@ -19,13 +19,6 @@ bool UPTWSessionSubsystem::IsUsingSteamSubsystem()
 
 void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig)
 {
-	
-#if USE_DEDICATED_SERVER
-	SessionConfig.bIsDedicatedServer = true;
-#else
-	SessionConfig.bIsDedicatedServer = false;
-#endif
-	
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 	
@@ -38,14 +31,14 @@ void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig)
         FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete, SessionConfig));
 	
     TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
-    SessionSettings->bIsLANMatch = false;							// Lan 연결 사용 여부
-    SessionSettings->bShouldAdvertise = true;							// 공개 여부: 검색 노출 및 친구 초대 가능
-    SessionSettings->bAllowJoinInProgress = true;						// 중간 난입 허용 여부
+    SessionSettings->bIsLANMatch = false;											// Lan 연결 사용 여부
+    SessionSettings->bShouldAdvertise = true;										// 공개 여부: 검색 노출 및 친구 초대 가능
+    SessionSettings->bAllowJoinInProgress = true;									// 중간 난입 허용 여부
     SessionSettings->NumPublicConnections = SessionConfig.MaxPlayers;   
     
-    SessionSettings->bIsDedicated = SessionConfig.bIsDedicatedServer;			// Dedicated Serer 여부
-    SessionSettings->bUsesPresence = !SessionConfig.bIsDedicatedServer;			// 스팀 상태 정보(Presence)
-    SessionSettings->bAllowJoinViaPresence = !SessionConfig.bIsDedicatedServer;	// 스팀 친구 참여
+    SessionSettings->bIsDedicated = SessionConfig.bIsDedicatedServer;				// Dedicated Serer 여부
+    SessionSettings->bUsesPresence = !SessionConfig.bIsDedicatedServer;				// 스팀 상태 정보(Presence)
+    SessionSettings->bAllowJoinViaPresence = !SessionConfig.bIsDedicatedServer;		// 스팀 친구 참여
 	SessionSettings->bUseLobbiesIfAvailable = !SessionConfig.bIsDedicatedServer;
 	
     SessionSettings->Set(PTWSessionKey::ServerName, SessionConfig.ServerName, EOnlineDataAdvertisementType::ViaOnlineService);
@@ -105,27 +98,32 @@ void UPTWSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessi
 	}
 }
 
-void UPTWSessionSubsystem::FindGameSession()
+void UPTWSessionSubsystem::FindGameSession(int32 SearchStep)
 {
 	if(!SessionInterface.IsValid()) return;
 	
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
-	
-	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
-		FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete)
-	);
+	if (SearchStep <= 0) return;
 	
 	SessionSearch = MakeShareable(new FOnlineSessionSearch());
 	SessionSearch->bIsLanQuery = false;
-	
 	SessionSearch->MaxSearchResults = 100;
-#if USE_DEDICATED_SERVER
-	SessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, true, EOnlineComparisonOp::Equals);
-	SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, false, EOnlineComparisonOp::Equals);
-#else
-	SessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, false, EOnlineComparisonOp::Equals);
-	SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
-#endif
+	
+	if (SearchStep == 2)	// DedicatedServer
+	{
+		SessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, true, EOnlineComparisonOp::Equals);
+		SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, false, EOnlineComparisonOp::Equals);
+	}
+	else					// SearchStep : 1 ListenServer
+	{
+		SessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, false, EOnlineComparisonOp::Equals);
+		SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+	}
+	
+	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
+		FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete, SearchStep)
+	);
+	
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	if (SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef()))
 	{
@@ -138,7 +136,7 @@ void UPTWSessionSubsystem::FindGameSession()
 	}
 }
 
-void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
+void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful, int32 SearchStep)
 {
 	if(!SessionInterface.IsValid()) return;
 	
@@ -168,6 +166,11 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 		if (OnSessionSearchComplete.IsBound() && !BPSearchResults.IsEmpty())
 		{
 			OnSessionSearchComplete.Broadcast(BPSearchResults);
+		}
+		
+		if (SearchStep > 0)
+		{
+			FindGameSession(SearchStep - 1);
 		}
 	}
 	else
@@ -236,7 +239,7 @@ void UPTWSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig Sess
 	}
 	
 }
-#include "OnlineSubsystemSteam.h"
+
 void UPTWSessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);

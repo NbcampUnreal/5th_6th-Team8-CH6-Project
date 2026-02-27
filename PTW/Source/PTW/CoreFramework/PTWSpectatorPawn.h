@@ -6,9 +6,6 @@
 #include "PTWSpectatorPawn.generated.h"
 
 class APTWBaseCharacter;
-/**
- * 
- */
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
@@ -23,7 +20,7 @@ class PTW_API APTWSpectatorPawn : public ASpectatorPawn
 public:
 	APTWSpectatorPawn();
 	
-	void SetViewTarget();
+	void SetViewTarget(bool bIsSameViewTarget = false);
 	void SetSpectatorTarget(APawn* NewViewTarget);
 	bool FindNextSpectatorTarget(APawn*& NewViewTarget);
 	void SpectateNextPlayer();

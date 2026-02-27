@@ -4,15 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotifyState.h"
-#include "PTWANS_MeleeAttack.generated.h"
+#include "PTWANS_PushAttack.generated.h"
 
-class APTWPlayerCharacter;
-class APTWWeaponActor;
 /**
  * 
  */
 UCLASS()
-class PTW_API UPTWANS_MeleeAttack : public UAnimNotifyState
+class PTW_API UPTWANS_PushAttack : public UAnimNotifyState
 {
 	GENERATED_BODY()
 	
@@ -21,13 +19,9 @@ protected:
 	virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime) override;
 	virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 	
+	void ProcessHit(AActor* Owner, AActor* Target);
+	
 protected:
 	UPROPERTY()
 	TArray<AActor*> HitActors;
-
-	UPROPERTY(VisibleAnywhere)
-	APTWWeaponActor* MeleeWeapon;
-
-	UPROPERTY(VisibleAnywhere)
-	APTWPlayerCharacter* Owner;
 };

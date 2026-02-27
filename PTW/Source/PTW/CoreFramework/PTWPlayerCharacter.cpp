@@ -8,6 +8,7 @@
 #include "GameplayTagContainer.h"
 #include "Camera/CameraComponent.h"
 #include "AbilitySystemComponent.h"
+#include "PTW.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -15,6 +16,7 @@
 #include "PTWPlayerState.h"
 #include "PTWInputComponent.h"
 #include "PTWPlayerController.h"
+#include "Components/SphereComponent.h"
 #include "GAS/PTWGameplayAbility.h"
 #include "System/PTWItemSpawnManager.h"
 #include "PTW/GAS/PTWAbilitySystemComponent.h"
@@ -26,6 +28,7 @@
 #include "CoreFramework/Character/Component/PTWInteractComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/VoiceConfig.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
 {
@@ -63,6 +66,16 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 
 	InteractComponent = CreateDefaultSubobject<UPTWInteractComponent>(TEXT("InteractComponent"));
 	InteractComponent->SetIsReplicated(true);
+	
+	PushCollision = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+	PushCollision->SetupAttachment(GetMesh(), TEXT("Hand_R_Socket")); 
+	PushCollision->SetSphereRadius(30.0f);
+	
+	PushCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	PushCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+	PushCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	
+	VOIPTalkerComponent = CreateDefaultSubobject<UVOIPTalker>(TEXT("VOIPTalker"));
 }
 
 void APTWPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -335,8 +348,12 @@ void APTWPlayerCharacter::InitCharacterState()
 	GiveDefaultAbilities();
 	ApplyDefaultEffects();
 	UpdateNameTagText();
-
 	bIsAbilitiesInitialized = true;
+	
+	if (VOIPTalkerComponent && GetPlayerState())
+	{
+		VOIPTalkerComponent->RegisterWithPlayerState(GetPlayerState());
+	}
 }
 
 void APTWPlayerCharacter::OnInputTriggered()

@@ -10,7 +10,9 @@
 #include "Weapon/PTWWeaponActor.h"
 #include "Inventory/Instance/PTWWeaponInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 #include "Weapon/PTWWeaponActor_HitScan.h"
+#include "Weapon/PTWWeaponSoundTable.h"
 
 
 class UPTWWeaponInstance;
@@ -58,13 +60,20 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 		);
 	}
 	
-	if (FireSFX)
+	
+	if (WeaponSoundTable)
 	{
-		UGameplayStatics::PlaySoundAtLocation(
-			GetWorld(), 
-			FireSFX, 
-			MuzzleComp->GetComponentLocation()
-		);
+		FGameplayTagContainer WeaponTags = Parameters.AggregatedSourceTags;
+		USoundCue* Cue = WeaponSoundTable->GetSoundForTag(WeaponTags.First());
+		
+		if (Cue)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				GetWorld(), 
+				Cue, 
+				MuzzleComp->GetComponentLocation()
+			);
+		}
 	}
 	
 	SpawnCasing(TargetWeapon);

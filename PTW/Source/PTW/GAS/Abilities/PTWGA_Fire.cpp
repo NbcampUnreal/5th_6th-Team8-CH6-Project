@@ -14,6 +14,7 @@
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "GAS/PTWWeaponAttributeSet.h"
 #include "Inventory/PTWInventoryComponent.h"
+#include "Inventory/PTWItemDefinition.h"
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "Weapon/PTWProjectile.h"
 #include "Weapon/PTWWeaponActor.h"
@@ -101,7 +102,8 @@ void UPTWGA_Fire::MakeGameplayCue(FPTWGameplayCueMakingInfo Infos)
 {
 	FGameplayCueParameters Params;
 	Params.Instigator = CurrentActorInfo->OwnerActor.Get();
-	Params.SourceObject = Infos.Weapon1P; 
+	Params.SourceObject = Infos.Weapon1P;
+	Params.AggregatedSourceTags = FGameplayTagContainer(Infos.Weapon1P->GetWeaponItemInstance()->ItemDef->WeaponTag);
 	
 	GetAbilitySystemComponentFromActorInfo()->ExecuteGameplayCue(
 		GameplayTags::GameplayCue::Weapon::Fire, 
@@ -156,7 +158,7 @@ void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* P
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Avatar); 
 	
-	float SweepRad = 20.0f;
+	float SweepRad = 35.0f;
 	
 	FCollisionShape SphereShape = FCollisionShape::MakeSphere(SweepRad);
 	

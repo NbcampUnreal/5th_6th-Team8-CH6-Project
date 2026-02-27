@@ -9,6 +9,7 @@
 #include "CoreFramework/PTWPlayerData.h"
 #include "PTWPlayerCharacter.generated.h"
 
+class USphereComponent;
 class APTWPlayerState;
 class UPTWItemDefinition;
 class UCameraComponent;
@@ -19,6 +20,7 @@ class UWidgetComponent;
 class UPTWWeaponComponent;
 class UPTWReactorComponent;
 class UPTWInteractComponent;
+class UVOIPTalker;
 
 UCLASS()
 class PTW_API APTWPlayerCharacter : public APTWBaseCharacter
@@ -44,7 +46,9 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return GetMesh(); }
 	FORCEINLINE UPTWInteractComponent* GetInteractComponent() const { return InteractComponent; }
 	FORCEINLINE bool GetStealthMode() const { return bIsStealth; }
-
+	FORCEINLINE USphereComponent* GetPushCollision() const {return PushCollision; }
+	FORCEINLINE UVOIPTalker* GetVOIPTalkerComponent() const { return VOIPTalkerComponent; }
+	
 protected:
 	// 4. [Protected] 오버라이드 함수 (LifeCycle) - BeginPlay, EndPlay 등
 	virtual void BeginPlay() override;
@@ -156,7 +160,11 @@ protected:
 	TObjectPtr<UPTWWeaponComponent> WeaponComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UPTWInteractComponent> InteractComponent;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<USphereComponent> PushCollision;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UVOIPTalker> VOIPTalkerComponent;
+	
 	
 	//Stealth 모드 전용(현정석)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components", ReplicatedUsing = OnRep_StealthMode)

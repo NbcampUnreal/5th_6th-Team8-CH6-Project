@@ -76,9 +76,11 @@ public:
 	void Server_NotifyReadyToPlay();
 
 	/* (폭탄넘기기 미니게임) BombActor 델리게이트 바인딩 */
-	void BindBombDelegate();
+	void BindBombDelegate(APTWBombActor* NewBomb);
 	void UnBindBombDelegate();
 
+	void OnVoicePressed();
+	void OnVoiceReleased();
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -160,10 +162,12 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UPTWUISubsystem> UISubsystem;
 
-	/* (폭탄넘기기 미니게임) 폭탄액터 캐싱 */
+	/* (폭탄넘기기 미니게임) 캐싱 */
 	UPROPERTY()
-	APTWBombActor* CachedBombActor;
+	APTWBombActor* CachedBombActor; // 폭탄 액터
 
+	/* 게임스테이트 델리게이트 바인드용 */
+	FTimerHandle GameStateBindRetryHandle;
 	/* 닉네임 업데이트용 타이머 핸들 */
 	FTimerHandle NameTagTimerHandle;
 
@@ -202,6 +206,10 @@ protected:
 	// 키가이드 (K)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> KeyGuideAction;
+	
+	// 마이크 입력 (V)
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> VoiceAction;
 	
 	/* ---------- UI ---------- */
 	// HUD

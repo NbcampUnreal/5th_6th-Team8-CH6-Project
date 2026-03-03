@@ -149,6 +149,10 @@ namespace GameplayTags
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Wall);
 		}
+		namespace MiniGame
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Delivery);
+		}
 	}
 
 	namespace ChaosEvent

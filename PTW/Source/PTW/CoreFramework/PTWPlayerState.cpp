@@ -10,6 +10,7 @@
 #include "GameplayEffect.h"
 #include "GameplayAbilitySpec.h"
 #include "Gameplay/Shop/PTWShopNPC.h"
+#include "GAS/PTWDeliveryAttributeSet.h"
 
 APTWPlayerState::APTWPlayerState()
 {
@@ -21,6 +22,9 @@ APTWPlayerState::APTWPlayerState()
 
 	AttributeSet = CreateDefaultSubobject<UPTWAttributeSet>(TEXT("AttributeSet"));
 	WeaponAttributeSet = CreateDefaultSubobject<UPTWWeaponAttributeSet>(TEXT("WeaponAttributeSet"));
+	
+	//FIXME : 테스트
+	DeliveryAttributeSet = CreateDefaultSubobject<UPTWDeliveryAttributeSet>(TEXT("DeliveryAttributeSet"));
 
 	CurrentPlayerData.PlayerName = "";
 	CurrentPlayerData.TotalWinPoints = 0;

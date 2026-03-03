@@ -150,6 +150,11 @@ namespace GameplayTags
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Wall, "GameplayCue.Hit.Wall");
 		}
+		
+		namespace MiniGame
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Delivery, "GameplayCue.MiniGame.Delivery");
+		}
 	}
 
 	namespace ChaosEvent

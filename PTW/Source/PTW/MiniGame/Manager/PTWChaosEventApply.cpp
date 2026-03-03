@@ -8,7 +8,6 @@
 #include "AbilitySystemInterface.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "MiniGame/Data/PTWChaosItemDefinition.h"
-#include "PTWGameplayTag/GameplayTags.h"
 
 
 void UPTWChaosEventApply::InitDefinition(UPTWChaosItemDefinition* InDefinition)
@@ -21,64 +20,50 @@ void UPTWChaosEventApply::SetStackCount(int32 Count)
 	StackCount = Count;
 }
 
-void UPTWChaosEventApply::ApplyChaosEffect(APTWGameState* GameState)
-{
-	if (!IsValid(GameState) || !IsValid(Definition) || !Definition->GameplayEffectClass) return;
-
-	for (APlayerState* PlayerState : GameState->PlayerArray)
-	{
-		if (!PlayerState) continue;
-
-		UAbilitySystemComponent* ASC = nullptr;
-
-		if (IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(PlayerState))
-		{
-			ASC = ASI->GetAbilitySystemComponent();
-		}
-		
-		if (!IsValid(ASC)) continue;
-
-		FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
-		
-		int32 Level = Definition->bUseStack ? StackCount : 1;
-		
-		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(
-			Definition->GameplayEffectClass, Level, ContextHandle);
-		
-		if (!SpecHandle.IsValid()) continue;
-		
-		FActiveGameplayEffectHandle ActiveHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-
-		if (!ActiveHandle.IsValid()) continue;
-
-		ApplyEffectHandles.Add(ASC, ActiveHandle);
-	}
-}
 
 void UPTWChaosEventApply::ApplyChaosEvent(APTWGameState* GameState)
 {
-	if (Definition->GameplayEffectClass)
+	if (Definition->ChaosAbilityClass)
 	{
-		ApplyChaosEffect(GameState);
+		ApplyChaosAbilityClass(GameState);
 	}
 }
 
 void UPTWChaosEventApply::ChaosEventEnd()
 {
-	ChaosEffectEnd();
+	ChaosAbilityEnd();
 }
 
-void UPTWChaosEventApply::ChaosEffectEnd()
+void UPTWChaosEventApply::ApplyChaosAbilityClass(APTWGameState* GameState)
 {
-	for (auto pair : ApplyEffectHandles)
-	{
-		if (!IsValid(pair.Key)) continue;
-		if (!pair.Value.IsValid()) continue;
-			
-		UAbilitySystemComponent* ASC = pair.Key;
-		FActiveGameplayEffectHandle ActiveHandle = pair.Value;
+	if (!IsValid(Definition) || !Definition->ChaosAbilityClass) return;
 
-		ASC->RemoveActiveGameplayEffect(ActiveHandle);
+	for (APlayerState* PlayerState : GameState->PlayerArray)
+	{
+		UAbilitySystemComponent* ASC = nullptr;
+		if (IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(PlayerState))
+		{
+			ASC = ASI->GetAbilitySystemComponent();
+		}
+		if (!IsValid(ASC)) continue;
+
+		FGameplayAbilitySpec Spec(Definition->ChaosAbilityClass, StackCount);
+		FGameplayAbilitySpecHandle Handle = ASC->GiveAbility(Spec);
+		ASC->TryActivateAbility(Handle);
+        
+		ApplyAbilityHandles.Add(ASC, Handle);
 	}
-	ApplyEffectHandles.Empty();
 }
+
+void UPTWChaosEventApply::ChaosAbilityEnd()
+{
+	for (auto& Pair : ApplyAbilityHandles)
+	{
+		if (!IsValid(Pair.Key)) continue;
+		
+		Pair.Key->CancelAbilityHandle(Pair.Value);
+		Pair.Key->ClearAbility(Pair.Value); 
+	}
+	ApplyAbilityHandles.Empty();
+}
+

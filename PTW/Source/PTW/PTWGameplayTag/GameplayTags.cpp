@@ -29,10 +29,12 @@ namespace GameplayTags
 		
 		namespace Round
 		{
-			UE_DEFINE_GAMEPLAY_TAG(Economy_Depression, "Event.Round.Economy.Depression");
-			UE_DEFINE_GAMEPLAY_TAG(Economy_Inflation, "Event.Round.Economy.Inflation");
+			UE_DEFINE_GAMEPLAY_TAG(DwarfPotion, "Event.Chaos.DwarfPotion");
 		}
-
+		namespace Chaos
+		{
+			
+		}
 		namespace Melee
 		{
 			UE_DEFINE_GAMEPLAY_TAG(Hit, "Event.Melee.Hit");
@@ -84,12 +86,6 @@ namespace GameplayTags
 		namespace Passive
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(ReflectShield, "Item.Passive.ReflectShield");
-		}
-
-		namespace Chaos
-		{
-			PTW_API UE_DEFINE_GAMEPLAY_TAG(Test, "Item.Chaos.Test");
-
 		}
 	}
 	namespace Weapon
@@ -150,20 +146,11 @@ namespace GameplayTags
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Wall, "GameplayCue.Hit.Wall");
 		}
-	}
-
-	namespace ChaosEvent
-	{
-		namespace Buff
-		{
-			PTW_API UE_DEFINE_GAMEPLAY_TAG(MoveSpeed, "ChaosEvent.Buff.MoveSpeed");
-		}
 		
-		namespace Debuff
+		namespace MiniGame
 		{
-			PTW_API UE_DEFINE_GAMEPLAY_TAG(MoveSpeed, "ChaosEvent.Debuff.MoveSpeed");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Delivery, "GameplayCue.MiniGame.Delivery");
 		}
-		
 	}
 	
 }

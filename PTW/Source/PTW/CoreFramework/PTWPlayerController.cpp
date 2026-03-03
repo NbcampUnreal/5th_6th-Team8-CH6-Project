@@ -214,6 +214,39 @@ void APTWPlayerController::OnVoiceReleased()
 	}
 }
 
+void APTWPlayerController::Client_ShowNotification_Implementation(const FNotificationData& Data)
+{
+	if (!IsLocalController()) return;
+
+	if (UISubsystem)
+	{
+		UISubsystem->PushNotification(Data);
+	}
+}
+
+void APTWPlayerController::ShowLocalNotification(const FNotificationData& Data)
+{
+	if (!IsLocalController()) return;
+
+	if (UISubsystem)
+	{
+		UISubsystem->PushNotification(Data);
+	}
+}
+
+void APTWPlayerController::SendMessage(const FText& InText, ENotificationPriority InPriority, float InDuration, bool bInterrupt)
+{
+	if (!HasAuthority()) return; // 서버에서만 호출
+
+	FNotificationData Data;
+	Data.Message = InText;
+	Data.Priority = InPriority;
+	Data.Duration = InDuration;
+	Data.bInterrupt = bInterrupt;
+
+	Client_ShowNotification(Data);
+}
+
 void APTWPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -245,7 +278,7 @@ void APTWPlayerController::BeginPlay()
 		}
 	}
 
-	BindGameStateDelegates();
+	// BindGameStateDelegates();
 
 	UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::GameOnly);
 
@@ -279,7 +312,7 @@ void APTWPlayerController::OnRep_PlayerState()
 		return;
 	}
 
-	// BindGameStateDelegates();
+	BindGameStateDelegates();
 
 	CreateUI();
 }

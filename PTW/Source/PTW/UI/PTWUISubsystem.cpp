@@ -206,10 +206,20 @@ UUserWidget* UPTWUISubsystem::ShowSystemWidget(TSubclassOf<UUserWidget> WidgetCl
 
 void UPTWUISubsystem::HideSystemWidget(TSubclassOf<UUserWidget> WidgetClass)
 {
-	if (TObjectPtr<UUserWidget>* Found = CachedWidgets.Find(WidgetClass))
+	if (!IsValid(this) || !GetWorld() || GetWorld()->bIsTearingDown)
 	{
-		UUserWidget* Widget = Found->Get();
-		Widget->RemoveFromParent();
+		return;
+	}
+
+	if (!WidgetClass) return;
+
+	if (TObjectPtr<UUserWidget>* FoundWidgetPtr = CachedWidgets.Find(WidgetClass))
+	{
+		UUserWidget* Widget = FoundWidgetPtr->Get();
+		if (IsValid(Widget))
+		{
+			Widget->RemoveFromParent();
+		}
 	}
 }
 
@@ -268,6 +278,16 @@ UUserWidget* UPTWUISubsystem::GetOrCreateWidget(TSubclassOf<UUserWidget> WidgetC
 
 	CachedWidgets.Add(WidgetClass, NewWidget);
 	return NewWidget;
+}
+
+void UPTWUISubsystem::PushNotification(const FNotificationData& Data)
+{
+	if (!HUDWidget) return;
+
+	if (UPTWInGameHUD* InGameHUD = Cast<UPTWInGameHUD>(HUDWidget))
+	{
+		InGameHUD->ShowNotification(Data);
+	}
 }
 
 APlayerController* UPTWUISubsystem::GetPlayerController() const

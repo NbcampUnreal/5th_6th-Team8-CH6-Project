@@ -10,6 +10,7 @@
 #include "PTWPlayerState.generated.h"
 
 
+class UPTWDeliveryAttributeSet;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDataChanged, const FPTWPlayerData&, NewData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerRoundDataChanged, const FPTWPlayerRoundData&, NewData);
 
@@ -87,6 +88,8 @@ protected:
 	TObjectPtr<UAttributeSet> AttributeSet;
 	UPROPERTY()
 	TObjectPtr<UPTWWeaponAttributeSet> WeaponAttributeSet;
+	UPROPERTY()
+	TObjectPtr<UPTWDeliveryAttributeSet> DeliveryAttributeSet;
 
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentPlayerData, VisibleAnywhere, BlueprintReadOnly, Category = "Data")
 	FPTWPlayerData CurrentPlayerData;

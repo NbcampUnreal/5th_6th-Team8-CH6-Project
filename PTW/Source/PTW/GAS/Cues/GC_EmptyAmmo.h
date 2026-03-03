@@ -9,6 +9,9 @@
 /**
  * 
  */
+
+class USoundCue;
+
 UCLASS()
 class PTW_API UGC_EmptyAmmo : public UGameplayCueNotify_Static
 {

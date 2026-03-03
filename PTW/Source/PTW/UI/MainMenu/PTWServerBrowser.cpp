@@ -121,16 +121,15 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 		SessionConfig.ServerName = ServerNameEditableText->GetText().ToString();
 		
 	}
-	
 	if (IsValid(ServerMaxPlayerEditableText))
 	{
 		SessionConfig.MaxPlayers = FCString::Atoi(*ServerMaxPlayerEditableText->GetText().ToString());
 	}
-	
 	if (IsValid(ServerMaxPlayerEditableText))
 	{
 		SessionConfig.MaxRounds = GetMaxRoundsByLimit(RoundLimit);
 	}
+	SessionConfig.bIsDedicatedServer = UE_SERVER;
 	
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!IsValid(GameInstance)) return;
@@ -139,7 +138,6 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	if (!IsValid(SessionSubsystem)) return;
 	
 	SessionSubsystem->CreateGameSession(SessionConfig);
-	// SessionSubsystem->LaunchDedicatedServer(ServerSettings, 16, false);
 }
 
 void UPTWServerBrowser::OnClickedFindServerButton()

@@ -238,8 +238,6 @@ void APTWBombActor::RequestExplode(AActor* InstigatorActor)
 	const float FinalDamage = BaseBombDamage;
 	ApplyExplosionDamage(OverlapResults, FinalDamage, InstigatorActor);
 	
-	Multicast_PlayExplosionCue(GetActorLocation(), InstigatorActor);
-	
 	SetActorEnableCollision(false);
 	
 	if (AudioComponent && AudioComponent->IsPlaying()) AudioComponent->Stop();
@@ -307,6 +305,11 @@ void APTWBombActor::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults,
 		if (!HitActor || ProcessedActors.Contains(HitActor)) continue;
 
 		if (HitActor == this) continue;
+		
+		APawn* HitPawn = Cast<APawn>(HitActor);
+		if (!HitPawn) continue;
+		
+		if (!HitPawn->GetPlayerState()) continue;
 
 		ProcessedActors.Add(HitActor);
 
@@ -346,22 +349,37 @@ void APTWBombActor::UpdateBombEffects(float NewTime)
 {
 	if (NewTime <= 0.0f)
 	{
-		if (AudioComponent->IsPlaying()) AudioComponent->Stop();
-		if (AudioLoopComponent->IsPlaying()) AudioLoopComponent->Stop();
+		if (AudioComponent && AudioComponent->IsPlaying()) AudioComponent->Stop();
+		if (AudioLoopComponent && AudioLoopComponent->IsPlaying()) AudioLoopComponent->Stop();
 		if (BombDynamicMat) BombDynamicMat->SetScalarParameterValue(FName("BlinkSpeed"), 0.0f);
 		
 		if (HasAuthority() && !bTimeExpiredNotified)
 		{
 			bTimeExpiredNotified = true;
-
+			
 			AActor* InstigatorActor = BombOwnerPawn ? Cast<AActor>(BombOwnerPawn) : this;
+			
+			if (BombOwnerPawn && ExplosionCueTag.IsValid())
+			{
+				UAbilitySystemComponent* OwnerASC =
+					UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(BombOwnerPawn);
+
+				if (OwnerASC)
+				{
+					FGameplayCueParameters Params;
+					Params.Location     = GetActorLocation();
+					Params.Instigator   = InstigatorActor;
+					Params.SourceObject = this;
+
+					OwnerASC->ExecuteGameplayCue(ExplosionCueTag, Params);
+				}
+			}
 			
 			RequestExplode(InstigatorActor);
 			
 			OnBombTimeExpired.Broadcast(InstigatorActor);
 		}
 
-		
 		return;
 	}
 

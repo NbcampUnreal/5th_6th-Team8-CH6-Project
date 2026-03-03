@@ -142,7 +142,6 @@ void UPTWAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, 
 void UPTWAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, Health, OldHealth); }
 void UPTWAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, MaxHealth, OldMaxHealth); }
 
-#pragma optimize ("", off)
 void UPTWAttributeSet::OnRep_MoveSpeed(const FGameplayAttributeData& OldMoveSpeed)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, MoveSpeed, OldMoveSpeed);
@@ -154,12 +153,11 @@ void UPTWAttributeSet::OnRep_MoveSpeed(const FGameplayAttributeData& OldMoveSpee
 			if (UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement())
 			{
 				MoveComp->MaxWalkSpeed = GetMoveSpeed();
-				UE_LOG(LogTemp, Log, TEXT("OnRep_MoveSpeed: New Speed = %f"), GetMoveSpeed());
 			}
 		}
 	}
 }
-#pragma optimize ("", on)
+
 void UPTWAttributeSet::OnRep_JumpZVelocity(const FGameplayAttributeData& OldJumpZVelocity) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, JumpZVelocity, OldJumpZVelocity); }
 
 void UPTWAttributeSet::HandleDamage(const FGameplayEffectModCallbackData& Data)

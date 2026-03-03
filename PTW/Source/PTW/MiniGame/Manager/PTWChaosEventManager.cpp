@@ -83,7 +83,7 @@ void UPTWChaosEventManager::TriggerChaosEvent()
 	UPTWChaosItemDefinition* Definition = Row->ChaosItemDefinition.LoadSynchronous();
 	if (!Definition) return;
 
-	CurrentApplyEvent = NewObject<UPTWChaosEventApply>(this, Definition->ChaosEventApplyClass);
+	CurrentApplyEvent = NewObject<UPTWChaosEventApply>(this);
 	if (!IsValid(CurrentApplyEvent)) return;
 
 	CurrentApplyEvent->InitDefinition(Definition);

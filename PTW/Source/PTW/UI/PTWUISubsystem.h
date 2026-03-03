@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/LocalPlayerSubsystem.h"
+#include "UI/InGameUI/PTWNotificationWidget.h"
 #include "PTWUISubsystem.generated.h"
 
 class UAbilitySystemComponent;
@@ -12,6 +13,7 @@ class UPTWInGameHUD;
 class UPTWDamageIndicator;
 class UPTWChatInput;
 class UPTWChatList;
+class UPTWNotificationWidget;
 
 UENUM(BlueprintType)
 enum class EUIInputPolicy : uint8
@@ -88,6 +90,9 @@ public:
 
 	/* 입력정책 기본값 수정 */
 	void SetDefaultInputPolicy(EUIInputPolicy NewPolicy) { DefaultInputPolicy = NewPolicy; }
+
+	/* 알림 위젯 */
+	void PushNotification(const FNotificationData& Data);
 
 private:
 	/* Helpers */

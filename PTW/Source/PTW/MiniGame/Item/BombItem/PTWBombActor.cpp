@@ -28,6 +28,8 @@
 
 #include "CoreFramework/PTWPlayerController.h"
 
+#define LOCTEXT_NAMESPACE "BombActor"
+
 APTWBombActor::APTWBombActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -186,6 +188,20 @@ void APTWBombActor::OnRep_BombOwnerPawn()
 
 	AttachToOwnerPawn();
 
+	if (BombOwnerPawn)
+	{
+		if (AController* OwnerController = BombOwnerPawn->GetController())
+		{
+			if (APTWPlayerController* Controller = Cast<APTWPlayerController>(OwnerController))
+			{
+				Controller->SendMessage(
+					LOCTEXT("GetBomb", "GetBomb!"),
+					ENotificationPriority::High,
+					3.f);
+			}
+		}
+	}
+
 	OnBombOwnerChanged.Broadcast(BombOwnerPawn);
 }
 
@@ -229,6 +245,11 @@ void APTWBombActor::RequestExplode(AActor* InstigatorActor)
 
 	if (bExplodeRequested) return;
 	bExplodeRequested = true;
+
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		UnBindToLocalPlayerController();
+	}
 
 	// 오버랩 수집
 	TArray<FOverlapResult> OverlapResults;
@@ -450,3 +471,5 @@ void APTWBombActor::UnBindToLocalPlayerController()
 
 	PTWPC->UnBindBombDelegate();
 }
+
+#undef LOCTEXT_NAMESPACE

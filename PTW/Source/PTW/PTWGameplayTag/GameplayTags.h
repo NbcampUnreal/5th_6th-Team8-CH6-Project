@@ -34,6 +34,11 @@ namespace GameplayTags
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Economy_Depression);
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Economy_Inflation);
 		}
+		namespace Chaos
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(DwarfPotion);
+			
+		}
 		namespace Melee
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Hit);
@@ -85,11 +90,7 @@ namespace GameplayTags
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(ReflectShield);
 		}
-
-		namespace Chaos
-		{
-			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Test);
-		}
+		
 	}
 	
 	namespace Weapon
@@ -152,18 +153,6 @@ namespace GameplayTags
 		namespace MiniGame
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Delivery);
-		}
-	}
-
-	namespace ChaosEvent
-	{
-		namespace Buff
-		{
-			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(MoveSpeed);
-		}
-		namespace Debuff
-		{
-			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(MoveSpeed);
 		}
 	}
 	

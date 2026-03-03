@@ -10,6 +10,7 @@
 #include "InGameUI/PTWAmmoWidget.h"
 #include "InGameUI/PTWCrosshair.h"
 #include "InGameUI/PTWInventoryWidget.h"
+#include "InGameUI/PTWNotificationWidget.h"
 
 void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 {
@@ -30,10 +31,83 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 	if (InventoryWidget) InventoryWidget->InitPS();
 }
 
+void UPTWInGameHUD::ShowNotification(const FNotificationData& Data)
+{
+	if (!NotificationWidget) return;
+
+	if (bIsShowingNotification)
+	{
+		if (Data.bInterrupt)
+		{
+			NotificationWidget->ForceHide();
+			bIsShowingNotification = false;
+		}
+		else
+		{
+			NotificationQueue.Add(Data);
+			NotificationQueue.Sort([](const FNotificationData& A, const FNotificationData& B)
+				{
+					return (uint8)A.Priority > (uint8)B.Priority;
+				});
+			return;
+		}
+	}
+
+	NotificationQueue.Add(Data);
+
+	NotificationQueue.Sort([](const FNotificationData& A, const FNotificationData& B)
+		{
+			return (uint8)A.Priority > (uint8)B.Priority;
+		});
+
+	TryShowNextNotification();
+}
+
 bool UPTWInGameHUD::Initialize()
 {
 	bool Success = Super::Initialize();
 	if (!Success) return false;
 
+	if (NotificationWidget)
+	{
+		NotificationWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+		NotificationWidget->OnMessageFinished.AddUObject(
+			this,
+			&ThisClass::HandleNotificationFinished
+		);
+	}
+
 	return true;
+}
+
+void UPTWInGameHUD::TryShowNextNotification()
+{
+	if (!NotificationWidget) return;
+
+	if (NotificationQueue.Num() == 0)
+	{
+		bIsShowingNotification = false;
+		return;
+	}
+
+	bIsShowingNotification = true;
+
+	FNotificationData Data = NotificationQueue[0];
+	NotificationQueue.RemoveAt(0);
+
+	NotificationWidget->SetVisibility(ESlateVisibility::Visible);
+	NotificationWidget->PlayMessage(Data);
+}
+
+void UPTWInGameHUD::HandleNotificationFinished()
+{
+	if (NotificationWidget)
+	{
+		NotificationWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	bIsShowingNotification = false;
+
+	TryShowNextNotification();
 }

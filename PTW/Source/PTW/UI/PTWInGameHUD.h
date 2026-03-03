@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "UI/InGameUI/PTWNotificationWidget.h"
 #include "PTWInGameHUD.generated.h"
 
 class UAbilitySystemComponent;
@@ -14,6 +15,8 @@ class UPTWTimer;
 class UPTWAmmoWidget;
 class UPTWCrosshair;
 class UPTWInventoryWidget;
+class UPTWNotificationWidget;
+
 /**
  * 
  */
@@ -25,6 +28,9 @@ class PTW_API UPTWInGameHUD : public UUserWidget
 public:
 	/* 초기화 (HUD 에서 ASC 받고, 하위 위젯에 ASC 전달) */
 	void InitializeUI(UAbilitySystemComponent* ASC);
+
+	/* 알림 위젯에 문구 추가 */
+	void ShowNotification(const FNotificationData& Data);
 
 	/* 위젯 바인딩 */
 	/* 체력바 */
@@ -45,7 +51,21 @@ public:
 	/* 인벤토리 위젯 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWInventoryWidget> InventoryWidget;
+	/* 알림 위젯 */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWNotificationWidget> NotificationWidget;
 
 protected:
 	virtual bool Initialize() override;
+
+	/* 알림 위젯 */
+	void TryShowNextNotification();
+
+	UFUNCTION()
+	void HandleNotificationFinished();
+
+	UPROPERTY()
+	TArray<FNotificationData> NotificationQueue;
+
+	bool bIsShowingNotification = false;
 };

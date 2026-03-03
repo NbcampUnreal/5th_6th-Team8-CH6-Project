@@ -3,15 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "PTWChaosItemDefinition.generated.h"
 
 /**
  * 
  */
 
+class UGameplayAbility;
 class UGameplayEffect;
-class UPTWChaosEventApply;
 
 UCLASS(BlueprintType)
 class PTW_API UPTWChaosItemDefinition : public UPrimaryDataAsset
@@ -21,9 +20,6 @@ class PTW_API UPTWChaosItemDefinition : public UPrimaryDataAsset
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Event")
 	FName ItemId;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Event")
-	FGameplayTag ItemTag;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="UI")
 	FText DisplayName;
@@ -37,10 +33,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Play")
 	bool bUseStack;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Function")
-	TSubclassOf<UPTWChaosEventApply> ChaosEventApplyClass;
-	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GAS")
-	TSubclassOf<UGameplayEffect> GameplayEffectClass;
+	TSubclassOf<UGameplayAbility> ChaosAbilityClass;
 	
 };

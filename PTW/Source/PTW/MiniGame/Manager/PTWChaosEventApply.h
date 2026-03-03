@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ActiveGameplayEffectHandle.h"
-#include "GameplayTagContainer.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "MiniGame/Data/PTWChaosItemDefinition.h"
 #include "UObject/Object.h"
 #include "PTWChaosEventApply.generated.h"
@@ -25,8 +25,8 @@ public:
 
 	void SetStackCount(int32 Count);
 	
-	void ApplyChaosEvent(APTWGameState* GameState);
-	void ChaosEventEnd();
+	virtual void ApplyChaosEvent(APTWGameState* GameState);
+	virtual void ChaosEventEnd();
 	
 	
 protected:
@@ -35,12 +35,13 @@ protected:
 
 	int32 StackCount = 1;
 	
-	//* 적용된 이펙트 제거를 위해 저장*/
-	TMap<TObjectPtr<UAbilitySystemComponent>, FActiveGameplayEffectHandle> ApplyEffectHandles;
+	//* 적용된 어빌리티 제거를 위해 저장*/
+	UPROPERTY()
+	TMap<UAbilitySystemComponent*, FGameplayAbilitySpecHandle> ApplyAbilityHandles;
 	
 private:
-	void ApplyChaosEffect(APTWGameState* GameState);
-	void ChaosEffectEnd();
+	void ApplyChaosAbilityClass(APTWGameState* GameState);
+	void ChaosAbilityEnd();
 	
 	
 };

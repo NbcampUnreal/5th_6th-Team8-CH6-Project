@@ -6,6 +6,7 @@
 #include "MiniGame/PTWMiniGameMode.h"
 #include "PTWDeliveryGameMode.generated.h"
 
+class UAbilitySystemComponent;
 class APTWPlayerCharacter;
 /**
  * 
@@ -31,11 +32,14 @@ private:
 	
 	/* 미니 게임 룰 적용*/
 	void SetMiniGameRule();
+	
+	/* 플레이어에게 미니게임 전용 AS 부여*/
+	void GrantDeliveryAttributeSet();
+	
+	/* AS 할당 이후 Value값 초기화 */
+	void InitializeAttributeSet(UAbilitySystemComponent* TargetASC);
 
 protected:
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
 	TSubclassOf<UGameplayEffect> DeliveryStartEffect;
-	
-	UPROPERTY()
-	TObjectPtr<UPTWItemDefinition> DefaultWeaponDef;
 };

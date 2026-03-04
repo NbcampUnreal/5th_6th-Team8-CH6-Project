@@ -8,6 +8,8 @@
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "System/PTWItemSpawnManager.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "GAS/PTWDeliveryAttributeSet.h"
 
 APTWDeliveryGameMode::APTWDeliveryGameMode()
 {
@@ -16,6 +18,7 @@ APTWDeliveryGameMode::APTWDeliveryGameMode()
 void APTWDeliveryGameMode::StartRound()
 {
 	SetMiniGameRule();
+	GrantDeliveryAttributeSet();
 	Super::StartRound();
 }
 
@@ -37,7 +40,7 @@ void APTWDeliveryGameMode::GivingDefaultWeapon(APTWPlayerCharacter* TargetCharac
 	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
 	if (!SpawnManager) return;
 	
-	SpawnManager->SpawnSingleItem(TargetCharacter->GetPlayerState<APTWPlayerState>(), DefaultWeaponDef);
+	SpawnManager->SpawnSingleItem(TargetCharacter->GetPlayerState<APTWPlayerState>(), ItemDefinition);
 }
 
 void APTWDeliveryGameMode::SetMiniGameRule()
@@ -45,4 +48,27 @@ void APTWDeliveryGameMode::SetMiniGameRule()
 	MiniGameRule.TimeRule.Timer = 180;
 	MiniGameRule.KillRule.KillScore = 0;
 	MiniGameRule.SpawnRule.RespawnDelay = 3.0f;
+}
+
+void APTWDeliveryGameMode::GrantDeliveryAttributeSet()
+{
+	for (APlayerState* AS : PTWGameState->AlivePlayers)
+	{
+		APTWPlayerState* PS = Cast<APTWPlayerState>(AS);
+		if (!PS) return;
+		UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+		if (!ASC) return;
+		
+		if (ASC->GetAttributeSet(UPTWDeliveryAttributeSet::StaticClass())) return;
+		
+		UPTWDeliveryAttributeSet* NewSet = NewObject<UPTWDeliveryAttributeSet>(AS->GetPawn());
+		ASC->AddSpawnedAttribute(NewSet);
+		InitializeAttributeSet(ASC);
+	}
+}
+
+void APTWDeliveryGameMode::InitializeAttributeSet(UAbilitySystemComponent* TargetASC)
+{
+	if (!TargetASC) return;
+	TargetASC->SetNumericAttributeBase(UPTWDeliveryAttributeSet::GetBatteryLevelAttribute(), 1.0f);
 }

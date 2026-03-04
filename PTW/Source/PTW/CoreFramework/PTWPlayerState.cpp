@@ -23,9 +23,6 @@ APTWPlayerState::APTWPlayerState()
 	AttributeSet = CreateDefaultSubobject<UPTWAttributeSet>(TEXT("AttributeSet"));
 	WeaponAttributeSet = CreateDefaultSubobject<UPTWWeaponAttributeSet>(TEXT("WeaponAttributeSet"));
 	
-	//FIXME : 테스트
-	DeliveryAttributeSet = CreateDefaultSubobject<UPTWDeliveryAttributeSet>(TEXT("DeliveryAttributeSet"));
-
 	CurrentPlayerData.PlayerName = "";
 	CurrentPlayerData.TotalWinPoints = 0;
 	CurrentPlayerData.Gold = 0.0f;

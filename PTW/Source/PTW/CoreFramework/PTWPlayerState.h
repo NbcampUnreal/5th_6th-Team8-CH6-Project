@@ -88,8 +88,6 @@ protected:
 	TObjectPtr<UAttributeSet> AttributeSet;
 	UPROPERTY()
 	TObjectPtr<UPTWWeaponAttributeSet> WeaponAttributeSet;
-	UPROPERTY()
-	TObjectPtr<UPTWDeliveryAttributeSet> DeliveryAttributeSet;
 
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentPlayerData, VisibleAnywhere, BlueprintReadOnly, Category = "Data")
 	FPTWPlayerData CurrentPlayerData;

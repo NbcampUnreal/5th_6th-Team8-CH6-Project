@@ -41,6 +41,8 @@ struct FOptionSnapshot
 	float UIVolume = 1.f;
 
 	float MouseSensitivity = 1.f;
+
+	FString SelectedLanguage;
 };
 /**
  * 
@@ -113,6 +115,9 @@ protected:
 	// 캔슬 버튼
 	UPROPERTY(meta = (BindWidget))
 	UButton* Button_Cancel;
+	// 언어 설정
+	UPROPERTY(meta = (BindWidget))
+	UComboBoxString* Combo_Language;
 
 	/* 카테고리 UI */
 	// 카테고리 스위치
@@ -149,6 +154,8 @@ private:
 
 	void PopulateResolutionList();
 	void PopulateQualityList();
+	void PopulateLanguageList();
+	void SetupLanguageData();
 	void InitializeUIFromCurrentSettings();
 	void CacheInitialSettings();
 	void UpdateDisplaySettings(); // 해상도, 창모드, VSync
@@ -201,6 +208,9 @@ private:
 	void OnMouseSensitivityTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 
 	UFUNCTION()
+	void OnLanguageChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
+
+	UFUNCTION()
 	void OnClickedSave();
 
 	UFUNCTION()
@@ -216,4 +226,7 @@ private:
 
 	UFUNCTION()
 	void OnClickedGame();
+
+	// 언어 설정에서 코드와 이름을 매핑하기 위한 맵
+	TMap<FString, FString> LanguageMap;
 };

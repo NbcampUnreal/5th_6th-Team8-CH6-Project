@@ -26,6 +26,8 @@ void UPTWOptionsWidget::NativeConstruct()
 
 	SetIsFocusable(true);
 
+	SetupLanguageData();
+	PopulateLanguageList();
 	PopulateResolutionList();
 	PopulateQualityList();
 	InitializeUIFromCurrentSettings();
@@ -88,6 +90,25 @@ void UPTWOptionsWidget::PopulateQualityList()
 	}
 }
 
+void UPTWOptionsWidget::PopulateLanguageList()
+{
+	if (!Combo_Language) return;
+
+	Combo_Language->ClearOptions();
+	for (const auto& Pair : LanguageMap)
+	{
+		Combo_Language->AddOption(Pair.Key);
+	}
+}
+
+void UPTWOptionsWidget::SetupLanguageData()
+{
+	LanguageMap.Empty();
+	LanguageMap.Add(TEXT("English"), TEXT("en"));
+	LanguageMap.Add(TEXT("한국어"), TEXT("ko"));
+	// LanguageMap.Add(TEXT("日本語"), TEXT("ja"));
+}
+
 void UPTWOptionsWidget::InitializeUIFromCurrentSettings()
 {
 	if (!GEngine) return;
@@ -96,6 +117,15 @@ void UPTWOptionsWidget::InitializeUIFromCurrentSettings()
 		Cast<UPTWGameUserSettings>(GEngine->GetGameUserSettings());
 
 	if (!Settings) return;
+
+	if (Combo_Language)
+	{
+		const FString* CurrentName = LanguageMap.FindKey(Settings->SelectedLanguage);
+		if (CurrentName)
+		{
+			Combo_Language->SetSelectedOption(*CurrentName);
+		}
+	}
 
 	if (CheckBox_Windowed)
 	{
@@ -443,6 +473,10 @@ void UPTWOptionsWidget::RestoreInitialSettings()
 	// 마우스 감도 복구
 	Settings->MouseSensitivity = InitialSnapshot.MouseSensitivity;
 
+	// 언어 복구
+	Settings->SelectedLanguage = InitialSnapshot.SelectedLanguage;
+	Settings->ApplyLanguageSettings();
+
 	/* (옵션창 취소 시 되돌리기) */
 	// 사운드 반영
 	if (MasterSoundMix && MasterSoundClass)
@@ -583,6 +617,12 @@ void UPTWOptionsWidget::BindEvents()
 	{
 		Button_Cancel->OnClicked.AddDynamic(
 			this, &UPTWOptionsWidget::OnClickedCancel);
+	}
+
+	/* 언어 설정 */
+	if (Combo_Language)
+	{
+		Combo_Language->OnSelectionChanged.AddDynamic(this, &UPTWOptionsWidget::OnLanguageChanged);
 	}
 }
 
@@ -777,6 +817,23 @@ void UPTWOptionsWidget::OnMouseSensitivityTextCommitted(const FText& Text, EText
 	{
 		// 유효한 입력이었을 때만 엔진 설정 업데이트
 		UpdateInputSettings();
+	}
+}
+
+void UPTWOptionsWidget::OnLanguageChanged(FString SelectedItem, ESelectInfo::Type SelectionType)
+{
+	if (SelectionType == ESelectInfo::Direct) return;
+
+	UPTWGameUserSettings* Settings = Cast<UPTWGameUserSettings>(GEngine->GetGameUserSettings());
+	if (Settings && LanguageMap.Contains(SelectedItem))
+	{
+		FString NewCultureCode = LanguageMap[SelectedItem];
+		Settings->SelectedLanguage = NewCultureCode;
+
+		// 즉시 반영
+		Settings->ApplyLanguageSettings();
+
+		bIsDirty = true;
 	}
 }
 

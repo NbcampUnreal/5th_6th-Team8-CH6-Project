@@ -6,6 +6,7 @@
 #include "PTWGameData.h"
 #include "GameFramework/GameState.h"
 #include "MiniGame/PTWMiniGameRule.h"
+#include "System/Prop/PTWPropData.h"
 #include "PTWGameState.generated.h"
 
 class APTWPlayerState;
@@ -206,6 +207,12 @@ public:
 	
 	/* 미니게임 카운트다운 */
 	bool IsMiniGameCountdown() const { return bMiniGameCountdown; }
+	
+	UFUNCTION(Server, Reliable)
+	void Server_SetPropSeed(int32 NewSeed);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetPropData(UPTWPropData* NewPropData);
 
 	void AddChaosItemEntry(const FPTWChaosItemEntry& Entry);
 	void ResetChaosItemEntries();
@@ -232,8 +239,6 @@ public:
 	void SetMaxMiniGameRound(int32 NewMaxRound);
 
 	void SetWinTeamId(int32 TeamId);
-	
-	void Server_SetPropSeed(int32 NewSeed);
 #pragma endregion
 
 #pragma region Event
@@ -399,6 +404,12 @@ protected:
 
 	UFUNCTION()
 	void OnRep_PropSeed();
+	
+	UPROPERTY(ReplicatedUsing = OnRep_PropData)
+	TObjectPtr<UPTWPropData> PropData;
+	
+	UFUNCTION()
+	void OnRep_PropData();
 #pragma endregion
 
 public:

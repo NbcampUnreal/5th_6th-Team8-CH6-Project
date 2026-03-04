@@ -24,8 +24,12 @@ void APTWDeliveryGameMode::StartRound()
 
 void APTWDeliveryGameMode::GiveDeliveryItems(APTWPlayerCharacter* TargetCharacter)
 {
+	if (!TargetCharacter) return;
+	if (DeliveredCharacters.Contains(TargetCharacter)) return;
+	
 	ApplyMiniGameEffect(TargetCharacter);
 	GivingDefaultWeapon(TargetCharacter);
+	DeliveredCharacters.Add(TargetCharacter);
 }
 
 void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter)

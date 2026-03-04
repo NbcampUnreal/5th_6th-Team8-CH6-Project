@@ -53,4 +53,8 @@ protected:
 	/* 등수 표시를 위한 도착 지점에 도착한 플레이어 배열*/
 	UPROPERTY(VisibleAnywhere, Category = "Game|Winner")
 	TArray<APTWPlayerCharacter*> GoalPlayers;
+	
+	/* 무기와 배달물을 지급 받은 플레이어 Set */
+	UPROPERTY(VisibleAnywhere, Category = "Game|Default")
+	TSet<APTWPlayerCharacter*> DeliveredCharacters;
 };

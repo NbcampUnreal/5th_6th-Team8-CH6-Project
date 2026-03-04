@@ -1,5 +1,6 @@
 ﻿#include "GoalDetector.h"
 
+#include "Components/BoxComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "MiniGame/GameMode/PTWDeliveryGameMode.h"
 

@@ -5,6 +5,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundMix.h"
 #include "Sound/SoundClass.h"
+#include "Internationalization/Internationalization.h"
+#include "Internationalization/Culture.h"
 
 void UPTWGameUserSettings::ApplyAudioSettings(UWorld* World, USoundMix* SoundMix, USoundClass* MasterClass, USoundClass* BGMClass, USoundClass* SFXClass, USoundClass* UIClass)
 {
@@ -40,4 +42,12 @@ void UPTWGameUserSettings::ApplyAudioSettings(UWorld* World, USoundMix* SoundMix
 	}
 
 	UGameplayStatics::PushSoundMixModifier(World, SoundMix);
+}
+
+void UPTWGameUserSettings::ApplyLanguageSettings()
+{
+	if (!SelectedLanguage.IsEmpty())
+	{
+		FInternationalization::Get().SetCurrentCulture(SelectedLanguage);
+	}
 }

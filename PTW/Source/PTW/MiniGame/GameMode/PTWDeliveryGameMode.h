@@ -19,12 +19,9 @@ class PTW_API APTWDeliveryGameMode : public APTWMiniGameMode
 public:
 	APTWDeliveryGameMode();
 	virtual void StartRound() override;
-	
-protected:
 	void GiveDeliveryItems(APTWPlayerCharacter* TargetCharacter);
-	
+protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
-	
 private:
 	/* 미니 게임 시작 이펙트 적용 */
 	void ApplyMiniGameEffect(APTWPlayerCharacter* TargetCharacter);

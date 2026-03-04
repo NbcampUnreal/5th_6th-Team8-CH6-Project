@@ -44,6 +44,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemSpawn")
 	void SpawnSingleItem(APTWPlayerState* PS, UPTWItemDefinition* ItemDef);
 
+	/* ID를 기반으로 아이템을 찾아서 지급하는 함수 */
+	UFUNCTION(BlueprintCallable, Category = "ItemSpawn")
+	void SpawnItemByID(APTWPlayerState* PS, const FString& ItemID);
+
 	void RegisterSpawnVolume(class APTWSpawnItemVolume* Volume);
 	void UnregisterSpawnVolume(class APTWSpawnItemVolume* Volume);
 

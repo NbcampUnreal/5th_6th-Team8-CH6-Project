@@ -15,6 +15,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraActor.h"
 #include "Engine/TargetPoint.h"
+#include "AIController.h"
 #include "Gameplay/Actor/PTWResultCharacter.h"
 
 class UPTWScoreSubsystem;
@@ -427,6 +428,14 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 
 	//SetInputBlock(NewPlayer, true);
 	PTWGameState->AlivePlayers.Add(PlayerState);
+
+	if (NewPlayer->IsA<AAIController>())
+	{
+		if (APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState))
+		{
+			PTWGameState->AddRankedPlayer(PTWPlayerState);
+		}
+	}
 	
 	ApplyMiniGameTag(NewPlayer);
 	InitPlayerHealth(NewPlayer);

@@ -15,8 +15,13 @@
 				"UMG",
 				"CoreUObject"
 			]
-		}
-	],
+		},
+		{
+		    "Name": "DedicatedServers",
+            "Type": "Runtime",
+            "LoadingPhase": "Default"
+        }
+    ],
 	"Plugins": [
 		{
 			"Name": "ModelingToolsEditorMode",

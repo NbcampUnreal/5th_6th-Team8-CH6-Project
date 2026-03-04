@@ -11,6 +11,7 @@ public class PTWServerTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V6;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_7;
 		ExtraModuleNames.Add("PTW");
+		ExtraModuleNames.Add("DedicatedServers");
 		
 		bUseLoggingInShipping = true;
 		bUseChecksInShipping = true;

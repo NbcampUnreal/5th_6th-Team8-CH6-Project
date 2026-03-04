@@ -1,7 +1,5 @@
 ﻿#include "PTWHTTPRequestTypes.h"
 
-#include "SWarningOrErrorBox.h"
-
 void FPTWMetaData::Dump() const
 {
 	UE_LOG(LogTemp, Warning, TEXT("MetaData: "));

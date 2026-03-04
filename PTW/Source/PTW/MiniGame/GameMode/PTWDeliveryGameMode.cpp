@@ -30,6 +30,11 @@ void APTWDeliveryGameMode::GiveDeliveryItems(APTWPlayerCharacter* TargetCharacte
 
 void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter)
 {
+	if (GoalPlayers.Num() == 0)
+	{
+		StartCountDown();
+	}
+	
 	GoalPlayers.Add(TargetCharacter);
 }
 

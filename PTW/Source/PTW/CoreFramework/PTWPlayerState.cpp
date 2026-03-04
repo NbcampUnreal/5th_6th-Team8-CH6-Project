@@ -11,6 +11,7 @@
 #include "GameplayAbilitySpec.h"
 #include "Gameplay/Shop/PTWShopNPC.h"
 #include "GAS/PTWDeliveryAttributeSet.h"
+#include "CoreFramework/Game/Gamestate/PTWGamestate.h"
 
 APTWPlayerState::APTWPlayerState()
 {
@@ -276,27 +277,38 @@ void APTWPlayerState::ServerRequestPurchase_Implementation(APTWShopNPC* ShopNPC,
 	{
 		CurrentPlayerData.Gold -= Cost;
 
-		CurrentPlayerData.InventoryItemIDs.Add(NewItemIDStr);
+		if (NewItemIDStr.StartsWith(TEXT("Chaos_"), ESearchCase::IgnoreCase))
+		{
+			if (APTWGameState* GameState = GetWorld()->GetGameState<APTWGameState>())
+			{
+				FPTWChaosItemEntry ChaosEntry;
 
-		FString DebugMsg = FString::Printf(TEXT("[Server] 구매 성공! 아이템: [%s] -> 지급 대상: [%s] (Obj: %s)"),
+				ChaosEntry.ItemId = ItemID;
+				ChaosEntry.PlayerName = GetPlayerName();
+
+				GameState->AddChaosItemEntry(ChaosEntry);
+				UE_LOG(LogTemp, Log, TEXT("[Chaos Item] 카오스 아이템 구매 성공! GameState에 등록됨: %s (구매자: %s)"), *NewItemIDStr, *GetPlayerName());
+			}
+		}
+		else
+		{
+			CurrentPlayerData.InventoryItemIDs.Add(NewItemIDStr);
+			UE_LOG(LogTemp, Log, TEXT("[Inventory Item] 일반 아이템 구매 성공! 인벤토리에 등록됨: %s"), *NewItemIDStr);
+		}
+
+		FString DebugMsg = FString::Printf(TEXT("[Server] 구매 성공! 아이템: [%s] -> 구매자: [%s]"),
 			*NewItemIDStr,
-			*GetPlayerName(),  // 플레이어 이름 (예: Player1)
-			*GetName()         // 객체 고유 이름 (예: PTWPlayerState_C_1) - 이게 다르면 서로 다른 객체임
+			*GetPlayerName()
 		);
 
-		// 1. 화면(Viewport)에 띄우기 (초록색, 5초간 표시)
 		if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, DebugMsg);
 		}
-
-		// 2. 출력 로그(Output Log)에 남기기
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *DebugMsg);
 
 		OnRep_CurrentPlayerData();
 		ForceNetUpdate();
-
-		UE_LOG(LogTemp, Log, TEXT("[Success] Bought %s"), *NewItemIDStr);
 
 		ClientPurchaseSuccess(ShopNPC);
 	}

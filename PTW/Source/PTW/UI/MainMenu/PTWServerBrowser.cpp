@@ -7,8 +7,10 @@
 #include "Components/VerticalBox.h"
 #include "Components/EditableText.h"
 #include "GameFramework/PlayerState.h"
+#include "Kismet/GameplayStatics.h"
 #include "PTW/UI/MainMenu/PTWServerListRow.h"
 #include "PTW/System/PTWSessionSubsystem.h"
+#include "System/Server/PTWHTTPRequestManager.h"
 #include "System/Session/PTWSessionConfig.h"
 
 #define LOCTEXT_NAMESPACE "ServerBrowser"
@@ -21,6 +23,10 @@ void UPTWServerBrowser::NativeConstruct()
 	if (!IsValid(ServerListRowClass))
 	{
 		ServerListRowClass = UPTWServerListRow::StaticClass();
+	}
+	if (!IsValid(HTTPRequestManagerClass))
+	{
+		HTTPRequestManagerClass = UPTWHTTPRequestManager::StaticClass();
 	}
 	
 	if (IsValid(BackButton))
@@ -52,6 +58,18 @@ void UPTWServerBrowser::NativeConstruct()
 	if (IsValid(LongRoundButton))
 	{
 		LongRoundButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedLongRoundButton);
+	}
+	
+	if (IsValid(TestButton))
+	{
+		TestButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedTestButton);
+	}
+	
+	if (IsValid(DevJoinButton))
+	{
+		#if WITH_EDITOR
+		DevJoinButton->OnClicked.AddDynamic(this, &ThisClass::DevJoinAction);
+		#endif
 	}
 	
 	UGameInstance* GameInstance = GetGameInstance();
@@ -181,5 +199,20 @@ void UPTWServerBrowser::OnFindSessionsComplete(const TArray<FOnlineSessionSearch
 		ServerListRow->Setup(SearchResult);
 		ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
 	}
+}
+
+void UPTWServerBrowser::OnClickedTestButton()
+{
+	if (!IsValid(HTTPRequestManager))
+	{
+		HTTPRequestManager = NewObject<UPTWHTTPRequestManager>(this, HTTPRequestManagerClass);
+	}
+	
+	HTTPRequestManager->RequestListFleets();
+}
+
+void UPTWServerBrowser::DevJoinAction()
+{
+	UGameplayStatics::OpenLevel(GetWorld(), TEXT("127.0.0.1"));
 }
 #undef LOCTEXT_NAMESPACE

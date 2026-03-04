@@ -26,4 +26,10 @@ private:
 	FGameplayTag AbyssDefaultWeaponTag;
 	
 	void GiveAbyssDefaultWeapon(AController* NewPlayer);
+	
+	UPROPERTY()
+	TObjectPtr<APostProcessVolume> AbyssPP = nullptr;
+
+	void SetAbyssDark(bool bEnable);
+	void CacheAbyssPP();
 };

@@ -68,6 +68,14 @@ FPTWPlayerRoundData APTWPlayerState::GetPlayerRoundData() const
 	return PlayerRoundData;
 }
 
+void APTWPlayerState::SetLobbyItemData(const FPTWLobbyItemData& NewData)
+{
+	if (HasAuthority())
+	{
+		LobbyItemData = NewData;
+	}
+}
+
 void APTWPlayerState::InjectAbility(TSubclassOf<UGameplayAbility> AbilityClass)
 {
 	if (!AbilityClass || !HasAuthority()) return;
@@ -241,6 +249,11 @@ void APTWPlayerState::OnRep_CurrentPlayerData()
 void APTWPlayerState::OnRep_PlayerRoundData()
 {
 	OnPlayerRoundDataUpdated.Broadcast(PlayerRoundData);
+}
+
+void APTWPlayerState::OnRep_LobbyItemData()
+{
+	
 }
 
 void APTWPlayerState::ServerRequestPurchase_Implementation(APTWShopNPC* ShopNPC, FName ItemID, int32 Cost)

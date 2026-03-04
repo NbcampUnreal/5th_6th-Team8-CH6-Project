@@ -331,6 +331,7 @@ void APTWGameMode::SaveGameDataToSubsystem()
 			if (APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState))
 			{
 				PTWScoreSubsystem->SavePlayerData(PTWPlayerState->GetPlayerName(), PTWPlayerState->GetPlayerData());
+				PTWScoreSubsystem->SaveLobbyItemData(PTWPlayerState->GetPlayerName(), PTWPlayerState->GetLobbyItemData());
 			}
 		}
 
@@ -367,6 +368,10 @@ void APTWGameMode::ApplyPlayerDataFromSubsystem(AController* NewPlayer)
 				PTWPlayerState->SetPlayerData(*FoundData);
 
 				UE_LOG(LogTemp, Warning, TEXT("Player Gold: %d"), FoundData->Gold);
+			}
+			if (FPTWLobbyItemData* FoundData = PTWScoreSubsystem->FindLobbyItemData(PTWPlayerState->GetPlayerName()))
+			{
+				PTWPlayerState->SetLobbyItemData(*FoundData);
 			}
 		}
 	}

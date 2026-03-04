@@ -11,6 +11,7 @@ class UButton;
 class UVerticalBox;
 class UEditableText;
 class UPTWServerListRow;
+class UPTWHTTPRequestManager;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnServerBackAction);
 
@@ -46,6 +47,11 @@ protected:
 	UFUNCTION()
 	void OnFindSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults);
 	
+	UFUNCTION()
+	void OnClickedTestButton();
+	
+	UFUNCTION()
+	void DevJoinAction();
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UVerticalBox> ServerListVerticalBox;
@@ -79,6 +85,18 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Widgets")
 	TSubclassOf<UPTWServerListRow> ServerListRowClass;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UButton> DevJoinButton;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UButton> TestButton;
+	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UPTWHTTPRequestManager> HTTPRequestManagerClass;
+	
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UPTWHTTPRequestManager> HTTPRequestManager;
 	
 private:
 	EPTWRoundLimit RoundLimit;

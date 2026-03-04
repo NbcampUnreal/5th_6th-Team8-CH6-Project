@@ -42,6 +42,7 @@ public class PTW : ModuleRules
             "OnlineSubsystem",
             "OnlineSubsystemUtils",
 			"OnlineSubsystemSteam",
+			"HTTP",
         });
         
         // 5. Niagara 이펙트 모듈

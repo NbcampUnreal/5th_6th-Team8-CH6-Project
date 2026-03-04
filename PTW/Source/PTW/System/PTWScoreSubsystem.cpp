@@ -11,6 +11,11 @@ void UPTWScoreSubsystem::SavePlayerData(const FString& PlayerName, const FPTWPla
 	SavedPlayersData.Add(PlayerName, PlayerData);
 }
 
+void UPTWScoreSubsystem::SaveLobbyItemData(const FString& PlayerName, const FPTWLobbyItemData& LobbyItemData)
+{
+	SavedLobbyItemData.Add(PlayerName, LobbyItemData);
+}
+
 void UPTWScoreSubsystem::SaveGameRound(int32 NewGameRound)
 {
 	SavedGameRound = NewGameRound;
@@ -39,6 +44,11 @@ void UPTWScoreSubsystem::DecreasePlayerCount()
 FPTWPlayerData* UPTWScoreSubsystem::FindPlayerData(const FString& PlayerName)
 {
 	return SavedPlayersData.Find(PlayerName);
+}
+
+FPTWLobbyItemData* UPTWScoreSubsystem::FindLobbyItemData(const FString& PlayerName)
+{
+	return SavedLobbyItemData.Find(PlayerName);
 }
 
 

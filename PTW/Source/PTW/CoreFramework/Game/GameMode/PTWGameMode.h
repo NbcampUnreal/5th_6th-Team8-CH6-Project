@@ -60,6 +60,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_CloseLoadingScreen();
 
+	/** 공통 입장 처리 로직 */
+	void HandlePlayerJoined(AController* JoinedController);
+
 	
 protected:
 	/** 지정한 시간(초) 기준으로 타이머를 시작 */
@@ -98,7 +101,7 @@ private:
 	void SaveGameDataToSubsystem();
 
 	// 로그인한 플레이어에게 Subsystem 저장 데이터를 적용
-	void ApplyPlayerDataFromSubsystem(APlayerController* NewPlayer);
+	void ApplyPlayerDataFromSubsystem(AController* NewPlayer);
 
 	
 	

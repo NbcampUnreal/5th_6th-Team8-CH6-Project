@@ -21,7 +21,8 @@ public class PTW : ModuleRules
             "CoreUObject",
             "Engine",
             "InputCore",
-            "EnhancedInput"
+            "EnhancedInput",
+			"AIModule"
 		});
 
         // 2. GAS (Gameplay Ability System) 필수 모듈

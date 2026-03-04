@@ -255,6 +255,32 @@ void UPTWItemSpawnManager::SpawnSingleItem(APTWPlayerState* PS, UPTWItemDefiniti
 	}
 }
 
+void UPTWItemSpawnManager::SpawnItemByID(APTWPlayerState* PS, const FString& ItemID)
+{
+	if (!PS || !ItemSpawnTable) return;
+
+	FName RowName = FName(*ItemID);
+	static const FString ContextString(TEXT("SpawnItemByID"));
+
+	FPTWItemSpawnRow* Row = ItemSpawnTable->FindRow<FPTWItemSpawnRow>(RowName, ContextString);
+
+	if (Row && !Row->ItemDefinition.IsNull())
+	{
+		if (UPTWItemDefinition* LoadedDef = Row->ItemDefinition.LoadSynchronous())
+		{
+			SpawnSingleItem(PS, LoadedDef);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[SpawnItemByID] Failed to load ItemDefinition for ID: %s"), *ItemID);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SpawnItemByID] ItemID not found in DT: %s"), *ItemID);
+	}
+}
+
 void UPTWItemSpawnManager::RegisterSpawnVolume(APTWSpawnItemVolume* Volume)
 {
 	if (Volume && !SpawnVolumes.Contains(Volume))

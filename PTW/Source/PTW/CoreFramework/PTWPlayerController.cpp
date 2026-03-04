@@ -36,6 +36,13 @@
 #include "Weapon/PTWWeaponActor.h"
 #include "MiniGame/Item/BombItem/PTWBombActor.h"
 #include "OnlineSubsystemUtils.h"
+#include "UI/Dev/PTWDevWidget.h"
+#include "CoreFramework/Character/Component/PTWDeveloperComponent.h"
+
+APTWPlayerController::APTWPlayerController()
+{
+	DeveloperComponent = CreateDefaultSubobject<UPTWDeveloperComponent>(TEXT("DevComponent"));
+}
 
 void APTWPlayerController::StartSpectating()
 {
@@ -214,6 +221,39 @@ void APTWPlayerController::OnVoiceReleased()
 	}
 }
 
+void APTWPlayerController::Client_ShowNotification_Implementation(const FNotificationData& Data)
+{
+	if (!IsLocalController()) return;
+
+	if (UISubsystem)
+	{
+		UISubsystem->PushNotification(Data);
+	}
+}
+
+void APTWPlayerController::ShowLocalNotification(const FNotificationData& Data)
+{
+	if (!IsLocalController()) return;
+
+	if (UISubsystem)
+	{
+		UISubsystem->PushNotification(Data);
+	}
+}
+
+void APTWPlayerController::SendMessage(const FText& InText, ENotificationPriority InPriority, float InDuration, bool bInterrupt)
+{
+	if (!HasAuthority()) return; // 서버에서만 호출
+
+	FNotificationData Data;
+	Data.Message = InText;
+	Data.Priority = InPriority;
+	Data.Duration = InDuration;
+	Data.bInterrupt = bInterrupt;
+
+	Client_ShowNotification(Data);
+}
+
 void APTWPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -245,7 +285,7 @@ void APTWPlayerController::BeginPlay()
 		}
 	}
 
-	BindGameStateDelegates();
+	// BindGameStateDelegates();
 
 	UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::GameOnly);
 
@@ -279,7 +319,7 @@ void APTWPlayerController::OnRep_PlayerState()
 		return;
 	}
 
-	// BindGameStateDelegates();
+	BindGameStateDelegates();
 
 	CreateUI();
 }
@@ -562,6 +602,14 @@ void APTWPlayerController::SetupInputComponent()
 			this,
 			&ThisClass::OnVoiceReleased
 		);
+
+		// 개발자용 UI (F6)
+		EIC->BindAction(
+			DevWidgetAction,
+			ETriggerEvent::Started,
+			this,
+			&APTWPlayerController::ToggleDevUI
+		);
 	}
 }
 
@@ -812,6 +860,33 @@ void APTWPlayerController::HideBombUI()
 	if (!BombWarningWidgetClass) return;
 
 	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, false);
+}
+
+void APTWPlayerController::ToggleDevUI()
+{
+	if (DevWidgetInstance && DevWidgetInstance->IsInViewport())
+	{
+		DevWidgetInstance->RemoveFromParent();
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+	}
+	else if (DevWidgetClass)
+	{
+		if (!DevWidgetInstance)
+		{
+			DevWidgetInstance = CreateWidget<UPTWDevWidget>(this, DevWidgetClass);
+		}
+
+		if (DevWidgetInstance)
+		{
+			DevWidgetInstance->AddToViewport(999);
+
+			FInputModeGameAndUI InputMode;
+			InputMode.SetWidgetToFocus(DevWidgetInstance->TakeWidget());
+			SetInputMode(InputMode);
+			bShowMouseCursor = true;
+		}
+	}
 }
 
 void APTWPlayerController::Server_ReportLoadingComplete_Implementation()

@@ -10,6 +10,7 @@
 #include "PTWPlayerState.generated.h"
 
 
+class UPTWDeliveryAttributeSet;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDataChanged, const FPTWPlayerData&, NewData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerRoundDataChanged, const FPTWPlayerRoundData&, NewData);
 

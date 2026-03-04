@@ -141,7 +141,23 @@ void UPTWAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, 
 
 void UPTWAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, Health, OldHealth); }
 void UPTWAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, MaxHealth, OldMaxHealth); }
-void UPTWAttributeSet::OnRep_MoveSpeed(const FGameplayAttributeData& OldMoveSpeed) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, MoveSpeed, OldMoveSpeed); }
+
+void UPTWAttributeSet::OnRep_MoveSpeed(const FGameplayAttributeData& OldMoveSpeed)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, MoveSpeed, OldMoveSpeed);
+	
+	if (UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent())
+	{
+		if (ACharacter* Character = Cast<ACharacter>(ASC->GetAvatarActor()))
+		{
+			if (UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement())
+			{
+				MoveComp->MaxWalkSpeed = GetMoveSpeed();
+			}
+		}
+	}
+}
+
 void UPTWAttributeSet::OnRep_JumpZVelocity(const FGameplayAttributeData& OldJumpZVelocity) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, JumpZVelocity, OldJumpZVelocity); }
 
 void UPTWAttributeSet::HandleDamage(const FGameplayEffectModCallbackData& Data)

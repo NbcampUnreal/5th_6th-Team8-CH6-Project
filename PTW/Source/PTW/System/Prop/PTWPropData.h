@@ -19,6 +19,9 @@ struct FPTWPropGroupRule
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 SeedSalt = 0;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bActorRandom = false;
 };
 
 UCLASS(BlueprintType)

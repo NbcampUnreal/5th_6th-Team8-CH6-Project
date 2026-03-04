@@ -109,6 +109,14 @@ void UPTWPropSubsystem::ApplyPropDataSeeded(const UPTWPropData* Data, int32 Seed
 	for (const FPTWPropGroupRule& Rule : Data->Rules)
 	{
 		const int32 MixedSeed = MixSeedFast(Seed, Rule.GroupTag, Rule.SeedSalt);
-		ApplySeededRandomGroupEnabled(Rule.GroupTag, MixedSeed, Rule.EnableChance);
+
+		if (Rule.bActorRandom)
+		{
+			ApplySeededRandomByActorTag(Rule.GroupTag, MixedSeed, Rule.EnableChance);
+		}
+		else
+		{
+			ApplySeededRandomGroupEnabled(Rule.GroupTag, MixedSeed, Rule.EnableChance);
+		}
 	}
 }

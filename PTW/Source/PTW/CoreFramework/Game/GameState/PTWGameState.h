@@ -217,7 +217,8 @@ public:
 	void AddChaosItemEntry(const FPTWChaosItemEntry& Entry);
 	void ResetChaosItemEntries();
 	void AddPlayedMap(FName MapRowName);
-	
+
+	UPROPERTY()
 	FPTWGameData GameData;
 	
 #pragma region Setter

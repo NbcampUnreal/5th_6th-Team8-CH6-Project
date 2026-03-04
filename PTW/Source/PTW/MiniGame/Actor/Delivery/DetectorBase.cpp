@@ -4,6 +4,7 @@
 ADetectorBase::ADetectorBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
 	
 	DetectArea = CreateDefaultSubobject<UBoxComponent>(TEXT("DetectArea"));
 	DetectArea->SetupAttachment(RootComponent);

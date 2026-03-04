@@ -10,6 +10,7 @@
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "GAS/PTWDeliveryAttributeSet.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 APTWDeliveryGameMode::APTWDeliveryGameMode()
 {
@@ -38,8 +39,11 @@ void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter)
 	{
 		StartCountDown();
 	}
-	
 	GoalPlayers.Add(TargetCharacter);
+	
+	IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(TargetCharacter);
+	if (!CombatInterface) return;
+	CombatInterface->ApplyGameplayEffectToSelf(InvincibleEffect, 1.0f, FGameplayEffectContextHandle());
 }
 
 void APTWDeliveryGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)

@@ -50,6 +50,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
 	TSubclassOf<UGameplayEffect> KillBonusEffect;
 	
+	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
+	TSubclassOf<UGameplayEffect> InvincibleEffect;
+	
 	/* 등수 표시를 위한 도착 지점에 도착한 플레이어 배열*/
 	UPROPERTY(VisibleAnywhere, Category = "Game|Winner")
 	TArray<APTWPlayerCharacter*> GoalPlayers;

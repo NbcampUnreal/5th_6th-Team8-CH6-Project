@@ -18,8 +18,13 @@ class PTW_API APTWDeliveryGameMode : public APTWMiniGameMode
 	
 public:
 	APTWDeliveryGameMode();
+	
 	virtual void StartRound() override;
+	
 	void GiveDeliveryItems(APTWPlayerCharacter* TargetCharacter);
+	
+	/* 도착 지점에 도착했을 때 배열에 저장시키는 함수 */
+	void GoalPlayer(APTWPlayerCharacter* TargetCharacter);
 protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 private:
@@ -44,4 +49,8 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
 	TSubclassOf<UGameplayEffect> KillBonusEffect;
+	
+	/* 등수 표시를 위한 도착 지점에 도착한 플레이어 배열*/
+	UPROPERTY(VisibleAnywhere, Category = "Game|Winner")
+	TArray<APTWPlayerCharacter*> GoalPlayers;
 };

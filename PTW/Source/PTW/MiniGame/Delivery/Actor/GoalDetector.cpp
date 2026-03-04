@@ -1,19 +1,14 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "StartDetector.h"
+﻿#include "GoalDetector.h"
 
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "MiniGame/GameMode/PTWDeliveryGameMode.h"
 
-
-// Sets default values
-AStartDetector::AStartDetector()
+AGoalDetector::AGoalDetector()
 {
 	PrimaryActorTick.bCanEverTick = false;
 }
 
-void AStartDetector::OnDetectPlayer(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void AGoalDetector::OnDetectPlayer(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (HasAuthority())
@@ -22,7 +17,7 @@ void AStartDetector::OnDetectPlayer(UPrimitiveComponent* OverlappedComp, AActor*
 		{
 			if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(OtherActor))
 			{
-				DeliveryGameMode->GiveDeliveryItems(PC);
+				DeliveryGameMode->GoalPlayer(PC);
 			}
 		}
 	}

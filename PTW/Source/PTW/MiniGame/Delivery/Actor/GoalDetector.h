@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "DetectorBase.h"
-#include "StartDetector.generated.h"
+#include "GoalDetector.generated.h"
 
 UCLASS()
-class PTW_API AStartDetector : public ADetectorBase
+class PTW_API AGoalDetector : public ADetectorBase
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this actor's properties
-	AStartDetector();
+	AGoalDetector();
 	
 protected:
 	UFUNCTION()

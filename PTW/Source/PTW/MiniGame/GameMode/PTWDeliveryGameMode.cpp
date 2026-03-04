@@ -28,6 +28,11 @@ void APTWDeliveryGameMode::GiveDeliveryItems(APTWPlayerCharacter* TargetCharacte
 	GivingDefaultWeapon(TargetCharacter);
 }
 
+void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter)
+{
+	GoalPlayers.Add(TargetCharacter);
+}
+
 void APTWDeliveryGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {
 	IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(KillActor);
@@ -55,7 +60,7 @@ void APTWDeliveryGameMode::SetMiniGameRule()
 {
 	MiniGameRule.TimeRule.Timer = 180;
 	MiniGameRule.KillRule.KillScore = 0;
-	MiniGameRule.SpawnRule.RespawnDelay = 3.0f;
+	MiniGameRule.SpawnRule.RespawnDelay = 1.5f;
 }
 
 void APTWDeliveryGameMode::GrantDeliveryAttributeSet()

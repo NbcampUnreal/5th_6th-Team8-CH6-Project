@@ -36,6 +36,13 @@
 #include "Weapon/PTWWeaponActor.h"
 #include "MiniGame/Item/BombItem/PTWBombActor.h"
 #include "OnlineSubsystemUtils.h"
+#include "UI/Dev/PTWDevWidget.h"
+#include "CoreFramework/Character/Component/PTWDeveloperComponent.h"
+
+APTWPlayerController::APTWPlayerController()
+{
+	DeveloperComponent = CreateDefaultSubobject<UPTWDeveloperComponent>(TEXT("DevComponent"));
+}
 
 void APTWPlayerController::StartSpectating()
 {
@@ -562,6 +569,14 @@ void APTWPlayerController::SetupInputComponent()
 			this,
 			&ThisClass::OnVoiceReleased
 		);
+
+		// 개발자용 UI (F6)
+		EIC->BindAction(
+			DevWidgetAction,
+			ETriggerEvent::Started,
+			this,
+			&APTWPlayerController::ToggleDevUI
+		);
 	}
 }
 
@@ -812,6 +827,33 @@ void APTWPlayerController::HideBombUI()
 	if (!BombWarningWidgetClass) return;
 
 	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, false);
+}
+
+void APTWPlayerController::ToggleDevUI()
+{
+	if (DevWidgetInstance && DevWidgetInstance->IsInViewport())
+	{
+		DevWidgetInstance->RemoveFromParent();
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+	}
+	else if (DevWidgetClass)
+	{
+		if (!DevWidgetInstance)
+		{
+			DevWidgetInstance = CreateWidget<UPTWDevWidget>(this, DevWidgetClass);
+		}
+
+		if (DevWidgetInstance)
+		{
+			DevWidgetInstance->AddToViewport(999);
+
+			FInputModeGameAndUI InputMode;
+			InputMode.SetWidgetToFocus(DevWidgetInstance->TakeWidget());
+			SetInputMode(InputMode);
+			bShowMouseCursor = true;
+		}
+	}
 }
 
 void APTWPlayerController::Server_ReportLoadingComplete_Implementation()

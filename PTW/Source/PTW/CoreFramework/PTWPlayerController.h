@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameplayTagContainer.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "UI/InGameUI/PTWNotificationWidget.h"
 #include "PTWPlayerController.generated.h"
 
 /* KillLog 델리게이트 */
@@ -85,6 +86,17 @@ public:
 
 	void OnVoicePressed();
 	void OnVoiceReleased();
+
+	/* 알림 위젯 */
+	UFUNCTION(Client, Reliable)
+	void Client_ShowNotification(const FNotificationData& Data);
+	void ShowLocalNotification(const FNotificationData& Data);
+	void SendMessage(
+		const FText& InText,
+		ENotificationPriority InPriority = ENotificationPriority::Normal,
+		float InDuration = 2.f,
+		bool bInterrupt = false);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

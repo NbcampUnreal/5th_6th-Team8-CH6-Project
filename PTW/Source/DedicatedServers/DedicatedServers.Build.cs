@@ -13,6 +13,7 @@ public class DedicatedServers : ModuleRules
             "Core",
             "CoreUObject",
             "Engine",
+            "GameLiftServerSDK"
 		});
 
         // 2. GAS (Gameplay Ability System) 필수 모듈

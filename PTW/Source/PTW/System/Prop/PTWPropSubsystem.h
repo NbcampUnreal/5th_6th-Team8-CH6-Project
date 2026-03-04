@@ -6,6 +6,8 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "PTWPropSubsystem.generated.h"
 
+class UPTWPropData;
+
 UCLASS()
 class PTW_API UPTWPropSubsystem : public UWorldSubsystem
 {
@@ -17,15 +19,17 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetGroupEnabled(FName GroupTag, bool bEnabled);
-	
-	UFUNCTION(BlueprintCallable) //그룹 내 선택된 모든 액터들 랜덤 토글
+
+	// 그룹 내 액터들을 랜덤 ON/OFF
+	UFUNCTION(BlueprintCallable)
 	void ApplySeededRandomByActorTag(FName GroupTag, int32 Seed, float EnableChance);
-	
-	UFUNCTION(BlueprintCallable)// 그룹 자체를 랜덤 토글
+
+	// 그룹 전체 ON/OFF
+	UFUNCTION(BlueprintCallable)
 	void ApplySeededRandomGroupEnabled(FName GroupTag, int32 Seed, float EnableChance);
 	
 	UFUNCTION(BlueprintCallable)
-	void ApplyRoundPropSeed(int32 Seed);
+	void ApplyPropDataSeeded(const UPTWPropData* Data, int32 Seed);
 
 private:
 	TMap<FName, TArray<TWeakObjectPtr<AActor>>> GroupToActors;

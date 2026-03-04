@@ -4,12 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "PTW/MiniGame/PTWMiniGameMode.h"
+#include "System/Prop/PTWPropData.h"
 #include "PTWBombMiniGameMode.generated.h"
 
 class APTWBombActor;
 class APTWBaseCharacter;
 class APTWPlayerState;
 class UGameplayEffect;
+class UPTWPropData;
 
 UCLASS()
 class PTW_API APTWBombMiniGameMode : public APTWMiniGameMode
@@ -57,6 +59,9 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UPTWItemDefinition> BombWeaponDef;
 	
+	UPROPERTY(EditDefaultsOnly, Category="Prop")
+	TObjectPtr<UPTWPropData> RoundPropData;
+	
 	void CleanupBombActor();
 	
 	UPROPERTY()
@@ -75,4 +80,5 @@ private:
 	void HandleBombTimeExpired(AActor* InstigatorActor);
 	
 	bool bRoundEndRequested = false;
+	
 };

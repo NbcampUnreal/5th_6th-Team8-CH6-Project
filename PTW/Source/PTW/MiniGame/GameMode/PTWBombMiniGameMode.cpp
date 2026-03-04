@@ -81,15 +81,14 @@ void APTWBombMiniGameMode::OnCountDownFinished()
 	{
 		BombActor->OnBombTimeExpired.AddUObject(this, &ThisClass::HandleBombTimeExpired);
 	}
-	
 	if (HasAuthority())
 	{
 		if (APTWGameState* GS = GetGameState<APTWGameState>())
 		{
-			GS->Server_SetPropSeed(FMath::Rand());
+			GS->Server_SetPropData(RoundPropData);
+			GS->Server_SetPropSeed(FMath::Rand()); 
 		}
 	}
-
 	//UE_LOG(LogTemp, Warning, TEXT("[BombMode] Round %d - Play Start"), CurrentRound);
 
 	// 라운드 진행 타이머 시작

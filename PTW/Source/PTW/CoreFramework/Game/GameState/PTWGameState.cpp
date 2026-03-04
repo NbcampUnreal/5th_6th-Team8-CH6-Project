@@ -33,6 +33,7 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(APTWGameState, MaxMiniGameRound);
 	DOREPLIFETIME(APTWGameState, Teams);
 	DOREPLIFETIME(APTWGameState, PropSeed);
+	DOREPLIFETIME(APTWGameState, PropData);
 
 }
 
@@ -329,7 +330,7 @@ void APTWGameState::SetWinTeamId(int32 TeamId)
 	WinTeamId = TeamId;
 }
 
-void APTWGameState::Server_SetPropSeed(int32 NewSeed)
+void APTWGameState::Server_SetPropSeed_Implementation(int32 NewSeed)
 {
 	if (!HasAuthority()) return;
 
@@ -438,7 +439,27 @@ void APTWGameState::OnRep_PropSeed()
 	{
 		if (auto* PropSubsys = World->GetSubsystem<UPTWPropSubsystem>())
 		{
-			PropSubsys->ApplyRoundPropSeed(PropSeed); 
+			PropSubsys->ApplyPropDataSeeded(PropData, PropSeed);
+		}
+	}
+}
+
+void APTWGameState::Server_SetPropData_Implementation(UPTWPropData* NewPropData)
+{
+	if (!HasAuthority()) return;
+
+	PropData = NewPropData;
+	
+	OnRep_PropData();
+}
+
+void APTWGameState::OnRep_PropData()
+{
+	if (UWorld* World = GetWorld())
+	{
+		if (auto* PropSubsys = World->GetSubsystem<UPTWPropSubsystem>())
+		{
+			PropSubsys->ApplyPropDataSeeded(PropData, PropSeed);
 		}
 	}
 }

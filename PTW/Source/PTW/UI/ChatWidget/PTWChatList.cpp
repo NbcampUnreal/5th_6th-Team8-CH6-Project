@@ -28,13 +28,16 @@ void UPTWChatList::AddChatMessage(const FString& Sender, const FString& Message)
 	{
 		if (UPTWChatEntry* NewEntry = CreateWidget<UPTWChatEntry>(PC, EntryClass))
 		{
-			ChatScrollBox->AddChild(NewEntry);
-			NewEntry->SetMessage(Sender, Message);
+			if (IsValid(ChatScrollBox))
+			{
+				ChatScrollBox->AddChild(NewEntry);
+				NewEntry->SetMessage(Sender, Message);
 
-			NewEntry->SetInteractionMode(bIsInteracting);
+				NewEntry->SetInteractionMode(bIsInteracting);
 
-			/* 항상 최신 메세지가 보이도록 스크롤 하단 이동 */
-			ChatScrollBox->ScrollToEnd();
+				/* 항상 최신 메세지가 보이도록 스크롤 하단 이동 */
+				ChatScrollBox->ScrollToEnd();
+			}
 		}
 	}
 }
@@ -79,6 +82,7 @@ void UPTWChatList::NativeConstruct()
 	{
 		ChatScrollBox->SetScrollBarVisibility(ESlateVisibility::Collapsed);
 		ChatScrollBox->SetConsumeMouseWheel(EConsumeMouseWheel::Never);
+		ChatScrollBox->ScrollToEnd();
 	}
 
 	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
@@ -89,10 +93,24 @@ void UPTWChatList::NativeConstruct()
 
 void UPTWChatList::NativeDestruct()
 {
+	if (UWorld* World = GetWorld())
+	{
+		if (APTWGameState* GS = World->GetGameState<APTWGameState>())
+		{
+			GS->OnChatMessageBroadcast.RemoveDynamic(this, &UPTWChatList::HandleChatMessage);
+		}
+	}
+
 	Super::NativeDestruct();
 }
 
 void UPTWChatList::HandleChatMessage(const FString& Sender, const FString& Message)
 {
+	UWorld* World = GetWorld();
+	if (!IsValid(this) || !World || World->bIsTearingDown)
+	{
+		return;
+	}
+
 	AddChatMessage(Sender, Message);
 }

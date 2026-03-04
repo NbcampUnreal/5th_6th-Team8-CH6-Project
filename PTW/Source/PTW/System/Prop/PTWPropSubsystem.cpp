@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "System/Prop/PTWPropSubsystem.h"
+#include "System/Prop/PTWPropData.h"
 
-#include "System/Prop/PTWPropSubsystem.h"   
 #include "EngineUtils.h"
 #include "Components/PrimitiveComponent.h"
 
@@ -48,10 +49,26 @@ void UPTWPropSubsystem::ApplyActorEnabled(AActor* Actor, bool bEnabled)
 	for (UPrimitiveComponent* Comp : PrimComps)
 	{
 		if (!Comp) continue;
-		Comp->SetCollisionEnabled(bEnabled ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+
+		Comp->SetCollisionEnabled(
+			bEnabled ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision
+		);
 	}
 }
 
+// 그룹 전체 ON/OFF
+void UPTWPropSubsystem::ApplySeededRandomGroupEnabled(FName GroupTag, int32 Seed, float EnableChance)
+{
+	EnableChance = FMath::Clamp(EnableChance, 0.f, 1.f);
+
+	FRandomStream Stream(Seed);
+	const bool bEnableGroup = (Stream.FRand() < EnableChance);
+	
+	RegisterByActorTag(GroupTag);
+	SetGroupEnabled(GroupTag, bEnableGroup);
+}
+
+// 그룹 내부 액터를 랜덤으로 ON/OFF
 void UPTWPropSubsystem::ApplySeededRandomByActorTag(FName GroupTag, int32 Seed, float EnableChance)
 {
 	EnableChance = FMath::Clamp(EnableChance, 0.f, 1.f);
@@ -80,28 +97,26 @@ void UPTWPropSubsystem::ApplySeededRandomByActorTag(FName GroupTag, int32 Seed, 
 	}
 }
 
-static int32 MixSeed(int32 BaseSeed, FName GroupTag)
+static int32 MixSeedFast(int32 BaseSeed, FName GroupTag, int32 Salt)
 {
-	return HashCombineFast(BaseSeed, GetTypeHash(GroupTag));
+	return HashCombineFast(HashCombineFast(BaseSeed, GetTypeHash(GroupTag)), Salt);
 }
 
-void UPTWPropSubsystem::ApplyRoundPropSeed(int32 Seed)
+void UPTWPropSubsystem::ApplyPropDataSeeded(const UPTWPropData* Data, int32 Seed)
 {
-	ApplySeededRandomGroupEnabled("Group_A", MixSeed(Seed, "Group_A"), 0.5f);
-	ApplySeededRandomGroupEnabled("Group_B", MixSeed(Seed, "Group_B"), 0.5f);
-	ApplySeededRandomGroupEnabled("Group_C", MixSeed(Seed, "Group_C"), 0.5f);
-	ApplySeededRandomGroupEnabled("Group_D", MixSeed(Seed, "Group_D"), 0.5f);
+	if (!Data) return;
 
+	for (const FPTWPropGroupRule& Rule : Data->Rules)
+	{
+		const int32 MixedSeed = MixSeedFast(Seed, Rule.GroupTag, Rule.SeedSalt);
+
+		if (Rule.bActorRandom)
+		{
+			ApplySeededRandomByActorTag(Rule.GroupTag, MixedSeed, Rule.EnableChance);
+		}
+		else
+		{
+			ApplySeededRandomGroupEnabled(Rule.GroupTag, MixedSeed, Rule.EnableChance);
+		}
+	}
 }
-
-void UPTWPropSubsystem::ApplySeededRandomGroupEnabled(FName GroupTag, int32 Seed, float EnableChance)
-{
-	EnableChance = FMath::Clamp(EnableChance, 0.f, 1.f);
-	
-	FRandomStream Stream(Seed);
-	const bool bEnableGroup = (Stream.FRand() < EnableChance);
-	
-	RegisterByActorTag(GroupTag);
-	SetGroupEnabled(GroupTag, bEnableGroup);
-}
-

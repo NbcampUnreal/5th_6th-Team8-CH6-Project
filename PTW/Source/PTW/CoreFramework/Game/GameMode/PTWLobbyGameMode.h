@@ -7,6 +7,8 @@
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWLobbyGameMode.generated.h"
 
+class APTWPlayerState;
+class UPTWLobbyItemManager;
 class UPTWRoundEventManager;
 struct FPTWMiniGameMapRow;
 /**
@@ -58,6 +60,9 @@ class PTW_API APTWLobbyGameMode : public APTWGameMode
 
 public:
 	APTWLobbyGameMode();
+
+	void ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId, APTWPlayerState* WinTarget = nullptr);
+	void AddChaosItemEntry(const FPTWChaosItemEntry& Entry);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
 	FPTWGameFlowRule GameFlowRule;
@@ -93,7 +98,15 @@ private:
 	void StartRoulette();
 	void EndGame();
 	void ReturnToMainMenu();
-	/**  */	
+	
+	/** 로비 아이템 데이터 테이블 */
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UDataTable> LobbyItemDataTable;
+	
+	/** 로비 아이템 관리 및 적용 */
+	UPROPERTY()
+	TObjectPtr<UPTWLobbyItemManager> LobbyItemManager;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Test")
 	bool bSkipFirstLobby = false;
 	

@@ -26,6 +26,8 @@ class UPTWChatInput;
 class UPTWGameStartTimer;
 class APTWBombActor;
 class UPTWBombWarning;
+class UPTWDevWidget;
+class UPTWDeveloperComponent;
 /**
  * 
  */
@@ -35,6 +37,8 @@ class PTW_API APTWPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+	APTWPlayerController();
+
 	/* 관전 시스템 함수 */
 	void StartSpectating();
 	UFUNCTION(NetMulticast, Reliable)
@@ -154,6 +158,9 @@ protected:
 	void HandleBombOwnerChanged(APawn* NewOwnerPawn);
 	void ShowBombUI();
 	void HideBombUI();
+	
+	/* 개발자용 UI 토글 */
+	void ToggleDevUI();
 
 public:
 	/* KillLog 델리게이트 */
@@ -164,6 +171,10 @@ public:
 
 	/* 게임설정 */
 	float CurrentMouseSensitivity = 1.0f;
+
+	/* 개발자용 액터 컴포넌트 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	UPTWDeveloperComponent* DeveloperComponent;
 
 protected:
 	/* 캐싱된 Ability System Component */
@@ -222,6 +233,10 @@ protected:
 	// 마이크 입력 (V)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> VoiceAction;
+
+	// 개발자용 UI (F8)
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> DevWidgetAction;
 	
 	/* ---------- UI ---------- */
 	// HUD
@@ -253,4 +268,8 @@ protected:
 	// 폭탄 경고 위젯
 	UPROPERTY(EditDefaultsOnly, Category = "UI|Bomb")
 	TSubclassOf<UPTWBombWarning> BombWarningWidgetClass;
+	UPROPERTY(EditAnywhere, Category="UI") 
+	TSubclassOf<UPTWDevWidget> DevWidgetClass;
+	UPROPERTY()
+	UPTWDevWidget* DevWidgetInstance;
 };

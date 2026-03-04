@@ -23,9 +23,6 @@ APTWPlayerState::APTWPlayerState()
 	AttributeSet = CreateDefaultSubobject<UPTWAttributeSet>(TEXT("AttributeSet"));
 	WeaponAttributeSet = CreateDefaultSubobject<UPTWWeaponAttributeSet>(TEXT("WeaponAttributeSet"));
 	
-	//FIXME : 테스트
-	DeliveryAttributeSet = CreateDefaultSubobject<UPTWDeliveryAttributeSet>(TEXT("DeliveryAttributeSet"));
-
 	CurrentPlayerData.PlayerName = "";
 	CurrentPlayerData.TotalWinPoints = 0;
 	CurrentPlayerData.Gold = 0.0f;
@@ -69,6 +66,14 @@ FPTWPlayerData APTWPlayerState::GetPlayerData() const
 FPTWPlayerRoundData APTWPlayerState::GetPlayerRoundData() const
 {
 	return PlayerRoundData;
+}
+
+void APTWPlayerState::SetLobbyItemData(const FPTWLobbyItemData& NewData)
+{
+	if (HasAuthority())
+	{
+		LobbyItemData = NewData;
+	}
 }
 
 void APTWPlayerState::InjectAbility(TSubclassOf<UGameplayAbility> AbilityClass)
@@ -244,6 +249,11 @@ void APTWPlayerState::OnRep_CurrentPlayerData()
 void APTWPlayerState::OnRep_PlayerRoundData()
 {
 	OnPlayerRoundDataUpdated.Broadcast(PlayerRoundData);
+}
+
+void APTWPlayerState::OnRep_LobbyItemData()
+{
+	
 }
 
 void APTWPlayerState::ServerRequestPurchase_Implementation(APTWShopNPC* ShopNPC, FName ItemID, int32 Cost)

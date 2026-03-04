@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -27,7 +27,7 @@ public:
 	 * @param PlayerData 저장할 플레이어 데이터
 	 */
 	void SavePlayerData(const FString& PlayerName, const FPTWPlayerData& PlayerData);
-
+	void SaveLobbyItemData(const FString& PlayerName, const FPTWLobbyItemData& LobbyItemData);
 	/** 현재 게임 라운드 값을 저장
 	 * - 라운드 진행 시 호출되어 상태 갱신
 	 *
@@ -42,9 +42,13 @@ public:
 	
 	bool bIsFirstLobby = true;
 	
+	UPROPERTY()
+	TArray<FString> TravelingBotNames;
+
 	/** 지정한 플레이어의 저장된 데이터가 있으면 반환 */
 	FPTWPlayerData* FindPlayerData(const FString& PlayerName);
-
+	FPTWLobbyItemData* FindLobbyItemData(const FString& PlayerName);
+	
 	/** 저장된 라운드 반환 */
 	FORCEINLINE int32 GetCurrentGameRound() const { return SavedGameRound; }
 	FORCEINLINE int32 GetSavedAllPlayerCount() const { return SavedAllPlayerCount; }
@@ -57,5 +61,9 @@ private:
 	// 플레이어 ID를 키로 하는 플레이어 데이터 저장소
 	TMap<FString, FPTWPlayerData> SavedPlayersData;
 	
+	// 플레이어 ID를 키로 하는 로비 아이템 데이터 저장소
+	TMap<FString, FPTWLobbyItemData> SavedLobbyItemData;
+	
+	UPROPERTY()
 	FPTWGameData SavedGameData;
 };

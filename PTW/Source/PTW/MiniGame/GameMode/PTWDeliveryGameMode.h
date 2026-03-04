@@ -23,6 +23,8 @@ public:
 protected:
 	void GiveDeliveryItems(APTWPlayerCharacter* TargetCharacter);
 	
+	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
+	
 private:
 	/* 미니 게임 시작 이펙트 적용 */
 	void ApplyMiniGameEffect(APTWPlayerCharacter* TargetCharacter);
@@ -42,4 +44,7 @@ private:
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
 	TSubclassOf<UGameplayEffect> DeliveryStartEffect;
+	
+	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
+	TSubclassOf<UGameplayEffect> KillBonusEffect;
 };

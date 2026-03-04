@@ -28,6 +28,14 @@ void APTWDeliveryGameMode::GiveDeliveryItems(APTWPlayerCharacter* TargetCharacte
 	GivingDefaultWeapon(TargetCharacter);
 }
 
+void APTWDeliveryGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
+{
+	IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(KillActor);
+	if (!CombatInt) return;
+	CombatInt->ApplyGameplayEffectToSelf(KillBonusEffect, 1.0f, FGameplayEffectContextHandle());
+	Super::HandlePlayerDeath(DeadActor, KillActor);
+}
+
 void APTWDeliveryGameMode::ApplyMiniGameEffect(APTWPlayerCharacter* TargetCharacter)
 {
 	IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(TargetCharacter);

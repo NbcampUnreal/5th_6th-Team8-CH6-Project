@@ -42,6 +42,9 @@ protected:
 	
 	UFUNCTION()
 	void OnRep_PlayerRoundData();
+	
+	UFUNCTION()
+	void OnRep_LobbyItemData();
 public:
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	void SetPlayerData(const FPTWPlayerData& NewData);
@@ -53,6 +56,11 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Data")
 	FPTWPlayerRoundData GetPlayerRoundData() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Data")
+	void SetLobbyItemData(const FPTWLobbyItemData& NewData);
+	UFUNCTION(BlueprintPure, Category = "Data")
+	FPTWLobbyItemData GetLobbyItemData() const {return LobbyItemData;}
+	
 	/** * 상점에 아이템 구매 요청
 	 * @param ItemID : 구매할 아이템 ID (FName)
 	 * @param Cost : 가격
@@ -93,6 +101,9 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerRoundData, VisibleAnywhere, BlueprintReadOnly, Category = "Data")
 	FPTWPlayerRoundData PlayerRoundData;
+
+	UPROPERTY(ReplicatedUsing = OnRep_LobbyItemData, VisibleAnywhere, BlueprintReadOnly, Category = "Data")
+	FPTWLobbyItemData LobbyItemData;
 
 	//GAS 추가 GA,GE 변수
 	UPROPERTY(Transient)

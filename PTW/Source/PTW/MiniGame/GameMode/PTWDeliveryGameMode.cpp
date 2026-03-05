@@ -38,8 +38,8 @@ void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter)
 	if (GoalPlayers.Num() == 0)
 	{
 		// 기존에 등록되었던 바인딩 함수 제거 후 새롭게 정의한 함수 등록
-		PTWGameState->OnCountDownFinished.Clear();
-		PTWGameState->OnCountDownFinished.AddDynamic(this, &APTWDeliveryGameMode::OnCountDownFinished);
+		// PTWGameState->OnCountDownFinished.Clear();
+		// PTWGameState->OnCountDownFinished.AddDynamic(this, &APTWDeliveryGameMode::OnCountDownFinished);
 		StartCountDown();
 	}
 	GoalPlayers.Add(TargetCharacter);
@@ -64,7 +64,14 @@ void APTWDeliveryGameMode::ApplyGameEffect(APTWPlayerCharacter* Target, TSubclas
 
 void APTWDeliveryGameMode::OnCountDownFinished()
 {
-	EndRound();
+	if (GoalPlayers.Num() == 0)
+	{
+		Super::OnCountDownFinished();
+	}
+	else
+	{
+		EndRound();
+	}
 }
 
 void APTWDeliveryGameMode::ApplyMiniGameEffect(APTWPlayerCharacter* TargetCharacter)

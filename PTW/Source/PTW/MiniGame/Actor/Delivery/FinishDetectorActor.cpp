@@ -1,20 +1,20 @@
-﻿#include "GoalDetector.h"
+﻿#include "FinishDetectorActor.h"
 
-#include "Components/BoxComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "MiniGame/GameMode/PTWDeliveryGameMode.h"
 
-AGoalDetector::AGoalDetector()
+
+AFinishDetectorActor::AFinishDetectorActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
 }
 
-void AGoalDetector::OnDetectPlayer(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+void AFinishDetectorActor::OnDetectOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (HasAuthority())
 	{
-		if (APTWDeliveryGameMode* DeliveryGameMode = Cast<APTWDeliveryGameMode>(GetWorld()->GetAuthGameMode()))
+		if (APTWDeliveryGameMode* DeliveryGameMode = GetWorld()->GetAuthGameMode<APTWDeliveryGameMode>())
 		{
 			if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(OtherActor))
 			{
@@ -23,5 +23,4 @@ void AGoalDetector::OnDetectPlayer(UPrimitiveComponent* OverlappedComp, AActor* 
 		}
 	}
 }
-
 

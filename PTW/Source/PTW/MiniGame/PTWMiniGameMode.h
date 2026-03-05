@@ -31,6 +31,7 @@ public:
 	FPTWMiniGameRule MiniGameRule;
 protected:
 	virtual void InitGameState() override;
+	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
 	virtual void Logout(AController* Exiting) override;
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
@@ -80,9 +81,11 @@ protected:
 	
 	/** 승리 조건 체크 */
 	virtual void CheckEndGameCondition();
-
 	virtual void CheckSurvivalCondition();
 	virtual void CheckTargetCondition();
+
+	/** 팀 결정 */
+	virtual void AssignTeam();
 	
 	/* 코인 스폰 타이머용 함수 */ 
 	void OnCoinSpawnTimerElapsed();
@@ -122,9 +125,6 @@ protected:
 private:
 	/** 플레이어에게 미니 게임 태그 적용 */
 	void ApplyMiniGameTag(AController* NewPlayer);
-	
-	/** 팀 결정 */
-	void AssignTeam();
 	
 	/** 마지막으로 사망한 플레이어 찾기 */
 	IPTWPlayerRoundDataInterface* FindLastDeadPlayer();

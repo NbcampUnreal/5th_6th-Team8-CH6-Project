@@ -39,6 +39,9 @@ protected:
 	void OnClickedFindServerButton();
 	
 	UFUNCTION()
+	void OnClickedQuickMatchButton();
+	
+	UFUNCTION()
 	void OnClickedShortRoundButton();
 	
 	UFUNCTION()
@@ -82,6 +85,8 @@ protected:
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> BackButton;
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UButton> QuickMatchButton;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Widgets")
 	TSubclassOf<UPTWServerListRow> ServerListRowClass;

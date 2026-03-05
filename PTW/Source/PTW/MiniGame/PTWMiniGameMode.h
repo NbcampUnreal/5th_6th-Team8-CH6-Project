@@ -6,6 +6,7 @@
 #include "PTWMiniGameRule.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
+#include "System/Prop/PTWPropData.h"
 #include "PTWMiniGameMode.generated.h"
 
 class UPTWItemInstance;
@@ -17,6 +18,7 @@ class APTWPlayerState;
 class UPTWItemDefinition;
 class APTWWeaponActor;
 class APTWResultCharacter;
+class UPTWPropData;
 
 struct FItemArrayWrapper
 {
@@ -89,6 +91,17 @@ protected:
 	UFUNCTION()
 	virtual void OnCountDownFinished();
 	
+	UPROPERTY(EditDefaultsOnly, Category="Prop")
+	bool bApplyPropOnStartGame = false;
+
+	UPROPERTY(EditDefaultsOnly, Category="Prop", meta=(EditCondition="!bApplyPropOnStartGame"))
+	bool bApplyPropOnStartRound = true; 
+
+	UPROPERTY(EditDefaultsOnly, Category="Prop", meta=(EditCondition="bApplyPropOnStartGame || bApplyPropOnStartRound"))
+	TObjectPtr<UPTWPropData> RoundPropData;
+
+	void ApplyRoundPropRandom();
+	
 	/** 승리 조건 체크 */
 	virtual void CheckEndGameCondition();
 	virtual void CheckSurvivalCondition();
@@ -125,6 +138,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Rule|Result")
 	float ResultSequenceDuration = 15.0f;
 
+	
 	/* 이미 게임 종료가 호출됬는지 체크 */
 	bool bIsGameEnded = false;
 	

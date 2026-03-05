@@ -91,6 +91,9 @@ protected:
 	// 내부 타이머 핸들(StartTimer/UpdateTimer에서 사용)
 	FTimerHandle TimerHandle;
 
+	/* 이미 게임이 실행됐는지 체크 */
+	bool bIsGameStarted = false;
+	
 	bool bAllPlayerReady = false;
 	int32 ReadyPlayer = 0;
 	int32 AllPlayer = 0;

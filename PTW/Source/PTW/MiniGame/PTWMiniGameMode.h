@@ -115,6 +115,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Rule|Result")
 	float ResultSequenceDuration = 15.0f;
 
+	
 	/* 이미 게임 종료가 호출됬는지 체크 */
 	bool bIsGameEnded = false;
 	

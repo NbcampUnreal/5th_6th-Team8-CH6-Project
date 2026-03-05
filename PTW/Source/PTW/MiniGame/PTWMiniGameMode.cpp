@@ -45,19 +45,33 @@ void APTWMiniGameMode::InitGameState()
 	}
 }
 
+void APTWMiniGameMode::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	
+	if (!PTWGameState) return;
+	
+	// 카오스 이벤트 태그 적용 테스트
+	if (!ChaosEventManager) return;
+	ChaosEventManager->InitChaosEventManager(PTWGameState, MiniGameRule.ChaosEventRule, CachedGameData.ChaosItemEntries);
+}
+
 void APTWMiniGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
+	
+	if (!PTWGameState) return;
+	
+	
+	
 #if WITH_EDITOR
 	// PIE에서는 딜레이 후 강제 시작
 	FTimerHandle PIEStartTimer;
 	GetWorldTimerManager().SetTimer(PIEStartTimer, this, &APTWMiniGameMode::StartGame, 2.f, false);
 #endif
 	
-	// 카오스 이벤트 태그 적용 테스트
-	if (!PTWGameState) return;
-	ChaosEventManager->InitChaosEventManager(PTWGameState, MiniGameRule.ChaosEventRule, CachedGameData.ChaosItemEntries);
+	
 }
 
 void APTWMiniGameMode::Logout(AController* Exiting)
@@ -111,7 +125,7 @@ void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	
 	Super::HandleSeamlessTravelPlayer(C);
 	
-	PlayerReadyToPlay(C);
+	//PlayerReadyToPlay(C);
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(AController* Controller)

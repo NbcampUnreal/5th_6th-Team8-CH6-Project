@@ -40,6 +40,7 @@
 #include "CoreFramework/Character/Component/PTWDeveloperComponent.h"
 #include "Engine/PostProcessVolume.h"
 #include "EngineUtils.h"
+#include "Game/GameMode/PTWLobbyGameMode.h"
 
 APTWPlayerController::APTWPlayerController()
 {
@@ -850,7 +851,12 @@ void APTWPlayerController::Server_NotifyMapLoaded_Implementation()
 {
 	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
 	{
-		GameMode->RestartPlayer(this);
+		// 로비 게임모드일 때만 RestartPlayer 호출
+		if (APTWLobbyGameMode* LobbyGameMode = Cast<APTWLobbyGameMode>(GameMode))
+		{
+			LobbyGameMode->RestartPlayer(this);
+		}
+        
 		GameMode->PlayerReadyToPlay(this);
 	}
 }

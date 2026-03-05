@@ -10,7 +10,6 @@
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "GAS/PTWDeliveryAttributeSet.h"
-#include "PTWGameplayTag/GameplayTags.h"
 
 APTWDeliveryGameMode::APTWDeliveryGameMode()
 {
@@ -37,9 +36,6 @@ void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter)
 {
 	if (GoalPlayers.Num() == 0)
 	{
-		// 기존에 등록되었던 바인딩 함수 제거 후 새롭게 정의한 함수 등록
-		// PTWGameState->OnCountDownFinished.Clear();
-		// PTWGameState->OnCountDownFinished.AddDynamic(this, &APTWDeliveryGameMode::OnCountDownFinished);
 		StartCountDown();
 	}
 	GoalPlayers.Add(TargetCharacter);

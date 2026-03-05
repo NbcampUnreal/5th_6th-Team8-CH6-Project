@@ -12,6 +12,8 @@ ADetectorActor::ADetectorActor()
 	
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>("BoxComponent");
 	BoxComponent->SetupAttachment(SceneComponent);
+	
+	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &ADetectorActor::OnDetectOverlap);
 }
 
 void ADetectorActor::OnDetectOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

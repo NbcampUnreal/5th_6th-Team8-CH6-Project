@@ -6,6 +6,7 @@
 #include "PTWMiniGameRule.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
+#include "System/Prop/PTWPropData.h"
 #include "PTWMiniGameMode.generated.h"
 
 class IPTWPlayerRoundDataInterface;
@@ -16,6 +17,7 @@ class APTWPlayerState;
 class UPTWItemDefinition;
 class APTWWeaponActor;
 class APTWResultCharacter;
+class UPTWPropData;
 
 UCLASS()
 class PTW_API APTWMiniGameMode : public APTWGameMode
@@ -78,6 +80,17 @@ protected:
 	/** 카운트 다운 종료 시 호출 */
 	UFUNCTION()
 	virtual void OnCountDownFinished();
+	
+	UPROPERTY(EditDefaultsOnly, Category="Prop")
+	bool bApplyPropOnStartGame = false;
+
+	UPROPERTY(EditDefaultsOnly, Category="Prop", meta=(EditCondition="!bApplyPropOnStartGame"))
+	bool bApplyPropOnStartRound = true; 
+
+	UPROPERTY(EditDefaultsOnly, Category="Prop", meta=(EditCondition="bApplyPropOnStartGame || bApplyPropOnStartRound"))
+	TObjectPtr<UPTWPropData> RoundPropData;
+
+	void ApplyRoundPropRandom();
 	
 	/** 승리 조건 체크 */
 	virtual void CheckEndGameCondition();

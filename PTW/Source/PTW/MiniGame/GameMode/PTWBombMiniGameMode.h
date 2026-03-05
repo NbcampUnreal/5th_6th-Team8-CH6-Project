@@ -59,9 +59,6 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UPTWItemDefinition> BombWeaponDef;
 	
-	UPROPERTY(EditDefaultsOnly, Category="Prop")
-	TObjectPtr<UPTWPropData> RoundPropData;
-	
 	void CleanupBombActor();
 	
 	UPROPERTY()

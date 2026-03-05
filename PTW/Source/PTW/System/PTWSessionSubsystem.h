@@ -17,6 +17,7 @@ struct FOnlineSessionSearchResultBP
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSessionSearchComplete, const TArray<FOnlineSessionSearchResultBP>&, SearchResult);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllSessionSearchFinished);
 
 UCLASS()
 class PTW_API UPTWSessionSubsystem : public UGameInstanceSubsystem
@@ -78,6 +79,8 @@ protected:
 	// 세션 탐색이 완료됐을 시 호출
 	void OnFindSessionsComplete(bool bWasSuccessful);
 	
+	UFUNCTION(BlueprintCallable, Category = "Session")
+	void OnQuickMatchFindSessionsComplete();
 public:
 	
 protected:
@@ -88,13 +91,12 @@ private:
 	
 public:
 	FOnSessionSearchComplete OnSessionSearchComplete;
-	
+	FOnAllSessionSearchFinished OnAllSessionSearchFinished;
 protected:
 	FDelegateHandle CreateSessionCompleteDelegateHandle;
 	FDelegateHandle DestroySessionDelegateHandle;
 	FDelegateHandle JoinSessionCompleteDelegateHandle;
 	FDelegateHandle FindSessionsCompleteDelegateHandle;
 	FDelegateHandle SteamLoginCompletedHandle;
-	
 private:
 };

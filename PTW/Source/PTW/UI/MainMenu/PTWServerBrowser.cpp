@@ -187,7 +187,7 @@ void UPTWServerBrowser::OnClickedQuickMatchButton()
 	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
 	if (!IsValid(SessionSubsystem)) return;
 	
-	SessionSubsystem->FindGameSession();
+	SessionSubsystem->QuickMatchGameSession();
 }
 
 void UPTWServerBrowser::OnClickedShortRoundButton()

@@ -2,6 +2,7 @@
 
 #include "PTWSessionSubsystem.h"
 #include "OnlineSubsystem.h"
+#include "Algo/RandomShuffle.h"
 #include "Kismet/GameplayStatics.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Interfaces/OnlineSessionInterface.h"
@@ -185,13 +186,56 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 		{
 			OnSessionSearchComplete.Broadcast(BPSearchResultInstances);
 		}
+		
 		BPSearchResults += BPSearchResultInstances;
-		SearchForGameSessions();
+		if(SessionSearchQueue.IsEmpty())
+		{
+			if (OnAllSessionSearchFinished.IsBound())
+			{
+				OnAllSessionSearchFinished.Broadcast();
+			}
+		}
+		else
+		{
+			SearchForGameSessions();
+		}
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Session search failed."));
 	}
+}
+
+void UPTWSessionSubsystem::OnQuickMatchFindSessionsComplete()
+{
+	if(!SessionInterface.IsValid()) return;
+	OnAllSessionSearchFinished.RemoveDynamic(this, &ThisClass::OnQuickMatchFindSessionsComplete);
+
+	TArray<FOnlineSessionSearchResultBP> BPAvailableSearchResults;
+	for (FOnlineSessionSearchResultBP& BPSearchResult : BPSearchResults)
+	{
+		FOnlineSessionSearchResult& SessionData = BPSearchResult.OnlineSessionSearchResult;
+		if (SessionData.IsValid() && SessionData.Session.NumOpenPublicConnections > 0)
+		{
+			BPAvailableSearchResults.Add(BPSearchResult);
+		}
+	}
+	
+	if (!BPAvailableSearchResults.IsEmpty())
+	{
+		Algo::RandomShuffle(BPAvailableSearchResults);
+		for (FOnlineSessionSearchResultBP& BPAvailableSearchResult : BPAvailableSearchResults)
+		{
+			FOnlineSessionSearchResult& SessionData = BPAvailableSearchResult.OnlineSessionSearchResult;
+			if (SessionData.IsValid() && SessionData.Session.NumOpenPublicConnections > 0)
+			{
+				JoinGameSession(BPAvailableSearchResult);
+				return;
+			}
+		}
+	}
+	
+	CreateGameSession(FPTWSessionConfig());
 }
 
 void UPTWSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig)
@@ -322,6 +366,9 @@ void UPTWSessionSubsystem::LeaveGameSession()
 
 void UPTWSessionSubsystem::QuickMatchGameSession()
 {
+	if(!SessionInterface.IsValid()) return;
+	OnAllSessionSearchFinished.AddUniqueDynamic(this, &UPTWSessionSubsystem::OnQuickMatchFindSessionsComplete);
+	
 	FindGameSession();
 }
 

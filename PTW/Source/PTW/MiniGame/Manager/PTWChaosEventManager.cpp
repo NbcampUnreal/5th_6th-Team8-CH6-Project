@@ -25,8 +25,8 @@ void UPTWChaosEventManager::BeginPlay()
 	Super::BeginPlay();
 
 	ChaosItemTable = LoadObject<UDataTable>(nullptr,
-		TEXT("/Game/_PTW/Data/Event/Chaos/DT_ChaosItem.DT_ChaosItem"));
-	
+		TEXT("/Game/_PTW/Data/Event/Chaos/DT_ChaosItem"));
+
 }
 
 FPTWChaosItemEntry UPTWChaosEventManager::SelectRandomChaosItem()

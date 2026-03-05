@@ -403,6 +403,16 @@ ASpectatorPawn* APTWPlayerController::SpawnSpectatorPawn()
 	return SpawnedSpectator;
 }
 
+void APTWPlayerController::NotifyLoadedWorld(FName WorldPackageName, bool bFinalDest)
+{
+	Super::NotifyLoadedWorld(WorldPackageName, bFinalDest);
+
+	if (bFinalDest)
+	{
+		Server_NotifyMapLoaded();
+	}
+}
+
 void APTWPlayerController::BindGameStateDelegates()
 {
 	APTWGameState* GS = GetWorld() ? GetWorld()->GetGameState<APTWGameState>() : nullptr;
@@ -831,6 +841,15 @@ void APTWPlayerController::UpdateNameTagsVisibility()
 		{
 			WidgetComp->SetVisibility(false);
 		}
+	}
+}
+
+void APTWPlayerController::Server_NotifyMapLoaded_Implementation()
+{
+	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
+	{
+		GameMode->RestartPlayer(this);
+		GameMode->PlayerReadyToPlay(this);
 	}
 }
 

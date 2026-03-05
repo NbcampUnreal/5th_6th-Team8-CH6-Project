@@ -54,7 +54,7 @@ void APTWLobbyGameMode::InitGameState()
 		else
 		{
 			PTWGameState->SetCurrentPhase(EPTWGamePhase::Loading);
-			TravelLevelName = TEXT("/Game/_PTW/Maps/MiniGame_Bomb");
+			//TravelLevelName = TEXT("/Game/_PTW/Maps/MiniGame_Bomb");
 		}
 	}
 }
@@ -171,6 +171,10 @@ void APTWLobbyGameMode::StartGameLobby()
 {
 	ClearTimer();
 
+	if (bIsGameStarted) return;
+
+	bIsGameStarted = true;
+
 	// 최대 라운드에 도달 하면 게임 종료
 	if (PTWGameState->GetCurrentRound() >= GameFlowRule.MaxRound)
 	{
@@ -178,6 +182,8 @@ void APTWLobbyGameMode::StartGameLobby()
 		
 		return;
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Start Game Lobby"));
 	
 	PTWGameState->AdvanceRound();
 	

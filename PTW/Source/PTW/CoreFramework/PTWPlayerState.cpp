@@ -12,6 +12,7 @@
 #include "Gameplay/Shop/PTWShopNPC.h"
 #include "GAS/PTWDeliveryAttributeSet.h"
 #include "CoreFramework/Game/Gamestate/PTWGamestate.h"
+#include "CoreFramework/PTWPlayerController.h"
 
 APTWPlayerState::APTWPlayerState()
 {
@@ -35,6 +36,7 @@ void APTWPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME(APTWPlayerState, CurrentPlayerData);
 	DOREPLIFETIME(APTWPlayerState, PlayerRoundData);
+	DOREPLIFETIME(APTWPlayerState, CurrentTargetPawn);
 }
 
 UAbilitySystemComponent* APTWPlayerState::GetAbilitySystemComponent() const
@@ -177,6 +179,14 @@ void APTWPlayerState::ApplyRespawnInvincible(float Duration)
 		FGameplayTag::RequestGameplayTag("Data.Duration"), Duration);
 
 	AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+}
+
+void APTWPlayerState::OnRep_CurrentTargetPawn()
+{
+	if (APTWPlayerController* PC = Cast<APTWPlayerController>(GetOwner()))
+	{
+		PC->UpdateTargetPOV(CurrentTargetPawn);
+	}
 }
 
 void APTWPlayerState::SetDeathOrder(int32 Order)

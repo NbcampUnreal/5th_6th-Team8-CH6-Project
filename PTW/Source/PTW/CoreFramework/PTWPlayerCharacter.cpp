@@ -12,6 +12,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/SceneCaptureComponent2D.h"
 
 #include "PTWPlayerState.h"
 #include "PTWInputComponent.h"
@@ -28,6 +29,7 @@
 #include "CoreFramework/Character/Component/PTWInteractComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
 #include "Kismet/GameplayStatics.h"
+#include "MiniGame/PTWMiniGameMode.h"
 #include "Net/VoiceConfig.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
@@ -76,6 +78,19 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 	PushCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	
 	VOIPTalkerComponent = CreateDefaultSubobject<UVOIPTalker>(TEXT("VOIPTalker"));
+
+	/* USceneCaptureComponent2D */
+	TargetPOVSource = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("TargetPOVSource"));
+	if (PlayerCamera)
+	{
+		TargetPOVSource->SetupAttachment(PlayerCamera); // 카메라에 부착
+	}
+	// 프리미티브만 렌더링하여 성능 최적화
+	TargetPOVSource->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
+	TargetPOVSource->bCaptureEveryFrame = false; // 수동 캡처(Timer) 사용
+	TargetPOVSource->bCaptureOnMovement = false;
+	// 가벼운 LDR 사용
+	TargetPOVSource->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 }
 
 void APTWPlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -508,8 +523,19 @@ void APTWPlayerCharacter::OnPlayerDataLoaded(const FPTWPlayerData& NewData)
 
 	if (UPTWItemSpawnManager* SpawnSys = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
 	{
-		SpawnSys->SpawnAndGiveItems(PS);
-
+		if (APTWMiniGameMode* MiniGameMode = Cast<APTWMiniGameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			if (!MiniGameMode->PlayerDeadCheck(GetController()))
+			{
+				SpawnSys->SpawnAndGiveItems(PS);
+			}
+			else
+			{
+				FItemArrayWrapper ItemArrayWrapper = MiniGameMode->GetOldPlayerItems(GetController());
+				SpawnSys->AddRestartPlayerItems(ItemArrayWrapper.Items, this);
+			}
+		}
+		
 		bHasGivenStartupItems = true;
 		PS->OnPlayerDataUpdated.RemoveDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);;
 	}

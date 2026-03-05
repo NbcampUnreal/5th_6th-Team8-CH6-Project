@@ -62,6 +62,7 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(HitReaction_HeadShot, "State.HitReaction.HeadShot");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Posture_Crouching, "State.Posture.Crouching");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Status_Dead, "State.Dead");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Status_Blind, "State.Blind");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Status_Bomb, "State.BombAttach");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Invincible, "State.Invincible");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Stasis, "State.Stasis");
@@ -140,6 +141,11 @@ namespace GameplayTags
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Invisibility, "GameplayCue.Item.Invisibility");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Invincible, "GameplayCue.Item.Invincible");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Stealth, "GameplayCue.Item.Stealth");
+		}
+		
+		namespace State
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Blind, "GameplayCue.State.Blind");
 		}
 		
 		namespace Hit

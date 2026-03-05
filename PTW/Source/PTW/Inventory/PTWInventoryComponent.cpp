@@ -246,19 +246,12 @@ void UPTWInventoryComponent::DropItem()
 	}
 }
 
-void UPTWInventoryComponent::TestFunction_GiveActiveItem_Implementation(UPTWItemDefinition* Def)
+void UPTWInventoryComponent::RemoveActiveItemGameplayAbilityHandle()
 {
-	if (Def->ItemType == EItemType::Active)
+	if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()))
 	{
-		UPTWActiveItemInstance* Active = NewObject<UPTWActiveItemInstance>(GetOwner());
-		Active->ItemDef = Def;
-		EquipActiveItem(Active);
-	}
-	else
-	{
-		UPTWPassiveItemInstance* Passive = NewObject<UPTWPassiveItemInstance>(GetOwner());
-		Passive->ItemDef = Def;
-		ApplyAllPassiveItems(Passive);
+		ASC->ClearAbility(ActiveItemAbilityHandle);
+		ActiveItemAbilityHandle = FGameplayAbilitySpecHandle();
 	}
 }
 
@@ -375,21 +368,14 @@ bool UPTWInventoryComponent::EquipActiveItem(UPTWItemInstance* ActiveItemInstanc
 	
 	return true;
 }
-void UPTWInventoryComponent::TestFunction_DropItem_Implementation()
-{
-	DropItem();
-}
+
 void UPTWInventoryComponent::ConsumeActiveItem()
 {
 	if (!CurrentActiveItemSlot->UsingActiveItem())
 	{
 		if (ActiveItemAbilityHandle.IsValid())
 		{
-			if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner()))
-			{
-				ASC->ClearAbility(ActiveItemAbilityHandle);
-				ActiveItemAbilityHandle = FGameplayAbilitySpecHandle();
-			}
+			RemoveActiveItemGameplayAbilityHandle();
 			ItemArr.Remove(CurrentActiveItemSlot);
 			CurrentActiveItemSlot = nullptr;
 		}

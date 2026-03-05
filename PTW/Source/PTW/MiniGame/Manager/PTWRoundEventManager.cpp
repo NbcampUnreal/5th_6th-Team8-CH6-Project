@@ -44,7 +44,7 @@ void UPTWRoundEventManager::SelectedRandomMap()
 
 	if (Row)
 	{
-		TravelLevelName = Row->Map.ToSoftObjectPath().GetLongPackageName();
+		TravelLevelName = Row->Map.GetLongPackageName();
 		MapTag = Row->MiniGameTag;
 		GEngine->AddOnScreenDebugMessage(0, 3.f, FColor::Black, Row->DisplayName.ToString(), false);
 	}

@@ -18,7 +18,7 @@ class PTW_API UPTWActiveItemInstance : public UPTWItemInstance
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	bool UsingActiveItem();
-	FORCEINLINE void SetCurrentCount(){CurrentCount  = ItemDef->MaxUsage - 1;}
+	FORCEINLINE void SetCurrentCount(){ CurrentCount =  CurrentCount == 0 ? ItemDef->MaxUsage - 1 : CurrentCount; }
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "ItemDefault")

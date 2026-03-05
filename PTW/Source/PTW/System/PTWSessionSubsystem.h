@@ -25,7 +25,6 @@ class PTW_API UPTWSessionSubsystem : public UGameInstanceSubsystem
 
 public:
 	FORCEINLINE IOnlineSessionPtr GetSessionInterface() const { return SessionInterface; };
-	FORCEINLINE TSharedPtr<FOnlineSessionSearch> GetSessionSearch() const { return SessionSearch; };
 	
 	// 온라인 서브시스템이 스팀인지 체크
 	UFUNCTION(BlueprintCallable, Category = "Session")
@@ -41,7 +40,10 @@ public:
 	
 	// 세션 탐색
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void FindGameSession(int Count = 2);
+	void FindGameSession();
+	
+	UFUNCTION(BlueprintCallable, Category = "Session")
+	void SearchForGameSessions();
 	
 	// 데디케이티드 서버 생성 (unused)
 	UFUNCTION(BlueprintCallable, Category = "Session")
@@ -53,6 +55,9 @@ public:
 	
 	// 세션 이탈 & 종료
 	void LeaveGameSession();
+	
+	UFUNCTION(BlueprintCallable, Category = "Session")
+	void QuickMatchGameSession();
 	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
@@ -71,14 +76,14 @@ protected:
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	
 	// 세션 탐색이 완료됐을 시 호출
-	void OnFindSessionsComplete(bool bWasSuccessful, int32 Count);
+	void OnFindSessionsComplete(bool bWasSuccessful);
 	
 public:
 	
 protected:
 	IOnlineSessionPtr SessionInterface;
-	TSharedPtr<FOnlineSessionSearch> SessionSearch;
-	
+	TArray<FOnlineSessionSearchResultBP> BPSearchResults;
+	TQueue<TSharedPtr<FOnlineSessionSearch>> SessionSearchQueue;
 private:
 	
 public:

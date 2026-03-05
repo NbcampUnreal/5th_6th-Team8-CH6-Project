@@ -98,30 +98,44 @@ void UPTWSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessi
 	}
 }
 
-void UPTWSessionSubsystem::FindGameSession(int32 SearchStep)
+void UPTWSessionSubsystem::FindGameSession()
 {
 	if(!SessionInterface.IsValid()) return;
-	
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
-	if (SearchStep <= 0) return;
 	
-	SessionSearch = MakeShareable(new FOnlineSessionSearch());
-	SessionSearch->bIsLanQuery = false;
-	SessionSearch->MaxSearchResults = 100;
+	SessionSearchQueue.Empty();
+	BPSearchResults.Reset();
 	
-	if (SearchStep == 2)	// DedicatedServer
-	{
-		SessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, true, EOnlineComparisonOp::Equals);
-		SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, false, EOnlineComparisonOp::Equals);
-	}
-	else					// SearchStep : 1 ListenServer
-	{
-		SessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, false, EOnlineComparisonOp::Equals);
-		SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
-	}
+	TSharedPtr<FOnlineSessionSearch> ListenSessionSearch = MakeShareable(new FOnlineSessionSearch());
+	ListenSessionSearch->bIsLanQuery = false;
+	ListenSessionSearch->MaxSearchResults = 100;
+	ListenSessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, false, EOnlineComparisonOp::Equals);
+	ListenSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+	SessionSearchQueue.Enqueue(ListenSessionSearch);
+	
+	TSharedPtr<FOnlineSessionSearch> DedicatedSessionSearch = MakeShareable(new FOnlineSessionSearch());
+	DedicatedSessionSearch->bIsLanQuery = false;
+	DedicatedSessionSearch->MaxSearchResults = 100;
+	DedicatedSessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, true, EOnlineComparisonOp::Equals);
+	DedicatedSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, false, EOnlineComparisonOp::Equals);
+	SessionSearchQueue.Enqueue(DedicatedSessionSearch);
+	
+	SearchForGameSessions();
+}
+
+void UPTWSessionSubsystem::SearchForGameSessions()
+{
+	if(!SessionInterface.IsValid()) return;
+	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+	
+	if (SessionSearchQueue.IsEmpty()) return;
+
+	
+	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+	SessionSearchQueue.Peek(SessionSearch);
 	
 	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
-		FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete, SearchStep)
+		FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete)
 	);
 	
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
@@ -136,16 +150,20 @@ void UPTWSessionSubsystem::FindGameSession(int32 SearchStep)
 	}
 }
 
-void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful, int32 SearchStep)
+void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 {
 	if(!SessionInterface.IsValid()) return;
-	
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
-	TArray<FOnlineSessionSearchResultBP> BPSearchResults;
+	
+	if(SessionSearchQueue.IsEmpty()) return;
+	
+	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+	SessionSearchQueue.Dequeue(SessionSearch);
+	
 	if (bWasSuccessful && SessionSearch.IsValid())
 	{
 		UE_LOG(LogTemp, Log, TEXT("Search Complete! Found %d sessions."), SessionSearch->SearchResults.Num());
-		
+		TArray<FOnlineSessionSearchResultBP> BPSearchResultInstances;
 		for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
 		{
 			FString SessionId = SearchResult.Session.GetSessionIdStr();
@@ -155,7 +173,7 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful, int32 Sea
 			if (SearchResult.Session.SessionSettings.Get(PTWSessionKey::ServerName, ServerName))
 			{
 				UE_LOG(LogTemp, Log, TEXT("Found Server: %s (Ping: %d)"), *ServerName, Ping);
-				BPSearchResults.Add(FOnlineSessionSearchResultBP(SearchResult));
+				BPSearchResultInstances.Add(FOnlineSessionSearchResultBP(SearchResult));
 			}
 			else
 			{
@@ -163,15 +181,12 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful, int32 Sea
 			}
 		}
 		
-		if (OnSessionSearchComplete.IsBound() && !BPSearchResults.IsEmpty())
+		if (OnSessionSearchComplete.IsBound())
 		{
-			OnSessionSearchComplete.Broadcast(BPSearchResults);
+			OnSessionSearchComplete.Broadcast(BPSearchResultInstances);
 		}
-		
-		if (SearchStep > 0)
-		{
-			FindGameSession(SearchStep - 1);
-		}
+		BPSearchResults += BPSearchResultInstances;
+		SearchForGameSessions();
 	}
 	else
 	{
@@ -253,6 +268,9 @@ void UPTWSessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	{
 		GEngine->OnNetworkFailure().AddUObject(this, &ThisClass::HandleNetworkFailure);
 	}
+	
+	SessionSearchQueue.Empty();
+	BPSearchResults.Reset();
 }
 
 void UPTWSessionSubsystem::Deinitialize()
@@ -300,6 +318,11 @@ void UPTWSessionSubsystem::LeaveGameSession()
 	}
 	
 	OnDestroySessionComplete(NAME_GameSession, true);
+}
+
+void UPTWSessionSubsystem::QuickMatchGameSession()
+{
+	FindGameSession();
 }
 
 void UPTWSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)

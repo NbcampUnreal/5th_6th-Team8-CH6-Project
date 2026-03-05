@@ -8,6 +8,7 @@
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "System/Prop/PTWPropSubsystem.h"
 #include "GAS/PTWAttributeSet.h"
 #include "EngineUtils.h"
 #include "Manager/PTWChaosEventManager.h"
@@ -158,6 +159,11 @@ void APTWMiniGameMode::StartGame()
 	
 	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
 	
+	if (bApplyPropOnStartGame)
+	{
+		ApplyRoundPropRandom();
+	}
+	
 	//SetInputBlock(false);
 	
 	WaitingToStartRound();
@@ -205,6 +211,16 @@ void APTWMiniGameMode::StartCountDown()
 	
 	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
 	GetWorldTimerManager().SetTimer(CountDownTimerHandle, this, &APTWMiniGameMode::TickCountDown, 1.0f, true, 1.f);
+}
+
+void APTWMiniGameMode::ApplyRoundPropRandom()
+{
+	if (!HasAuthority()) return;
+	if (!PTWGameState) return;
+	if (!RoundPropData) return;
+
+	PTWGameState->Server_SetPropData(RoundPropData);
+	PTWGameState->Server_SetPropSeed(FMath::Rand());
 }
 
 void APTWMiniGameMode::TickCountDown()
@@ -300,6 +316,11 @@ void APTWMiniGameMode::EndGame()
 
 void APTWMiniGameMode::StartRound()
 {
+	if (!bApplyPropOnStartGame && bApplyPropOnStartRound)
+	{
+		ApplyRoundPropRandom();
+	}
+	
 	if (MiniGameRule.TimeRule.bUseTimer)
 	{
 		StartTimer(MiniGameRule.TimeRule.Timer);

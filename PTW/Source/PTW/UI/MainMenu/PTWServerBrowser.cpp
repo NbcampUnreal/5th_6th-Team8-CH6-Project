@@ -49,6 +49,11 @@ void UPTWServerBrowser::NativeConstruct()
 		FindServerButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedFindServerButton);
 	}
 	
+	if (IsValid(QuickMatchButton))
+	{
+		QuickMatchButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedQuickMatchButton);
+	}
+	
 	if (IsValid(ShortRoundButton))
 	{
 		ShortRoundButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedShortRoundButton);
@@ -68,6 +73,7 @@ void UPTWServerBrowser::NativeConstruct()
 	if (IsValid(DevJoinButton))
 	{
 		#if WITH_EDITOR
+		DevJoinButton->SetVisibility(ESlateVisibility::Visible);
 		DevJoinButton->OnClicked.AddDynamic(this, &ThisClass::DevJoinAction);
 		#endif
 	}
@@ -164,6 +170,17 @@ void UPTWServerBrowser::OnClickedFindServerButton()
 	
 	if (!IsValid(ServerNameEditableText)) return;
 	
+	UGameInstance* GameInstance = GetGameInstance();
+	if (!IsValid(GameInstance)) return;
+	
+	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
+	if (!IsValid(SessionSubsystem)) return;
+	
+	SessionSubsystem->FindGameSession();
+}
+
+void UPTWServerBrowser::OnClickedQuickMatchButton()
+{
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!IsValid(GameInstance)) return;
 	

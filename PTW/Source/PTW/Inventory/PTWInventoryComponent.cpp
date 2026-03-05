@@ -390,8 +390,9 @@ void UPTWInventoryComponent::ConsumeActiveItem()
 				ASC->ClearAbility(ActiveItemAbilityHandle);
 				ActiveItemAbilityHandle = FGameplayAbilitySpecHandle();
 			}
+			ItemArr.Remove(CurrentActiveItemSlot);
+			CurrentActiveItemSlot = nullptr;
 		}
-		CurrentActiveItemSlot = nullptr;
 	}
 }
 

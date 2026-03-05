@@ -454,6 +454,11 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	ApplyMiniGameTag(NewPlayer);
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);
+	
+	if (UPTWItemSpawnManager* Spawn = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+	{
+		Spawn->SpawnAndGiveItems(Cast<APTWPlayerState>(PlayerState));
+	}
 	//SpawnPlayerSavedItems(NewPlayer);
 	
 	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))

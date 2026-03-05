@@ -89,6 +89,14 @@ public:
 
 	void ApplyRespawnInvincible(float Duration);
 
+	/* 타겟 POV 시스템 */
+	// 타겟이 변경되었을 때 로컬 컨트롤러에 알림
+	UFUNCTION()
+	void OnRep_CurrentTargetPawn();
+	// 현재 추격 중인 타겟 (복제 변수)
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentTargetPawn, VisibleAnywhere, BlueprintReadOnly, Category = "GTS|Target")
+	TObjectPtr<APawn> CurrentTargetPawn;
+
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;

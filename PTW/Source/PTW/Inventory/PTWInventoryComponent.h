@@ -75,13 +75,9 @@ public:
 	
 	void DropItem();
 	
-	// FIXME : 테스트 코드
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void TestFunction_GiveActiveItem(UPTWItemDefinition* Def);
+	FORCEINLINE TArray<TObjectPtr<UPTWItemInstance>> GetAllItems() const { return ItemArr; }
 	
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void TestFunction_DropItem();
-
+	void RemoveActiveItemGameplayAbilityHandle();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

@@ -21,6 +21,7 @@ class UPTWWeaponComponent;
 class UPTWReactorComponent;
 class UPTWInteractComponent;
 class UVOIPTalker;
+class USceneCaptureComponent2D;
 
 UCLASS()
 class PTW_API APTWPlayerCharacter : public APTWBaseCharacter
@@ -48,7 +49,8 @@ public:
 	FORCEINLINE bool GetStealthMode() const { return bIsStealth; }
 	FORCEINLINE USphereComponent* GetPushCollision() const {return PushCollision; }
 	FORCEINLINE UVOIPTalker* GetVOIPTalkerComponent() const { return VOIPTalkerComponent; }
-	
+	FORCEINLINE USceneCaptureComponent2D* GetTargetPOVCapture() const { return TargetPOVSource; }
+
 protected:
 	// 4. [Protected] 오버라이드 함수 (LifeCycle) - BeginPlay, EndPlay 등
 	virtual void BeginPlay() override;
@@ -164,7 +166,8 @@ protected:
 	TObjectPtr<USphereComponent> PushCollision;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UVOIPTalker> VOIPTalkerComponent;
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GTS|Capture")
+	TObjectPtr<USceneCaptureComponent2D> TargetPOVSource;
 	
 	//Stealth 모드 전용(현정석)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components", ReplicatedUsing = OnRep_StealthMode)

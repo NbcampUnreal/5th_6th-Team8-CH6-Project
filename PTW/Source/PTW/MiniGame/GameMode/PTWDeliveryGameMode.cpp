@@ -80,7 +80,7 @@ void APTWDeliveryGameMode::GivingDefaultWeapon(APTWPlayerCharacter* TargetCharac
 	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
 	if (!SpawnManager) return;
 	
-	SpawnManager->SpawnSingleItem(TargetCharacter->GetPlayerState<APTWPlayerState>(), ItemDefinition);
+	SpawnManager->SpawnSingleItem(TargetCharacter->GetPlayerState<APTWPlayerState>(), DeliveryDefaultWeapon);
 }
 
 void APTWDeliveryGameMode::SetMiniGameRule()

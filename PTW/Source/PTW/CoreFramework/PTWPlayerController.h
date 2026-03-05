@@ -29,6 +29,9 @@ class UPTWBombWarning;
 class UPTWDevWidget;
 class UPTWDeveloperComponent;
 class APostProcessVolume;
+class UPTWTargetViewWidget;
+class USceneCaptureComponent2D; 
+class UTextureRenderTarget2D;   
 /**
  * 
  */
@@ -102,6 +105,9 @@ public:
 		float InDuration = 2.f,
 		bool bInterrupt = false);
 
+	/* 타겟 플레이어가 변경되었을 때 호출 */
+	void UpdateTargetPOV(APawn* NewTarget);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -171,6 +177,9 @@ protected:
 	/* 개발자용 UI 토글 */
 	void ToggleDevUI();
 
+	/* 타겟뷰 호출 */
+	void CaptureTargetPOV();
+
 public:
 	/* KillLog 델리게이트 */
 	FOnKillLog OnKillLog;
@@ -202,10 +211,19 @@ protected:
 	UPROPERTY()
 	APTWBombActor* CachedBombActor; // 폭탄 액터
 
+	/* 씬 캡처 결과가 저장될 렌더 타겟 메모리 리소스 */
+	UPROPERTY()
+	TObjectPtr<UTextureRenderTarget2D> TargetPOVRT;
+	/* 현재 활성화되어 캡처를 수행 중인 대상의 캡처 컴포넌트 참조 (GC 방지를 위해 Strong Pointer 사용) */
+	UPROPERTY()
+	TObjectPtr<USceneCaptureComponent2D> CurrentActiveCapture;
+
 	/* 게임스테이트 델리게이트 바인드용 */
 	FTimerHandle GameStateBindRetryHandle;
 	/* 닉네임 업데이트용 타이머 핸들 */
 	FTimerHandle NameTagTimerHandle;
+	/* 캡처 프레임 제한(30FPS)을 위한 타이머 핸들 */
+	FTimerHandle POVCaptureTimerHandle;
 
 	/* 위젯 Open 가능 유무 */
 	bool bAbleRankingBoard; // 랭킹보드
@@ -285,4 +303,7 @@ protected:
 	TSubclassOf<UPTWDevWidget> DevWidgetClass;
 	UPROPERTY()
 	UPTWDevWidget* DevWidgetInstance;
+	// 타겟뷰 위젯
+	UPROPERTY(EditDefaultsOnly, Category = "UI|GhostChase")
+	TSubclassOf<UPTWTargetViewWidget> POVWidgetClass;
 };

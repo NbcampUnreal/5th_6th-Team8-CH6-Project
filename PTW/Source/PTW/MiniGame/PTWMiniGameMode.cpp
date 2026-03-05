@@ -156,6 +156,10 @@ void APTWMiniGameMode::PlayerReadyToPlay(AController* Controller)
 void APTWMiniGameMode::StartGame()
 {
 	if (!PTWGameState) return;
+
+	if (bIsGameStarted) return;
+
+	bIsGameStarted = true;
 	
 	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
 	

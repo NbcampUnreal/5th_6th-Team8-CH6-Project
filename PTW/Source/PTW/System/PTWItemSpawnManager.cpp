@@ -427,7 +427,10 @@ void UPTWItemSpawnManager::AddRestartPlayerItems(TArray<TObjectPtr<UPTWItemInsta
 	
 	for (auto& Item : Items)
 	{
-		Item->Rename(nullptr, Inventory);
-		Inventory->AddItem(Item);
+		if (Item)
+		{
+			Item->Rename(nullptr, Inventory);
+			Inventory->AddItem(Item);
+		}
 	}
 }

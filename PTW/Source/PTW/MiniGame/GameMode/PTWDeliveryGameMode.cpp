@@ -37,28 +37,39 @@ void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter)
 {
 	if (GoalPlayers.Num() == 0)
 	{
+		// 기존에 등록되었던 바인딩 함수 제거 후 새롭게 정의한 함수 등록
+		PTWGameState->OnCountDownFinished.Clear();
+		PTWGameState->OnCountDownFinished.AddDynamic(this, &APTWDeliveryGameMode::OnCountDownFinished);
 		StartCountDown();
 	}
 	GoalPlayers.Add(TargetCharacter);
 	
-	IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(TargetCharacter);
-	if (!CombatInterface) return;
-	CombatInterface->ApplyGameplayEffectToSelf(InvincibleEffect, 1.0f, FGameplayEffectContextHandle());
+	ApplyGameEffect(TargetCharacter, InvincibleEffect);
 }
 
 void APTWDeliveryGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {
-	IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(KillActor);
-	if (!CombatInt) return;
-	CombatInt->ApplyGameplayEffectToSelf(KillBonusEffect, 1.0f, FGameplayEffectContextHandle());
+	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(KillActor);
+	ApplyGameEffect(TargetCharacter, KillBonusEffect);
+	
 	Super::HandlePlayerDeath(DeadActor, KillActor);
+}
+
+void APTWDeliveryGameMode::ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect)
+{
+	IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(Target);
+	if (!CombatInterface) return;
+	CombatInterface->ApplyGameplayEffectToSelf(TargetGameplayEffect, 1.0f, FGameplayEffectContextHandle());
+}
+
+void APTWDeliveryGameMode::OnCountDownFinished()
+{
+	EndRound();
 }
 
 void APTWDeliveryGameMode::ApplyMiniGameEffect(APTWPlayerCharacter* TargetCharacter)
 {
-	IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(TargetCharacter);
-	if (!CombatInterface) return;
-	CombatInterface->ApplyGameplayEffectToSelf(DeliveryStartEffect, 1.0f, FGameplayEffectContextHandle());
+	ApplyGameEffect(TargetCharacter, DeliveryStartEffect);
 }
 
 void APTWDeliveryGameMode::GivingDefaultWeapon(APTWPlayerCharacter* TargetCharacter)

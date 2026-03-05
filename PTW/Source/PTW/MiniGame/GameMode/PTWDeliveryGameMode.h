@@ -8,6 +8,7 @@
 
 class UAbilitySystemComponent;
 class APTWPlayerCharacter;
+class IPTWCombatInterface;
 /**
  * 
  */
@@ -27,6 +28,8 @@ public:
 	void GoalPlayer(APTWPlayerCharacter* TargetCharacter);
 protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
+	void ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect);
+	virtual void OnCountDownFinished() override;
 private:
 	/* 미니 게임 시작 이펙트 적용 */
 	void ApplyMiniGameEffect(APTWPlayerCharacter* TargetCharacter);

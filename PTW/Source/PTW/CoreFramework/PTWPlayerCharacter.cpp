@@ -28,6 +28,7 @@
 #include "CoreFramework/Character/Component/PTWInteractComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
 #include "Kismet/GameplayStatics.h"
+#include "MiniGame/PTWMiniGameMode.h"
 #include "Net/VoiceConfig.h"
 
 APTWPlayerCharacter::APTWPlayerCharacter()
@@ -508,8 +509,19 @@ void APTWPlayerCharacter::OnPlayerDataLoaded(const FPTWPlayerData& NewData)
 
 	if (UPTWItemSpawnManager* SpawnSys = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
 	{
-		SpawnSys->SpawnAndGiveItems(PS);
-
+		if (APTWMiniGameMode* MiniGameMode = Cast<APTWMiniGameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			if (!MiniGameMode->PlayerDeadCheck(GetController()))
+			{
+				SpawnSys->SpawnAndGiveItems(PS);
+			}
+			else
+			{
+				FItemArrayWrapper ItemArrayWrapper = MiniGameMode->GetOldPlayerItems(GetController());
+				SpawnSys->AddRestartPlayerItems(ItemArrayWrapper.Items, this);
+			}
+		}
+		
 		bHasGivenStartupItems = true;
 		PS->OnPlayerDataUpdated.RemoveDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);;
 	}

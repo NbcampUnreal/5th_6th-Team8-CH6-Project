@@ -63,4 +63,7 @@ protected:
 	/* 무기와 배달물을 지급 받은 플레이어 Set */
 	UPROPERTY(VisibleAnywhere, Category = "Game|Default")
 	TSet<APTWPlayerCharacter*> DeliveredCharacters;
+	
+	UPROPERTY(EditAnywhere, Category = "Game|Weapon")
+	TObjectPtr<UPTWItemDefinition> DeliveryDefaultWeapon;
 };

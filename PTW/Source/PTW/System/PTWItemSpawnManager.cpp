@@ -418,3 +418,16 @@ FVector UPTWItemSpawnManager::GetGroundLocation(FVector StartLocation)
 
 	return StartLocation; 
 }
+
+void UPTWItemSpawnManager::AddRestartPlayerItems(TArray<TObjectPtr<UPTWItemInstance>>& Items, APTWPlayerCharacter* TargetPlayer)
+{
+	if (!TargetPlayer) return;
+	UPTWInventoryComponent* Inventory = TargetPlayer->GetInventoryComponent();
+	if (!Inventory) return;
+	
+	for (auto& Item : Items)
+	{
+		Item->Rename(nullptr, Inventory);
+		Inventory->AddItem(Item);
+	}
+}

@@ -8,6 +8,7 @@
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWMiniGameMode.generated.h"
 
+class UPTWItemInstance;
 class IPTWPlayerRoundDataInterface;
 class UPTWChaosEventManager;
 class UGameplayEffect;
@@ -16,6 +17,11 @@ class APTWPlayerState;
 class UPTWItemDefinition;
 class APTWWeaponActor;
 class APTWResultCharacter;
+
+struct FItemArrayWrapper
+{
+	TArray<TObjectPtr<UPTWItemInstance>> Items;
+};
 
 UCLASS()
 class PTW_API APTWMiniGameMode : public APTWGameMode
@@ -26,6 +32,10 @@ public:
 	APTWMiniGameMode();
 
 	void AddWinPoint(AActor* Actor, int32 AddPoint);
+	
+	bool PlayerDeadCheck(AController* Controller);
+	
+	FItemArrayWrapper GetOldPlayerItems(AController* Controller) const;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule")
 	FPTWMiniGameRule MiniGameRule;
@@ -140,6 +150,9 @@ private:
 	
 	/** 리스폰 시 플레이어 체력 초기화 */
 	void InitPlayerHealth(AController* Controller);
+	
+	/* 플레이어 인벤토리 ItemInstance Outer 재설정*/
+	void SetOldPlayerItemInstanceOuter(TArray<TObjectPtr<UPTWItemInstance>> ItemArr);
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> MiniGameEffectClass;
@@ -154,4 +167,6 @@ private:
 	int32 PlayerStartCount = 0;
 
 	int32 CurrentDeathOrder = 1;
+	
+	TMap<AController*, FItemArrayWrapper> PendingRespawnItems;
 };

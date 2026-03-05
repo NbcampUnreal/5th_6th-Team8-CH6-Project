@@ -17,6 +17,8 @@
 #include "Engine/TargetPoint.h"
 #include "AIController.h"
 #include "Gameplay/Actor/PTWResultCharacter.h"
+#include "Inventory/PTWInventoryComponent.h"
+#include "Inventory/Instance/PTWItemInstance.h"
 
 class UPTWScoreSubsystem;
 
@@ -30,6 +32,28 @@ APTWMiniGameMode::APTWMiniGameMode()
 void APTWMiniGameMode::AddWinPoint(AActor* Actor, int32 AddPoint)
 {
 	
+}
+
+bool APTWMiniGameMode::PlayerDeadCheck(AController* Controller)
+{
+	if (PendingRespawnItems.Contains(Controller))
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+FItemArrayWrapper APTWMiniGameMode::GetOldPlayerItems(AController* Controller) const
+{
+	if (PendingRespawnItems.Contains(Controller))
+	{
+		return PendingRespawnItems[Controller];
+	}
+	else
+	{
+		return FItemArrayWrapper();
+	}
 }
 
 void APTWMiniGameMode::InitGameState()
@@ -420,8 +444,16 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
 	if (!NewPlayer) return;
 	
+	TArray<TObjectPtr<UPTWItemInstance>> SavedItems;
+	
 	Super::RestartPlayer(NewPlayer);
-
+	
+	if (PendingRespawnItems.Contains(NewPlayer))
+	{
+		SavedItems = PendingRespawnItems[NewPlayer].Items;
+		PendingRespawnItems.Remove(NewPlayer); 
+	}
+	
 	if (!IsValid(PTWGameState)) return;
 	
 	// if (PlayerStarts.Num() == 0)
@@ -454,12 +486,6 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	ApplyMiniGameTag(NewPlayer);
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);
-	
-	if (UPTWItemSpawnManager* Spawn = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
-	{
-		Spawn->SpawnAndGiveItems(Cast<APTWPlayerState>(PlayerState));
-	}
-	//SpawnPlayerSavedItems(NewPlayer);
 	
 	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
 	{
@@ -499,6 +525,15 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	{
 		DeadPlayerController = DeadPawn->GetController<APTWPlayerController>();
 		DeadPlayerState = DeadPawn->GetPlayerState();
+	}
+	
+	// ItemInstance의 Outer 변경
+	if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(DeadActor))
+	{
+		TArray<TObjectPtr<UPTWItemInstance>> Items = PlayerCharacter->GetInventoryComponent()->GetAllItems();
+		PlayerCharacter->GetInventoryComponent()->RemoveActiveItemGameplayAbilityHandle();
+		SetOldPlayerItemInstanceOuter(Items);
+		PendingRespawnItems.Add(DeadPlayerController, {Items});
 	}
 	
 	APlayerState* KillPlayerState = nullptr;
@@ -699,6 +734,14 @@ void APTWMiniGameMode::InitPlayerHealth(AController* Controller)
 	if (!AttributeSet) return;
 
 	AttributeSet->SetHealth(AttributeSet->GetMaxHealth());
+}
+
+void APTWMiniGameMode::SetOldPlayerItemInstanceOuter(TArray<TObjectPtr<UPTWItemInstance>> ItemArr)
+{
+	for (auto Item : ItemArr)
+	{
+		Item->Rename(nullptr, this);
+	}
 }
 
 void APTWMiniGameMode::OnCoinSpawnTimerElapsed()

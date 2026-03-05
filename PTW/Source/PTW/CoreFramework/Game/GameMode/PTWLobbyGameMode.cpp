@@ -118,12 +118,18 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	UE_LOG(LogTemp, Warning, TEXT("HandleSeamlessTravelPlayer: %s"), *C->GetName());
-    
-	ExitSpectorMode(Cast<APlayerController>(C)); 
+
+	if (APlayerController* PC = Cast<APlayerController>(C))
+	{
+		if (APawn* OldPawn = PC->GetPawn())
+		{
+			OldPawn->DetachFromControllerPendingDestroy();
+			OldPawn->Destroy();
+		}
+		ExitSpectorMode(PC);
+	}
 
 	Super::HandleSeamlessTravelPlayer(C);
-	
-	PlayerReadyToPlay(C);
 }
 void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {

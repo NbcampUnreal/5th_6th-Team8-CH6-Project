@@ -111,7 +111,7 @@ protected:
 	virtual void OnUnPossess() override;
 	virtual void BeginSpectatingState() override;
 	virtual ASpectatorPawn* SpawnSpectatorPawn() override;
-	
+	virtual void NotifyLoadedWorld(FName WorldPackageName, bool bFinalDest) override;
 	
 	/*  ASC Delegate 바인딩 */
 	//void BindASCDelegates();
@@ -155,6 +155,10 @@ protected:
 	/* 닉네임 가시성 업데이트 로직 */
 	void UpdateNameTagsVisibility();
 
+	/*  클라 로딩완료 알리기 */
+	UFUNCTION(Server, Reliable)
+	void Server_NotifyMapLoaded();
+	
 	/* (로딩스크린) 로딩완료 알리기 */
 	UFUNCTION(Server, Reliable)
 	void Server_ReportLoadingComplete();

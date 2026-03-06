@@ -366,6 +366,8 @@ void APTWPlayerController::BeginPlay()
 
 	UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::GameOnly);
 
+	BindGameStateDelegates();
+	
 	/* UI 위젯 생성 */
 	CreateUI();
 

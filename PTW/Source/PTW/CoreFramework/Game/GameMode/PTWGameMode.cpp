@@ -169,6 +169,8 @@ void APTWGameMode::PostSeamlessTravel()
 	ReadyPlayer = 0;
 	AllPlayer = GetNumPlayers();
 
+	UE_LOG(LogTemp, Warning, TEXT("PostSeamlessTravel AllPlayer: %d"), AllPlayer);
+	
 	// 모든 사람 플레이어 준비 상태 초기화
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
@@ -206,7 +208,7 @@ void APTWGameMode::CheckAllPlayersLoaded()
 	}
 }
 
-void APTWGameMode::PlayerReadyToPlay(AController* Controller)
+void APTWGameMode::PlayerReadyToPlay(APlayerController* Controller)
 {
 	ReadyPlayer++;
 }

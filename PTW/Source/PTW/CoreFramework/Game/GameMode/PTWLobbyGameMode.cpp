@@ -126,7 +126,6 @@ void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 			OldPawn->DetachFromControllerPendingDestroy();
 			OldPawn->Destroy();
 		}
-		ExitSpectorMode(PC);
 	}
 
 	Super::HandleSeamlessTravelPlayer(C);
@@ -145,9 +144,11 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 	PTWPlayerState->SetPlayerData(PlayerData);
 }
 
-void APTWLobbyGameMode::PlayerReadyToPlay(AController* Controller)
+void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
 {
 	Super::PlayerReadyToPlay(Controller);
+
+	UE_LOG(LogTemp, Warning, TEXT("PlayerReadyToPlay: %s"), *Controller->GetName());
 	
 	if (!IsValid(PTWGameState) || !Controller) return;
 	
@@ -155,6 +156,15 @@ void APTWLobbyGameMode::PlayerReadyToPlay(AController* Controller)
 	if (!PTWPlayerState) return;
 	
 	PTWPlayerState->bIsReadyToPlay = true;
+	
+	Controller->bPlayerIsWaiting = false;
+	Controller->PlayerState->SetIsSpectator(false);
+	Controller->ChangeState(NAME_Playing);
+	Controller->ClientGotoState(NAME_Playing);
+
+	if (Controller->GetPawn()) return;
+
+	RestartPlayer(Controller);
 	
 	if (ReadyPlayer >= AllPlayer)
 	{

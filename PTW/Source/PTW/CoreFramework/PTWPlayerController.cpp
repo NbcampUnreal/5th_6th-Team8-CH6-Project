@@ -366,6 +366,8 @@ void APTWPlayerController::BeginPlay()
 
 	UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::GameOnly);
 
+	BindGameStateDelegates();
+	
 	/* UI 위젯 생성 */
 	CreateUI();
 
@@ -925,12 +927,6 @@ void APTWPlayerController::Server_NotifyMapLoaded_Implementation()
 {
 	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
 	{
-		// 로비 게임모드일 때만 RestartPlayer 호출
-		if (APTWLobbyGameMode* LobbyGameMode = Cast<APTWLobbyGameMode>(GameMode))
-		{
-			LobbyGameMode->RestartPlayer(this);
-		}
-        
 		GameMode->PlayerReadyToPlay(this);
 	}
 }

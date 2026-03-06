@@ -153,7 +153,7 @@ void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	//PlayerReadyToPlay(C);
 }
 
-void APTWMiniGameMode::PlayerReadyToPlay(AController* Controller)
+void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 {
 	Super::PlayerReadyToPlay(Controller);
 

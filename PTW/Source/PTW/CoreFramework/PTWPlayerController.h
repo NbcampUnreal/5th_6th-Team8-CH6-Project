@@ -136,6 +136,7 @@ protected:
 	void HandleRoulettePhaseChanged(FPTWRouletteData RouletteData);
 
 	/* 페이즈 변경 델리게이트 수신 함수 */
+	UFUNCTION()
 	void HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase);
 
 	virtual void SetupInputComponent() override;

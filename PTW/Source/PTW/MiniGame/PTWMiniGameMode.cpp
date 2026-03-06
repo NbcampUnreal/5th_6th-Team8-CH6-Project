@@ -88,14 +88,16 @@ void APTWMiniGameMode::BeginPlay()
 	
 	if (!PTWGameState) return;
 	
-	
-	
+
 #if WITH_EDITOR
 	// PIE에서는 딜레이 후 강제 시작
 	FTimerHandle PIEStartTimer;
 	GetWorldTimerManager().SetTimer(PIEStartTimer, this, &APTWMiniGameMode::StartGame, 2.f, false);
 #endif
-	
+
+	// 플레이어 로딩 완료 체크에서 문제가 생겨 미작동 시 10초 후 게임 강제 시작
+	FTimerHandle StartGameTimer;
+	GetWorldTimerManager().SetTimer(StartGameTimer, this, &APTWMiniGameMode::StartGame, 10.f, false);
 	
 }
 
@@ -134,7 +136,6 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	
 	//SetInputBlock(true);
 	
-
 	PTWGameState->AddRankedPlayer(PlayerState);
 
 	//FIXME : 임시로 난입플레이어도 리스타트 플레이어 시키기

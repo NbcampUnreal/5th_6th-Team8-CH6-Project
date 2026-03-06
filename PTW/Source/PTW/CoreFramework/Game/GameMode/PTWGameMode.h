@@ -84,6 +84,7 @@ protected:
 	virtual void UpdateTimer();
 	
 	void SetInputBlock(bool bInputBlock);
+	
 	// 이동할 레벨 이름(TravelLevel에서 사용)
 	FString TravelLevelName;
 	

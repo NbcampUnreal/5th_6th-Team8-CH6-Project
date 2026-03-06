@@ -245,6 +245,23 @@ void APTWGameMode::HandlePlayerJoined(AController* JoinedController)
 	AllPlayer = GetNumPlayers();
 }
 
+void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	if (APlayerController* PC = Cast<APlayerController>(C))
+	{
+		if (PC->PlayerState)
+		{
+			PC->PlayerState->SetIsSpectator(false);
+		}
+
+		PC->ChangeState(NAME_Playing);
+		PC->bPlayerIsWaiting = false;
+
+		UE_LOG(LogTemp, Warning, TEXT("[Travel] %s 플레이어를 정상 플레이어로 복구했습니다!"), *PC->PlayerState->GetPlayerName());
+	}
+	Super::HandleSeamlessTravelPlayer(C);
+}
+
 void APTWGameMode::StartTimer(float TimeDuration)
 {
 	if (PTWGameState)

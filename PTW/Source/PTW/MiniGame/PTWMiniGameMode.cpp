@@ -556,8 +556,11 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	// ItemInstance의 Outer 변경
 	if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(DeadActor))
 	{
-		TArray<TObjectPtr<UPTWItemInstance>> Items = PlayerCharacter->GetInventoryComponent()->GetAllItems();
-		PlayerCharacter->GetInventoryComponent()->RemoveActiveItemGameplayAbilityHandle();
+		UPTWInventoryComponent* InventoryComponent = PlayerCharacter->GetInventoryComponent();
+		if (!InventoryComponent) return;
+		
+		TArray<TObjectPtr<UPTWItemInstance>> Items = InventoryComponent->GetAllItems();
+		InventoryComponent->RemoveActiveItemGameplayAbilityHandle();
 		SetOldPlayerItemInstanceOuter(Items);
 		PendingRespawnItems.Add(DeadPlayerController, {Items});
 	}

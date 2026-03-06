@@ -6,6 +6,10 @@
 #include "GameplayCueNotify_Actor.h"
 #include "GC_Blind.generated.h"
 
+class UMaterialInterface;
+class UPostProcessComponent;
+class UMaterialInstanceDynamic;
+
 UCLASS()
 class PTW_API AGC_Blind : public AGameplayCueNotify_Actor
 {
@@ -22,7 +26,28 @@ protected:
 	virtual bool OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) override;
 	
 	virtual bool OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) override;
+	
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Post Process")
+	UMaterialInterface* PostProcessMaterial;
+
+	UPROPERTY()
+	UPostProcessComponent* PostProcessComponent;
+	
+	UPROPERTY()
+	UMaterialInstanceDynamic* DynamicMaterial;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Blind Effect")
+	FName OpacityParamName = FName("BlindOpacity");
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Blind Effect")
+	float FadeSpeed = 5.0f;
+
+	float CurrentOpacity;
+	float TargetOpacity;
+	
+	bool bIsFadingOut;
+	
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 };

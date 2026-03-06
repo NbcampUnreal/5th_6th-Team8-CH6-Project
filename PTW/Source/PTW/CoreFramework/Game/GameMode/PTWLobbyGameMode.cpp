@@ -80,7 +80,13 @@ void APTWLobbyGameMode::BeginPlay()
 		FTimerHandle PIEStartTimer;
 		GetWorldTimerManager().SetTimer(PIEStartTimer, this, &APTWLobbyGameMode::StartGameLobby, 2.f, false);
 #endif
+
+		
+		FTimerHandle StartGameTimer;
+		GetWorldTimerManager().SetTimer(StartGameTimer, this, &APTWLobbyGameMode::StartGameLobby, 10.f, false);
 	}
+
+	
 }
 
 void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
@@ -177,10 +183,13 @@ void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
 	Controller->PlayerState->SetIsSpectator(false);
 	Controller->ChangeState(NAME_Playing);
 	Controller->ClientGotoState(NAME_Playing);
-
-	if (Controller->GetPawn()) return;
-
-	RestartPlayer(Controller);
+	
+	APawn* CurrentPawn = Controller->GetPawn();
+	if (!IsValid(CurrentPawn) || CurrentPawn->IsA<ASpectatorPawn>())
+	{
+		if (IsValid(CurrentPawn)) CurrentPawn->Destroy();
+		RestartPlayer(Controller);
+	}
 	
 	if (ReadyPlayer >= AllPlayer)
 	{

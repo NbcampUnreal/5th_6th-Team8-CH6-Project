@@ -63,6 +63,8 @@ public:
 	/** 공통 입장 처리 로직 */
 	void HandlePlayerJoined(AController* JoinedController);
 
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
+
 	
 protected:
 	/** 지정한 시간(초) 기준으로 타이머를 시작 */

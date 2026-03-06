@@ -1,5 +1,7 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿	// Fill out your copyright notice in the Description page of Project Settings.
 
+
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MiniGame/Character/RedLight/PTWRedLightCharacter.h"
 #include "MiniGame/GameMode/PTWRedLightGameMode.h"
@@ -7,17 +9,13 @@
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Components/SpotLightComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
-#include "Components/SpotLightComponent.h"
 
 APTWRedLightCharacter::APTWRedLightCharacter()
 {
-	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCamera->SetupAttachment(GetMesh(), TEXT("head"));
-	FirstPersonCamera->bUsePawnControlRotation = true;
-
 	if (GetMesh())
 	{
 		GetMesh()->bOwnerNoSee = true;
@@ -30,7 +28,8 @@ APTWRedLightCharacter::APTWRedLightCharacter()
 	}
 
 	LeftEyeLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("LeftEyeLight"));
-	LeftEyeLight->SetupAttachment(GetMesh(), TEXT("head"));
+	LeftEyeLight->SetupAttachment(GetMesh(), TEXT("head")); // 머리 소켓에 부착
+
 	RightEyeLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("RightEyeLight"));
 	RightEyeLight->SetupAttachment(GetMesh(), TEXT("head"));
 }
@@ -41,7 +40,7 @@ void APTWRedLightCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(APTWRedLightCharacter, bIsRedLight);
 }
 
-void APTWRedLightCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void APTWRedLightCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
@@ -64,6 +63,7 @@ void APTWRedLightCharacter::ToggleLight()
 void APTWRedLightCharacter::Server_SetLightState_Implementation(bool bNewState)
 {
 	bIsRedLight = bNewState;
+	UpdateEyeLights();
 
 	if (APTWRedLightGameMode* GM = Cast<APTWRedLightGameMode>(GetWorld()->GetAuthGameMode()))
 	{
@@ -95,6 +95,3 @@ void APTWRedLightCharacter::Multicast_SpottedPlayer_Implementation(ACharacter* C
 		MarkWidget->PlaySpottedAnimation();
 	}
 }
-
-
-

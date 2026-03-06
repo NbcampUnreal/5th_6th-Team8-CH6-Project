@@ -243,6 +243,22 @@ void APTWGameMode::HandlePlayerJoined(AController* JoinedController)
 	AllPlayer = GetNumPlayers();
 }
 
+void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	if (APlayerController* PC = Cast<APlayerController>(C))
+	{
+		if (PC->PlayerState)
+		{
+			PC->PlayerState->SetIsSpectator(false);
+		}
+
+		PC->ChangeState(NAME_Playing);
+		PC->bPlayerIsWaiting = false;
+	}
+
+	Super::HandleSeamlessTravelPlayer(C);
+}
+
 void APTWGameMode::StartTimer(float TimeDuration)
 {
 	if (PTWGameState)

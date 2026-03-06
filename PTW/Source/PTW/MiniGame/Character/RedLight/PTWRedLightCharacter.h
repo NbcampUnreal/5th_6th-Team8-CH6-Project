@@ -3,15 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CoreFramework/PTWBaseCharacter.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "PTWRedLightCharacter.generated.h"
 
-class UCameraComponent;
 class UPTWRedLightMark;
 class USpotLightComponent;
 
 UCLASS()
-class PTW_API APTWRedLightCharacter : public APTWBaseCharacter
+class PTW_API APTWRedLightCharacter : public APTWPlayerCharacter
 {
 	GENERATED_BODY()
 	
@@ -19,33 +18,31 @@ public:
 	APTWRedLightCharacter();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-	UFUNCTION(Server, Reliable)
-	void Server_SetLightState(bool bNewState);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight")
+	TSubclassOf<UPTWRedLightMark> MarkWidgetClass;
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsRedLight, BlueprintReadOnly, Category = "RedLight")
+	bool bIsRedLight = false;
+
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SpottedPlayer(ACharacter* CaughtPlayer);
 
 protected:
+	// 연출용 스포트라이트 (빨간 눈)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RedLight|Lights")
+	TObjectPtr<USpotLightComponent> LeftEyeLight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RedLight|Lights")
+	TObjectPtr<USpotLightComponent> RightEyeLight;
+
 	UFUNCTION()
 	void OnRep_IsRedLight();
 
+	// 상태 전환 및 연출 업데이트
 	void ToggleLight();
 	void UpdateEyeLights();
 
-public:
-	UPROPERTY(ReplicatedUsing = OnRep_IsRedLight, BlueprintReadOnly, Category = "RedLight")
-	bool bIsRedLight = false;
-
-protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight")
-	TSubclassOf<class UPTWRedLightMark> MarkWidgetClass;
-
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	UCameraComponent* FirstPersonCamera;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RedLight|Lights")
-	USpotLightComponent* LeftEyeLight;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RedLight|Lights")
-	USpotLightComponent* RightEyeLight;
-
+	UFUNCTION(Server, Reliable)
+	void Server_SetLightState(bool bNewState);
 };

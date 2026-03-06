@@ -5,10 +5,12 @@
 #include "MiniGame/Character/RedLight/PTWRedLightCharacter.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerStart.h"
+#include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "System/PTWItemSpawnmanager.h"
 
-void APTWRedLightGameMode::AssignTagger(APlayerController* TaggerPC, TSubclassOf<APTWRedLightCharacter> TaggerClass)
+void APTWRedLightGameMode::AssignTagger(APlayerController* TaggerPC)
 {
 	if (!TaggerPC || !TaggerClass) return;
 
@@ -74,4 +76,49 @@ void APTWRedLightGameMode::CheckPlayerMovements()
 bool APTWRedLightGameMode::IsPlayerCaught(ACharacter* PlayerToCheck) const
 {
 	return CaughtPlayers.Contains(PlayerToCheck);
+}
+
+void APTWRedLightGameMode::StartRound()
+{
+	Super::StartRound();
+
+	TArray<APlayerController*> ValidPlayers;
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APlayerController* PC = It->Get())
+		{
+			ValidPlayers.Add(PC);
+		}
+	}
+
+	if (ValidPlayers.Num() > 0 && TaggerClass)
+	{
+		int32 RandomIndex = FMath::RandRange(0, ValidPlayers.Num() - 1);
+		APlayerController* SelectedPC = ValidPlayers[RandomIndex];
+
+		AssignTagger(SelectedPC);
+
+		if (TaggerWeaponDef)
+		{
+			if (APTWPlayerState* PS = SelectedPC->GetPlayerState<APTWPlayerState>())
+			{
+				if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+				{
+					SpawnManager->SpawnSingleItem(PS, TaggerWeaponDef);
+					UE_LOG(LogTemp, Warning, TEXT("[RedLight] 술래에게 전용 무기가 지급되었습니다."));
+				}
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[RedLight] TaggerWeaponDef(지급할 무기)가 설정되지 않아 무기를 지급하지 않았습니다."));
+		}
+
+		FString TaggerName = SelectedPC->PlayerState ? SelectedPC->PlayerState->GetPlayerName() : TEXT("Unknown");
+		UE_LOG(LogTemp, Warning, TEXT("[RedLight] 라운드 시작! %s 플레이어가 술래로 당첨되었습니다!"), *TaggerName);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[RedLight] 에러: 참가 중인 플레이어가 없거나 TaggerClass가 설정되지 않았습니다!"));
+	}
 }

@@ -187,7 +187,10 @@ void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
 	APawn* CurrentPawn = Controller->GetPawn();
 	if (!IsValid(CurrentPawn) || CurrentPawn->IsA<ASpectatorPawn>())
 	{
-		if (IsValid(CurrentPawn)) CurrentPawn->Destroy();
+		if (IsValid(CurrentPawn))
+		{
+			CurrentPawn->Destroy();
+		}
 		RestartPlayer(Controller);
 	}
 	

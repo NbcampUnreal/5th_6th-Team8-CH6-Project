@@ -33,6 +33,7 @@ protected:
 	virtual void InitGameState() override;
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void BeginPlay() override;
+
 	
 	/** 플레이어 로그인 시 호출(접속 인원/시작 조건 갱신) */
 	virtual void PostLogin(APlayerController* NewPlayer) override;
@@ -62,6 +63,9 @@ public:
 
 	/** 공통 입장 처리 로직 */
 	void HandlePlayerJoined(AController* JoinedController);
+
+	/* 트래블후 플레이어 초기 세팅 함수 */
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 
 protected:
 	/** 지정한 시간(초) 기준으로 타이머를 시작 */

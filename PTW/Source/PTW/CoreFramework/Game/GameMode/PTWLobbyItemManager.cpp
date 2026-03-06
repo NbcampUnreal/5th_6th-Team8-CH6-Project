@@ -3,12 +3,30 @@
 
 #include "CoreFramework/Game/GameMode/PTWLobbyItemManager.h"
 
+#include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "MiniGame/Data/PTWLobbyItemDefinition.h"
 #include "MiniGame/Data/PTWLobbyItemRow.h"
+
+void UPTWLobbyItemManager::InitLobbyItemManager(UDataTable* DataTable, APTWGameState* GameState)
+{
+	InitLobbyItemTable(DataTable);
+	InitGameState(GameState);
+}
+
+void UPTWLobbyItemManager::StartNewRound()
+{
+	
+}
 
 void UPTWLobbyItemManager::InitLobbyItemTable(UDataTable* DataTable)
 {
 	LobbyItemTable = DataTable;
+}
+
+void UPTWLobbyItemManager::InitGameState(APTWGameState* GameState)
+{
+	CachedGameState = GameState;
 }
 
 void UPTWLobbyItemManager::ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId, APTWPlayerState* WinTarget)
@@ -19,7 +37,8 @@ void UPTWLobbyItemManager::ApplyLobbyItem(APTWPlayerState* Buyer, const FName It
 	
 	switch (Row->LobbyItemDefinition->ItemType)
 	{
-	case ELobbyItemType::Saving:
+	case ELobbyItemType::SavingGold:
+		HandleSavingGold(Buyer, Row);
 		break;
 	case ELobbyItemType::PredictionWin:
 		break;
@@ -32,4 +51,17 @@ void UPTWLobbyItemManager::ApplyLobbyItem(APTWPlayerState* Buyer, const FName It
 	}
 }
 
+
+void UPTWLobbyItemManager::HandleSavingGold(APTWPlayerState* Buyer, const FPTWLobbyItemRow* Row)
+{
+	if (!CachedGameState) return;
+	
+	FSavingData SavingGold;
+	SavingGold.TargetRound = Row->LobbyItemDefinition->DelayRound + CachedGameState->GetCurrentRound();
+	SavingGold.RewardAmount = Row->LobbyItemDefinition->RewardAmount;
+
+	FPTWLobbyItemData LobbyItemData = Buyer->GetLobbyItemData();
+	LobbyItemData.SavingData.Add(SavingGold);
+	Buyer->SetLobbyItemData(LobbyItemData);
+}
 

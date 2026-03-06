@@ -6,6 +6,9 @@
 #include "PTW/MiniGame/PTWMiniGameMode.h"
 #include "PTWAbyssMiniGameMode.generated.h"
 
+class APlayerState;
+class AActor;
+
 UCLASS()
 class PTW_API APTWAbyssMiniGameMode : public APTWMiniGameMode
 {
@@ -32,4 +35,27 @@ private:
 
 	void SetAbyssDark(bool bEnable);
 	void CacheAbyssPP();
+	
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")
+	float IdleRevealTime = 3.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")
+	float IdleSpeedThreshold = 10.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")
+	float IdleCheckInterval = 0.1f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")
+	TSubclassOf<AActor> RevealMarkerClass;
+
+	FTimerHandle IdleRevealTimerHandle;
+
+	TMap<TObjectPtr<APlayerState>, float> IdleTimeMap;
+
+	UPROPERTY()
+	TMap<TObjectPtr<APlayerState>, TObjectPtr<AActor>> RevealMarkerMap;
+
+	void TickIdleReveal();
+	void ShowReveal(AController* Controller);
+	void HideReveal(AController* Controller);
 };

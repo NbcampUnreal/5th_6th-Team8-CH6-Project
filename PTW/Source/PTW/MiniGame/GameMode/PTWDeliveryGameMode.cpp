@@ -42,7 +42,7 @@ void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter)
 	
 	ApplyGameEffect(TargetCharacter, InvincibleEffect);
 }
-
+	
 void APTWDeliveryGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {
 	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(KillActor);
@@ -87,7 +87,7 @@ void APTWDeliveryGameMode::SetMiniGameRule()
 {
 	MiniGameRule.TimeRule.Timer = 180;
 	MiniGameRule.KillRule.KillScore = 0;
-	MiniGameRule.SpawnRule.RespawnDelay = 1.5f;
+	MiniGameRule.SpawnRule.RespawnDelay = 5.0f;
 }
 
 void APTWDeliveryGameMode::GrantDeliveryAttributeSet()

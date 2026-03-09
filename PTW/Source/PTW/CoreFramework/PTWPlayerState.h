@@ -59,8 +59,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	void SetLobbyItemData(const FPTWLobbyItemData& NewData);
-	UFUNCTION(BlueprintPure, Category = "Data")
-	FPTWLobbyItemData GetLobbyItemData() const {return LobbyItemData;}
+	FPTWLobbyItemData& GetLobbyItemData() {return LobbyItemData;}
 	
 	/** * 상점에 아이템 구매 요청
 	 * @param ItemID : 구매할 아이템 ID (FName)

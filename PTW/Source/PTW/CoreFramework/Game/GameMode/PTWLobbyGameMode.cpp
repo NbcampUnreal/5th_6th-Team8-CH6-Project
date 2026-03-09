@@ -13,10 +13,12 @@
 #include "System/PTWScoreSubsystem.h"
 #include "System/PTWSessionSubsystem.h"
 #include "System/Session/PTWSessionConfig.h"
+#include "GameFramework/SpectatorPawn.h"
 
 APTWLobbyGameMode::APTWLobbyGameMode()
 {
 	RoundEventManager = CreateDefaultSubobject<UPTWRoundEventManager>(TEXT("RoundEventManager"));
+	LobbyItemManager = CreateDefaultSubobject<UPTWLobbyItemManager>(TEXT("LobbyItemManager"));
 }
 
 void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -145,25 +147,11 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 	APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
 	if (!PTWPlayerState) return;
 
-	int32 SavingGold = 0;
-
-	// 적금 아이템이 있을 경우 적금 골드를 받을 수 있는 지 확인하고 골드 추가
-	if (!PTWPlayerState->GetLobbyItemData().SavingData.IsEmpty())
-	{
-		for (FSavingData SavingData : PTWPlayerState->GetLobbyItemData().SavingData)
-		{
-			if (SavingData.TargetRound == PTWGameState->GetCurrentRound())
-			{
-				SavingGold = SavingData.RewardAmount;
-			}
-		}
-	}
+	if (!LobbyItemManager) return;
 	
 	// 데이터 초기화 및 골드 지급
 	PTWPlayerState->ResetInventoryItemId();
-	FPTWPlayerData PlayerData = PTWPlayerState->GetPlayerData();
-	PlayerData.Gold += RoundClearBonusGold + SavingGold;
-	PTWPlayerState->SetPlayerData(PlayerData);
+	AddGold(PTWPlayerState, RoundClearBonusGold + LobbyItemManager->TakeSavingsReward(PTWPlayerState));
 }
 
 void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
@@ -351,6 +339,13 @@ void APTWLobbyGameMode::AddChaosItemEntry(const FPTWChaosItemEntry& Entry)
 	if (!PTWGameState) return;
 
 	PTWGameState->AddChaosItemEntry(Entry);
+}
+
+void APTWLobbyGameMode::AddGold(APTWPlayerState* PlayerState, int32 Amount)
+{
+	FPTWPlayerData PlayerData = PlayerState->GetPlayerData();
+	PlayerData.Gold += Amount; // 적금 골드를 받을 수 있으면 지급 골드에 추가
+	PlayerState->SetPlayerData(PlayerData);
 }
 
 

@@ -13,5 +13,5 @@ struct FPTWLobbyItemRow : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
-	TSoftObjectPtr<UPTWLobbyItemDefinition> LobbyItemDefinition;
+	TObjectPtr<UPTWLobbyItemDefinition> LobbyItemDefinition;
 };

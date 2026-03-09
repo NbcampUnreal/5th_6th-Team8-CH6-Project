@@ -237,6 +237,16 @@ void APTWMiniGameMode::StartCountDown()
 	
 	PTWGameState->SetMiniGameCountdown(MiniGameRule.TimeRule.CountDown);
 	PTWGameState->SetbMiniGameCountdown(true);
+
+	// 카운트 다운 동안 모든 플레이어 무적 
+	for (APlayerState* PlayerState : GameState->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (PTWPlayerState)
+		{
+			PTWPlayerState->ApplyInvincible(MiniGameRule.TimeRule.CountDown);
+		}
+	}
 	
 	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
 	GetWorldTimerManager().SetTimer(CountDownTimerHandle, this, &APTWMiniGameMode::TickCountDown, 1.0f, true, 1.f);
@@ -529,13 +539,24 @@ void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 		return;
 	}
 	
+	// if (MiniGameRule.LoadoutRule.DefaultWeapon.IsEmpty())
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] SpawnDefaultWeapon Failed: ItemDefinition is NULL. Please set Default Weapon in Blueprint."));
+	// 	return;
+	// }
+	
 	if (UPTWItemSpawnManager* ItemSpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
 	{
 		if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
 		{
-			FGameplayTag RifleTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Gun.Rifle"));
+			// for (UPTWItemDefinition* DefaultWeapon: MiniGameRule.LoadoutRule.DefaultWeapon)
+			// {
+			// 	FGameplayTag WeaponTag = DefaultWeapon->WeaponTag;
+			// 	ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, DefaultWeapon, WeaponTag);
+			// }
 
-			ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition, RifleTag);
+			FGameplayTag WeaponTag = ItemDefinition->WeaponTag;
+			ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition, WeaponTag);
 		}
 	}
 }
@@ -742,7 +763,7 @@ void APTWMiniGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController
 					APTWPlayerState* PlayerState = WeakDeadController->GetPlayerState<APTWPlayerState>();
 					if (!PlayerState) return;
 
-					PlayerState->ApplyRespawnInvincible(MiniGameRule.SpawnRule.SpawnProtectionTime);
+					PlayerState->ApplyInvincible(MiniGameRule.SpawnRule.SpawnProtectionTime);
 				}
 			}
 		}, MiniGameRule.SpawnRule.RespawnDelay, false);

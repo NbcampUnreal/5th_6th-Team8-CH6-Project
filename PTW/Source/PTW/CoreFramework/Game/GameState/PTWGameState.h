@@ -310,7 +310,7 @@ public:
 	FORCEINLINE EPTWGamePhase GetCurrentGamePhase() const {return CurrentGamePhase;}
 	FORCEINLINE TArray<APTWPlayerState*> GetRankedPlayers() const {return RankedPlayers;}
 	FORCEINLINE FPTWRouletteData GetRouletteData() const {return RouletteData;}
-	FORCEINLINE TArray<FPTWTeamInfo> GetTeams() const {return Teams;}
+	FORCEINLINE TArray<FPTWTeamInfo>& GetTeams() {return Teams;}
 	FORCEINLINE int32 GetWinTeamId() const {return WinTeamId;}
 #pragma endregion
 	

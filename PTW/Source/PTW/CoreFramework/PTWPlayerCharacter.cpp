@@ -333,8 +333,11 @@ void APTWPlayerCharacter::InitCharacterState()
 	{
 		if (AbilitySystemComponent)
 		{
-			AbilitySystemComponent->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
-
+			if(AbilitySystemComponent->HasMatchingGameplayTag(GameplayTags::State::Status_Dead))
+			{
+				AbilitySystemComponent->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
+				UE_LOG(LogTemp, Warning, TEXT("[InitChar] %s 플레이어의 죽음 태그를 제거했습니다!"), *PS->GetPlayerName());
+			}
 			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 			if (AbilitySystemComponent->HasMatchingGameplayTag(EquipTag))
 			{

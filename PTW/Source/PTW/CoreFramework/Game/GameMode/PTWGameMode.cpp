@@ -252,14 +252,29 @@ void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		if (PC->PlayerState)
 		{
 			PC->PlayerState->SetIsSpectator(false);
+			PC->PlayerState->SetIsOnlyASpectator(false);
 		}
-
-		PC->ChangeState(NAME_Playing);
-		PC->bPlayerIsWaiting = false;
-
-		UE_LOG(LogTemp, Warning, TEXT("[Travel] %s 플레이어를 정상 플레이어로 복구했습니다!"), *PC->PlayerState->GetPlayerName());
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("[TravelPlayer] 플레이어 스테이트가 유효하지 않습니다"));
+		}
 	}
+
 	Super::HandleSeamlessTravelPlayer(C);
+
+	if (APlayerController* PC = Cast<APlayerController>(C))
+	{
+		if (PC->GetStateName() == NAME_Spectating)
+		{
+			PC->ChangeState(NAME_Playing);
+			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어를 플레이 상태로 전환하였습니다!"), *PC->PlayerState->GetPlayerName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어는 이미 관전상태가 해제되었습니다!"), *PC->PlayerState->GetPlayerName());
+		}
+		PC->SetViewTarget(PC);
+	}
 }
 
 void APTWGameMode::StartTimer(float TimeDuration)

@@ -63,6 +63,7 @@ public:
 
 	void ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId, APTWPlayerState* WinTarget = nullptr);
 	void AddChaosItemEntry(const FPTWChaosItemEntry& Entry);
+	void AddGold(APTWPlayerState* PlayerState, int32 Amount);
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
 	FPTWGameFlowRule GameFlowRule;
@@ -91,7 +92,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UPTWRoundEventManager> RoundEventManager;
-	
+
+	/** 로비 아이템 관리 및 적용 */
+	UPROPERTY()
+	TObjectPtr<UPTWLobbyItemManager> LobbyItemManager;
 private:
 	void ExitSpectorMode(AController* Controller);
 	
@@ -103,9 +107,7 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UDataTable> LobbyItemDataTable;
 	
-	/** 로비 아이템 관리 및 적용 */
-	UPROPERTY()
-	TObjectPtr<UPTWLobbyItemManager> LobbyItemManager;
+
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Test")
 	bool bSkipFirstLobby = false;

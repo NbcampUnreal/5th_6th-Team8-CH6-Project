@@ -66,7 +66,7 @@ struct FPTWPlayerRoundData
 };
 
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FSavingData
 {
 	GENERATED_BODY()

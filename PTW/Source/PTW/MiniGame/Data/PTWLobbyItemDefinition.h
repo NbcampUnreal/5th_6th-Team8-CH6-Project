@@ -33,7 +33,11 @@ public:
 	/** 적금 몇 골드 받을 지 설정 */
 	UPROPERTY(EditDefaultsOnly, meta = (EditCondition= "ItemType == ELobbyItemType::SavingGold"))
 	int32 RewardAmount = 1000;
-
+	
+	/** 갬블 박스 최대 골드 설정 */
+	UPROPERTY(EditDefaultsOnly, meta = (EditCondition= "ItemType == ELobbyItemType::GambleBox"))
+	int32 GambleBoxMaxAmount = 1000;
+	
 	/** 승리 예측 적중 시 받을 골드 */
 	UPROPERTY(EditDefaultsOnly, meta = (EditCondition= "ItemType == ELobbyItemType::PredictionWin"))
 	int32 PredictionReward = 300;

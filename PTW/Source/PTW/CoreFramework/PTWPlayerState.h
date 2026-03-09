@@ -86,7 +86,7 @@ public:
 	void ApplyAdditionalAbilities();
 	void ApplyAdditionalEffects();
 
-	void ApplyRespawnInvincible(float Duration);
+	void ApplyInvincible(float Duration);
 
 	/* 타겟 POV 시스템 */
 	// 타겟이 변경되었을 때 로컬 컨트롤러에 알림
@@ -121,7 +121,7 @@ protected:
 
 	//스폰 무적 이펙트
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<UGameplayEffect> ReSpawnInvincibleEffectClass;
+	TSubclassOf<UGameplayEffect> InvincibleEffectClass;
 public:
 	virtual void SetDeathOrder(int32 Order) override;
 	virtual void SetTeamId(int32 TeamId) override;

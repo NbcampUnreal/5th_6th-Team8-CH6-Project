@@ -169,11 +169,11 @@ void APTWPlayerState::ApplyAdditionalEffects()
 	}
 }
 
-void APTWPlayerState::ApplyRespawnInvincible(float Duration)
+void APTWPlayerState::ApplyInvincible(float Duration)
 {
 	FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
 	FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(
-		ReSpawnInvincibleEffectClass, 1.0f, Context);
+		InvincibleEffectClass, 1.0f, Context);
 
 	Spec.Data->SetSetByCallerMagnitude(
 		FGameplayTag::RequestGameplayTag("Data.Duration"), Duration);

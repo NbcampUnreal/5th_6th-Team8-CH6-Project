@@ -39,6 +39,10 @@ public:
 	
 	FItemArrayWrapper GetOldPlayerItems(AController* Controller) const;
 	
+	/** 플레이어 사망할 때 호출되는 함수 */
+	UFUNCTION()
+	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor);
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule")
 	FPTWMiniGameRule MiniGameRule;
 protected:
@@ -68,9 +72,6 @@ protected:
 	//* 미니 게임이 완전히 끝났을 때 호출하는 함수 */
 	virtual void EndGame();
 	
-	/** 플레이어 사망할 때 호출되는 함수 */
-	UFUNCTION()
-	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor);
 
 	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
 	void AddKillDeathCount(APlayerState* DeadPlayerState, APlayerState* KillPlayerState);

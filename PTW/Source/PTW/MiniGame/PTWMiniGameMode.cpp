@@ -123,8 +123,9 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 		}
 	}*/
 
+	//FIXME : 03/09 박태웅 테스트로 주석처리
 	//FIXME : 임시로 난입플레이어도 관전상태해제
-	ExitSpectatorMode(NewPlayer);
+	//ExitSpectatorMode(NewPlayer);
 	
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	
@@ -138,20 +139,37 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	
 	PTWGameState->AddRankedPlayer(PlayerState);
 
+	//FIXME : 03/09 박태웅 테스트로 주석처리
 	//FIXME : 임시로 난입플레이어도 리스타트 플레이어 시키기
-	if (NewPlayer->GetPawn() == nullptr)
-	{
-		RestartPlayer(NewPlayer);
-	}
+	//if (NewPlayer->GetPawn() == nullptr)
+	//{
+	//	RestartPlayer(NewPlayer);
+	//}
 }
 
+
+//FIXME : 03/09 박태웅 테스트로 함수내부 코드 수정
 void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	ExitSpectatorMode(C);
-	
+	if (APlayerController* PC = Cast<APlayerController>(C))
+	{
+		if (PC->PlayerState)
+		{
+			PC->PlayerState->SetIsSpectator(false);
+			PC->PlayerState->SetIsOnlyASpectator(false);
+		}
+	}
+
 	Super::HandleSeamlessTravelPlayer(C);
-	
-	//PlayerReadyToPlay(C);
+
+	if (APlayerController* PC = Cast<APlayerController>(C))
+	{
+		if (PC->GetStateName() == NAME_Spectating)
+		{
+			PC->ChangeState(NAME_Playing);
+		}
+		PC->SetViewTarget(PC);
+	}
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)

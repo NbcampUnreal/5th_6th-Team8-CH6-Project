@@ -10,6 +10,7 @@
 #define COPS 1
 
 class UGameplayAbility;
+class UGameplayEffect;
 
 UCLASS()
 class PTW_API APTWCopsAndRobbersGameMode : public APTWMiniGameMode
@@ -18,11 +19,25 @@ class PTW_API APTWCopsAndRobbersGameMode : public APTWMiniGameMode
 	
 public:
 	APTWCopsAndRobbersGameMode();
-	
+
+protected:
 	virtual void StartGame() override;
+	virtual void EndGame() override;
 	virtual void WaitingToStartRound() override;
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
+	virtual void AssignTeam() override;
+	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
+	
+public:
 	
 protected:
-	UPROPERTY(EditAnywhere, Category="GAS")
-	TSubclassOf<UGameplayAbility> GA_Blind;
+	UPROPERTY(EditAnywhere, Category="GAS|GameplayEffects")
+	TSubclassOf<UGameplayEffect> BlindGameplayEffect;
+	
+	UPROPERTY(EditAnywhere, Category="GAS|GameplayEffects")
+	TSubclassOf<UGameplayEffect> ReboundGameplayEffect;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cops|Weapon")
+	TObjectPtr<UPTWItemDefinition> CopsWeaponDefinition;
+	
 };

@@ -46,6 +46,13 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Bomb, "MiniGame.Bomb");
 	}
 	
+	namespace Role
+	{
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Citizen, "Role.Citizen");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Cop, "Role.Cop");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Robber, "Role.Robber");
+	}
+	
 	namespace Input
 	{
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Crouch, "Input.Action.Crouch");

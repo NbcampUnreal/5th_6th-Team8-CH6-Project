@@ -48,6 +48,14 @@ namespace GameplayTags
 	namespace MiniGame
 	{
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Bomb);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(CopsAndRobbers);
+	}
+	
+	namespace Role
+	{
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Citizen);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cop);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Robber);
 	}
 	
 	namespace Input

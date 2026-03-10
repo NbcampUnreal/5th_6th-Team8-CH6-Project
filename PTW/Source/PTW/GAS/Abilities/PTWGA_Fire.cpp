@@ -378,8 +378,8 @@ bool UPTWGA_Fire::CheckingTeam(AActor* TargetActor)
 	APTWPlayerState* MyPS = Cast<APTWPlayerState>(MyPC->GetPlayerState());
 	
 	if (!TargetPS || !MyPS) return false;
-	if (TargetPS->GetPlayerRoundData().TeamId == MyPS->GetPlayerRoundData().TeamId) return false; //같은 팀인 경우
 	if (TargetPS->GetPlayerRoundData().TeamId == -1) return true; // 개인전인 경우
+	if (TargetPS->GetPlayerRoundData().TeamId == MyPS->GetPlayerRoundData().TeamId) return false; //같은 팀인 경우
 	
 	return true;
 }

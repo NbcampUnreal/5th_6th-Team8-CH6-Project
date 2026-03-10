@@ -18,7 +18,7 @@ void AFinishDetectorActor::OnDetectOverlap(UPrimitiveComponent* OverlappedCompon
 		{
 			if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(OtherActor))
 			{
-				DeliveryGameMode->GoalPlayer(PC);
+				DeliveryGameMode->GoalPlayer(PC, EffectToApply);
 			}
 		}
 	}

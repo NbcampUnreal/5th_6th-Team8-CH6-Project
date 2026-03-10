@@ -59,8 +59,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	void SetLobbyItemData(const FPTWLobbyItemData& NewData);
-	UFUNCTION(BlueprintPure, Category = "Data")
-	FPTWLobbyItemData GetLobbyItemData() const {return LobbyItemData;}
+	FPTWLobbyItemData& GetLobbyItemData() {return LobbyItemData;}
 	
 	/** * 상점에 아이템 구매 요청
 	 * @param ItemID : 구매할 아이템 ID (FName)
@@ -87,7 +86,7 @@ public:
 	void ApplyAdditionalAbilities();
 	void ApplyAdditionalEffects();
 
-	void ApplyRespawnInvincible(float Duration);
+	void ApplyInvincible(float Duration);
 
 	/* 타겟 POV 시스템 */
 	// 타겟이 변경되었을 때 로컬 컨트롤러에 알림
@@ -122,7 +121,7 @@ protected:
 
 	//스폰 무적 이펙트
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<UGameplayEffect> ReSpawnInvincibleEffectClass;
+	TSubclassOf<UGameplayEffect> InvincibleEffectClass;
 public:
 	virtual void SetDeathOrder(int32 Order) override;
 	virtual void SetTeamId(int32 TeamId) override;

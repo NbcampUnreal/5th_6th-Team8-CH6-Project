@@ -333,8 +333,11 @@ void APTWPlayerCharacter::InitCharacterState()
 	{
 		if (AbilitySystemComponent)
 		{
-			AbilitySystemComponent->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
-
+			if(AbilitySystemComponent->HasMatchingGameplayTag(GameplayTags::State::Status_Dead))
+			{
+				AbilitySystemComponent->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
+				UE_LOG(LogTemp, Warning, TEXT("[InitChar] %s 플레이어의 죽음 태그를 제거했습니다!"), *PS->GetPlayerName());
+			}
 			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
 			if (AbilitySystemComponent->HasMatchingGameplayTag(EquipTag))
 			{
@@ -458,6 +461,9 @@ void APTWPlayerCharacter::RegisterGameplayTagEvents()
 	{
 		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Stasis, EGameplayTagEventType::AnyCountChange)
 		.AddUObject(this, &APTWPlayerCharacter::OnStasisTagChanged);
+		
+		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Charge, EGameplayTagEventType::AnyCountChange)
+		.AddUObject(this, &APTWPlayerCharacter::OnMovelimit);
 	}
 }
 
@@ -475,6 +481,22 @@ void APTWPlayerCharacter::OnStasisTagChanged(const FGameplayTag Tag, int32 NewCo
 	else
 	{
 		PC->ResetIgnoreLookInput();
+		PC->ResetIgnoreMoveInput();
+	}
+}
+
+void APTWPlayerCharacter::OnMovelimit(const FGameplayTag Tag, int32 NewCount)
+{
+	APTWPlayerController* PC = Cast<APTWPlayerController>(Controller);
+	if (!PC) return;
+	
+	if (NewCount > 0)
+	{
+		PC->SetIgnoreMoveInput(true);
+		GetCharacterMovement()->StopMovementImmediately();
+	}
+	else
+	{
 		PC->ResetIgnoreMoveInput();
 	}
 }

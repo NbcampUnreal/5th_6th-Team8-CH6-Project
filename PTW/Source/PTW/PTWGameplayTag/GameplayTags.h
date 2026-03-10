@@ -48,6 +48,14 @@ namespace GameplayTags
 	namespace MiniGame
 	{
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Bomb);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(CopsAndRobbers);
+	}
+	
+	namespace Role
+	{
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Citizen);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cop);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Robber);
 	}
 	
 	namespace Input
@@ -72,6 +80,7 @@ namespace GameplayTags
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Stasis);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Slowing);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Stealth);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Charge);
 		
 		namespace Passive
 		{

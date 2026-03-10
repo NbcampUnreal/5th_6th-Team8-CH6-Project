@@ -123,8 +123,9 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 		}
 	}*/
 
+	//FIXME : 03/09 박태웅 테스트로 주석처리
 	//FIXME : 임시로 난입플레이어도 관전상태해제
-	ExitSpectatorMode(NewPlayer);
+	//ExitSpectatorMode(NewPlayer);
 	
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	
@@ -138,20 +139,37 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	
 	PTWGameState->AddRankedPlayer(PlayerState);
 
+	//FIXME : 03/09 박태웅 테스트로 주석처리
 	//FIXME : 임시로 난입플레이어도 리스타트 플레이어 시키기
-	if (NewPlayer->GetPawn() == nullptr)
-	{
-		RestartPlayer(NewPlayer);
-	}
+	//if (NewPlayer->GetPawn() == nullptr)
+	//{
+	//	RestartPlayer(NewPlayer);
+	//}
 }
 
+
+//FIXME : 03/09 박태웅 테스트로 함수내부 코드 수정
 void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	ExitSpectatorMode(C);
-	
+	if (APlayerController* PC = Cast<APlayerController>(C))
+	{
+		if (PC->PlayerState)
+		{
+			PC->PlayerState->SetIsSpectator(false);
+			PC->PlayerState->SetIsOnlyASpectator(false);
+		}
+	}
+
 	Super::HandleSeamlessTravelPlayer(C);
-	
-	//PlayerReadyToPlay(C);
+
+	if (APlayerController* PC = Cast<APlayerController>(C))
+	{
+		if (PC->GetStateName() == NAME_Spectating)
+		{
+			PC->ChangeState(NAME_Playing);
+		}
+		PC->SetViewTarget(PC);
+	}
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
@@ -237,6 +255,16 @@ void APTWMiniGameMode::StartCountDown()
 	
 	PTWGameState->SetMiniGameCountdown(MiniGameRule.TimeRule.CountDown);
 	PTWGameState->SetbMiniGameCountdown(true);
+
+	// 카운트 다운 동안 모든 플레이어 무적 
+	for (APlayerState* PlayerState : GameState->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (PTWPlayerState)
+		{
+			PTWPlayerState->ApplyInvincible(MiniGameRule.TimeRule.CountDown);
+		}
+	}
 	
 	GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
 	GetWorldTimerManager().SetTimer(CountDownTimerHandle, this, &APTWMiniGameMode::TickCountDown, 1.0f, true, 1.f);
@@ -523,7 +551,13 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 
 void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 {
-	if (!ItemDefinition)
+	// if (!ItemDefinition)
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] SpawnDefaultWeapon Failed: ItemDefinition is NULL. Please set Default Weapon in Blueprint."));
+	// 	return;
+	// }
+	
+	if (MiniGameRule.LoadoutRule.DefaultWeapon.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] SpawnDefaultWeapon Failed: ItemDefinition is NULL. Please set Default Weapon in Blueprint."));
 		return;
@@ -533,9 +567,14 @@ void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 	{
 		if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
 		{
-			FGameplayTag RifleTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Gun.Rifle"));
+			for (UPTWItemDefinition* DefaultWeapon: MiniGameRule.LoadoutRule.DefaultWeapon)
+			{
+				FGameplayTag WeaponTag = DefaultWeapon->WeaponTag;
+				ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, DefaultWeapon, WeaponTag);
+			}
 
-			ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition, RifleTag);
+			// FGameplayTag WeaponTag = ItemDefinition->WeaponTag;
+			// ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition, WeaponTag);
 		}
 	}
 }
@@ -742,7 +781,7 @@ void APTWMiniGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController
 					APTWPlayerState* PlayerState = WeakDeadController->GetPlayerState<APTWPlayerState>();
 					if (!PlayerState) return;
 
-					PlayerState->ApplyRespawnInvincible(MiniGameRule.SpawnRule.SpawnProtectionTime);
+					PlayerState->ApplyInvincible(MiniGameRule.SpawnRule.SpawnProtectionTime);
 				}
 			}
 		}, MiniGameRule.SpawnRule.RespawnDelay, false);

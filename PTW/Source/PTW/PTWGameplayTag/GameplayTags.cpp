@@ -46,6 +46,13 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Bomb, "MiniGame.Bomb");
 	}
 	
+	namespace Role
+	{
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Citizen, "Role.Citizen");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Cop, "Role.Cop");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Robber, "Role.Robber");
+	}
+	
 	namespace Input
 	{
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Crouch, "Input.Action.Crouch");
@@ -68,6 +75,7 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Stasis, "State.Stasis");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Slowing, "State.DebuffSlow");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Stealth, "State.Stealth");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Charge, "State.Charge");
 		
 		namespace Passive
 		{

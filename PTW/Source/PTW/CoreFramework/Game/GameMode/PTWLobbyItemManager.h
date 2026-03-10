@@ -22,6 +22,8 @@ public:
 	void InitLobbyItemManager(UDataTable* DataTable, APTWGameState* GameState);
 
 	void StartNewRound();
+
+	int32 TakeSavingsReward(APTWPlayerState* PlayerState);
 private:
 
 	void InitLobbyItemTable(UDataTable* DataTable);
@@ -30,7 +32,8 @@ private:
 	UPROPERTY()
 	TObjectPtr<UDataTable> LobbyItemTable;
 	
-	void HandleSavingGold(APTWPlayerState* Buyer, const FPTWLobbyItemRow* Row);
+	void HandleSavingGold(APTWPlayerState* Buyer, const UPTWLobbyItemDefinition* LobbyItemDefinition);
+	void HandleGambleBox(APTWPlayerState* Buyer, const UPTWLobbyItemDefinition* LobbyItemDefinition);
 
 	UPROPERTY()
 	TObjectPtr<APTWGameState> CachedGameState;

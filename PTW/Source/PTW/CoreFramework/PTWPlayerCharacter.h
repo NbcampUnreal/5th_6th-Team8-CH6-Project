@@ -97,6 +97,10 @@ protected:
 	UFUNCTION()
 	void OnStasisTagChanged(const FGameplayTag Tag, int32 NewCount);
 	
+	/*움직임만(마우스 제외) 제한 이벤트 함수(태그 적용 시 자동으로 움직임을 멈춤) 현정석(26.02.12)*/
+	UFUNCTION()
+	void OnMovelimit(const FGameplayTag Tag, int32 NewCount);
+	
 	/*StealthMode 관련*/
 	UFUNCTION()
 	void OnRep_StealthMode();

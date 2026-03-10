@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "DetectorActor.generated.h"
 
+class UGameplayEffect;
 class UBoxComponent;
 
 UCLASS(Abstract)
@@ -26,4 +27,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UBoxComponent> BoxComponent;
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UGameplayEffect> EffectToApply;
 };

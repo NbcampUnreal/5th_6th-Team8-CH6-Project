@@ -169,12 +169,30 @@ void APTWPlayerState::ApplyAdditionalEffects()
 	}
 }
 
-void APTWPlayerState::ApplyRespawnInvincible(float Duration)
+void APTWPlayerState::ApplyInvincible(float Duration)
 {
+	if (!IsValid(AbilitySystemComponent))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ApplyInvincible 실패: ASC가 없습니다."));
+		return;
+	}
+
+	if (!IsValid(InvincibleEffectClass))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ApplyInvincible 실패: InvincibleEffectClass가 없습니다."));
+		return;
+	}
+	
 	FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
 	FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(
-		ReSpawnInvincibleEffectClass, 1.0f, Context);
+		InvincibleEffectClass, 1.0f, Context);
 
+	if (!Spec.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ApplyInvincible 실패: Spec 생성에 실패했습니다."));
+		return;
+	}
+	
 	Spec.Data->SetSetByCallerMagnitude(
 		FGameplayTag::RequestGameplayTag("Data.Duration"), Duration);
 

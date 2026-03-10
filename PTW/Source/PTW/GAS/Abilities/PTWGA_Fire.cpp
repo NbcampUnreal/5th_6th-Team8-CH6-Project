@@ -11,6 +11,7 @@
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerController.h"
+#include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "GAS/PTWWeaponAttributeSet.h"
 #include "Inventory/PTWInventoryComponent.h"
@@ -231,7 +232,7 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilityTargetDataHandle& Ta
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
 		if (!TargetASC) continue;
 		
-		if (!CheckingTag(TargetASC))
+		if (!CheckingTag(TargetASC) && CheckingTeam(HitActor))
 		{
 			IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(HitActor);
 			float CurrentDamage = BaseDamage;
@@ -364,6 +365,23 @@ void UPTWGA_Fire::ExecuteHitImpactCue(const FHitResult& HitResult)
 bool UPTWGA_Fire::CheckingTag(UAbilitySystemComponent* ASC)
 {
 	return ASC->HasMatchingGameplayTag(IgnoreTag);
+}
+
+bool UPTWGA_Fire::CheckingTeam(AActor* TargetActor)
+{
+	APTWPlayerCharacter* TargetPC = Cast<APTWPlayerCharacter>(TargetActor);
+	APTWPlayerCharacter* MyPC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
+	
+	if (!TargetPC || !MyPC) return false;
+
+	APTWPlayerState* TargetPS = Cast<APTWPlayerState>(TargetPC->GetPlayerState());
+	APTWPlayerState* MyPS = Cast<APTWPlayerState>(MyPC->GetPlayerState());
+	
+	if (!TargetPS || !MyPS) return false;
+	if (TargetPS->GetPlayerRoundData().TeamId == MyPS->GetPlayerRoundData().TeamId) return false; //같은 팀인 경우
+	if (TargetPS->GetPlayerRoundData().TeamId == -1) return true; // 개인전인 경우
+	
+	return true;
 }
 
 void UPTWGA_Fire::PlayEmptyClickCue()

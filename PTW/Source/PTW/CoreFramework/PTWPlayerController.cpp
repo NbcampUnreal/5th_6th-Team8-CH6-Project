@@ -45,6 +45,7 @@
 #include "Engine/PostProcessVolume.h"
 #include "EngineUtils.h"
 #include "Game/GameMode/PTWLobbyGameMode.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 APTWPlayerController::APTWPlayerController()
 {
@@ -269,8 +270,9 @@ void APTWPlayerController::UpdateTargetPOV(APawn* NewTarget)
 	// 기존에 연결된 캡처 컴포넌트가 있다면 연결을 끊고 참조를 초기화
 	if (CurrentActiveCapture)
 	{
-		CurrentActiveCapture->TextureTarget = nullptr;
-		CurrentActiveCapture = nullptr;
+		/*CurrentActiveCapture->TextureTarget = nullptr;
+		CurrentActiveCapture = nullptr;*/
+		RefreshTargetViewHiddenActors();
 	}
 
 	if (!NewTarget || !IsLocalController()) return;
@@ -325,6 +327,52 @@ void APTWPlayerController::UpdateTargetPOV(APawn* NewTarget)
 					POVWidget->SetRenderTarget(TargetPOVRT);
 					// 확실하게 보이도록 설정
 					UISubsystem->SetWidgetVisibility(POVWidgetClass, true);
+				}
+			}
+		}
+	}
+}
+
+void APTWPlayerController::RefreshTargetViewHiddenActors()
+{
+	if (!CurrentActiveCapture) return;
+
+	// 목록 초기화
+	CurrentActiveCapture->HiddenActors.Empty();
+
+	// 타겟(추적 대상)과 그 부착물들 숨기기 (원래 로직)
+	if (APawn* TargetPawn = Cast<APawn>(CurrentActiveCapture->GetOwner()))
+	{
+		CurrentActiveCapture->HiddenActors.Add(TargetPawn);
+		TArray<AActor*> TargetAttached;
+		TargetPawn->GetAttachedActors(TargetAttached);
+		CurrentActiveCapture->HiddenActors.Append(TargetAttached);
+	}
+
+	// 플레이어가 유령 상태면 숨기기
+	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
+	APTWPlayerCharacter* MyChar = Cast<APTWPlayerCharacter>(GetPawn());
+
+	if (PS && MyChar)
+	{
+		UAbilitySystemComponent* MyASC = PS->GetAbilitySystemComponent();
+		if (MyASC)
+		{
+			bool bIsInvisible = MyASC->HasMatchingGameplayTag(GameplayTags::State::Ghost::Invisible);
+			bool bIsRevealed = MyASC->HasMatchingGameplayTag(GameplayTags::State::Ghost::Revealed);
+
+			// 유령 모드 판정
+			if (bIsInvisible && !bIsRevealed)
+			{
+				// 나 자신 숨기기
+				CurrentActiveCapture->HiddenActors.Add(MyChar);
+
+				// 내 부착물(무기 등)도 함께 숨김
+				TArray<AActor*> MyAttached;
+				MyChar->GetAttachedActors(MyAttached);
+				for (AActor* Attached : MyAttached)
+				{
+					if (Attached) CurrentActiveCapture->HiddenActors.Add(Attached);
 				}
 			}
 		}
@@ -396,6 +444,13 @@ void APTWPlayerController::OnRep_PlayerState()
 	if (!IsLocalController())
 	{
 		return;
+	}
+
+	/* ASC 등록 */
+	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
+	if (PS)
+	{
+		ASC = PS->GetAbilitySystemComponent();
 	}
 
 	BindGameStateDelegates();

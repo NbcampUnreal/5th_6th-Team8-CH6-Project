@@ -32,6 +32,7 @@ class APostProcessVolume;
 class UPTWTargetViewWidget;
 class USceneCaptureComponent2D; 
 class UTextureRenderTarget2D;   
+class UGameplayEffect;
 /**
  * 
  */
@@ -107,6 +108,9 @@ public:
 
 	/* 타겟 플레이어가 변경되었을 때 호출 */
 	void UpdateTargetPOV(APawn* NewTarget);
+
+	/* 타겟 뷰의 숨김 목록(HiddenActors)을 현재 상태에 맞춰 새로고침 */
+	void RefreshTargetViewHiddenActors();
 
 protected:
 	virtual void BeginPlay() override;

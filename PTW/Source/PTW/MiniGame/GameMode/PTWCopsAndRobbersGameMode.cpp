@@ -47,36 +47,17 @@ void APTWCopsAndRobbersGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);
 	
-	if (APlayerController* PC = Cast<APlayerController>(C))
-	{
-		PlayerReadyToPlay(PC);
-	}
+	// if (APlayerController* PC = Cast<APlayerController>(C))
+	// {
+	// 	PlayerReadyToPlay(PC);
+	// }
 }
 
 void APTWCopsAndRobbersGameMode::AssignTeam()
 {
 	Super::AssignTeam();
 	// ROBBERS : COPS is 3 : 1 (75% : 25%)
-	TArray<APlayerState*> Players = PTWGameState->PlayerArray;
 	
-	int32 MaxCopsSize = FMath::CeilToInt32(PTWGameState->PlayerArray.Num() / 4.0);
-	int32 CurrentCopsSize = PTWGameState->GetTeams()[COPS].Members.Num();
-	
-	FPTWTeamInfo& RobbersTeam = PTWGameState->GetTeams()[ROBBERS];
-	FPTWTeamInfo& CopsTeam = PTWGameState->GetTeams()[COPS];
-	
-	while (MaxCopsSize > CurrentCopsSize)
-	{
-		APlayerState* PS = CopsTeam.Members.Pop();
-		RobbersTeam.Members.Add(PS);
-		Cast<IPTWPlayerRoundDataInterface>(PS)->SetTeamId(ROBBERS); 
-	}
-	while (MaxCopsSize < CurrentCopsSize)
-	{
-		APlayerState* PS = RobbersTeam.Members.Pop();
-		CopsTeam.Members.Add(PS);
-		Cast<IPTWPlayerRoundDataInterface>(PS)->SetTeamId(COPS); 
-	}
 }
 
 void APTWCopsAndRobbersGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
@@ -114,9 +95,56 @@ void APTWCopsAndRobbersGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* Ki
 void APTWCopsAndRobbersGameMode::WaitingToStartRound()
 {
 	Super::WaitingToStartRound();
-
+	
+	TArray<APlayerState*> Players = PTWGameState->PlayerArray;
 	FPTWTeamInfo& RobbersTeam = PTWGameState->GetTeams()[ROBBERS];
 	FPTWTeamInfo& CopsTeam = PTWGameState->GetTeams()[COPS];
+	
+	TArray<APlayerState*> AllPlayers;
+	AllPlayers.Append(RobbersTeam.Members);
+	AllPlayers.Append(CopsTeam.Members);
+	
+	RobbersTeam.Members.Empty();
+	CopsTeam.Members.Empty();
+	const int32 TotalPlayers = AllPlayers.Num();
+	if (TotalPlayers > 0)
+	{
+		for (int32 i = TotalPlayers - 1; i > 0; --i)
+		{
+			int32 RandomIndex = FMath::RandRange(0, i);
+			AllPlayers.Swap(i, RandomIndex);
+		}
+	}
+	
+	int32 MaxCopsSize = FMath::CeilToInt(TotalPlayers / 4.0f);
+	for (int32 i = 0; i < TotalPlayers; ++i)
+	{
+		APlayerState* PS = AllPlayers[i];
+		if (IsValid(PS)) 
+		{
+			IPTWPlayerRoundDataInterface* RoundData = Cast<IPTWPlayerRoundDataInterface>(PS);
+
+			if (i < MaxCopsSize)
+			{
+				CopsTeam.Members.Add(PS);
+				if (RoundData)
+				{
+					RoundData->SetTeamId(COPS);
+				}
+			}
+			else
+			{
+				RobbersTeam.Members.Add(PS);
+				if (RoundData)
+				{
+					RoundData->SetTeamId(ROBBERS);
+				}
+			}
+		}
+	}
+	
+	// FPTWTeamInfo& RobbersTeam = PTWGameState->GetTeams()[ROBBERS];
+	// FPTWTeamInfo& CopsTeam = PTWGameState->GetTeams()[COPS];
 	
 	for (APlayerState* Robber : RobbersTeam.Members)
 	{

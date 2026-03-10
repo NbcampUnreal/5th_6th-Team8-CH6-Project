@@ -120,8 +120,6 @@ void APTWPlayerCharacter::BeginPlay()
 		Mesh1P->SetVisibility(true);
 		Mesh1P->HideBoneByName(FName("head"), EPhysBodyOp::PBO_None);
 	}
-	
-	RegisterGameplayTagEvents();
 }
 
 void APTWPlayerCharacter::PossessedBy(AController* NewController)
@@ -129,6 +127,7 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	InitCharacterState();
+	RegisterGameplayTagEvents();
 }
 
 void APTWPlayerCharacter::OnRep_PlayerState()
@@ -136,6 +135,7 @@ void APTWPlayerCharacter::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	InitCharacterState();
+	RegisterGameplayTagEvents();
 }
 
 void APTWPlayerCharacter::OnPlayerStateChanged(APlayerState* NewPlayerState, APlayerState* OldPlayerState)

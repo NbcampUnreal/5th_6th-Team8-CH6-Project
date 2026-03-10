@@ -19,9 +19,13 @@ protected:
 	void ApplyChargeEffect();
 	void TickReCharge();
 	void FinishRecharge();
+	void OnRechargeCompleted();
 protected:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UGameplayEffect> ReChargeGEClass;
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UGameplayEffect> ChargeCompleteGEClass;
 	
 	FTimerHandle RechargeTimerHandle;
 	

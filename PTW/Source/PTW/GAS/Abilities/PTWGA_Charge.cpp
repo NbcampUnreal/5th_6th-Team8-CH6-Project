@@ -6,13 +6,13 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "CoreFramework/PTWCombatInterface.h"
 #include "GAS/PTWDeliveryAttributeSet.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 void UPTWGA_Charge::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
                                     const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	ApplyChargeEffect();
 	GetWorld()->GetTimerManager().SetTimer(RechargeTimerHandle, this, &UPTWGA_Charge::TickReCharge, 0.05f, true);
-	
 }
 
 void UPTWGA_Charge::ApplyChargeEffect()
@@ -21,8 +21,6 @@ void UPTWGA_Charge::ApplyChargeEffect()
 	if (!CombatInterface) return;
 	
 	CombatInterface->ApplyGameplayEffectToSelf(ReChargeGEClass, 1.0f, FGameplayEffectContextHandle());
-	
-	
 }
 
 void UPTWGA_Charge::TickReCharge()
@@ -50,6 +48,15 @@ void UPTWGA_Charge::TickReCharge()
 void UPTWGA_Charge::FinishRecharge()
 {
 	GetWorld()->GetTimerManager().ClearTimer(RechargeTimerHandle);
-	//OnRechargeCompleted(); 
-	K2_EndAbility();
+	OnRechargeCompleted(); 
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+}
+
+void UPTWGA_Charge::OnRechargeCompleted()
+{
+	IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(GetAvatarActorFromActorInfo());
+	if (!CombatInterface) return;
+	
+	CombatInterface->RemoveEffectWithTag(GameplayTags::State::Charge);
+	CombatInterface->ApplyGameplayEffectToSelf(ChargeCompleteGEClass, 1.0f, FGameplayEffectContextHandle());
 }

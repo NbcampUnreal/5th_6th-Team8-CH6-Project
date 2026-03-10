@@ -112,6 +112,9 @@ public:
 	/* 타겟 뷰의 숨김 목록(HiddenActors)을 현재 상태에 맞춰 새로고침 */
 	void RefreshTargetViewHiddenActors();
 
+	/* UI 생성 */
+	void CreateUI();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -145,9 +148,6 @@ protected:
 
 	virtual void SetupInputComponent() override;
 	virtual void PostSeamlessTravel() override;
-
-	/* UI 생성 */
-	void CreateUI();
 
 	/* 랭킹보드 (Tab) */
 	void OnRankingPressed();

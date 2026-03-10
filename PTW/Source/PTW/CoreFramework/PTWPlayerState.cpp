@@ -364,3 +364,17 @@ void APTWPlayerState::AddGold(int32 Amount)
 		ForceNetUpdate();
 	}
 }
+
+void APTWPlayerState::ClearGAS()
+{
+	if (!HasAuthority() || !AbilitySystemComponent) return;
+
+	AbilitySystemComponent->ClearAllAbilities();
+
+	FGameplayEffectQuery Query;
+	AbilitySystemComponent->RemoveActiveEffects(Query);
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, nullptr);
+
+	UE_LOG(LogTemp, Warning, TEXT("[GAS] %s 의 GAS 캐시가 완벽하게 초기화되었습니다! (전생 기억 삭제)"), *GetPlayerName());
+}

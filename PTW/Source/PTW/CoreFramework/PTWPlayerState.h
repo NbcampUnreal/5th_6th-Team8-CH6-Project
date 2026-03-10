@@ -96,6 +96,10 @@ public:
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentTargetPawn, VisibleAnywhere, BlueprintReadOnly, Category = "GTS|Target")
 	TObjectPtr<APawn> CurrentTargetPawn;
 
+	/* 심리스 트래블 시 이전 맵의 GAS 를 초기화하는 함수 */
+	UFUNCTION(BlueprintCallable, Category = "GAS")
+	void ClearGAS();
+
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;

@@ -88,6 +88,11 @@ namespace GameplayTags
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Sprinting, "State.Movement.Sprinting");
 		}
 		
+		namespace Ghost
+		{
+			UE_DEFINE_GAMEPLAY_TAG(Invisible, "State.Ghost.Invisible");
+			UE_DEFINE_GAMEPLAY_TAG(Revealed, "State.Ghost.Revealed");
+		}
 	}
 	
 	namespace Item

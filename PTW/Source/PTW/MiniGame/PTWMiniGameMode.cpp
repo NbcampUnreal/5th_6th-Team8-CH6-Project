@@ -97,7 +97,14 @@ void APTWMiniGameMode::BeginPlay()
 
 	// 플레이어 로딩 완료 체크에서 문제가 생겨 미작동 시 10초 후 게임 강제 시작
 	FTimerHandle StartGameTimer;
-	GetWorldTimerManager().SetTimer(StartGameTimer, this, &APTWMiniGameMode::StartGame, 10.f, false);
+	GetWorldTimerManager().SetTimer(StartGameTimer, FTimerDelegate::CreateLambda([this]()
+	{
+		if (!bIsGameStarted)
+		{
+			StartGame();
+		}
+		
+	}), 10.f, false);
 	
 }
 
@@ -148,15 +155,16 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 }
 
 
-//FIXME : 03/09 박태웅 테스트로 함수내부 코드 수정
+//FIXME : 03/10 박태웅 테스트로 함수내부 코드 수정
 void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	if (APlayerController* PC = Cast<APlayerController>(C))
 	{
-		if (PC->PlayerState)
+		if (APTWPlayerState* PS = PC->GetPlayerState<APTWPlayerState>())
 		{
-			PC->PlayerState->SetIsSpectator(false);
-			PC->PlayerState->SetIsOnlyASpectator(false);
+			PS->SetIsSpectator(false);
+			PS->SetIsOnlyASpectator(false);
+			PS->ClearGAS();
 		}
 	}
 
@@ -192,7 +200,13 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 		AssignTeam();
 		
 		FTimerHandle LoadingDelayTimer;
-		GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWMiniGameMode::StartGame, 3.f);
+		GetWorldTimerManager().SetTimer(LoadingDelayTimer, FTimerDelegate::CreateLambda([this]()
+		{
+			if (!bIsGameStarted)
+			{
+				StartGame();
+			}
+		}), 3.f, false);
 	}
 }
 

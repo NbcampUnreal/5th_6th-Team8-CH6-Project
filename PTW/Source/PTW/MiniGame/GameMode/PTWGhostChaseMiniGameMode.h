@@ -6,6 +6,7 @@
 #include "MiniGame/PTWMiniGameMode.h"
 #include "PTWGhostChaseMiniGameMode.generated.h"
 
+class UPTWItemDefinition;
 /**
  * 
  */
@@ -39,6 +40,16 @@ private:
 	/* 특정 플레이어의 타겟이 변경되었음을 알림 (UI 갱신용) */
 	void UpdatePlayerTargetUI(AController* Chaser, AController* NewTarget);
 
+	/* 기본무기 지급 로직 */
+	void GiveBaseWeaponToAll();
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "GE")
+	TSubclassOf<UGameplayEffect> InvisibilityEffectClass;
+
+	/*UPROPERTY(EditDefaultsOnly, Category = "GE")
+	TSubclassOf<UGameplayEffect> test;*/
+
 private:
 	/* 현재 생존하여 게임에 참여 중인 플레이어 리스트 (순서가 타겟 체인임) */
 	UPROPERTY()
@@ -47,4 +58,8 @@ private:
 	/* 타겟을 관리하는 맵 */
 	UPROPERTY()
 	TMap<AController*, AController*> TargetMap;
+
+	/* 기본으로 지급할 무기 */
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	TObjectPtr<UPTWItemDefinition> GhostWeaponDef;
 };

@@ -2,9 +2,6 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "CoreFramework/PTWPlayerCharacter.h"
-#include "MiniGame/GameMode/PTWDeliveryGameMode.h"
-
 
 AChargeDetectActor::AChargeDetectActor()
 {

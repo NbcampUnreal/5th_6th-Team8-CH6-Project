@@ -128,16 +128,7 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	UE_LOG(LogTemp, Warning, TEXT("HandleSeamlessTravelPlayer: %s"), *C->GetName());
-
-	if (APlayerController* PC = Cast<APlayerController>(C))
-	{
-		if (APawn* OldPawn = PC->GetPawn())
-		{
-			OldPawn->DetachFromControllerPendingDestroy();
-			OldPawn->Destroy();
-		}
-	}
-
+	
 	Super::HandleSeamlessTravelPlayer(C);
 }
 void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
@@ -158,7 +149,7 @@ void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
 {
 	Super::PlayerReadyToPlay(Controller);
 
-	UE_LOG(LogTemp, Warning, TEXT("PlayerReadyToPlay: %s"), *Controller->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("PlayerReadyToPlay: %s, %d/%d"), *Controller->GetName(),ReadyPlayer, AllPlayer);
 	
 	if (!IsValid(PTWGameState) || !Controller) return;
 	
@@ -171,16 +162,6 @@ void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
 	Controller->PlayerState->SetIsSpectator(false);
 	Controller->ChangeState(NAME_Playing);
 	Controller->ClientGotoState(NAME_Playing);
-	
-	APawn* CurrentPawn = Controller->GetPawn();
-	if (!IsValid(CurrentPawn) || CurrentPawn->IsA<ASpectatorPawn>())
-	{
-		if (IsValid(CurrentPawn))
-		{
-			CurrentPawn->Destroy();
-		}
-		RestartPlayer(Controller);
-	}
 	
 	if (ReadyPlayer >= AllPlayer)
 	{

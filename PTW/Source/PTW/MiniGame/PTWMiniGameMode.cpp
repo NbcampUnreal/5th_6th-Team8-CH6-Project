@@ -97,7 +97,14 @@ void APTWMiniGameMode::BeginPlay()
 
 	// 플레이어 로딩 완료 체크에서 문제가 생겨 미작동 시 10초 후 게임 강제 시작
 	FTimerHandle StartGameTimer;
-	GetWorldTimerManager().SetTimer(StartGameTimer, this, &APTWMiniGameMode::StartGame, 10.f, false);
+	GetWorldTimerManager().SetTimer(StartGameTimer, FTimerDelegate::CreateLambda([this]()
+	{
+		if (!bIsGameStarted)
+		{
+			StartGame();
+		}
+		
+	}), 10.f, false);
 	
 }
 
@@ -193,7 +200,13 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 		AssignTeam();
 		
 		FTimerHandle LoadingDelayTimer;
-		GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWMiniGameMode::StartGame, 3.f);
+		GetWorldTimerManager().SetTimer(LoadingDelayTimer, FTimerDelegate::CreateLambda([this]()
+		{
+			if (!bIsGameStarted)
+			{
+				StartGame();
+			}
+		}), 3.f, false);
 	}
 }
 

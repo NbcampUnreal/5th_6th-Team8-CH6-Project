@@ -551,30 +551,30 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 
 void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 {
-	if (!ItemDefinition)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] SpawnDefaultWeapon Failed: ItemDefinition is NULL. Please set Default Weapon in Blueprint."));
-		return;
-	}
-	
-	// if (MiniGameRule.LoadoutRule.DefaultWeapon.IsEmpty())
+	// if (!ItemDefinition)
 	// {
 	// 	UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] SpawnDefaultWeapon Failed: ItemDefinition is NULL. Please set Default Weapon in Blueprint."));
 	// 	return;
 	// }
 	
+	if (MiniGameRule.LoadoutRule.DefaultWeapon.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] SpawnDefaultWeapon Failed: ItemDefinition is NULL. Please set Default Weapon in Blueprint."));
+		return;
+	}
+	
 	if (UPTWItemSpawnManager* ItemSpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
 	{
 		if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
 		{
-			// for (UPTWItemDefinition* DefaultWeapon: MiniGameRule.LoadoutRule.DefaultWeapon)
-			// {
-			// 	FGameplayTag WeaponTag = DefaultWeapon->WeaponTag;
-			// 	ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, DefaultWeapon, WeaponTag);
-			// }
+			for (UPTWItemDefinition* DefaultWeapon: MiniGameRule.LoadoutRule.DefaultWeapon)
+			{
+				FGameplayTag WeaponTag = DefaultWeapon->WeaponTag;
+				ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, DefaultWeapon, WeaponTag);
+			}
 
-			FGameplayTag WeaponTag = ItemDefinition->WeaponTag;
-			ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition, WeaponTag);
+			// FGameplayTag WeaponTag = ItemDefinition->WeaponTag;
+			// ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition, WeaponTag);
 		}
 	}
 }

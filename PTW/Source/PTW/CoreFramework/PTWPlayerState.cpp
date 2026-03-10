@@ -171,6 +171,12 @@ void APTWPlayerState::ApplyAdditionalEffects()
 
 void APTWPlayerState::ApplyInvincible(float Duration)
 {
+	if (!IsValid(AbilitySystemComponent))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ApplyInvincible 실패: ASC가 없습니다."));
+		return;
+	}
+
 	FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
 	FGameplayEffectSpecHandle Spec = AbilitySystemComponent->MakeOutgoingSpec(
 		InvincibleEffectClass, 1.0f, Context);

@@ -1,17 +1,19 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MiniGame/GameMode/PTWAbyssMiniGameMode.h"
-#include "PTW/System/PTWItemSpawnManager.h"
-#include "CoreFramework/PTWPlayerCharacter.h"
+
 #include "CoreFramework/PTWPlayerController.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
+#include "GameFramework/PlayerController.h"
+#include "System/PTWItemSpawnManager.h"
 #include "PTWGameplayTag/GameplayTags.h"
-#include "GameFramework/PlayerStart.h"
+
 #include "EngineUtils.h"
 #include "Engine/PostProcessVolume.h"
 
 APTWAbyssMiniGameMode::APTWAbyssMiniGameMode()
 {
-	AbyssDefaultWeaponTag = GameplayTags::Weapon::Gun::Rifle::Rifle;
+	AbyssDefaultWeaponTag = GameplayTags::Weapon::Gun::Pistol::AbyssPistol;
 }
 
 void APTWAbyssMiniGameMode::StartRound()
@@ -30,7 +32,7 @@ void APTWAbyssMiniGameMode::StartRound()
 	}
 
 	StartChaosEvent();
-	
+
 	if (HasAuthority())
 	{
 		GetWorldTimerManager().ClearTimer(IdleRevealTimerHandle);
@@ -44,36 +46,20 @@ void APTWAbyssMiniGameMode::StartRound()
 	}
 }
 
-void APTWAbyssMiniGameMode::RestartPlayer(AController* NewPlayer)
+void APTWAbyssMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 {
-	if (!NewPlayer) return;
-	
-	Super::RestartPlayer(NewPlayer);
-
-
-	GiveAbyssDefaultWeapon(NewPlayer);
-}
-
-void APTWAbyssMiniGameMode::GiveAbyssDefaultWeapon(AController* NewPlayer)
-{
-	if (!NewPlayer) return;
-
 	if (!ItemDefinition)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("[AbyssMiniGameMode] ItemDefinition is NULL. Set it in BP."));
 		return;
 	}
 
-	APawn* Pawn = NewPlayer->GetPawn();
-	if (!Pawn) return;
-
-	APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(Pawn);
-	if (!PlayerCharacter) return;
-
-	UPTWItemSpawnManager* ItemSpawnManager = GetWorld() ? GetWorld()->GetSubsystem<UPTWItemSpawnManager>() : nullptr;
-	if (!ItemSpawnManager) return;
-
-	ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition, AbyssDefaultWeaponTag);
+	if (UPTWItemSpawnManager* ItemSpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
+	{
+		if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
+		{
+			ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition, AbyssDefaultWeaponTag);
+		}
+	}
 }
 
 void APTWAbyssMiniGameMode::EndRound()
@@ -99,10 +85,11 @@ void APTWAbyssMiniGameMode::EndRound()
 				Pair.Value->Destroy();
 			}
 		}
+
 		RevealMarkerMap.Empty();
 		IdleTimeMap.Empty();
 	}
-	
+
 	Super::EndRound();
 }
 
@@ -130,7 +117,7 @@ void APTWAbyssMiniGameMode::SetAbyssDark(bool bEnable)
 
 	CacheAbyssPP();
 	if (!AbyssPP) return;
-	
+
 	AbyssPP->bEnabled = true;
 	AbyssPP->BlendWeight = bEnable ? 1.0f : 0.0f;
 }
@@ -175,7 +162,7 @@ void APTWAbyssMiniGameMode::ShowReveal(AController* Controller)
 	APlayerState* PS = Controller->PlayerState;
 	APawn* Pawn = Controller->GetPawn();
 	if (!PS || !Pawn) return;
-	
+
 	if (TObjectPtr<AActor>* Found = RevealMarkerMap.Find(PS))
 	{
 		if (IsValid(*Found)) return;
@@ -193,7 +180,7 @@ void APTWAbyssMiniGameMode::ShowReveal(AController* Controller)
 	);
 
 	if (!Marker) return;
-	
+
 	RevealMarkerMap.Add(Controller->PlayerState, Marker);
 }
 

@@ -8,6 +8,7 @@
 
 class APlayerState;
 class AActor;
+class APostProcessVolume;
 
 UCLASS()
 class PTW_API APTWAbyssMiniGameMode : public APTWMiniGameMode
@@ -19,23 +20,19 @@ public:
 
 protected:
 	virtual void StartRound() override;
-
-	virtual void RestartPlayer(AController* NewPlayer) override;
-
 	virtual void EndRound() override;
+	virtual void SpawnDefaultWeapon(AController* NewPlayer) override;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Weapon")
 	FGameplayTag AbyssDefaultWeaponTag;
-	
-	void GiveAbyssDefaultWeapon(AController* NewPlayer);
 	
 	UPROPERTY()
 	TObjectPtr<APostProcessVolume> AbyssPP = nullptr;
 
 	void SetAbyssDark(bool bEnable);
 	void CacheAbyssPP();
-	
+
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")
 	float IdleRevealTime = 3.0f;
 

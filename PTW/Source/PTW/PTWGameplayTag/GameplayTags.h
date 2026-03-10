@@ -107,6 +107,7 @@ namespace GameplayTags
 			{
 				PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Pistol);
 				PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BombPistol);
+				PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(AbyssPistol);
 			}
 			namespace Rifle
 			{

@@ -17,6 +17,7 @@
 APTWPlayerState::APTWPlayerState()
 {
 	NetUpdateFrequency = 100.0f;
+	NetPriority = 5.0f;
 
 	AbilitySystemComponent = CreateDefaultSubobject<UPTWAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);

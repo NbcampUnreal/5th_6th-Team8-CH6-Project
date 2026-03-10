@@ -415,9 +415,6 @@ void APTWPlayerController::BeginPlay()
 	UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::GameOnly);
 
 	BindGameStateDelegates();
-	
-	/* UI 위젯 생성 */
-	CreateUI();
 
 	/* 게임설정 */
 	if (UPTWGameUserSettings* Settings = Cast<UPTWGameUserSettings>(UGameUserSettings::GetGameUserSettings()))
@@ -454,8 +451,6 @@ void APTWPlayerController::OnRep_PlayerState()
 	}
 
 	BindGameStateDelegates();
-
-	CreateUI();
 }
 
 void APTWPlayerController::OnRep_Pawn()
@@ -769,13 +764,6 @@ void APTWPlayerController::PostSeamlessTravel()
 		{
 			UISubsystem = LP->GetSubsystem<UPTWUISubsystem>();
 		}
-
-		// 위젯 재생성 및 뷰포트 재등록
-		UE_LOG(LogTemp, Error, TEXT("PTWPlayerController : PostSeamlessTravel"));
-		CreateUI();
-
-		// 서버에 SeamlessTravel을 했다고 알림
-		//Server_NotifyReadyToPlay();
 	}
 }
 

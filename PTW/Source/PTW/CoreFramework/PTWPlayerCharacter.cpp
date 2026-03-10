@@ -461,6 +461,9 @@ void APTWPlayerCharacter::RegisterGameplayTagEvents()
 	{
 		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Stasis, EGameplayTagEventType::AnyCountChange)
 		.AddUObject(this, &APTWPlayerCharacter::OnStasisTagChanged);
+		
+		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Charge, EGameplayTagEventType::AnyCountChange)
+		.AddUObject(this, &APTWPlayerCharacter::OnStasisTagChanged);
 	}
 }
 

@@ -1,15 +1,15 @@
-﻿#include "StartDetectorActor.h"
+﻿#include "ChargeDetectActor.h"
 
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "MiniGame/GameMode/PTWDeliveryGameMode.h"
 
 
-AStartDetectorActor::AStartDetectorActor()
+AChargeDetectActor::AChargeDetectActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
 }
 
-void AStartDetectorActor::OnDetectOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+void AChargeDetectActor::OnDetectOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (HasAuthority())
@@ -18,10 +18,9 @@ void AStartDetectorActor::OnDetectOverlap(UPrimitiveComponent* OverlappedCompone
 		{
 			if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(OtherActor))
 			{
-				DeliveryGameMode->GiveDeliveryItems(PC, EffectToApply);
+				DeliveryGameMode->StartBatteryCharge(PC);
 			}
 		}
 	}
 }
-
 

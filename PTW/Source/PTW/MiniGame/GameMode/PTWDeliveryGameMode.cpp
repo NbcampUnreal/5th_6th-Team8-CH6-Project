@@ -22,17 +22,17 @@ void APTWDeliveryGameMode::StartRound()
 	Super::StartRound();
 }
 
-void APTWDeliveryGameMode::GiveDeliveryItems(APTWPlayerCharacter* TargetCharacter)
+void APTWDeliveryGameMode::GiveDeliveryItems(APTWPlayerCharacter* TargetCharacter, TSubclassOf<UGameplayEffect> EffectToApply)
 {
 	if (!TargetCharacter) return;
 	if (DeliveredCharacters.Contains(TargetCharacter)) return;
 	
-	ApplyMiniGameEffect(TargetCharacter);
+	ApplyGameEffect(TargetCharacter, EffectToApply);
 	GivingDefaultWeapon(TargetCharacter);
 	DeliveredCharacters.Add(TargetCharacter);
 }
 
-void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter)
+void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter, TSubclassOf<UGameplayEffect> EffectToApply)
 {
 	if (GoalPlayers.Num() == 0)
 	{
@@ -40,9 +40,21 @@ void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter)
 	}
 	GoalPlayers.Add(TargetCharacter);
 	
-	ApplyGameEffect(TargetCharacter, InvincibleEffect);
+	ApplyGameEffect(TargetCharacter, EffectToApply);
 }
+
+void APTWDeliveryGameMode::StartBatteryCharge(APTWPlayerCharacter* TargetCharacter)
+{
+	// GE 적용(움직임 제한, 배터리 충전(Lerp))
 	
+}
+
+void APTWDeliveryGameMode::EndBatteryCharge(APTWPlayerCharacter* TargetCharacter)
+{
+	// GE 해제(움직임 제한 해제, 배터리 충전 해제, 이동속도 잠깐 증가)
+	
+}
+
 void APTWDeliveryGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {
 	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(KillActor);
@@ -68,11 +80,6 @@ void APTWDeliveryGameMode::OnCountDownFinished()
 	{
 		EndRound();
 	}
-}
-
-void APTWDeliveryGameMode::ApplyMiniGameEffect(APTWPlayerCharacter* TargetCharacter)
-{
-	ApplyGameEffect(TargetCharacter, DeliveryStartEffect);
 }
 
 void APTWDeliveryGameMode::GivingDefaultWeapon(APTWPlayerCharacter* TargetCharacter)

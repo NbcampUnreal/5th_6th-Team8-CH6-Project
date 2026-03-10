@@ -111,6 +111,8 @@ protected:
 	
 	virtual bool CheckingTag(UAbilitySystemComponent* ASC);
 	
+	virtual bool CheckingTeam(AActor* TargetActor);
+	
 	virtual void PlayEmptyClickCue();
 	
 private:

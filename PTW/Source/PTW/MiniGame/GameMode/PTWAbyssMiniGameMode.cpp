@@ -23,6 +23,11 @@ void APTWAbyssMiniGameMode::StartRound()
 		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
 		{
 			PC->Client_SetAbyssDark(true);
+			
+			if (APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(PC->GetPawn()))
+			{
+				Character->SetStealthMode(true);
+			}
 		}
 	}
 
@@ -69,6 +74,11 @@ void APTWAbyssMiniGameMode::EndRound()
 		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
 		{
 			PC->Client_SetAbyssDark(false);
+			
+			if (APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(PC->GetPawn()))
+			{
+				Character->SetStealthMode(false);
+			}
 		}
 	}
 

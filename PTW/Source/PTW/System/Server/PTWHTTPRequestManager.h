@@ -7,6 +7,9 @@
 #include "PTWHTTPRequestManager.generated.h"
 
 class UPTWAPIData;
+class FJsonObject;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnListFleetsResponseReceived, const FPTWListFleetsResponse&, ListFleetsResponse, bool, bwasSuccessful);
 
 UCLASS(Blueprintable, BlueprintType)
 class PTW_API UPTWHTTPRequestManager : public UObject
@@ -20,4 +23,12 @@ public:
 	void RequestListFleets();
 	
 	void ListFleets_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void JoinGameSession();
+	UPROPERTY()
+	FOnListFleetsResponseReceived OnListFleetsResponseReceived;
+protected:
+	
+	bool ContainErrors(TSharedPtr<FJsonObject> JsonObject);
+	void DumpMetadata(TSharedPtr<FJsonObject> JsonObject);
 };

@@ -6,11 +6,14 @@
 #include "Components/Button.h"
 #include "Components/VerticalBox.h"
 #include "Components/EditableText.h"
+#include "Components/TextBlock.h"
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "PTW/UI/MainMenu/PTWServerListRow.h"
 #include "PTW/System/PTWSessionSubsystem.h"
+#include "System/Server/GameplayServerTags.h"
 #include "System/Server/PTWHTTPRequestManager.h"
+#include "System/Server/PTWHTTPRequestTypes.h"
 #include "System/Session/PTWSessionConfig.h"
 
 #define LOCTEXT_NAMESPACE "ServerBrowser"
@@ -224,8 +227,51 @@ void UPTWServerBrowser::OnClickedTestButton()
 	{
 		HTTPRequestManager = NewObject<UPTWHTTPRequestManager>(this, HTTPRequestManagerClass);
 	}
-	
+
+	/*
+	HTTPRequestManager->OnListFleetsResponseReceived.AddUniqueDynamic(this, &ThisClass::OnListFleetsResponseReceived);
 	HTTPRequestManager->RequestListFleets();
+	TestButton->SetIsEnabled(false);
+	*/
+	
+	HTTPRequestManager->JoinGameSession();
+	TestButton->SetIsEnabled(false);
+}
+
+void UPTWServerBrowser::OnListFleetsResponseReceived(const struct FPTWListFleetsResponse& ListFleetsResponse,
+	bool bwasSuccessful)
+{
+	if (HTTPRequestManager->OnListFleetsResponseReceived.IsAlreadyBound(this, &ThisClass::OnListFleetsResponseReceived))
+	{
+		HTTPRequestManager->OnListFleetsResponseReceived.RemoveDynamic(this, &ThisClass::OnListFleetsResponseReceived);
+	}
+	ServerListVerticalBox->ClearChildren();
+	if (bwasSuccessful)
+	{
+		for (const FString& FleetId : ListFleetsResponse.FleetIds)
+		{
+			UPTWServerListRow* ServerListRow = CreateWidget<UPTWServerListRow>(this, ServerListRowClass);
+			ServerListRow->GetServerName()->SetText(FText::FromString(FleetId));
+			ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
+		}
+	}
+	else
+	{
+		UPTWServerListRow* ServerListRow = CreateWidget<UPTWServerListRow>(this, ServerListRowClass);
+		ServerListRow->GetServerName()->SetText(FText::FromString("Something went wrong!"));
+		ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
+	}
+	TestButton->SetIsEnabled(true);
+	
+	if (!IsValid(ServerNameEditableText)) return;
+	
+	UGameInstance* GameInstance = GetGameInstance();
+	if (!IsValid(GameInstance)) return;
+	
+	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
+	if (!IsValid(SessionSubsystem)) return;
+	
+	SessionSubsystem->FindGameSession();
 }
 
 void UPTWServerBrowser::DevJoinAction()

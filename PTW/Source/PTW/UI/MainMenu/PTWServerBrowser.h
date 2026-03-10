@@ -54,6 +54,9 @@ protected:
 	void OnClickedTestButton();
 	
 	UFUNCTION()
+	void OnListFleetsResponseReceived(const struct FPTWListFleetsResponse& ListFleetsResponse, bool bwasSuccessful);
+	
+	UFUNCTION()
 	void DevJoinAction();
 protected:
 	UPROPERTY(meta=(BindWidget))

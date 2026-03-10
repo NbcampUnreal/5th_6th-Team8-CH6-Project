@@ -52,3 +52,68 @@ struct FPTWSessionConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
 	int32 MaxRounds = 5;
 };
+
+USTRUCT(BlueprintType)
+struct FAWSSessionConfig
+{
+	GENERATED_BODY()
+	
+	UPROPERTY()
+	double CreationTime{};
+	
+	UPROPERTY()
+	FString CreatorId{};
+	
+	UPROPERTY()
+	int32 CurrentPlayerSessionCount{};
+	
+	UPROPERTY()
+	FString DNSName{};
+	
+	UPROPERTY()
+	FString FleetArn{};
+	
+	UPROPERTY()
+	FString FleetId;
+	
+	UPROPERTY()
+	TMap<FString, FString> GameProperties{};
+	
+	UPROPERTY()
+	FString GameSessionData{};
+	
+	UPROPERTY()
+	FString GameSessionId{};
+	
+	UPROPERTY()
+	FString IPAddress{};
+	
+	UPROPERTY()
+	FString Location{};
+	
+	UPROPERTY()
+	FString MatchMakerData{};
+	
+	UPROPERTY()
+	int32 MaximumPlayerSessionCount{};
+	
+	UPROPERTY()
+	FString Name{};
+	
+	UPROPERTY()
+	FString PlayerSessionCreationPolicy{};
+	
+	UPROPERTY()
+	int32 Port{};
+	
+	UPROPERTY()
+	FString Status{};
+	
+	UPROPERTY()
+	FString StatusReason{};
+	
+	UPROPERTY()
+	double TerminationTime{};
+	
+	void Dump() const;
+};

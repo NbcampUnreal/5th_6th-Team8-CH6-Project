@@ -6,6 +6,8 @@
 #include "DetectorActor.h"
 #include "ChargeDetectActor.generated.h"
 
+class UGameplayAbility;
+
 UCLASS()
 class PTW_API AChargeDetectActor : public ADetectorActor
 {
@@ -17,4 +19,8 @@ public:
 
 protected:
 	virtual void OnDetectOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+	
+protected:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UGameplayAbility> ChargeAbilityClass;
 };

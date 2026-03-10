@@ -463,7 +463,7 @@ void APTWPlayerCharacter::RegisterGameplayTagEvents()
 		.AddUObject(this, &APTWPlayerCharacter::OnStasisTagChanged);
 		
 		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Charge, EGameplayTagEventType::AnyCountChange)
-		.AddUObject(this, &APTWPlayerCharacter::OnStasisTagChanged);
+		.AddUObject(this, &APTWPlayerCharacter::OnMovelimit);
 	}
 }
 
@@ -481,6 +481,22 @@ void APTWPlayerCharacter::OnStasisTagChanged(const FGameplayTag Tag, int32 NewCo
 	else
 	{
 		PC->ResetIgnoreLookInput();
+		PC->ResetIgnoreMoveInput();
+	}
+}
+
+void APTWPlayerCharacter::OnMovelimit(const FGameplayTag Tag, int32 NewCount)
+{
+	APTWPlayerController* PC = Cast<APTWPlayerController>(Controller);
+	if (!PC) return;
+	
+	if (NewCount > 0)
+	{
+		PC->SetIgnoreMoveInput(true);
+		GetCharacterMovement()->StopMovementImmediately();
+	}
+	else
+	{
 		PC->ResetIgnoreMoveInput();
 	}
 }

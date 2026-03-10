@@ -1,5 +1,7 @@
 ﻿#include "ChargeDetectActor.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "MiniGame/GameMode/PTWDeliveryGameMode.h"
 
@@ -14,13 +16,12 @@ void AChargeDetectActor::OnDetectOverlap(UPrimitiveComponent* OverlappedComponen
 {
 	if (HasAuthority())
 	{
-		if (APTWDeliveryGameMode* DeliveryGameMode = GetWorld()->GetAuthGameMode<APTWDeliveryGameMode>())
-		{
-			if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(OtherActor))
-			{
-				DeliveryGameMode->StartBatteryCharge(PC);
-			}
-		}
+		UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
+		if (!ASC) return;
+
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(ChargeAbilityClass);
+		FGameplayAbilitySpecHandle SpecHandle = ASC->GiveAbility(Spec);
+		ASC->TryActivateAbility(SpecHandle);
 	}
 }
 

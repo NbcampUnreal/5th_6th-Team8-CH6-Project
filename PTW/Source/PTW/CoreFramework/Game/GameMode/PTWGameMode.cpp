@@ -264,11 +264,19 @@ void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 
 	if (APlayerController* PC = Cast<APlayerController>(C))
 	{
-		if (!PC->GetPawn())
+		if (APawn* CurrentPawn = PC->GetPawn())
 		{
-			RestartPlayer(PC);
-			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn을 재스폰하였습니다."), *PC->PlayerState->GetPlayerName());
+			CurrentPawn->Destroy();
 		}
+		
+		GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
+		{
+			if (!PC->GetPawn())
+			{
+				RestartPlayer(PC);
+				UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn을 재스폰하였습니다."), *PC->PlayerState->GetPlayerName());
+			}
+		});
 	}
 	
 	if (APlayerController* PC = Cast<APlayerController>(C))

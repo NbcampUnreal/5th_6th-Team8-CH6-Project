@@ -424,7 +424,7 @@ void APTWPlayerController::BeginPlay()
 
 	CreateUI();
 	
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] CreateUI 함수 호출됨."));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] BeginPlay - CreateUI 함수 호출됨."));
 }
 
 void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -467,6 +467,9 @@ void APTWPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
 	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnRep_Pawn 함수 호출됨."));
+
+	CreateUI();
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnRep_Pawn - CreateUI 함수 호출됨."));
 }
 
 void APTWPlayerController::OnPossess(APawn* InPawn)
@@ -477,6 +480,9 @@ void APTWPlayerController::OnPossess(APawn* InPawn)
 	Server_ReportLoadingComplete();
 	
 	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] 플레이어 컨트롤러 Possess 함수 호출됨."));
+
+	CreateUI();
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnPossess - CreateUI 함수 호출됨."));
 }
 
 void APTWPlayerController::OnUnPossess()
@@ -776,6 +782,8 @@ void APTWPlayerController::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
 
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] PostSeamlessTravel 함수 호출됨."));
+
 	// 로컬 컨트롤러인지 다시 확인
 	if (IsLocalController())
 	{
@@ -784,6 +792,9 @@ void APTWPlayerController::PostSeamlessTravel()
 		{
 			UISubsystem = LP->GetSubsystem<UPTWUISubsystem>();
 		}
+
+		CreateUI();
+		UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] PostSeamlessTravel - CreateUI 함수 호출됨."));
 	}
 }
 

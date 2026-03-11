@@ -281,6 +281,26 @@ void APTWMiniGameMode::ApplyRoundPropRandom()
 	PTWGameState->Server_SetPropSeed(FMath::Rand());
 }
 
+void APTWMiniGameMode::RemoveTags(AController* Controller)
+{
+	if (!Controller) return;
+
+	APTWPlayerState* PlayerState = Controller->GetPlayerState<APTWPlayerState>();
+	if (!PlayerState) return;
+
+	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
+	if (!ASC) return;
+	
+	FGameplayTagContainer GameplayTagContainer;
+	ASC->GetOwnedGameplayTags(GameplayTagContainer);
+
+	for (const FGameplayTag& Tag : GameplayTagContainer)
+	{
+		ASC->RemoveLooseGameplayTag(Tag);
+	}
+}
+
+
 void APTWMiniGameMode::TickCountDown()
 {
 	// CurrentCountDown--;
@@ -539,6 +559,7 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	}
 	
 	ApplyMiniGameTag(NewPlayer);
+	RemoveTags(NewPlayer);
 	InitPlayerHealth(NewPlayer);
 	SpawnDefaultWeapon(NewPlayer);
 	

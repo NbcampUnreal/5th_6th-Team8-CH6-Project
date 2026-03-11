@@ -225,10 +225,10 @@ void APTWGameMode::PlayerReadyToPlay(APlayerController* Controller)
 			UE_LOG(Log_GameMode, Error, TEXT("[PlayerReadyToPlay] 플레이어 스테이트가 유효하지 않습니다"));
 		}
 		
-		if (APawn* CurrentPawn = PC->GetPawn())
-		{
-			CurrentPawn->Destroy();
-		}
+		// if (APawn* CurrentPawn = PC->GetPawn())
+		// {
+		// 	CurrentPawn->Destroy();
+		// }
 		
 		GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
 		{
@@ -301,15 +301,15 @@ void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 			CurrentPawn->Destroy();
 		}
 
-		GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
-			{
-				if (PC && !PC->GetPawn())
-				{
-					RestartPlayer(PC);
-					PC->SetViewTarget(PC);
-					UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn 재스폰 완료"), *PC->PlayerState->GetPlayerName());
-				}
-			});
+		// GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
+		// 	{
+		// 		if (PC && !PC->GetPawn())
+		// 		{
+		// 			RestartPlayer(PC);
+		// 			PC->SetViewTarget(PC);
+		// 			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn 재스폰 완료"), *PC->PlayerState->GetPlayerName());
+		// 		}
+		// 	});
 	}
 }
 

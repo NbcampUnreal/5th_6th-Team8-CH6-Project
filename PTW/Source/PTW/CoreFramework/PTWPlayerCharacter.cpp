@@ -226,6 +226,17 @@ void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+		{
+			if (DefaultMappingContext)
+			{
+				Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			}
+		}
+	}
+	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		if (MoveAction)
@@ -334,37 +345,45 @@ void APTWPlayerCharacter::Input_AbilityInputTagReleased(FGameplayTag InputTag)
 
 void APTWPlayerCharacter::InitCharacterState()
 {
+	// 1. 실행 주체 확인 로그
+	FString NetRole = HasAuthority() ? TEXT("Server") : TEXT("Client");
+	FString LocalStatus = IsLocallyControlled() ? TEXT("Local") : TEXT("Remote");
+
 	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
 
+	// 2. PlayerState 복제 대기 로그
 	if (!PS)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[InitChar] %s: PlayerState가 아직 복제되지 않았습니다. 재시도 예약."), *GetName());
+		UE_LOG(LogTemp, Warning, TEXT("[InitChar][%s][%s] %s: PlayerState 대기 중..."), *NetRole, *LocalStatus, *GetName());
 		StartInitTimer();
 		return;
 	}
 
+	// 3. 중복 초기화 방지
 	if (bIsAbilitiesInitialized)
 	{
 		GetWorldTimerManager().ClearTimer(InitTimerHandle);
 		return;
 	}
 
+	// 4. GAS 초기화 시도 및 결과 확인
 	InitAbilityActorInfo();
 
-	if (!GetAbilitySystemComponent())
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
+	if (!ASC)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[InitChar] %s: ASC 초기화 실패. 재시도 예약."), *GetName());
+		UE_LOG(LogTemp, Error, TEXT("[InitChar][%s][%s] %s: ASC가 여전히 Null입니다! 재시도 예약."), *NetRole, *LocalStatus, *GetName());
 		StartInitTimer();
 		return;
 	}
 
+	// 5. 서버 전용 로직 (태그 및 아이템)
 	if (HasAuthority())
 	{
-		UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
-
 		if (ASC->HasMatchingGameplayTag(GameplayTags::State::Status_Dead))
 		{
 			ASC->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
+			UE_LOG(LogTemp, Log, TEXT("[InitChar][Server] %s: 죽음 태그를 정리했습니다."), *PS->GetPlayerName());
 		}
 
 		FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
@@ -372,6 +391,7 @@ void APTWPlayerCharacter::InitCharacterState()
 		{
 			ASC->SetLooseGameplayTagCount(EquipTag, 0);
 			ASC->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
+			UE_LOG(LogTemp, Log, TEXT("[InitChar][Server] %s: 장착 태그를 강제 초기화했습니다."), *PS->GetPlayerName());
 		}
 
 		if (!bHasGivenStartupItems)
@@ -379,10 +399,12 @@ void APTWPlayerCharacter::InitCharacterState()
 			FPTWPlayerData CurrentData = PS->GetPlayerData();
 			if (CurrentData.InventoryItemIDs.Num() > 0)
 			{
+				UE_LOG(LogTemp, Log, TEXT("[InitChar][Server] %s: 기존 데이터 로드 성공 (아이템 %d개)"), *PS->GetPlayerName(), CurrentData.InventoryItemIDs.Num());
 				OnPlayerDataLoaded(CurrentData);
 			}
 			else
 			{
+				UE_LOG(LogTemp, Log, TEXT("[InitChar][Server] %s: 초기 데이터 없음. 델리게이트 바인딩."), *PS->GetPlayerName());
 				PS->OnPlayerDataUpdated.RemoveDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);
 				PS->OnPlayerDataUpdated.AddDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);
 			}
@@ -392,6 +414,7 @@ void APTWPlayerCharacter::InitCharacterState()
 		ApplyDefaultEffects();
 	}
 
+	// 6. 공통 컴포넌트 등록
 	UpdateNameTagText();
 
 	if (VOIPTalkerComponent)
@@ -399,15 +422,11 @@ void APTWPlayerCharacter::InitCharacterState()
 		VOIPTalkerComponent->RegisterWithPlayerState(PS);
 	}
 
-	APTWPlayerController* PC = Cast<APTWPlayerController>(GetController());
-	if (!PC) return;
-
-	PC->CreateUI();
-
+	// 7. 최종 완료 처리
 	bIsAbilitiesInitialized = true;
 	GetWorldTimerManager().ClearTimer(InitTimerHandle);
 
-	UE_LOG(LogTemp, Log, TEXT("[InitChar] %s: 모든 초기화가 완료되었습니다."), *PS->GetPlayerName());
+	UE_LOG(LogTemp, Log, TEXT("[InitChar][%s][%s] %s: 초기화 최종 완료!"), *NetRole, *LocalStatus, *PS->GetPlayerName());
 }
 
 void APTWPlayerCharacter::OnInputTriggered()
@@ -458,7 +477,6 @@ void APTWPlayerCharacter::SetIdleState(bool bNewState)
 	}
 	else
 	{
-		// 태그 제거
 		ASC->RemoveLooseGameplayTag(IdleTag);
 	}
 }

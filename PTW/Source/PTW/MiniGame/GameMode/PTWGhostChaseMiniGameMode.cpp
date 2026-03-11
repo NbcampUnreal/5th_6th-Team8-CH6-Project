@@ -17,6 +17,25 @@ APTWGhostChaseMiniGameMode::APTWGhostChaseMiniGameMode()
 	MiniGameRule.TimeRule.Timer = 180.f;    // 3분 게임
 }
 
+void APTWGhostChaseMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
+{
+	if (!DeadActor) return;
+
+	AController* DeadController = nullptr;
+
+	if (APawn* DeadPawn = Cast<APawn>(DeadActor))
+	{
+		DeadController = DeadPawn->GetController();
+	}
+
+	if (DeadController)
+	{
+		OnPlayerEliminated(DeadController);
+	}
+
+	Super::HandlePlayerDeath(DeadActor, KillActor);
+}
+
 void APTWGhostChaseMiniGameMode::OnPlayerEliminated(AController* EliminatedController)
 {
 	if (!EliminatedController || ActiveChasers.Num() <= 1) return;
@@ -51,6 +70,23 @@ void APTWGhostChaseMiniGameMode::OnPlayerEliminated(AController* EliminatedContr
 	}
 }
 
+bool APTWGhostChaseMiniGameMode::IsValidChaseTarget(AController* Chaser, AController* Target) const
+{
+	if (!Chaser || !Target)
+	{
+		return false;
+	}
+
+	const AController* const* FoundTarget = TargetMap.Find(Chaser);
+
+	if (!FoundTarget)
+	{
+		return false;
+	}
+
+	return (*FoundTarget == Target);
+}
+
 void APTWGhostChaseMiniGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -74,7 +110,7 @@ void APTWGhostChaseMiniGameMode::StartRound()
 	GiveBaseWeaponToAll();
 
 	// 투명화 적용
-	ApplyInvisibilityToAll();
+	//ApplyInvisibilityToAll();
 }
 
 void APTWGhostChaseMiniGameMode::SetupTargetChain()
@@ -83,9 +119,10 @@ void APTWGhostChaseMiniGameMode::SetupTargetChain()
 	TargetMap.Empty();
 
 	// 월드의 모든 플레이어 컨트롤러 수집
-	for (FConstControllerIterator It = GetWorld()->GetControllerIterator(); It; ++It)
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		if (AController* PC = It->Get())
+		APlayerController* PC = It->Get();
+		if (PC && PC->GetPawn())
 		{
 			ActiveChasers.Add(PC);
 		}
@@ -114,14 +151,7 @@ void APTWGhostChaseMiniGameMode::SetupTargetChain()
 
 void APTWGhostChaseMiniGameMode::ApplyInvisibilityToAll()
 {
-	for (AController* PC : ActiveChasers)
-	{
-		if (APTWPlayerCharacter* TargetChar = Cast<APTWPlayerCharacter>(PC->GetPawn()))
-		{
-			TargetChar->ApplyInvisibilityEffect(InvisibilityEffectClass);
-			//TargetChar->ApplyInvisibilityEffect(test);
-		}
-	}
+	
 }
 
 void APTWGhostChaseMiniGameMode::UpdatePlayerTargetUI(AController* Chaser, AController* NewTarget)

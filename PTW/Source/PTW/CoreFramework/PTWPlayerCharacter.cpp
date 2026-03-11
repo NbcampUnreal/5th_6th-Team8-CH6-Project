@@ -481,13 +481,6 @@ void APTWPlayerCharacter::RegisterGameplayTagEvents()
 		
 		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Charge, EGameplayTagEventType::AnyCountChange)
 		.AddUObject(this, &APTWPlayerCharacter::OnMovelimit);
-
-		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Ghost::Invisible, EGameplayTagEventType::NewOrRemoved)
-			.AddUObject(this, &APTWPlayerCharacter::OnGhostStateTagChanged);
-
-		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Ghost::Revealed, EGameplayTagEventType::NewOrRemoved)
-			.AddUObject(this, &APTWPlayerCharacter::OnGhostStateTagChanged);
-
 	}
 }
 
@@ -529,98 +522,6 @@ void APTWPlayerCharacter::OnRep_StealthMode()
 {
 }
 
-void APTWPlayerCharacter::OnGhostStateTagChanged(const FGameplayTag Tag, int32 NewCount)
-{
-	UpdateGhostVisibility();
-}
-
-void APTWPlayerCharacter::UpdateGhostVisibility()
-{
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
-	if (!ASC) return;
-
-	// 상태 확인
-	bool bIsInvisible = ASC->HasMatchingGameplayTag(GameplayTags::State::Ghost::Invisible);
-	bool bIsRevealed = ASC->HasMatchingGameplayTag(GameplayTags::State::Ghost::Revealed);
-
-	// 최종 상태
-	bool bIsGhostMode = bIsInvisible && !bIsRevealed;
-
-	APTWPlayerController* LocalPC = GetWorld()->GetFirstPlayerController<APTWPlayerController>();
-	bool bIsMyPawn = LocalPC && LocalPC->GetPawn() == this;
-
-	if (bIsGhostMode)
-	{
-		//GhostHiddenComponents.Empty();
-
-		// 본체 메시 처리
-		if (USkeletalMeshComponent* Mesh3P = GetMesh())
-		{
-			// 내가 조종하는 캐릭터가 아닐 때만 숨김
-			if (!bIsMyPawn)
-			{
-				// 이미 숨겨져 있는 메시가 아닐 때만 처리
-				if (!Mesh3P->bHiddenInGame)
-				{
-					Mesh3P->SetHiddenInGame(true);
-					GhostHiddenComponents.Add(Mesh3P); // 나중에 복원하기 위해 기록
-				}
-			}
-		}
-
-		// 무기 및 부착물 처리
-		TArray<AActor*> AttachedActors;
-		GetAttachedActors(AttachedActors);
-		for (AActor* AttachedActor : AttachedActors)
-		{
-			TArray<UMeshComponent*> MeshComps;
-			AttachedActor->GetComponents<UMeshComponent>(MeshComps);
-
-			for (UMeshComponent* MeshComp : MeshComps)
-			{
-				if (!IsLocallyControlled())
-				{
-					// 원래 보이던 상태인 것만 숨기고 기록
-					if (!MeshComp->bHiddenInGame)
-					{
-						MeshComp->SetHiddenInGame(true);
-						GhostHiddenComponents.Add(MeshComp);
-					}
-				}
-			}
-		}
-
-		SetStealthMode(true);
-	}
-	// 투명 모드 해제 시
-	else
-	{
-		// 기록해두었던 '내가 숨긴 메시들'만 순회하며 복원
-		for (auto& WeakMesh : GhostHiddenComponents)
-		{
-			if (UMeshComponent* GhostMesh = WeakMesh.Get())
-			{
-				GhostMesh->SetHiddenInGame(false);
-			}
-		}
-
-		// 복원이 끝났으므로 리스트 비우기
-		GhostHiddenComponents.Empty();
-
-		SetStealthMode(false);
-	}
-
-	// TargetPlayer View (위젯 시점) 관리
-	// 내가 로컬 플레이어일 때만 컨트롤러를 통해 타겟 뷰의 숨김 목록을 갱신
-	if (APTWPlayerController* PC = Cast<APTWPlayerController>(GetController()))
-	{
-		if (PC->IsLocalController())
-		{
-			PC->RefreshTargetViewHiddenActors();
-		}
-	}
-}
-
 void APTWPlayerCharacter::TryInitLocalUI()
 {
 	if (bIsUIInitialized) return;
@@ -648,26 +549,6 @@ void APTWPlayerCharacter::SetStealthMode(bool bSetStealthMode)
 {
 	bIsStealth = bSetStealthMode;
 	OnRep_StealthMode();
-}
-
-void APTWPlayerCharacter::ApplyInvisibilityEffect(TSubclassOf<UGameplayEffect> EffectClass)
-{
-	if (!EffectClass) return;
-
-	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
-	{
-		FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
-		ContextHandle.AddSourceObject(this);
-
-		// GE 클래스로 스펙 생성 후 적용
-		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(EffectClass, 1.0f, ContextHandle);
-		if (SpecHandle.IsValid())
-		{
-			ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-
-			UpdateGhostVisibility();
-		}
-	}
 }
 
 void APTWPlayerCharacter::ServerRPCUseActiveItem_Implementation()

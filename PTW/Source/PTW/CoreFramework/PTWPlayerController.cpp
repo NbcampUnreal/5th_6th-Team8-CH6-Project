@@ -536,7 +536,7 @@ void APTWPlayerController::NotifyLoadedWorld(FName WorldPackageName, bool bFinal
 {
 	Super::NotifyLoadedWorld(WorldPackageName, bFinalDest);
 
-	if (bFinalDest)
+	if (bFinalDest && IsLocalController())
 	{
 		Server_NotifyMapLoaded();
 	}

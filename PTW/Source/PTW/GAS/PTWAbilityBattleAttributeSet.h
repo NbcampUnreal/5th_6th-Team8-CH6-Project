@@ -14,7 +14,7 @@ GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
 
 UCLASS()
-class PTW_API UPTWAbilityBattleAttributeSet : public UPTWAttributeSet
+class PTW_API UPTWAbilityBattleAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
 public:
@@ -41,9 +41,9 @@ public:
 	FGameplayAttributeData Shield;
 	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, Shield);
 
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_LifeOnHit, Category = "AttributeBattle|Attributes")
-	FGameplayAttributeData LifeOnHit;
-	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, LifeOnHit);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_LifeStealOnHit, Category = "AttributeBattle|Attributes")
+	FGameplayAttributeData LifeStealOnHit;
+	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, LifeStealOnHit);
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxShield, Category = "AttributeBattle|Attributes")
 	FGameplayAttributeData MaxShield;
@@ -72,7 +72,7 @@ protected:
 	void OnRep_LifeSteal (const FGameplayAttributeData& OldLifeSteal);
 
 	UFUNCTION()
-	void OnRep_LifeOnHit(const FGameplayAttributeData& OldLifeOnHit);
+	void OnRep_LifeStealOnHit(const FGameplayAttributeData& OldLifeStealOnHit);
 
 	UFUNCTION()
 	void OnRep_Shield(const FGameplayAttributeData& OldShield);

@@ -3,10 +3,4 @@
 
 #include "MiniGame/Data/AbilityBattle/PTWAbilityRow.h"
 
-PTWAbilityRow::PTWAbilityRow()
-{
-}
 
-PTWAbilityRow::~PTWAbilityRow()
-{
-}

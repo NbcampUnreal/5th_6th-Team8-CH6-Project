@@ -16,7 +16,7 @@ void UPTWAbilityBattleAttributeSet::GetLifetimeReplicatedProps(TArray<class FLif
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, Armor, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, HealthRegen, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, LifeSteal, COND_None, REPNOTIFY_OnChanged);
-	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, LifeOnHit, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, LifeStealOnHit, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, Shield, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, MaxShield, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, DamageReceived, COND_None, REPNOTIFY_OnChanged);
@@ -55,9 +55,9 @@ void UPTWAbilityBattleAttributeSet::OnRep_LifeSteal(const FGameplayAttributeData
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAbilityBattleAttributeSet, LifeSteal, OldLifeSteal);
 }
 
-void UPTWAbilityBattleAttributeSet::OnRep_LifeOnHit(const FGameplayAttributeData& OldLifeOnHit)
+void UPTWAbilityBattleAttributeSet::OnRep_LifeStealOnHit(const FGameplayAttributeData& OldLifeStealOnHit)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAbilityBattleAttributeSet, LifeOnHit, OldLifeOnHit);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAbilityBattleAttributeSet, LifeStealOnHit, OldLifeStealOnHit);
 }
 
 void UPTWAbilityBattleAttributeSet::OnRep_Shield(const FGameplayAttributeData& OldShield)

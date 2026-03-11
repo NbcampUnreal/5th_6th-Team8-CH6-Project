@@ -6,6 +6,7 @@
 #include "MiniGame/PTWMiniGameMode.h"
 #include "PTWAbilityBattleGameMode.generated.h"
 
+class UPTWRandomDraftSystem;
 /**
  * 
  */
@@ -13,5 +14,14 @@ UCLASS()
 class PTW_API APTWAbilityBattleGameMode : public APTWMiniGameMode
 {
 	GENERATED_BODY()
+
+protected:
+
+	virtual void StartGame() override;
 	
+private:
+	void GrandAbilityBattleAttributeSet();
+
+	UPROPERTY()
+	TObjectPtr<UPTWRandomDraftSystem> RandomDraftSystem;
 };

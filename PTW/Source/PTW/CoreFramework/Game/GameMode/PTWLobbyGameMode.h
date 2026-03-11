@@ -107,11 +107,11 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UDataTable> LobbyItemDataTable;
 	
-
-	
 	UPROPERTY(EditDefaultsOnly, Category = "Test")
 	bool bSkipFirstLobby = false;
 	
 	bool bIsFirstLobby;
 	bool bWaitingTimerStarted = false;
+
+	FTimerHandle LoadingDelayTimer;
 };

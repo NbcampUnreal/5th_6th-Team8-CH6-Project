@@ -7,6 +7,7 @@
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/PTWDummyBotController.h"
+#include "Debug/PTWLogCategorys.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
 
@@ -211,6 +212,33 @@ void APTWGameMode::CheckAllPlayersLoaded()
 void APTWGameMode::PlayerReadyToPlay(APlayerController* Controller)
 {
 	ReadyPlayer++;
+
+	if (APlayerController* PC = Cast<APlayerController>(Controller))
+	{
+		if (PC->PlayerState)
+		{
+			PC->PlayerState->SetIsSpectator(false);
+			PC->PlayerState->SetIsOnlyASpectator(false);
+		}
+		else
+		{
+			UE_LOG(Log_GameMode, Error, TEXT("[PlayerReadyToPlay] 플레이어 스테이트가 유효하지 않습니다"));
+		}
+		
+		if (APawn* CurrentPawn = PC->GetPawn())
+		{
+			CurrentPawn->Destroy();
+		}
+		
+		GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
+		{
+			if (!PC->GetPawn())
+			{
+				RestartPlayer(PC);
+				UE_LOG(Log_GameMode, Warning, TEXT("[PlayerReadyToPlay] %s 플레이어 Pawn을 재스폰하였습니다."), *PC->PlayerState->GetPlayerName());
+			}
+		});
+	}
 }
 
 void APTWGameMode::Multicast_CloseLoadingScreen_Implementation()
@@ -262,22 +290,22 @@ void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 
 	Super::HandleSeamlessTravelPlayer(C);
 
-	if (APlayerController* PC = Cast<APlayerController>(C))
-	{
-		if (APawn* CurrentPawn = PC->GetPawn())
-		{
-			CurrentPawn->Destroy();
-		}
-		
-		GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
-		{
-			if (!PC->GetPawn())
-			{
-				RestartPlayer(PC);
-				UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn을 재스폰하였습니다."), *PC->PlayerState->GetPlayerName());
-			}
-		});
-	}
+	// if (APlayerController* PC = Cast<APlayerController>(C))
+	// {
+	// 	if (APawn* CurrentPawn = PC->GetPawn())
+	// 	{
+	// 		CurrentPawn->Destroy();
+	// 	}
+	// 	
+	// 	GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
+	// 	{
+	// 		if (!PC->GetPawn())
+	// 		{
+	// 			RestartPlayer(PC);
+	// 			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn을 재스폰하였습니다."), *PC->PlayerState->GetPlayerName());
+	// 		}
+	// 	});
+	// }
 	
 	if (APlayerController* PC = Cast<APlayerController>(C))
 	{

@@ -175,6 +175,16 @@ void APTWPlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		GetWorldTimerManager().ClearTimer(NameTagRetryTimer);
 	}
 
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->ClearActorInfo();
+	}
+
+	if (APTWPlayerState* PS = GetPlayerState<APTWPlayerState>())
+	{
+		PS->OnPlayerDataUpdated.RemoveDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);
+	}
+
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -624,21 +634,6 @@ void APTWPlayerCharacter::SetStealthMode(bool bSetStealthMode)
 {
 	bIsStealth = bSetStealthMode;
 	OnRep_StealthMode();
-}
-
-void APTWPlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	if (AbilitySystemComponent)
-	{
-		AbilitySystemComponent->ClearActorInfo();
-	}
-
-	if (APTWPlayerState* PS = GetPlayerState<APTWPlayerState>())
-	{
-		PS->OnPlayerDataUpdated.RemoveDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);
-	}
-
-	Super::EndPlay(EndPlayReason);
 }
 
 void APTWPlayerCharacter::ApplyInvisibilityEffect(TSubclassOf<UGameplayEffect> EffectClass)

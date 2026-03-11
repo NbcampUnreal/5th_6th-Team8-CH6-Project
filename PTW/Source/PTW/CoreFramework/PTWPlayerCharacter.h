@@ -111,9 +111,6 @@ protected:
 	// 실제 가시성을 업데이트하는 함수
 	void UpdateGhostVisibility();
 
-	// 파괴될 때 실행되는 정리 함수 오버라이드
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
 private:
 	// 6. [Private] 내부 전용 유틸리티 함수 (외부/자식 노출 X)
 

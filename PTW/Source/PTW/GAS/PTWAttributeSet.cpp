@@ -9,6 +9,7 @@
 #include "PTW/CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/Character/Component/PTWReactorComponent.h"
+#include "MiniGame/GameMode/PTWGhostChaseMiniGameMode.h"
 
 UPTWAttributeSet::UPTWAttributeSet()
 {
@@ -139,6 +140,24 @@ void UPTWAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, 
 	}
 }
 
+bool UPTWAttributeSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data)
+{
+	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+	{
+		// 데미지인지 확인 (음수 = 데미지)
+		if (Data.EvaluatedData.Magnitude < 0.f)
+		{
+			if (!IsDamageToValidTarget(Data))
+			{
+				// Target이 아니면 데미지 차단
+				return false;
+			}
+		}
+	}
+
+	return Super::PreGameplayEffectExecute(Data);
+}
+
 void UPTWAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, Health, OldHealth); }
 void UPTWAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, MaxHealth, OldMaxHealth); }
 
@@ -189,4 +208,48 @@ void UPTWAttributeSet::HandleDamage(const FGameplayEffectModCallbackData& Data)
 	{
 		PC->ClientRPC_ShowDamageIndicator(DamageCauserLocation);
 	}
+}
+
+bool UPTWAttributeSet::IsDamageToValidTarget(const FGameplayEffectModCallbackData& Data) const
+{
+	const FGameplayEffectContextHandle& Context = Data.EffectSpec.GetContext();
+
+	UAbilitySystemComponent* SourceASC = Context.GetOriginalInstigatorAbilitySystemComponent();
+
+	if (!SourceASC)
+	{
+		return false;
+	}
+
+	APawn* SourcePawn = Cast<APawn>(SourceASC->GetAvatarActor());
+	APawn* TargetPawn = Cast<APawn>(Data.Target.GetAvatarActor());
+
+	if (!SourcePawn || !TargetPawn)
+	{
+		return false;
+	}
+
+	AController* SourceController = SourcePawn->GetController();
+	AController* TargetController = TargetPawn->GetController();
+
+	if (!SourceController || !TargetController)
+	{
+		return false;
+	}
+
+	UWorld* World = SourcePawn->GetWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	APTWGhostChaseMiniGameMode* GM = Cast<APTWGhostChaseMiniGameMode>(World->GetAuthGameMode());
+
+	// 다른 게임모드면 제한 없음
+	if (!GM)
+	{
+		return true;
+	}
+
+	return GM->IsValidChaseTarget(SourceController, TargetController);
 }

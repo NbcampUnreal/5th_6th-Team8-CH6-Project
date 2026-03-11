@@ -43,10 +43,12 @@ void UPTWInventoryWidget::BindDelegates()
 		CachedPlayerState->OnPlayerDataUpdated.AddDynamic(this, &UPTWInventoryWidget::OnInventoryUpdated);
 
 		UE_LOG(LogTemp, Warning, TEXT("InventoryWidget Binding delegates"));
+		
+		/* 최신 데이터로 초기화 */
+		OnInventoryUpdated(CachedPlayerState->GetPlayerData());
 	}
 
-	/* 최신 데이터로 초기화 */
-	OnInventoryUpdated(CachedPlayerState->GetPlayerData());
+	
 }
 
 void UPTWInventoryWidget::UnbindDelegates()

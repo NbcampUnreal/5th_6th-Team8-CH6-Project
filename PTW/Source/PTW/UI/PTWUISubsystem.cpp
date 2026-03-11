@@ -155,9 +155,26 @@ void UPTWUISubsystem::ShowHUD(TSubclassOf<UUserWidget> HUDClass)
 		HUDWidget->AddToViewport(0);
 	}
 
-	if (UPTWInGameHUD* InGameHUD = Cast<UPTWInGameHUD>(HUDWidget))
+	// ASC 체크
+	UAbilitySystemComponent* ASC = GetLocalPlayerASC();
+
+	if (ASC)
 	{
-		InGameHUD->InitializeUI(GetLocalPlayerASC());
+		if (UPTWInGameHUD* InGameHUD = Cast<UPTWInGameHUD>(HUDWidget))
+		{
+			InGameHUD->InitializeUI(ASC);
+		}
+	}
+	else
+	{
+		// ASC 준비될 때까지 타이머
+		GetWorld()->GetTimerManager().SetTimer(
+			ASCInitTimerHandle,
+			this,
+			&UPTWUISubsystem::TryInitializeHUDASC,
+			0.1f,
+			true
+		);
 	}
 }
 
@@ -327,4 +344,21 @@ void UPTWUISubsystem::ApplyInputPolicy(EUIInputPolicy Policy)
 	default:
 		break;
 	}
+}
+
+void UPTWUISubsystem::TryInitializeHUDASC()
+{
+	UAbilitySystemComponent* ASC = GetLocalPlayerASC();
+
+	if (!ASC || !HUDWidget)
+	{
+		return;
+	}
+
+	if (UPTWInGameHUD* InGameHUD = Cast<UPTWInGameHUD>(HUDWidget))
+	{
+		InGameHUD->InitializeUI(ASC);
+	}
+
+	GetWorld()->GetTimerManager().ClearTimer(ASCInitTimerHandle);
 }

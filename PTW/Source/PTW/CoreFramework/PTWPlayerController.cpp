@@ -421,6 +421,8 @@ void APTWPlayerController::BeginPlay()
 	{
 		CurrentMouseSensitivity = Settings->MouseSensitivity;
 	}
+
+	CreateUI();
 }
 
 void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -452,7 +454,7 @@ void APTWPlayerController::OnRep_PlayerState()
 
 	BindGameStateDelegates();
 
-	CreateUI();
+	//CreateUI();
 }
 
 void APTWPlayerController::OnRep_Pawn()

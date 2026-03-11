@@ -261,8 +261,6 @@ void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			BindHandles
 		);
 	}
-
-	TryInitLocalUI();
 }
 
 void APTWPlayerCharacter::Move(const FInputActionValue& Value)
@@ -401,7 +399,10 @@ void APTWPlayerCharacter::InitCharacterState()
 		VOIPTalkerComponent->RegisterWithPlayerState(PS);
 	}
 
-	TryInitLocalUI();
+	APTWPlayerController* PC = Cast<APTWPlayerController>(GetController());
+	if (!PC) return;
+
+	PC->CreateUI();
 
 	bIsAbilitiesInitialized = true;
 	GetWorldTimerManager().ClearTimer(InitTimerHandle);
@@ -538,24 +539,6 @@ void APTWPlayerCharacter::OnMovelimit(const FGameplayTag Tag, int32 NewCount)
 
 void APTWPlayerCharacter::OnRep_StealthMode()
 {
-}
-
-void APTWPlayerCharacter::TryInitLocalUI()
-{
-	if (bIsUIInitialized) return;
-
-	if (!IsLocallyControlled()) return;
-
-	APTWPlayerController* PC = Cast<APTWPlayerController>(GetController());
-	if (!PC) return;
-
-	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
-	if (!PS) return;
-
-	PC->CreateUI();
-	bIsUIInitialized = true;
-
-	UE_LOG(LogTemp, Log, TEXT("[%s] 로컬 화면 UI 생성 완료!"), *GetName());
 }
 
 void APTWPlayerCharacter::StartInitTimer()

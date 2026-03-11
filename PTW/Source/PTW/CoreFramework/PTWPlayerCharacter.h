@@ -105,9 +105,6 @@ protected:
 	UFUNCTION()
 	void OnRep_StealthMode();
 
-	// 안전하게 UI를 띄우는 전용 함수
-	void TryInitLocalUI();
-
 	void StartInitTimer();
 
 private:
@@ -157,7 +154,6 @@ protected:
 
 	bool bIsAbilitiesInitialized = false;
 	bool bIsIdleState = false;
-	bool bIsUIInitialized = false;
 
 
 

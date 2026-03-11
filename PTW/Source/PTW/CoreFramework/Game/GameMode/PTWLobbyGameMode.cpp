@@ -127,7 +127,7 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 
 void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	UE_LOG(LogTemp, Warning, TEXT("HandleSeamlessTravelPlayer: %s"), *C->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("[로비게임모드] HandleSeamlessTravelPlayer: %s"), *C->GetName());
 	
 	Super::HandleSeamlessTravelPlayer(C);
 }

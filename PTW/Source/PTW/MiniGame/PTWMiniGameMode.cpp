@@ -155,29 +155,13 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 }
 
 
-//FIXME : 03/10 박태웅 테스트로 함수내부 코드 수정
+//FIXME : 03/11 박태웅 내부함수 코드 삭제
 void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	if (APlayerController* PC = Cast<APlayerController>(C))
-	{
-		if (APTWPlayerState* PS = PC->GetPlayerState<APTWPlayerState>())
-		{
-			PS->SetIsSpectator(false);
-			PS->SetIsOnlyASpectator(false);
-			PS->ClearGAS();
-		}
-	}
-
+	UE_LOG(LogTemp, Warning, TEXT("[미니게임모드] HandleSeamlessTravelPlayer: %s"), *C->GetName());
+	
 	Super::HandleSeamlessTravelPlayer(C);
 
-	if (APlayerController* PC = Cast<APlayerController>(C))
-	{
-		if (PC->GetStateName() == NAME_Spectating)
-		{
-			PC->ChangeState(NAME_Playing);
-		}
-		PC->SetViewTarget(PC);
-	}
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)

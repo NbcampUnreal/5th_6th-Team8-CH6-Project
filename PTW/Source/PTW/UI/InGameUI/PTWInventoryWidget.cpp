@@ -38,7 +38,7 @@ void UPTWInventoryWidget::BindDelegates()
 	UnbindDelegates();
 
 	/* 델리게이트 바인딩 */
-	if (CachedPlayerState)
+	if (CachedPlayerState.IsValid())
 	{
 		CachedPlayerState->OnPlayerDataUpdated.AddDynamic(this, &UPTWInventoryWidget::OnInventoryUpdated);
 
@@ -52,7 +52,7 @@ void UPTWInventoryWidget::BindDelegates()
 void UPTWInventoryWidget::UnbindDelegates()
 {
 	/* 델리게이트 바인딩 해제 */
-	if (CachedPlayerState)
+	if (CachedPlayerState.IsValid())
 	{
 		CachedPlayerState->OnPlayerDataUpdated.RemoveDynamic(this, &UPTWInventoryWidget::OnInventoryUpdated);
 	}

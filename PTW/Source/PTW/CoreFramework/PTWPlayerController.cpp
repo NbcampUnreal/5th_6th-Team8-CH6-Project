@@ -451,6 +451,8 @@ void APTWPlayerController::OnRep_PlayerState()
 	}
 
 	BindGameStateDelegates();
+
+	CreateUI();
 }
 
 void APTWPlayerController::OnRep_Pawn()

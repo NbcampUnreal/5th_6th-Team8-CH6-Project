@@ -145,13 +145,13 @@ void APTWPlayerController::Client_OpenMainMenu_Implementation()
 	}
 }
 
-void APTWPlayerController::Server_NotifyReadyToPlay_Implementation()
-{
-	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
-	{
-		GameMode->PlayerReadyToPlay(this);
-	}
-}
+//void APTWPlayerController::Server_NotifyReadyToPlay_Implementation()
+//{
+//	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
+//	{
+//		GameMode->PlayerReadyToPlay(this);
+//	}
+//}
 
 void APTWPlayerController::BindBombDelegate(APTWBombActor* NewBomb)
 {
@@ -560,7 +560,7 @@ void APTWPlayerController::NotifyLoadedWorld(FName WorldPackageName, bool bFinal
 
 	if (bFinalDest && IsLocalController())
 	{
-		Server_NotifyMapLoaded();
+		//Server_NotifyMapLoaded();
 		UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] Server_NotifyMapLoaded 함수 호출됨."));
 	}
 }
@@ -595,7 +595,7 @@ void APTWPlayerController::BindGameStateDelegates()
 	HandleRoulettePhaseChanged(GS->GetRouletteData());
 	HandleGamePhaseChanged(GS->GetCurrentGamePhase());
 	
-	Server_NotifyReadyToPlay();
+	//Server_NotifyReadyToPlay();
 	
 }
 
@@ -997,13 +997,13 @@ void APTWPlayerController::UpdateNameTagsVisibility()
 	}
 }
 
-void APTWPlayerController::Server_NotifyMapLoaded_Implementation()
-{
-	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
-	{
-		GameMode->PlayerReadyToPlay(this);
-	}
-}
+//void APTWPlayerController::Server_NotifyMapLoaded_Implementation()
+//{
+//	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
+//	{
+//		GameMode->PlayerReadyToPlay(this);
+//	}
+//}
 
 void APTWPlayerController::HandleBombOwnerChanged(APawn* NewOwnerPawn)
 {

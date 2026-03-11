@@ -86,8 +86,8 @@ public:
 	void Client_OpenMainMenu();
 	
 	/* 서버에 플레이어가 준비 상태인 것을 알림 */
-	UFUNCTION(Server, Reliable)
-	void Server_NotifyReadyToPlay();
+	//UFUNCTION(Server, Reliable)
+	//void Server_NotifyReadyToPlay();
 
 	/* (폭탄넘기기 미니게임) BombActor 델리게이트 바인딩 */
 	void BindBombDelegate(APTWBombActor* NewBomb);
@@ -167,8 +167,8 @@ protected:
 	void UpdateNameTagsVisibility();
 
 	/*  클라 로딩완료 알리기 */
-	UFUNCTION(Server, Reliable)
-	void Server_NotifyMapLoaded();
+	//UFUNCTION(Server, Reliable)
+	//void Server_NotifyMapLoaded();
 	
 	/* (로딩스크린) 로딩완료 알리기 */
 	UFUNCTION(Server, Reliable)

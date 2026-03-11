@@ -83,7 +83,6 @@ void APTWLobbyGameMode::BeginPlay()
 		GetWorldTimerManager().SetTimer(PIEStartTimer, this, &APTWLobbyGameMode::StartGameLobby, 2.f, false);
 #endif
 
-		
 		FTimerHandle StartGameTimer;
 		GetWorldTimerManager().SetTimer(StartGameTimer, this, &APTWLobbyGameMode::StartGameLobby, 10.f, false);
 	}
@@ -158,18 +157,13 @@ void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
 	
 	PTWPlayerState->bIsReadyToPlay = true;
 	
-	Controller->bPlayerIsWaiting = false;
-	Controller->PlayerState->SetIsSpectator(false);
-	Controller->ChangeState(NAME_Playing);
-	Controller->ClientGotoState(NAME_Playing);
-	
 	if (ReadyPlayer >= AllPlayer)
 	{
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
 		
-		FTimerHandle LoadingDealyTimer;
-		GetWorldTimerManager().SetTimer(LoadingDealyTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
+		GetWorldTimerManager().ClearTimer(LoadingDelayTimer);
+		GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
 	}
 }
 

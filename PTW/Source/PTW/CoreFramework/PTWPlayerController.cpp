@@ -423,6 +423,8 @@ void APTWPlayerController::BeginPlay()
 	}
 
 	CreateUI();
+	
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] CreateUI 함수 호출됨."));
 }
 
 void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -434,6 +436,8 @@ void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 	
 	Super::EndPlay(EndPlayReason);
+	
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] EndPlay 함수 호출됨."));
 }
 
 void APTWPlayerController::OnRep_PlayerState()
@@ -455,11 +459,14 @@ void APTWPlayerController::OnRep_PlayerState()
 	BindGameStateDelegates();
 
 	//CreateUI();
+	
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnRep_PlayerState 함수 호출됨."));
 }
 
 void APTWPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnRep_Pawn 함수 호출됨."));
 }
 
 void APTWPlayerController::OnPossess(APawn* InPawn)
@@ -468,16 +475,21 @@ void APTWPlayerController::OnPossess(APawn* InPawn)
 
 	/* 로딩완료 */
 	Server_ReportLoadingComplete();
+	
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] 플레이어 컨트롤러 Possess 함수 호출됨."));
 }
 
 void APTWPlayerController::OnUnPossess()
 {
 	Super::OnUnPossess();
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnUnPossess 함수 호출됨."));
 }
 
 void APTWPlayerController::BeginSpectatingState()
 {
 	Super::BeginSpectatingState();
+	
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] BeginSpectatingState 함수 호출됨."));
 }
 
 ASpectatorPawn* APTWPlayerController::SpawnSpectatorPawn()
@@ -543,6 +555,7 @@ void APTWPlayerController::NotifyLoadedWorld(FName WorldPackageName, bool bFinal
 	if (bFinalDest && IsLocalController())
 	{
 		Server_NotifyMapLoaded();
+		UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] Server_NotifyMapLoaded 함수 호출됨."));
 	}
 }
 

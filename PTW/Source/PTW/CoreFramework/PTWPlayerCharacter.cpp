@@ -261,6 +261,8 @@ void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			BindHandles
 		);
 	}
+
+	TryInitLocalUI();
 }
 
 void APTWPlayerCharacter::Move(const FInputActionValue& Value)
@@ -386,13 +388,7 @@ void APTWPlayerCharacter::InitCharacterState()
 		VOIPTalkerComponent->RegisterWithPlayerState(PS);
 	}
 
-	if (IsLocallyControlled())
-	{
-		if (APTWPlayerController* PC = Cast<APTWPlayerController>(GetController()))
-		{
-			PC->CreateUI();
-		}
-	}
+	TryInitLocalUI();
 }
 
 void APTWPlayerCharacter::OnInputTriggered()
@@ -623,6 +619,24 @@ void APTWPlayerCharacter::UpdateGhostVisibility()
 			PC->RefreshTargetViewHiddenActors();
 		}
 	}
+}
+
+void APTWPlayerCharacter::TryInitLocalUI()
+{
+	if (bIsUIInitialized) return;
+
+	if (!IsLocallyControlled()) return;
+
+	APTWPlayerController* PC = Cast<APTWPlayerController>(GetController());
+	if (!PC) return;
+
+	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
+	if (!PS) return;
+
+	PC->CreateUI();
+	bIsUIInitialized = true;
+
+	UE_LOG(LogTemp, Log, TEXT("[%s] 로컬 화면 UI 생성 완료!"), *GetName());
 }
 
 void APTWPlayerCharacter::ServerRPCUpdateAimPitch_Implementation(float NewAimPitch)

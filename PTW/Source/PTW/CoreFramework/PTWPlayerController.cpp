@@ -571,6 +571,9 @@ void APTWPlayerController::BindGameStateDelegates()
 	OnMiniGameCountdownChanged(GS->IsMiniGameCountdown());
 	HandleRoulettePhaseChanged(GS->GetRouletteData());
 	HandleGamePhaseChanged(GS->GetCurrentGamePhase());
+	
+	Server_NotifyReadyToPlay();
+	
 }
 
 void APTWPlayerController::UnbindGameStateDelegates()

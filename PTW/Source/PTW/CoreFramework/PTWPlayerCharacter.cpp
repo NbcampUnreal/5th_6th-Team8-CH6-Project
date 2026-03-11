@@ -121,7 +121,7 @@ void APTWPlayerCharacter::BeginPlay()
 		Mesh1P->HideBoneByName(FName("head"), EPhysBodyOp::PBO_None);
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("PTWPlayerCharacter::BeginPlay 함수 호출 완료"));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerCharacter] BeginPlay 함수 호출 완료, %s "), *GetName());
 }
 
 void APTWPlayerCharacter::PossessedBy(AController* NewController)
@@ -131,7 +131,7 @@ void APTWPlayerCharacter::PossessedBy(AController* NewController)
 	InitCharacterState();
 	RegisterGameplayTagEvents();
 	
-	UE_LOG(LogTemp, Warning, TEXT("PossessedBy 함수 호출 완료"));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerCharacter] PossessedBy 함수 호출 완료, %s "), *GetName());
 }
 
 void APTWPlayerCharacter::OnRep_PlayerState()
@@ -140,6 +140,8 @@ void APTWPlayerCharacter::OnRep_PlayerState()
 
 	InitCharacterState();
 	RegisterGameplayTagEvents();
+
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerCharacter] PlayerState 할당 완료, %s "), *GetName());
 }
 
 void APTWPlayerCharacter::OnPlayerStateChanged(APlayerState* NewPlayerState, APlayerState* OldPlayerState)
@@ -150,6 +152,8 @@ void APTWPlayerCharacter::OnPlayerStateChanged(APlayerState* NewPlayerState, APl
 	{
 		InitCharacterState();
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerCharacter] OnPlayerStateChanged 호출됨, %s "), *GetName());
 }
 
 void APTWPlayerCharacter::InitAbilityActorInfo()
@@ -174,33 +178,65 @@ void APTWPlayerCharacter::InitAbilityActorInfo()
 
 void APTWPlayerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (GetWorldTimerManager().IsTimerActive(NameTagRetryTimer))
-	{
-		GetWorldTimerManager().ClearTimer(NameTagRetryTimer);
-	}
+		UE_LOG(LogTemp, Warning, TEXT("[EndPlay] %s 캐릭터 EndPlay 호출됨 (Reason: %d)"), *GetName(), (int32)EndPlayReason);
 
-	if (AbilitySystemComponent)
-	{
-		AbilitySystemComponent->ClearActorInfo();
-	}
+		if (GetWorldTimerManager().IsTimerActive(NameTagRetryTimer))
+		{
+			GetWorldTimerManager().ClearTimer(NameTagRetryTimer);
+			UE_LOG(LogTemp, Log, TEXT("[EndPlay] %s: NameTag 무한 재시도 타이머 클리어 완료."), *GetName());
+		}
 
-	if (APTWPlayerState* PS = GetPlayerState<APTWPlayerState>())
-	{
-		PS->OnPlayerDataUpdated.RemoveDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);
-	}
+		if (AbilitySystemComponent)
+		{
+			AbilitySystemComponent->ClearActorInfo();
+			UE_LOG(LogTemp, Log, TEXT("[EndPlay] %s: ASC ClearActorInfo (육신 연결 해제) 완료."), *GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[EndPlay] %s: ASC가 이미 Null입니다. (이미 파괴되었거나 할당된 적 없음)"), *GetName());
+		}
 
-	Super::EndPlay(EndPlayReason);
+		if (APTWPlayerState* PS = GetPlayerState<APTWPlayerState>())
+		{
+			PS->OnPlayerDataUpdated.RemoveDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);
+			UE_LOG(LogTemp, Log, TEXT("[EndPlay] %s: PlayerState 델리게이트 안전하게 해제 완료."), *GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[EndPlay] %s: PlayerState가 Null입니다. 델리게이트 해제 패스 (PS가 먼저 파괴되었을 수 있음)."), *GetName());
+		}
+
+		Super::EndPlay(EndPlayReason);
+		UE_LOG(LogTemp, Log, TEXT("[EndPlay] %s: Super::EndPlay 최종 완료."), *GetName());
 }
 
 void APTWPlayerCharacter::HandleDeath(AActor* Attacker)
 {
-	if (!HasAuthority() || !AbilitySystemComponent) return;
-	
-	Super::HandleDeath(Attacker);
-	
-	if(APTWPlayerController* PTWPC= GetController<APTWPlayerController>())
+	UE_LOG(LogTemp, Warning, TEXT("[HandleDeath] %s 캐릭터 사망 처리 시작! Attacker: %s"), *GetName(), Attacker ? *Attacker->GetName() : TEXT("None"));
+
+	if (!HasAuthority())
 	{
+		UE_LOG(LogTemp, Log, TEXT("[HandleDeath] %s: 클라이언트이므로 사망 처리를 패스합니다. (서버만 처리)"), *GetName());
+		return;
+	}
+
+	if (!AbilitySystemComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[HandleDeath] 치명적 에러! %s: ASC가 Null이라서 사망 로직을 진행할 수 없습니다!"), *GetName());
+		return;
+	}
+
+	Super::HandleDeath(Attacker);
+	UE_LOG(LogTemp, Log, TEXT("[HandleDeath] %s: Super::HandleDeath 기본 사망 처리 완료."), *GetName());
+
+	if (APTWPlayerController* PTWPC = GetController<APTWPlayerController>())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[HandleDeath] %s: 컨트롤러(%s) 확인됨. 관전 모드(StartSpectating)로 전환합니다."), *GetName(), *PTWPC->GetName());
 		PTWPC->StartSpectating();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[HandleDeath] 관전 전환 실패! %s: 빙의된 컨트롤러가 없습니다! (이미 UnPossess 되었을 수 있음)"), *GetName());
 	}
 }
 
@@ -528,8 +564,14 @@ void APTWPlayerCharacter::RegisterGameplayTagEvents()
 void APTWPlayerCharacter::OnStasisTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
 	APTWPlayerController* PC = Cast<APTWPlayerController>(Controller);
-	if (!PC) return;
+	if (!PC)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[OnStasisTagChanged] 경고! 태그가 변경(%d)되었으나 조종 중인 PC가 없습니다. 조작 제한이 영구히 꼬일 수 있습니다!"), NewCount);
+		return;
+	}
 	
+	UE_LOG(LogTemp, Log, TEXT("[OnStasisTagChanged] PC 확인됨. 조작 제한 상태 변경 (Count: %d)"), NewCount);
+
 	if (NewCount > 0)
 	{
 		PC->SetIgnoreLookInput(true);

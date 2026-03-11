@@ -282,11 +282,28 @@ void APTWSpectatorPawn::BlockSpectating()
 
 void APTWSpectatorPawn::BeginPlay()
 {
+	if (APlayerState* PS = GetPlayerState())
+	{
+		UE_LOG(LogTemp, Log, TEXT("[PTWSpectatorPawn] %s: BeginPlay() called"), *PS->GetPlayerName());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("[PTWSpectatorPawn] BeginPlay() called"));
+	}
 	Super::BeginPlay();
 }
 
 void APTWSpectatorPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (APlayerState* PS = GetPlayerState())
+	{
+		UE_LOG(LogTemp, Log, TEXT("[PTWSpectatorPawn] %s: EndPlay() called"), *PS->GetPlayerName());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("[PTWSpectatorPawn] EndPlay() called"));
+	}
+	
 	if (IsLocallyControlled())
 	{
 		BlockSpectating();

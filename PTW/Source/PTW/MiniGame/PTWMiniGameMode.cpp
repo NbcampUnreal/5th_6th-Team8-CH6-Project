@@ -17,6 +17,7 @@
 #include "Camera/CameraActor.h"
 #include "Engine/TargetPoint.h"
 #include "AIController.h"
+#include "Debug/PTWLogCategorys.h"
 #include "Gameplay/Actor/PTWResultCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/Instance/PTWItemInstance.h"
@@ -158,7 +159,7 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 //FIXME : 03/11 박태웅 내부함수 코드 삭제
 void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[미니게임모드] HandleSeamlessTravelPlayer: %s"), *C->GetName());
+	UE_LOG(Log_MiniGameMode, Warning, TEXT("[미니게임모드] HandleSeamlessTravelPlayer: %s"), *C->GetName());
 	
 	Super::HandleSeamlessTravelPlayer(C);
 
@@ -168,6 +169,8 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 {
 	Super::PlayerReadyToPlay(Controller);
 
+	UE_LOG(Log_MiniGameMode, Warning, TEXT("[MiniGame] PlayerReadyToPlay: %s, %d/%d"), *Controller->GetName(),ReadyPlayer, AllPlayer);
+	
 	if (!IsValid(PTWGameState) || !Controller) return;
 
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);

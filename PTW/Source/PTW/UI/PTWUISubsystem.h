@@ -100,6 +100,8 @@ private:
 
 	void ApplyInputPolicy(EUIInputPolicy Policy);
 
+	void TryInitializeHUDASC();
+
 	/* 입력정책 기본값 저장 */
 	UPROPERTY()
 	EUIInputPolicy DefaultInputPolicy = EUIInputPolicy::GameOnly;
@@ -125,4 +127,7 @@ private:
 	TSubclassOf<UPTWChatInput> ChatInputClass;
 	UPROPERTY()
 	TSubclassOf<UPTWChatList> ChatListClass;
+	
+	/* ASC get 타이머 */
+	FTimerHandle ASCInitTimerHandle;
 };

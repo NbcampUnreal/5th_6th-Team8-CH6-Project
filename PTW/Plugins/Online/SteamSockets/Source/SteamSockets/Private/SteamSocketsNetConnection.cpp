@@ -18,6 +18,19 @@ static const int32 MAX_PACKET = 1024;
 
 void USteamSocketsNetConnection::CleanUp()
 {
+	if (GetConnectionState() != USOCK_Closed)
+	{
+		FlushNet(true);
+
+		for (int32 i = OpenChannels.Num() - 1; i >= 0; --i)
+		{
+			if (UChannel* Channel = OpenChannels[i])
+			{
+				Channel->Close(EChannelCloseReason::Destroyed);
+			}
+		}
+	}
+	
 	if (GetDriver() != nullptr && GetDriver()->GetSocketSubsystem() != nullptr && ConnectionSocket != nullptr)
 	{
 		FSteamSocketsSubsystem* SocketSub = static_cast<FSteamSocketsSubsystem*>(GetDriver()->GetSocketSubsystem());

@@ -25,7 +25,8 @@ public:
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
-
+	virtual bool PreGameplayEffectExecute(struct FGameplayEffectModCallbackData& Data) override;
+ 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Attributes")
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(UPTWAttributeSet, Health);
@@ -50,4 +51,5 @@ protected:
 	virtual void OnRep_JumpZVelocity(const FGameplayAttributeData& OldJumpZVelocity);
 
 	void HandleDamage(const FGameplayEffectModCallbackData& Data);
+	bool IsDamageToValidTarget(const FGameplayEffectModCallbackData& Data) const;
 };

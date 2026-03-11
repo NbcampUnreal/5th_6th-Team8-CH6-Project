@@ -22,10 +22,6 @@ APTWBaseCharacter::APTWBaseCharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
-	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
-
 	ReactorComponent = CreateDefaultSubobject<UPTWReactorComponent>(TEXT("ReactorComponent"));
 }
 

@@ -18,8 +18,13 @@ class PTW_API APTWGhostChaseMiniGameMode : public APTWMiniGameMode
 public:
 	APTWGhostChaseMiniGameMode();
 
-	/** 플레이어 사망 시 호출 (기존 PTWMiniGameMode 또는 Character에서 호출해줘야 함) */
+	/* 플레이어 사망 시 호출 */
+	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
+
+	/* 플레이어 체인에서 제거 */
 	virtual void OnPlayerEliminated(AController* EliminatedController);
+
+	bool IsValidChaseTarget(AController* Chaser, AController* Target) const;
 
 protected:
 	virtual void BeginPlay() override;

@@ -281,44 +281,35 @@ void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		{
 			PC->PlayerState->SetIsSpectator(false);
 			PC->PlayerState->SetIsOnlyASpectator(false);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("[TravelPlayer] 플레이어 스테이트가 유효하지 않습니다"));
+			PC->bPlayerIsWaiting = false;
 		}
 	}
 
 	Super::HandleSeamlessTravelPlayer(C);
 
-	// if (APlayerController* PC = Cast<APlayerController>(C))
-	// {
-	// 	if (APawn* CurrentPawn = PC->GetPawn())
-	// 	{
-	// 		CurrentPawn->Destroy();
-	// 	}
-	// 	
-	// 	GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
-	// 	{
-	// 		if (!PC->GetPawn())
-	// 		{
-	// 			RestartPlayer(PC);
-	// 			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn을 재스폰하였습니다."), *PC->PlayerState->GetPlayerName());
-	// 		}
-	// 	});
-	// }
-	
 	if (APlayerController* PC = Cast<APlayerController>(C))
 	{
-		if (PC->GetStateName() == NAME_Spectating)
+		const FName CurrentState = PC->GetStateName();
+		if (CurrentState == NAME_Spectating || CurrentState == NAME_Inactive)
 		{
 			PC->ChangeState(NAME_Playing);
-			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어를 플레이 상태로 전환하였습니다!"), *PC->PlayerState->GetPlayerName());
+			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 상태를 %s에서 Playing으로 전환"), *PC->PlayerState->GetPlayerName(), *CurrentState.ToString());
 		}
-		else
+
+		if (APawn* CurrentPawn = PC->GetPawn())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어는 이미 관전상태가 해제되었습니다!"), *PC->PlayerState->GetPlayerName());
+			CurrentPawn->Destroy();
 		}
-		PC->SetViewTarget(PC);
+
+		GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
+			{
+				if (PC && !PC->GetPawn())
+				{
+					RestartPlayer(PC);
+					PC->SetViewTarget(PC);
+					UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn 재스폰 완료"), *PC->PlayerState->GetPlayerName());
+				}
+			});
 	}
 }
 

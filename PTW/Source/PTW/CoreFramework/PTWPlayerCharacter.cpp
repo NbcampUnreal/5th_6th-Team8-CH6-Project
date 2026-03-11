@@ -261,8 +261,6 @@ void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			BindHandles
 		);
 	}
-
-	TryInitLocalUI();
 }
 
 void APTWPlayerCharacter::Move(const FInputActionValue& Value)
@@ -338,33 +336,47 @@ void APTWPlayerCharacter::InitCharacterState()
 {
 	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
 
-	if (!PS || bIsAbilitiesInitialized) return;
+	if (!PS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[InitChar] %s: PlayerState가 아직 복제되지 않았습니다. 재시도 예약."), *GetName());
+		StartInitTimer();
+		return;
+	}
+
+	if (bIsAbilitiesInitialized)
+	{
+		GetWorldTimerManager().ClearTimer(InitTimerHandle);
+		return;
+	}
 
 	InitAbilityActorInfo();
 
+	if (!GetAbilitySystemComponent())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[InitChar] %s: ASC 초기화 실패. 재시도 예약."), *GetName());
+		StartInitTimer();
+		return;
+	}
+
 	if (HasAuthority())
 	{
-		if (AbilitySystemComponent)
-		{
-			if (AbilitySystemComponent->HasMatchingGameplayTag(GameplayTags::State::Status_Dead))
-			{
-				AbilitySystemComponent->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
-				UE_LOG(LogTemp, Warning, TEXT("[InitChar] %s 플레이어의 죽음 태그를 제거했습니다!"), *PS->GetPlayerName());
-			}
+		UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
 
-			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
-			if (AbilitySystemComponent->HasMatchingGameplayTag(EquipTag))
-			{
-				AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
-				AbilitySystemComponent->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
-				UE_LOG(LogTemp, Warning, TEXT("InitCharacterState: Force Removed Equip Tag"));
-			}
+		if (ASC->HasMatchingGameplayTag(GameplayTags::State::Status_Dead))
+		{
+			ASC->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
+		}
+
+		FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+		if (ASC->HasMatchingGameplayTag(EquipTag))
+		{
+			ASC->SetLooseGameplayTagCount(EquipTag, 0);
+			ASC->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
 		}
 
 		if (!bHasGivenStartupItems)
 		{
 			FPTWPlayerData CurrentData = PS->GetPlayerData();
-
 			if (CurrentData.InventoryItemIDs.Num() > 0)
 			{
 				OnPlayerDataLoaded(CurrentData);
@@ -381,14 +393,21 @@ void APTWPlayerCharacter::InitCharacterState()
 	}
 
 	UpdateNameTagText();
-	bIsAbilitiesInitialized = true;
 
-	if (VOIPTalkerComponent && GetPlayerState())
+	if (VOIPTalkerComponent)
 	{
 		VOIPTalkerComponent->RegisterWithPlayerState(PS);
 	}
 
-	TryInitLocalUI();
+	APTWPlayerController* PC = Cast<APTWPlayerController>(GetController());
+	if (!PC) return;
+
+	PC->CreateUI();
+
+	bIsAbilitiesInitialized = true;
+	GetWorldTimerManager().ClearTimer(InitTimerHandle);
+
+	UE_LOG(LogTemp, Log, TEXT("[InitChar] %s: 모든 초기화가 완료되었습니다."), *PS->GetPlayerName());
 }
 
 void APTWPlayerCharacter::OnInputTriggered()
@@ -481,13 +500,6 @@ void APTWPlayerCharacter::RegisterGameplayTagEvents()
 		
 		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Charge, EGameplayTagEventType::AnyCountChange)
 		.AddUObject(this, &APTWPlayerCharacter::OnMovelimit);
-
-		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Ghost::Invisible, EGameplayTagEventType::NewOrRemoved)
-			.AddUObject(this, &APTWPlayerCharacter::OnGhostStateTagChanged);
-
-		AbilitySystemComponent->RegisterGameplayTagEvent(GameplayTags::State::Ghost::Revealed, EGameplayTagEventType::NewOrRemoved)
-			.AddUObject(this, &APTWPlayerCharacter::OnGhostStateTagChanged);
-
 	}
 }
 
@@ -529,114 +541,12 @@ void APTWPlayerCharacter::OnRep_StealthMode()
 {
 }
 
-void APTWPlayerCharacter::OnGhostStateTagChanged(const FGameplayTag Tag, int32 NewCount)
+void APTWPlayerCharacter::StartInitTimer()
 {
-	UpdateGhostVisibility();
-}
-
-void APTWPlayerCharacter::UpdateGhostVisibility()
-{
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
-	if (!ASC) return;
-
-	// 상태 확인
-	bool bIsInvisible = ASC->HasMatchingGameplayTag(GameplayTags::State::Ghost::Invisible);
-	bool bIsRevealed = ASC->HasMatchingGameplayTag(GameplayTags::State::Ghost::Revealed);
-
-	// 최종 상태
-	bool bIsGhostMode = bIsInvisible && !bIsRevealed;
-
-	APTWPlayerController* LocalPC = GetWorld()->GetFirstPlayerController<APTWPlayerController>();
-	bool bIsMyPawn = LocalPC && LocalPC->GetPawn() == this;
-
-	if (bIsGhostMode)
+	if (!GetWorldTimerManager().IsTimerActive(InitTimerHandle))
 	{
-		//GhostHiddenComponents.Empty();
-
-		// 본체 메시 처리
-		if (USkeletalMeshComponent* Mesh3P = GetMesh())
-		{
-			// 내가 조종하는 캐릭터가 아닐 때만 숨김
-			if (!bIsMyPawn)
-			{
-				// 이미 숨겨져 있는 메시가 아닐 때만 처리
-				if (!Mesh3P->bHiddenInGame)
-				{
-					Mesh3P->SetHiddenInGame(true);
-					GhostHiddenComponents.Add(Mesh3P); // 나중에 복원하기 위해 기록
-				}
-			}
-		}
-
-		// 무기 및 부착물 처리
-		TArray<AActor*> AttachedActors;
-		GetAttachedActors(AttachedActors);
-		for (AActor* AttachedActor : AttachedActors)
-		{
-			TArray<UMeshComponent*> MeshComps;
-			AttachedActor->GetComponents<UMeshComponent>(MeshComps);
-
-			for (UMeshComponent* MeshComp : MeshComps)
-			{
-				if (!IsLocallyControlled())
-				{
-					// 원래 보이던 상태인 것만 숨기고 기록
-					if (!MeshComp->bHiddenInGame)
-					{
-						MeshComp->SetHiddenInGame(true);
-						GhostHiddenComponents.Add(MeshComp);
-					}
-				}
-			}
-		}
-
-		SetStealthMode(true);
+		GetWorldTimerManager().SetTimer(InitTimerHandle, this, &APTWPlayerCharacter::InitCharacterState, 0.2f, true);
 	}
-	// 투명 모드 해제 시
-	else
-	{
-		// 기록해두었던 '내가 숨긴 메시들'만 순회하며 복원
-		for (auto& WeakMesh : GhostHiddenComponents)
-		{
-			if (UMeshComponent* GhostMesh = WeakMesh.Get())
-			{
-				GhostMesh->SetHiddenInGame(false);
-			}
-		}
-
-		// 복원이 끝났으므로 리스트 비우기
-		GhostHiddenComponents.Empty();
-
-		SetStealthMode(false);
-	}
-
-	// TargetPlayer View (위젯 시점) 관리
-	// 내가 로컬 플레이어일 때만 컨트롤러를 통해 타겟 뷰의 숨김 목록을 갱신
-	if (APTWPlayerController* PC = Cast<APTWPlayerController>(GetController()))
-	{
-		if (PC->IsLocalController())
-		{
-			PC->RefreshTargetViewHiddenActors();
-		}
-	}
-}
-
-void APTWPlayerCharacter::TryInitLocalUI()
-{
-	if (bIsUIInitialized) return;
-
-	if (!IsLocallyControlled()) return;
-
-	APTWPlayerController* PC = Cast<APTWPlayerController>(GetController());
-	if (!PC) return;
-
-	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
-	if (!PS) return;
-
-	PC->CreateUI();
-	bIsUIInitialized = true;
-
-	UE_LOG(LogTemp, Log, TEXT("[%s] 로컬 화면 UI 생성 완료!"), *GetName());
 }
 
 void APTWPlayerCharacter::ServerRPCUpdateAimPitch_Implementation(float NewAimPitch)
@@ -648,26 +558,6 @@ void APTWPlayerCharacter::SetStealthMode(bool bSetStealthMode)
 {
 	bIsStealth = bSetStealthMode;
 	OnRep_StealthMode();
-}
-
-void APTWPlayerCharacter::ApplyInvisibilityEffect(TSubclassOf<UGameplayEffect> EffectClass)
-{
-	if (!EffectClass) return;
-
-	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
-	{
-		FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
-		ContextHandle.AddSourceObject(this);
-
-		// GE 클래스로 스펙 생성 후 적용
-		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(EffectClass, 1.0f, ContextHandle);
-		if (SpecHandle.IsValid())
-		{
-			ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-
-			UpdateGhostVisibility();
-		}
-	}
 }
 
 void APTWPlayerCharacter::ServerRPCUseActiveItem_Implementation()

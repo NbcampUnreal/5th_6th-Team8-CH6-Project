@@ -78,7 +78,7 @@ protected:
 	/** 설정된 점수 부여. */
 	void AddRoundScore(APlayerState* ScoreTarget, int32 ScoreValue = 1);
 	
-	void SpawnDefaultWeapon(AController* NewPlayer);
+	virtual void SpawnDefaultWeapon(AController* NewPlayer);
 
 	//* 미니 게임 라운드 시작 대기 */
 	virtual void WaitingToStartRound();

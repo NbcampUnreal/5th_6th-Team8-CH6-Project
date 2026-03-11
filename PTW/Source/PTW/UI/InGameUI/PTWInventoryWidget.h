@@ -48,5 +48,5 @@ protected:
 	int32 MaxColumns = 5;
 
 private:
-	TObjectPtr<APTWPlayerState> CachedPlayerState;
+	TWeakObjectPtr<APTWPlayerState> CachedPlayerState;
 };

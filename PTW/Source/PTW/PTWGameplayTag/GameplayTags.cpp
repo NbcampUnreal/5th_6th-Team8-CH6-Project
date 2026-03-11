@@ -88,6 +88,11 @@ namespace GameplayTags
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Sprinting, "State.Movement.Sprinting");
 		}
 		
+		namespace Ghost
+		{
+			UE_DEFINE_GAMEPLAY_TAG(Invisible, "State.Ghost.Invisible");
+			UE_DEFINE_GAMEPLAY_TAG(Revealed, "State.Ghost.Revealed");
+		}
 	}
 	
 	namespace Item
@@ -110,6 +115,7 @@ namespace GameplayTags
 			{
 				PTW_API UE_DEFINE_GAMEPLAY_TAG(Pistol, "Weapon.Gun.Pistol");
 				PTW_API UE_DEFINE_GAMEPLAY_TAG(BombPistol, "Weapon.Gun.Pistol.BombPistol");
+				PTW_API UE_DEFINE_GAMEPLAY_TAG(AbyssPistol, "Weapon.Gun.Pistol.AbyssPistol");
 			}
 
 			namespace Rifle

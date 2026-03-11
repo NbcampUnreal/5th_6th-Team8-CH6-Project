@@ -93,6 +93,11 @@ namespace GameplayTags
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sprinting);
 		}
 		
+		namespace Ghost
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Invisible);
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Revealed);
+		}
 	}
 	namespace Item
 	{
@@ -116,6 +121,7 @@ namespace GameplayTags
 			{
 				PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Pistol);
 				PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(BombPistol);
+				PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(AbyssPistol);
 			}
 			namespace Rifle
 			{

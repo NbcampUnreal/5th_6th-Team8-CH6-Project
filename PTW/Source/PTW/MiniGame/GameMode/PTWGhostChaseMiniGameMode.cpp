@@ -3,6 +3,9 @@
 
 #include "MiniGame/GameMode/PTWGhostChaseMiniGameMode.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
+#include "System/PTWItemSpawnManager.h"
+#include "Inventory/PTWInventoryComponent.h"
 
 APTWGhostChaseMiniGameMode::APTWGhostChaseMiniGameMode()
 {
@@ -44,7 +47,7 @@ void APTWGhostChaseMiniGameMode::OnPlayerEliminated(AController* EliminatedContr
 	// 최후의 1인 체크
 	if (ActiveChasers.Num() == 1)
 	{
-		// EndGame 로직 호출
+		EndGame();
 	}
 }
 
@@ -60,16 +63,18 @@ void APTWGhostChaseMiniGameMode::WaitingToStartRound()
 	// 타겟 체인 구성
 	SetupTargetChain();
 
-	// 투명화 적용
-	ApplyInvisibilityToAll();
-
 	// 필요 시 대기 시간 동안 플레이어 움직임을 제한하는 등의 로직 추가
 }
 
 void APTWGhostChaseMiniGameMode::StartRound()
 {
 	Super::StartRound();
-	// 필요한 로직 추가 예정
+
+	// 기본무기 지급
+	GiveBaseWeaponToAll();
+
+	// 투명화 적용
+	ApplyInvisibilityToAll();
 }
 
 void APTWGhostChaseMiniGameMode::SetupTargetChain()
@@ -109,13 +114,12 @@ void APTWGhostChaseMiniGameMode::SetupTargetChain()
 
 void APTWGhostChaseMiniGameMode::ApplyInvisibilityToAll()
 {
-	// 나중에 GAS Tag (예: State.Invisible) 부여로 교체 예정
 	for (AController* PC : ActiveChasers)
 	{
-		if (APawn* P = PC->GetPawn())
+		if (APTWPlayerCharacter* TargetChar = Cast<APTWPlayerCharacter>(PC->GetPawn()))
 		{
-			// 임시 시각적 투명화 (Actor Hidden)
-			// P->SetActorHiddenInGame(true);
+			TargetChar->ApplyInvisibilityEffect(InvisibilityEffectClass);
+			//TargetChar->ApplyInvisibilityEffect(test);
 		}
 	}
 }
@@ -138,6 +142,33 @@ void APTWGhostChaseMiniGameMode::UpdatePlayerTargetUI(AController* Chaser, ACont
 		if (Chaser->IsLocalController())
 		{
 			ChaserPS->OnRep_CurrentTargetPawn();
+		}
+	}
+}
+
+void APTWGhostChaseMiniGameMode::GiveBaseWeaponToAll()
+{
+	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
+	if (!SpawnManager) return;
+
+	// 현재 게임에 참여 중인 모든 추격자(플레이어) 순회
+	for (AController* Controller : ActiveChasers)
+	{
+		if (!Controller) continue;
+
+		APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(Controller->GetPawn());
+		APTWPlayerState* PS = Controller->GetPlayerState<APTWPlayerState>();
+
+		if (PC && PS)
+		{
+			// 아이템 스폰
+			SpawnManager->SpawnSingleItem(PS, GhostWeaponDef);
+
+			// 무기 지급
+			if (UPTWInventoryComponent* Inven = PC->GetInventoryComponent())
+			{
+				Inven->EquipWeapon(0);
+			}
 		}
 	}
 }

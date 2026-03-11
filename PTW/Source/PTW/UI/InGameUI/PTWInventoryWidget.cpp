@@ -38,21 +38,23 @@ void UPTWInventoryWidget::BindDelegates()
 	UnbindDelegates();
 
 	/* 델리게이트 바인딩 */
-	if (CachedPlayerState)
+	if (CachedPlayerState.IsValid())
 	{
 		CachedPlayerState->OnPlayerDataUpdated.AddDynamic(this, &UPTWInventoryWidget::OnInventoryUpdated);
 
 		UE_LOG(LogTemp, Warning, TEXT("InventoryWidget Binding delegates"));
+		
+		/* 최신 데이터로 초기화 */
+		OnInventoryUpdated(CachedPlayerState->GetPlayerData());
 	}
 
-	/* 최신 데이터로 초기화 */
-	OnInventoryUpdated(CachedPlayerState->GetPlayerData());
+	
 }
 
 void UPTWInventoryWidget::UnbindDelegates()
 {
 	/* 델리게이트 바인딩 해제 */
-	if (CachedPlayerState)
+	if (CachedPlayerState.IsValid())
 	{
 		CachedPlayerState->OnPlayerDataUpdated.RemoveDynamic(this, &UPTWInventoryWidget::OnInventoryUpdated);
 	}

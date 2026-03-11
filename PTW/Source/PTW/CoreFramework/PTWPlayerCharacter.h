@@ -97,9 +97,22 @@ protected:
 	UFUNCTION()
 	void OnStasisTagChanged(const FGameplayTag Tag, int32 NewCount);
 	
+	/*움직임만(마우스 제외) 제한 이벤트 함수(태그 적용 시 자동으로 움직임을 멈춤) 현정석(26.02.12)*/
+	UFUNCTION()
+	void OnMovelimit(const FGameplayTag Tag, int32 NewCount);
+	
 	/*StealthMode 관련*/
 	UFUNCTION()
 	void OnRep_StealthMode();
+
+	/* 캐릭터 숨기는 로직 (김세훈) */
+	// 태그가 변경될 때 호출될 함수
+	virtual void OnGhostStateTagChanged(const FGameplayTag Tag, int32 NewCount);
+	// 실제 가시성을 업데이트하는 함수
+	void UpdateGhostVisibility();
+
+	// 안전하게 UI를 띄우는 전용 함수
+	void TryInitLocalUI();
 
 private:
 	// 6. [Private] 내부 전용 유틸리티 함수 (외부/자식 노출 X)
@@ -114,6 +127,9 @@ public:
 	void ServerRPCUpdateAimPitch(float NewAimPitch);
 	// StealthMode 관련 함수 추가
 	void SetStealthMode(bool bSetStealthMode);
+
+	/* 캐릭터 숨기는 로직 (김세훈) */
+	void ApplyInvisibilityEffect(TSubclassOf<UGameplayEffect> EffectClass);
 
 protected:
 	// 8. [Protected] 멤버 변수 (내부 상태값)
@@ -148,6 +164,7 @@ protected:
 
 	bool bIsAbilitiesInitialized = false;
 	bool bIsIdleState = false;
+	bool bIsUIInitialized = false;
 
 
 
@@ -172,6 +189,10 @@ protected:
 	//Stealth 모드 전용(현정석)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components", ReplicatedUsing = OnRep_StealthMode)
 	bool bIsStealth;
+
+	/* 고스트꼬리잡기 전용 */
+	UPROPERTY()
+	TArray<TWeakObjectPtr<UMeshComponent>> GhostHiddenComponents;
 private:
 	// 10. [Private] 멤버 변수 (완벽히 숨겨야 하는 값)
 

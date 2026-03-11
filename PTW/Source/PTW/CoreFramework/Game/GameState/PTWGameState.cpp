@@ -5,6 +5,7 @@
 
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "Debug/PTWLogCategorys.h"
 #include "MiniGame/PTWMiniGameRule.h"
 #include "System/Prop/PTWPropSubsystem.h"
 #include "Net/UnrealNetwork.h"
@@ -191,6 +192,8 @@ void APTWGameState::OnRep_WinTeamId()
 void APTWGameState::DecreaseTimer()
 {
 	if (!HasAuthority()) return;
+
+	UE_LOG(Log_GameState, Log, TEXT("Timer: %d"), RemainTime);
 	
 	if (RemainTime <= 0)
 	{

@@ -5,3 +5,8 @@
 
 
 PTW_API DEFINE_LOG_CATEGORY(Log_GameMode);
+
+PTW_API DEFINE_LOG_CATEGORY(Log_GameState);
+
+PTW_API DEFINE_LOG_CATEGORY(Log_AbilityBattle);
+

@@ -3,13 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PTWAbilityRow.generated.h"
 
+class UPTWAbilityDefinition;
 /**
  * 
  */
-class PTW_API PTWAbilityRow
+USTRUCT(BlueprintType)
+struct FPTWAbilityRow : public FTableRowBase
 {
-public:
-	PTWAbilityRow();
-	~PTWAbilityRow();
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<UPTWAbilityDefinition> AbilityDefinition;
 };

@@ -338,33 +338,47 @@ void APTWPlayerCharacter::InitCharacterState()
 {
 	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
 
-	if (!PS || bIsAbilitiesInitialized) return;
+	if (!PS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[InitChar] %s: PlayerState가 아직 복제되지 않았습니다. 재시도 예약."), *GetName());
+		StartInitTimer();
+		return;
+	}
+
+	if (bIsAbilitiesInitialized)
+	{
+		GetWorldTimerManager().ClearTimer(InitTimerHandle);
+		return;
+	}
 
 	InitAbilityActorInfo();
 
+	if (!GetAbilitySystemComponent())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[InitChar] %s: ASC 초기화 실패. 재시도 예약."), *GetName());
+		StartInitTimer();
+		return;
+	}
+
 	if (HasAuthority())
 	{
-		if (AbilitySystemComponent)
-		{
-			if (AbilitySystemComponent->HasMatchingGameplayTag(GameplayTags::State::Status_Dead))
-			{
-				AbilitySystemComponent->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
-				UE_LOG(LogTemp, Warning, TEXT("[InitChar] %s 플레이어의 죽음 태그를 제거했습니다!"), *PS->GetPlayerName());
-			}
+		UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
 
-			FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
-			if (AbilitySystemComponent->HasMatchingGameplayTag(EquipTag))
-			{
-				AbilitySystemComponent->SetLooseGameplayTagCount(EquipTag, 0);
-				AbilitySystemComponent->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
-				UE_LOG(LogTemp, Warning, TEXT("InitCharacterState: Force Removed Equip Tag"));
-			}
+		if (ASC->HasMatchingGameplayTag(GameplayTags::State::Status_Dead))
+		{
+			ASC->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
+		}
+
+		FGameplayTag EquipTag = FGameplayTag::RequestGameplayTag(FName("Weapon.State.Equip"));
+		if (ASC->HasMatchingGameplayTag(EquipTag))
+		{
+			ASC->SetLooseGameplayTagCount(EquipTag, 0);
+			ASC->RemoveActiveEffectsWithTags(FGameplayTagContainer(EquipTag));
 		}
 
 		if (!bHasGivenStartupItems)
 		{
 			FPTWPlayerData CurrentData = PS->GetPlayerData();
-
 			if (CurrentData.InventoryItemIDs.Num() > 0)
 			{
 				OnPlayerDataLoaded(CurrentData);
@@ -381,14 +395,18 @@ void APTWPlayerCharacter::InitCharacterState()
 	}
 
 	UpdateNameTagText();
-	bIsAbilitiesInitialized = true;
 
-	if (VOIPTalkerComponent && GetPlayerState())
+	if (VOIPTalkerComponent)
 	{
 		VOIPTalkerComponent->RegisterWithPlayerState(PS);
 	}
 
 	TryInitLocalUI();
+
+	bIsAbilitiesInitialized = true;
+	GetWorldTimerManager().ClearTimer(InitTimerHandle);
+
+	UE_LOG(LogTemp, Log, TEXT("[InitChar] %s: 모든 초기화가 완료되었습니다."), *PS->GetPlayerName());
 }
 
 void APTWPlayerCharacter::OnInputTriggered()
@@ -538,6 +556,14 @@ void APTWPlayerCharacter::TryInitLocalUI()
 	bIsUIInitialized = true;
 
 	UE_LOG(LogTemp, Log, TEXT("[%s] 로컬 화면 UI 생성 완료!"), *GetName());
+}
+
+void APTWPlayerCharacter::StartInitTimer()
+{
+	if (!GetWorldTimerManager().IsTimerActive(InitTimerHandle))
+	{
+		GetWorldTimerManager().SetTimer(InitTimerHandle, this, &APTWPlayerCharacter::InitCharacterState, 0.2f, true);
+	}
 }
 
 void APTWPlayerCharacter::ServerRPCUpdateAimPitch_Implementation(float NewAimPitch)

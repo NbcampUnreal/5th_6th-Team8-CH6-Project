@@ -108,6 +108,8 @@ protected:
 	// 안전하게 UI를 띄우는 전용 함수
 	void TryInitLocalUI();
 
+	void StartInitTimer();
+
 private:
 	// 6. [Private] 내부 전용 유틸리티 함수 (외부/자식 노출 X)
 
@@ -151,6 +153,7 @@ protected:
 
 	FTimerHandle NameTagRetryTimer;
 	FTimerHandle IdleCheckTimerHandle;
+	FTimerHandle InitTimerHandle;
 
 	bool bIsAbilitiesInitialized = false;
 	bool bIsIdleState = false;

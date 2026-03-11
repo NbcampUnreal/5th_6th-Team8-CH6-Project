@@ -264,6 +264,15 @@ void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 
 	if (APlayerController* PC = Cast<APlayerController>(C))
 	{
+		if (!PC->GetPawn())
+		{
+			RestartPlayer(PC);
+			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn을 재스폰하였습니다."), *PC->PlayerState->GetPlayerName());
+		}
+	}
+	
+	if (APlayerController* PC = Cast<APlayerController>(C))
+	{
 		if (PC->GetStateName() == NAME_Spectating)
 		{
 			PC->ChangeState(NAME_Playing);

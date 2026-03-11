@@ -7,6 +7,7 @@
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
+#include "Debug/PTWLogCategorys.h"
 #include "Kismet/GameplayStatics.h"
 #include "MiniGame/Manager/PTWRoundEventManager.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
@@ -126,7 +127,7 @@ void APTWLobbyGameMode::Logout(AController* Exiting)
 
 void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[로비게임모드] HandleSeamlessTravelPlayer: %s"), *C->GetName());
+	UE_LOG(Log_LobbyGameMode, Warning, TEXT("[로비게임모드] HandleSeamlessTravelPlayer: %s"), *C->GetName());
 	
 	Super::HandleSeamlessTravelPlayer(C);
 }
@@ -148,7 +149,7 @@ void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
 {
 	Super::PlayerReadyToPlay(Controller);
 
-	UE_LOG(LogTemp, Warning, TEXT("PlayerReadyToPlay: %s, %d/%d"), *Controller->GetName(),ReadyPlayer, AllPlayer);
+	UE_LOG(Log_LobbyGameMode, Warning, TEXT("[Lobby] PlayerReadyToPlay: %s, %d/%d"), *Controller->GetName(),ReadyPlayer, AllPlayer);
 	
 	if (!IsValid(PTWGameState) || !Controller) return;
 	

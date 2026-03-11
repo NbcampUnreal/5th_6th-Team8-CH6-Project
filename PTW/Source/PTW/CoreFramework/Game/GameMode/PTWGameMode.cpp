@@ -299,6 +299,7 @@ void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		if (APawn* CurrentPawn = PC->GetPawn())
 		{
 			CurrentPawn->Destroy();
+			UE_LOG(Log_GameMode, Warning, TEXT("[TravelPlayer] %s의 폰 제거"), *PC->PlayerState->GetPlayerName());
 		}
 
 		// GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()

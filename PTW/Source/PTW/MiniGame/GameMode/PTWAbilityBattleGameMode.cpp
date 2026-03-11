@@ -21,6 +21,28 @@ void APTWAbilityBattleGameMode::StartGame()
 	
 }
 
+void APTWAbilityBattleGameMode::InitAttributeSet()
+{
+	if (!InitAttributeEffectClass) return;
+	
+	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (!PTWPlayerState) continue;
+
+		UAbilitySystemComponent* ASC = PTWPlayerState->GetAbilitySystemComponent();
+		if (!ASC) continue;
+		
+		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+		FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(InitAttributeEffectClass, 1.f, Context);
+
+		if (Spec.IsValid()) continue;
+		
+		ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+	}
+
+}
+
 void APTWAbilityBattleGameMode::GrandAbilityBattleAttributeSet()
 {
 

@@ -18,10 +18,15 @@ class PTW_API APTWAbilityBattleGameMode : public APTWMiniGameMode
 protected:
 
 	virtual void StartGame() override;
-	
+
+	void InitAttributeSet();
 private:
 	void GrandAbilityBattleAttributeSet();
 
 	UPROPERTY()
 	TObjectPtr<UPTWRandomDraftSystem> RandomDraftSystem;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> InitAttributeEffectClass;
+	
 };

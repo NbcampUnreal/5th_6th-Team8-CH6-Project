@@ -92,16 +92,10 @@ protected:
 	UFUNCTION()
 	virtual void OnCountDownFinished();
 	
-	UPROPERTY(EditDefaultsOnly, Category="Prop")
-	bool bApplyPropOnStartGame = false;
-
-	UPROPERTY(EditDefaultsOnly, Category="Prop", meta=(EditCondition="!bApplyPropOnStartGame"))
-	bool bApplyPropOnStartRound = true; 
-
-	UPROPERTY(EditDefaultsOnly, Category="Prop", meta=(EditCondition="bApplyPropOnStartGame || bApplyPropOnStartRound"))
-	TObjectPtr<UPTWPropData> RoundPropData;
-
 	void ApplyRoundPropRandom();
+
+	/** 플레이어 모든 태그 제거*/
+	void RemoveTags(AController* Controller);
 	
 	/** 승리 조건 체크 */
 	virtual void CheckEndGameCondition();
@@ -126,8 +120,18 @@ protected:
 	void SpawnPlayerSavedItems(AController* Controller);
 
 	void StartChaosEvent();
-protected:
 
+protected:
+	
+	UPROPERTY(EditDefaultsOnly, Category="Prop")
+	bool bApplyPropOnStartGame = false;
+
+	UPROPERTY(EditDefaultsOnly, Category="Prop", meta=(EditCondition="!bApplyPropOnStartGame"))
+	bool bApplyPropOnStartRound = true; 
+
+	UPROPERTY(EditDefaultsOnly, Category="Prop", meta=(EditCondition="bApplyPropOnStartGame || bApplyPropOnStartRound"))
+	TObjectPtr<UPTWPropData> RoundPropData;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")
 	TObjectPtr<UPTWItemDefinition> ItemDefinition;
 

@@ -43,6 +43,7 @@
 #include "UI/Dev/PTWDevWidget.h"
 #include "CoreFramework/Character/Component/PTWDeveloperComponent.h"
 #include "MiniGame/ControllerComponent/Abyss/PTWAbyssControllerComponent.h"
+#include "MiniGame/ControllerComponent/GhostChase/PTWGhostChaseControllerComponent.h"
 #include "Engine/PostProcessVolume.h"
 #include "EngineUtils.h"
 #include "Game/GameMode/PTWLobbyGameMode.h"
@@ -52,6 +53,7 @@ APTWPlayerController::APTWPlayerController()
 {
 	DeveloperComponent = CreateDefaultSubobject<UPTWDeveloperComponent>(TEXT("DevComponent"));
 	AbyssControllerComponent = CreateDefaultSubobject<UPTWAbyssControllerComponent>(TEXT("AbyssControllerComponent"));
+	GhostChaseComponent = CreateDefaultSubobject<UPTWGhostChaseControllerComponent>(TEXT("GhostChaseComponent"));
 }
 
 void APTWPlayerController::StartSpectating()
@@ -1000,6 +1002,16 @@ void APTWPlayerController::UpdateNameTagsVisibility()
 			if (UUserWidget* UserW = WidgetComp->GetUserWidgetObject())
 			{
 				UserW->SetRenderScale(FVector2D(TargetScale, TargetScale));
+
+				if (auto* GCComp = FindComponentByClass<UPTWGhostChaseControllerComponent>())
+				{
+					GCComp->ApplyNameTagHighlight(TargetChar, WidgetComp);
+				}
+				else
+				{
+					// 컴포넌트가 없으면 기본 색상 유지
+					UserW->SetColorAndOpacity(FLinearColor::White);
+				}
 			}
 		}
 		else

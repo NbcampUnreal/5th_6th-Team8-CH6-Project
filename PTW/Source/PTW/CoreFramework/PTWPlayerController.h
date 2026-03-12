@@ -34,6 +34,8 @@ class UPTWTargetViewWidget;
 class USceneCaptureComponent2D; 
 class UTextureRenderTarget2D;   
 class UGameplayEffect;
+class UPTWGhostChaseControllerComponent;
+
 /**
  * 
  */
@@ -218,6 +220,9 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Abyss")
 	TObjectPtr<UPTWAbyssControllerComponent> AbyssControllerComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	TObjectPtr<UPTWGhostChaseControllerComponent> GhostChaseComponent;
 
 	/* 씬 캡처 결과가 저장될 렌더 타겟 메모리 리소스 */
 	UPROPERTY()

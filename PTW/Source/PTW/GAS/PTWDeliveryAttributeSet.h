@@ -33,6 +33,10 @@ public:
 	FGameplayAttributeData BatteryLevel;
 	ATTRIBUTE_ACCESSORS(UPTWDeliveryAttributeSet, BatteryLevel);
 	
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxBatteryLevel, Category = "Delivery|Attributes")
+	FGameplayAttributeData MaxBatteryLevel;
+	ATTRIBUTE_ACCESSORS(UPTWDeliveryAttributeSet, MaxBatteryLevel);
+	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MoveSpeedModifier, Category = "Delivery|Attributes")
 	FGameplayAttributeData MoveSpeedModifier;
 	ATTRIBUTE_ACCESSORS(UPTWDeliveryAttributeSet, MoveSpeedModifier);
@@ -40,6 +44,9 @@ public:
 protected:
 	UFUNCTION()
 	void OnRep_BatteryLevel(const FGameplayAttributeData& OldBatteryLevel);
+	
+	UFUNCTION()
+	void OnRep_MaxBatteryLevel(const FGameplayAttributeData& OldMaxBatteryLevel);
 	
 	UFUNCTION()
 	void OnRep_MoveSpeedModifier(const FGameplayAttributeData& OldMoveSpeedMod);

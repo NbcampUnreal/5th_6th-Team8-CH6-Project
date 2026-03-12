@@ -347,11 +347,13 @@ void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasS
 void UPTWSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, 
 	ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
+	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] HandleNetworkFailure() called"));
 	LeaveGameSession();
 }
 
 void UPTWSessionSubsystem::LeaveGameSession()
 {
+	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] LeaveGameSession() called"));
 	if (SessionInterface.IsValid())
 	{
 		DestroySessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(
@@ -374,6 +376,7 @@ void UPTWSessionSubsystem::QuickMatchGameSession()
 
 void UPTWSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
+	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] OnDestroySessionComplete() called"));
 	if (SessionInterface.IsValid())
 	{
 		SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionDelegateHandle);

@@ -302,15 +302,15 @@ void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 			UE_LOG(Log_GameMode, Warning, TEXT("[TravelPlayer] %s의 폰 제거"), *PC->PlayerState->GetPlayerName());
 		}
 
-		// GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
-		// 	{
-		// 		if (PC && !PC->GetPawn())
-		// 		{
-		// 			RestartPlayer(PC);
-		// 			PC->SetViewTarget(PC);
-		// 			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn 재스폰 완료"), *PC->PlayerState->GetPlayerName());
-		// 		}
-		// 	});
+		 GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
+		 	{
+		 		if (PC && !PC->GetPawn())
+		 		{
+		 			RestartPlayer(PC);
+		 			PC->SetViewTarget(PC);
+		 			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn 재스폰 완료"), *PC->PlayerState->GetPlayerName());
+		 		}
+		 	});
 	}
 }
 

@@ -145,13 +145,13 @@ void APTWPlayerController::Client_OpenMainMenu_Implementation()
 	}
 }
 
-void APTWPlayerController::Server_NotifyReadyToPlay_Implementation()
-{
-	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
-	{
-		GameMode->PlayerReadyToPlay(this);
-	}
-}
+//void APTWPlayerController::Server_NotifyReadyToPlay_Implementation()
+//{
+//	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
+//	{
+//		GameMode->PlayerReadyToPlay(this);
+//	}
+//}
 
 void APTWPlayerController::BindBombDelegate(APTWBombActor* NewBomb)
 {
@@ -421,6 +421,10 @@ void APTWPlayerController::BeginPlay()
 	{
 		CurrentMouseSensitivity = Settings->MouseSensitivity;
 	}
+
+	CreateUI();
+	
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] BeginPlay - CreateUI 함수 호출됨."));
 }
 
 void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -432,6 +436,8 @@ void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 	
 	Super::EndPlay(EndPlayReason);
+	
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] EndPlay 함수 호출됨."));
 }
 
 void APTWPlayerController::OnRep_PlayerState()
@@ -452,12 +458,18 @@ void APTWPlayerController::OnRep_PlayerState()
 
 	BindGameStateDelegates();
 
-	CreateUI();
+	//CreateUI();
+	
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnRep_PlayerState 함수 호출됨."));
 }
 
 void APTWPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnRep_Pawn 함수 호출됨."));
+
+	CreateUI();
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnRep_Pawn - CreateUI 함수 호출됨."));
 }
 
 void APTWPlayerController::OnPossess(APawn* InPawn)
@@ -466,16 +478,24 @@ void APTWPlayerController::OnPossess(APawn* InPawn)
 
 	/* 로딩완료 */
 	Server_ReportLoadingComplete();
+	
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] 플레이어 컨트롤러 Possess 함수 호출됨."));
+
+	CreateUI();
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnPossess - CreateUI 함수 호출됨."));
 }
 
 void APTWPlayerController::OnUnPossess()
 {
 	Super::OnUnPossess();
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnUnPossess 함수 호출됨."));
 }
 
 void APTWPlayerController::BeginSpectatingState()
 {
 	Super::BeginSpectatingState();
+	
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] BeginSpectatingState 함수 호출됨."));
 }
 
 ASpectatorPawn* APTWPlayerController::SpawnSpectatorPawn()
@@ -540,7 +560,8 @@ void APTWPlayerController::NotifyLoadedWorld(FName WorldPackageName, bool bFinal
 
 	if (bFinalDest && IsLocalController())
 	{
-		Server_NotifyMapLoaded();
+		//Server_NotifyMapLoaded();
+		UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] Server_NotifyMapLoaded 함수 호출됨."));
 	}
 }
 
@@ -574,7 +595,7 @@ void APTWPlayerController::BindGameStateDelegates()
 	HandleRoulettePhaseChanged(GS->GetRouletteData());
 	HandleGamePhaseChanged(GS->GetCurrentGamePhase());
 	
-	Server_NotifyReadyToPlay();
+	//Server_NotifyReadyToPlay();
 	
 }
 
@@ -761,6 +782,8 @@ void APTWPlayerController::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
 
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] PostSeamlessTravel 함수 호출됨."));
+
 	// 로컬 컨트롤러인지 다시 확인
 	if (IsLocalController())
 	{
@@ -769,6 +792,9 @@ void APTWPlayerController::PostSeamlessTravel()
 		{
 			UISubsystem = LP->GetSubsystem<UPTWUISubsystem>();
 		}
+
+		CreateUI();
+		UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] PostSeamlessTravel - CreateUI 함수 호출됨."));
 	}
 }
 
@@ -971,13 +997,13 @@ void APTWPlayerController::UpdateNameTagsVisibility()
 	}
 }
 
-void APTWPlayerController::Server_NotifyMapLoaded_Implementation()
-{
-	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
-	{
-		GameMode->PlayerReadyToPlay(this);
-	}
-}
+//void APTWPlayerController::Server_NotifyMapLoaded_Implementation()
+//{
+//	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
+//	{
+//		GameMode->PlayerReadyToPlay(this);
+//	}
+//}
 
 void APTWPlayerController::HandleBombOwnerChanged(APawn* NewOwnerPawn)
 {

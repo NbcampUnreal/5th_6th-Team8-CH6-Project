@@ -17,6 +17,7 @@ void UPTWDeliveryAttributeSet::GetLifetimeReplicatedProps(TArray<class FLifetime
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWDeliveryAttributeSet, BatteryLevel, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPTWDeliveryAttributeSet, MaxBatteryLevel, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWDeliveryAttributeSet, MoveSpeedModifier, COND_None, REPNOTIFY_Always);
 }
 
@@ -65,6 +66,11 @@ void UPTWDeliveryAttributeSet::PostAttributeChange(const FGameplayAttribute& Att
 void UPTWDeliveryAttributeSet::OnRep_BatteryLevel(const FGameplayAttributeData& OldBatteryLevel)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWDeliveryAttributeSet, BatteryLevel, OldBatteryLevel);
+}
+
+void UPTWDeliveryAttributeSet::OnRep_MaxBatteryLevel(const FGameplayAttributeData& OldMaxBatteryLevel)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWDeliveryAttributeSet, MaxBatteryLevel, OldMaxBatteryLevel);
 }
 
 void UPTWDeliveryAttributeSet::OnRep_MoveSpeedModifier(const FGameplayAttributeData& OldMoveSpeedMod)

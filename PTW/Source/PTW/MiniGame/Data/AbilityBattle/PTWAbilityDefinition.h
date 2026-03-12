@@ -10,13 +10,6 @@
 class UGameplayAbility;
 class UGameplayEffect;
 
-UENUM(BlueprintType)
-enum class EPTWAbilityTier : uint8
-{
-	Tier1,
-	Tier2,
-	Tier3
-};
 
 UCLASS()
 class PTW_API UPTWAbilityDefinition : public UDataAsset
@@ -34,7 +27,7 @@ public:
 	TSoftObjectPtr<UTexture2D> Icon;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Ability")
-	EPTWAbilityTier Tier;
+	int32 Tier;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Ability")
 	TSubclassOf<UGameplayEffect> EffectClass;

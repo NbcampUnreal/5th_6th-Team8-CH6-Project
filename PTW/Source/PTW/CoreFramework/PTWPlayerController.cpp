@@ -42,6 +42,7 @@
 #include "OnlineSubsystemUtils.h"
 #include "UI/Dev/PTWDevWidget.h"
 #include "CoreFramework/Character/Component/PTWDeveloperComponent.h"
+#include "MiniGame/ControllerComponent/Abyss/PTWAbyssControllerComponent.h"
 #include "Engine/PostProcessVolume.h"
 #include "EngineUtils.h"
 #include "Game/GameMode/PTWLobbyGameMode.h"
@@ -50,6 +51,7 @@
 APTWPlayerController::APTWPlayerController()
 {
 	DeveloperComponent = CreateDefaultSubobject<UPTWDeveloperComponent>(TEXT("DevComponent"));
+	AbyssControllerComponent = CreateDefaultSubobject<UPTWAbyssControllerComponent>(TEXT("AbyssControllerComponent"));
 }
 
 void APTWPlayerController::StartSpectating()
@@ -1128,3 +1130,10 @@ void APTWPlayerController::ApplyInputRestricted(bool bRestricted)
 		Subsystem->AddMappingContext(IMC, 0);
 }
 
+void APTWPlayerController::Client_SetAbyssDark_Implementation(bool bEnable)
+{
+	if (AbyssControllerComponent)
+	{
+		AbyssControllerComponent->SetAbyssDark(bEnable);
+	}
+}

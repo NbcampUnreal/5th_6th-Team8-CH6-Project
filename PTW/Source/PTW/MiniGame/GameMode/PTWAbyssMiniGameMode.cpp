@@ -5,6 +5,7 @@
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "GameFramework/PlayerController.h"
+#include "MiniGame/Controller/Abyss/PTWAbyssPlayerController.h"
 #include "System/PTWItemSpawnManager.h"
 #include "PTWGameplayTag/GameplayTags.h"
 
@@ -20,10 +21,10 @@ void APTWAbyssMiniGameMode::StartRound()
 {
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		if (APTWAbyssPlayerController* PC = Cast<APTWAbyssPlayerController>(It->Get()))
 		{
 			PC->Client_SetAbyssDark(true);
-			
+
 			if (APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(PC->GetPawn()))
 			{
 				Character->SetStealthMode(true);
@@ -71,7 +72,7 @@ void APTWAbyssMiniGameMode::EndRound()
 {
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		if (APTWAbyssPlayerController* PC = Cast<APTWAbyssPlayerController>(It->Get()))
 		{
 			PC->Client_SetAbyssDark(false);
 			

@@ -1118,24 +1118,3 @@ void APTWPlayerController::ApplyInputRestricted(bool bRestricted)
 		Subsystem->AddMappingContext(IMC, 0);
 }
 
-void APTWPlayerController::Client_SetAbyssDark_Implementation(bool bEnable)
-{
-	if (!GetWorld()) return;
-	
-	if (!CachedAbyssPP)
-	{
-		for (TActorIterator<APostProcessVolume> It(GetWorld()); It; ++It)
-		{
-			if (It->ActorHasTag(FName("AbyssPP")))
-			{
-				CachedAbyssPP = *It;
-				break;
-			}
-		}
-	}
-
-	if (!CachedAbyssPP) return;
-	
-	CachedAbyssPP->bEnabled = true;
-	CachedAbyssPP->BlendWeight = bEnable ? 1.0f : 0.0f;
-}

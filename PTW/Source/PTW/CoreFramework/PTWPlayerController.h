@@ -56,10 +56,6 @@ public:
 	/* 입력 제한 함수 */
 	UFUNCTION(Client, Reliable)
 	void Client_SetInputRestricted(bool bRestricted);
-	
-	/*  화면 어둡게 토글 */
-	UFUNCTION(Client, Reliable)
-	void Client_SetAbyssDark(bool bEnable);
 
 	void ApplyInputRestricted(bool bRestricted);
 	
@@ -207,10 +203,6 @@ protected:
 	/* 캐싱된 UI 서브시스템 */
 	UPROPERTY()
 	TObjectPtr<UPTWUISubsystem> UISubsystem;
-	
-	/* Abyss: 캐싱된 PostProcessVolume */
-	UPROPERTY(Transient)
-	TObjectPtr<APostProcessVolume> CachedAbyssPP;
 
 	/* (폭탄넘기기 미니게임) 캐싱 */
 	UPROPERTY()

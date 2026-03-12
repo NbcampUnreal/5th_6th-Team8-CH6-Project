@@ -6,6 +6,7 @@
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "System/PTWItemSpawnManager.h"
 #include "Inventory/PTWInventoryComponent.h"
+#include "MiniGame/ControllerComponent/GhostChase/PTWGhostChaseControllerComponent.h"
 
 APTWGhostChaseMiniGameMode::APTWGhostChaseMiniGameMode()
 {
@@ -173,6 +174,11 @@ void APTWGhostChaseMiniGameMode::UpdatePlayerTargetUI(AController* Chaser, ACont
 		{
 			ChaserPS->OnRep_CurrentTargetPawn();
 		}
+	}
+
+	if (auto* GCComp = Chaser->FindComponentByClass<UPTWGhostChaseControllerComponent>())
+	{
+		GCComp->SetTarget(NewTarget->GetPawn());
 	}
 }
 

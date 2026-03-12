@@ -4,6 +4,7 @@
 #include "PTWServerBrowser.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
+#include "Components/CheckBox.h"
 #include "Components/VerticalBox.h"
 #include "Components/EditableText.h"
 #include "Components/TextBlock.h"
@@ -156,15 +157,25 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	{
 		SessionConfig.MaxRounds = GetMaxRoundsByLimit(RoundLimit);
 	}
-	SessionConfig.bIsDedicatedServer = UE_SERVER;
+	// SessionConfig.bIsDedicatedServer = UE_SERVER;
+	SessionConfig.bIsDedicatedServer = DedicatedCheckBox->IsChecked();
 	
-	UGameInstance* GameInstance = GetGameInstance();
-	if (!IsValid(GameInstance)) return;
+	if (SessionConfig.bIsDedicatedServer)
+	{
+		// Dedicated Server는 AWS GameLift에서 원격으로 Fleet Instance에 빈 프로세스를 선택하고 GameSession을 생성.
+		
+	}
+	else
+	{
+		// Listen Server는 현재 Desktop 에서 실행.
+		UGameInstance* GameInstance = GetGameInstance();
+		if (!IsValid(GameInstance)) return;
 	
-	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
-	if (!IsValid(SessionSubsystem)) return;
+		UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
+		if (!IsValid(SessionSubsystem)) return;
 	
-	SessionSubsystem->CreateGameSession(SessionConfig);
+		SessionSubsystem->CreateGameSession(SessionConfig);
+	}
 }
 
 void UPTWServerBrowser::OnClickedFindServerButton()

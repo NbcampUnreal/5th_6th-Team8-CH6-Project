@@ -113,7 +113,7 @@ public:
 	void RefreshTargetViewHiddenActors();
 
 	/* UI 생성 */
-	void CreateUI();
+	virtual void CreateUI();
 
 protected:
 	virtual void BeginPlay() override;

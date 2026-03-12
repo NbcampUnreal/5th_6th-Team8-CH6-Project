@@ -3,6 +3,7 @@
 
 #include "GAS/PTWAbilityBattleAttributeSet.h"
 
+#include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
 
 UPTWAbilityBattleAttributeSet::UPTWAbilityBattleAttributeSet()
@@ -27,11 +28,26 @@ void UPTWAbilityBattleAttributeSet::GetLifetimeReplicatedProps(TArray<class FLif
 void UPTWAbilityBattleAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
+
+	if (Attribute == GetShieldAttribute())
+	{
+		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxShield());
+	}
 }
 
 void UPTWAbilityBattleAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
+
+	if (Data.EvaluatedData.Attribute == GetMaxShieldAttribute())
+	{
+		SetShield(FMath::Clamp(GetShield(), 0.f, GetMaxShield()));
+	}
+
+	if (Data.EvaluatedData.Attribute == GetShieldAttribute())
+	{
+		SetShield(FMath::Clamp(GetShield(), 0.f, GetMaxShield()));
+	}
 }
 
 void UPTWAbilityBattleAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue,

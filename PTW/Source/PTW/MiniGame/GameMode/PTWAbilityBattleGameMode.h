@@ -23,9 +23,9 @@ protected:
 private:
 	void GrandAbilityBattleAttributeSet();
 
-	UPROPERTY()
-	TObjectPtr<UPTWRandomDraftSystem> RandomDraftSystem;
-
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UDataTable> AbilityDataTable;
+	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> InitAttributeEffectClass;
 	

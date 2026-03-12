@@ -39,7 +39,7 @@ void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter, TSub
 {
 	if (GoalPlayers.Num() == 0)
 	{
-		StartCountDown();
+		StartEndCountDown();
 	}
 	GoalPlayers.Add(TargetCharacter);
 	
@@ -58,6 +58,21 @@ void APTWDeliveryGameMode::EndBatteryCharge(APTWPlayerCharacter* TargetCharacter
 	
 }
 
+void APTWDeliveryGameMode::SetPlayerSpawnLocation(APTWPlayerController* PC, FVector NewLocation)
+{
+	PlayerSpawnPoints.FindOrAdd(PC) = NewLocation;
+}
+
+FTransform APTWDeliveryGameMode::GetPlayerSpawnTransform(APTWPlayerController* PC)
+{
+	if (FVector* SpawnLoc = PlayerSpawnPoints.Find(PC))
+	{
+		return FTransform(FRotator::ZeroRotator, *SpawnLoc);
+	}
+	
+	return FTransform();
+}
+
 void APTWDeliveryGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {
 	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(KillActor);
@@ -73,16 +88,30 @@ void APTWDeliveryGameMode::ApplyGameEffect(APTWPlayerCharacter* Target, TSubclas
 	CombatInterface->ApplyGameplayEffectToSelf(TargetGameplayEffect, 1.0f, FGameplayEffectContextHandle());
 }
 
-void APTWDeliveryGameMode::OnCountDownFinished()
+void APTWDeliveryGameMode::StartEndCountDown()
 {
-	if (GoalPlayers.Num() == 0)
+	DeliveryComp->ShowCountDownWidget();
+	UpdateCountDown();
+	GetWorld()->GetTimerManager().SetTimer(CountDownTimerHandle, this, &APTWDeliveryGameMode::UpdateCountDown,1.0f,true);
+}
+
+void APTWDeliveryGameMode::UpdateCountDown()
+{
+	if (FinalCount == 0)
 	{
-		Super::OnCountDownFinished();
+		StopCountDown();
 	}
-	else
-	{
-		EndRound();
-	}
+		
+	DeliveryComp->SetCountDownText(FinalCount);
+	FinalCount--;
+}
+
+void APTWDeliveryGameMode::StopCountDown()
+{
+	GetWorld()->GetTimerManager().ClearTimer(CountDownTimerHandle);
+	
+	FTimerHandle EndTimerWaitHandle;
+	GetWorld()->GetTimerManager().SetTimer(EndTimerWaitHandle, this, &APTWDeliveryGameMode::EndTimer, 3.0f, false);
 }
 
 void APTWDeliveryGameMode::GivingDefaultWeapon(APTWPlayerCharacter* TargetCharacter)
@@ -129,7 +158,9 @@ void APTWDeliveryGameMode::DeliveryUISetting(APTWPlayerCharacter* TargetCharacte
 {
 	if (APTWPlayerController* PlayerController = Cast<APTWPlayerController>(TargetCharacter->GetController()))
 	{
-		if (UPTWDeliveryControllerComponent* DeliveryComp = Cast<UPTWDeliveryControllerComponent>(PlayerController->GetComponentByClass(UPTWDeliveryControllerComponent::StaticClass())))
+		DeliveryComp = Cast<UPTWDeliveryControllerComponent>(PlayerController->GetComponentByClass(UPTWDeliveryControllerComponent::StaticClass()));
+		
+		if (DeliveryComp)
 		{
 			DeliveryComp->AddBatteryUI();
 		}

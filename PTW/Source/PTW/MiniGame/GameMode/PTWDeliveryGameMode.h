@@ -9,6 +9,7 @@
 class UAbilitySystemComponent;
 class APTWPlayerCharacter;
 class IPTWCombatInterface;
+class UPTWDeliveryControllerComponent;
 /**
  * 
  */
@@ -32,11 +33,18 @@ public:
 	
 	/* 충전 완료*/
 	void EndBatteryCharge(APTWPlayerCharacter* TargetCharacter);
+	
+	void SetPlayerSpawnLocation(APTWPlayerController* PC, FVector NewLocation);
+	
+	FTransform GetPlayerSpawnTransform(APTWPlayerController* PC);
 
 protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	void ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect);
-	virtual void OnCountDownFinished() override;
+	void StartEndCountDown();
+	void UpdateCountDown();
+	void StopCountDown();	
+	
 private:
 	
 	/* 미니 게임 시작 무기 지급*/
@@ -68,4 +76,14 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Game|Weapon")
 	TObjectPtr<UPTWItemDefinition> DeliveryDefaultWeapon;
+	
+private:
+	FTimerHandle CountDownTimerHandle;
+	
+	UPROPERTY()
+	TObjectPtr<UPTWDeliveryControllerComponent> DeliveryComp;
+	
+	int32 FinalCount = 10;
+	
+	TMap<APTWPlayerController*, FVector> PlayerSpawnPoints; 
 };

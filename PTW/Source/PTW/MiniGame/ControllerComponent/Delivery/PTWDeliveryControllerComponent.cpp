@@ -3,6 +3,7 @@
 #include "CoreFramework/PTWPlayerController.h"
 #include "UI/PTWUISubsystem.h"
 #include "UI/MiniGame/Delivery/PTWBatterLevelWidget.h"
+#include "UI/MiniGame/Delivery/PTWDeliveryHUD.h"
 
 UPTWDeliveryControllerComponent::UPTWDeliveryControllerComponent()
 {
@@ -19,10 +20,43 @@ void UPTWDeliveryControllerComponent::AddBatteryUI()
 	}
 }
 
+void UPTWDeliveryControllerComponent::ShowCountDownWidget()
+{
+	if (GetOwner()->HasAuthority())
+	{
+		ClientRPC_ShowCountDownWidget();
+	}
+}
+
+void UPTWDeliveryControllerComponent::SetCountDownText(int32 Count)
+{
+	if (GetOwner()->HasAuthority())
+	{
+		ClientRPC_SetCountDownText(Count);
+	}
+}
+
+
 // Called when the game starts
 void UPTWDeliveryControllerComponent::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void UPTWDeliveryControllerComponent::ClientRPC_ShowCountDownWidget_Implementation()
+{
+	if (DeliveryHUDWidgetInstance)
+	{
+		DeliveryHUDWidgetInstance->InitCountDownWidget();
+	}
+}
+
+void UPTWDeliveryControllerComponent::ClientRPC_SetCountDownText_Implementation(int32 Count)
+{
+	if (DeliveryHUDWidgetInstance)
+	{
+		DeliveryHUDWidgetInstance->UpdateCountDownWidgetCount(Count);
+	}
 }
 
 void UPTWDeliveryControllerComponent::ClientRPC_AddBatteryUI_Implementation()
@@ -40,10 +74,11 @@ void UPTWDeliveryControllerComponent::ClientRPC_AddBatteryUI_Implementation()
 	UUserWidget* WidetInstance = UISubsystem->CreatePersistentWidget(BatteryWidgetClass);
 	if (!WidetInstance) return;
 	
-	if (UPTWBatterLevelWidget* BatterLevelWidget = Cast<UPTWBatterLevelWidget>(WidetInstance))
+	if (UPTWDeliveryHUD* BatterLevelWidget = Cast<UPTWDeliveryHUD>(WidetInstance))
 	{
-		BatterLevelWidget->InitWithASC(UISubsystem->GetLocalPlayerASC());
-		BatterLevelWidget->SetVisibility(ESlateVisibility::Visible);
+		DeliveryHUDWidgetInstance = BatterLevelWidget;
+		DeliveryHUDWidgetInstance->SetVisibility(ESlateVisibility::Visible);
+		DeliveryHUDWidgetInstance->InitBatterLevelWidget(UISubsystem->GetLocalPlayerASC());
 	}
 }
 

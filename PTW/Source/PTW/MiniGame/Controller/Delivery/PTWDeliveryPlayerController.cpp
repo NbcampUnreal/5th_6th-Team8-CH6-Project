@@ -16,6 +16,7 @@ void APTWDeliveryPlayerController::CreateUI()
 		if (UPTWBatterLevelWidget* BatterLevelWidget = Cast<UPTWBatterLevelWidget>(WidgetInstance))
 		{
 			BatterLevelWidget->InitWithASC(UISubsystem->GetLocalPlayerASC());
+			BatterLevelWidget->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
 }

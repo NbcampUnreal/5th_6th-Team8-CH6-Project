@@ -4,6 +4,7 @@
 #include "PTWBatterLevelWidget.h"
 
 #include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
 #include "GAS/PTWDeliveryAttributeSet.h"
 
 void UPTWBatterLevelWidget::NativeConstruct()
@@ -59,7 +60,7 @@ void UPTWBatterLevelWidget::OnBatteryLevelAttributeChanged(const FOnAttributeCha
 	float MaxBatteryLevel = AbilitySystemComponent
 		->GetNumericAttribute(UPTWDeliveryAttributeSet::GetMaxBatteryLevelAttribute());
 
-	UpdateBatteryLevelBar(MaxBatteryLevel, Data.NewValue);
+	UpdateBatteryLevelBar( Data.NewValue, MaxBatteryLevel);
 }
 
 void UPTWBatterLevelWidget::OnMaxBatteryLevelAttributeChanged(const FOnAttributeChangeData& Data)
@@ -78,5 +79,12 @@ void UPTWBatterLevelWidget::UpdateBatteryLevelBar(float CurrentBatteryLevel, flo
 	{
 		const float Percent = CurrentBatteryLevel / MaxBatteryLevel;
 		BatteryLevelBar->SetPercent(Percent);
+		UpdateBatteryText(Percent);
 	}
+}
+
+void UPTWBatterLevelWidget::UpdateBatteryText(float Percent)
+{
+	FText BatteryText = FText::Format(FText::FromString("{0}%"), Percent * 100);
+	BatteryLevelTextBlock->SetText(BatteryText);
 }

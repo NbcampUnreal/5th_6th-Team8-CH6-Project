@@ -117,5 +117,7 @@ void APTWDeliveryGameMode::GrantDeliveryAttributeSet()
 void APTWDeliveryGameMode::InitializeAttributeSet(UAbilitySystemComponent* TargetASC)
 {
 	if (!TargetASC) return;
-	TargetASC->SetNumericAttributeBase(UPTWDeliveryAttributeSet::GetBatteryLevelAttribute(), 1.0f);
+	TargetASC->SetNumericAttributeBase(UPTWDeliveryAttributeSet::GetMaxBatteryLevelAttribute(), 1.0f);
+	float MaxValue = TargetASC->GetNumericAttribute(UPTWDeliveryAttributeSet::GetMaxBatteryLevelAttribute());
+	TargetASC->SetNumericAttributeBase(UPTWDeliveryAttributeSet::GetBatteryLevelAttribute(), MaxValue);
 }

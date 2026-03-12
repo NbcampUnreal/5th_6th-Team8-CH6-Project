@@ -110,6 +110,9 @@ public:
 
 	/* UI 생성 */
 	virtual void CreateUI();
+	
+	/* UISubsystem Getter*/
+	FORCEINLINE UPTWUISubsystem* GetUISubSystem() const {return UISubsystem;}
 
 protected:
 	virtual void BeginPlay() override;

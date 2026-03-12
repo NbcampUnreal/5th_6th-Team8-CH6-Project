@@ -50,6 +50,9 @@ private:
 	
 	/* AS 할당 이후 Value값 초기화 */
 	void InitializeAttributeSet(UAbilitySystemComponent* TargetASC);
+	
+	/* UI */
+	void DeliveryUISetting(APTWPlayerCharacter* TargetCharacter);
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")

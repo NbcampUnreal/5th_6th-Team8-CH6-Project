@@ -15,12 +15,15 @@ class PTW_API UPTWDeliveryControllerComponent : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	UPTWDeliveryControllerComponent();
-	
 	void AddBatteryUI();
 
 protected:
 	virtual void BeginPlay() override;
+	
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_AddBatteryUI();
 
-
-
+protected:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> BatteryWidgetClass;
 };

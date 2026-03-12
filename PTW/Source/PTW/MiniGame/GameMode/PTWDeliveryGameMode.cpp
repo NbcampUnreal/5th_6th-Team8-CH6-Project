@@ -6,10 +6,12 @@
 
 #include "AbilitySystemComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "CoreFramework/PTWPlayerController.h"
 #include "System/PTWItemSpawnManager.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "GAS/PTWDeliveryAttributeSet.h"
+#include "MiniGame/ControllerComponent/Delivery/PTWDeliveryControllerComponent.h"
 
 APTWDeliveryGameMode::APTWDeliveryGameMode()
 {
@@ -29,6 +31,7 @@ void APTWDeliveryGameMode::GiveDeliveryItems(APTWPlayerCharacter* TargetCharacte
 	
 	ApplyGameEffect(TargetCharacter, EffectToApply);
 	GivingDefaultWeapon(TargetCharacter);
+	DeliveryUISetting(TargetCharacter);
 	DeliveredCharacters.Add(TargetCharacter);
 }
 
@@ -120,4 +123,15 @@ void APTWDeliveryGameMode::InitializeAttributeSet(UAbilitySystemComponent* Targe
 	TargetASC->SetNumericAttributeBase(UPTWDeliveryAttributeSet::GetMaxBatteryLevelAttribute(), 1.0f);
 	float MaxValue = TargetASC->GetNumericAttribute(UPTWDeliveryAttributeSet::GetMaxBatteryLevelAttribute());
 	TargetASC->SetNumericAttributeBase(UPTWDeliveryAttributeSet::GetBatteryLevelAttribute(), MaxValue);
+}
+
+void APTWDeliveryGameMode::DeliveryUISetting(APTWPlayerCharacter* TargetCharacter)
+{
+	if (APTWPlayerController* PlayerController = Cast<APTWPlayerController>(TargetCharacter->GetController()))
+	{
+		if (UPTWDeliveryControllerComponent* DeliveryComp = Cast<UPTWDeliveryControllerComponent>(PlayerController->GetComponentByClass(UPTWDeliveryControllerComponent::StaticClass())))
+		{
+			DeliveryComp->AddBatteryUI();
+		}
+	}
 }

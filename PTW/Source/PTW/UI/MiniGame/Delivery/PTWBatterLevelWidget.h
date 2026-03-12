@@ -7,6 +7,7 @@
 #include "GameplayEffectTypes.h"
 #include "PTWBatterLevelWidget.generated.h"
 
+class UTextBlock;
 class UProgressBar;
 class UAbilitySystemComponent;
 /**
@@ -25,6 +26,9 @@ public:
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UProgressBar> BatteryLevelBar;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UTextBlock> BatteryLevelTextBlock;
 
 private:
 	UPROPERTY()
@@ -37,6 +41,8 @@ private:
 	void OnMaxBatteryLevelAttributeChanged(const FOnAttributeChangeData& Data);
 
 	void UpdateBatteryLevelBar(float CurrentBatteryLevel, float MaxBatteryLevel);
+	
+	void UpdateBatteryText(float Percent);
 	
 	FDelegateHandle BatterLevelChangedHandle;
 	FDelegateHandle MaxBatterLevelChangedHandle;

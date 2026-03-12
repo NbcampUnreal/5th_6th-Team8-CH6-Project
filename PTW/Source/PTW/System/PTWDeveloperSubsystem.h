@@ -37,6 +37,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Dev") void SetSuperJump(float JumpZVelocity);
 	UFUNCTION(BlueprintCallable, Category = "Dev") void ToggleFlyMode();
 	UFUNCTION(BlueprintCallable, Category = "Dev") void KillSelf();
+	UFUNCTION(BlueprintCallable, Category = "Dev") void RespawnSelf();
 
 	// --- 4. 아이템 & 디버깅 ---
 	UFUNCTION(BlueprintCallable, Category = "Dev") void GrantItem(FString ItemID);

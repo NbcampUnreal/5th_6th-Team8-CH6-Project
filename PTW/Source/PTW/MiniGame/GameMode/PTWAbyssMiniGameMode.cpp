@@ -5,12 +5,9 @@
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "GameFramework/PlayerController.h"
-#include "MiniGame/Controller/Abyss/PTWAbyssPlayerController.h"
 #include "System/PTWItemSpawnManager.h"
 #include "PTWGameplayTag/GameplayTags.h"
 
-#include "EngineUtils.h"
-#include "Engine/PostProcessVolume.h"
 
 APTWAbyssMiniGameMode::APTWAbyssMiniGameMode()
 {
@@ -21,7 +18,7 @@ void APTWAbyssMiniGameMode::StartRound()
 {
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		if (APTWAbyssPlayerController* PC = Cast<APTWAbyssPlayerController>(It->Get()))
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
 		{
 			PC->Client_SetAbyssDark(true);
 
@@ -72,7 +69,7 @@ void APTWAbyssMiniGameMode::EndRound()
 {
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		if (APTWAbyssPlayerController* PC = Cast<APTWAbyssPlayerController>(It->Get()))
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
 		{
 			PC->Client_SetAbyssDark(false);
 			
@@ -102,35 +99,6 @@ void APTWAbyssMiniGameMode::EndRound()
 	}
 
 	Super::EndRound();
-}
-
-void APTWAbyssMiniGameMode::CacheAbyssPP()
-{
-	if (AbyssPP) return;
-	if (!GetWorld()) return;
-
-	for (TActorIterator<APostProcessVolume> It(GetWorld()); It; ++It)
-	{
-		APostProcessVolume* PP = *It;
-		if (!PP) continue;
-
-		if (PP->ActorHasTag(FName("AbyssPP")))
-		{
-			AbyssPP = PP;
-			break;
-		}
-	}
-}
-
-void APTWAbyssMiniGameMode::SetAbyssDark(bool bEnable)
-{
-	if (!GetWorld()) return;
-
-	CacheAbyssPP();
-	if (!AbyssPP) return;
-
-	AbyssPP->bEnabled = true;
-	AbyssPP->BlendWeight = bEnable ? 1.0f : 0.0f;
 }
 
 void APTWAbyssMiniGameMode::TickIdleReveal()

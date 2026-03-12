@@ -29,6 +29,7 @@ class UPTWBombWarning;
 class UPTWDevWidget;
 class UPTWDeveloperComponent;
 class APostProcessVolume;
+class UPTWAbyssControllerComponent;
 class UPTWTargetViewWidget;
 class USceneCaptureComponent2D; 
 class UTextureRenderTarget2D;   
@@ -58,6 +59,10 @@ public:
 	void Client_SetInputRestricted(bool bRestricted);
 
 	void ApplyInputRestricted(bool bRestricted);
+	
+	/* 어비스 화면 연출 */
+	UFUNCTION(Client, Reliable)
+	void Client_SetAbyssDark(bool bEnable);
 	
 	/* 클라이언트가 서버에 메시지 전송을 요청하는 RPC */
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -210,6 +215,9 @@ protected:
 	/* (폭탄넘기기 미니게임) 캐싱 */
 	UPROPERTY()
 	APTWBombActor* CachedBombActor; // 폭탄 액터
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Abyss")
+	TObjectPtr<UPTWAbyssControllerComponent> AbyssControllerComponent;
 
 	/* 씬 캡처 결과가 저장될 렌더 타겟 메모리 리소스 */
 	UPROPERTY()

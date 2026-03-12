@@ -42,6 +42,7 @@ protected:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_SuperJump;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_FlyMode;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_KillSelf;
+	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_RespawnSelf;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_GrantItem;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_ShowFPS;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_ToggleHUD;
@@ -63,6 +64,7 @@ protected:
 	UFUNCTION() void OnSuperJumpClicked();
 	UFUNCTION() void OnFlyModeClicked();
 	UFUNCTION() void OnKillSelfClicked();
+	UFUNCTION() void OnRespawnSelfClicked();
 
 	UFUNCTION() void OnGrantItemClicked();
 	UFUNCTION() void OnShowFPSClicked();

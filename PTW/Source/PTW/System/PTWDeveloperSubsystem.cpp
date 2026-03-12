@@ -263,7 +263,46 @@ void UPTWDeveloperSubsystem::ProcessServerCommand(APlayerController* InstigatorP
 				MyPawn->Destroy();
 			}
 		}
+	}
+	else if (CommandName == FName("RespawnSelf"))
+	{
+		if (AGameModeBase* GameMode = GetWorld()->GetAuthGameMode())
+		{
+			if (APawn* CurrentPawn = InstigatorPC->GetPawn())
+			{
+				CurrentPawn->Destroy();
+			}
+			else
+			{
+				UE_LOG(LogTemp, Log, TEXT("[Dev] %s 의 폰이 존재하지 않습니다."),
+					*InstigatorPC->GetName());
+			}
+
+			FName CurrentState = InstigatorPC->GetStateName();
+			if (CurrentState == NAME_Spectating || CurrentState == NAME_Inactive)
+			{
+				if (InstigatorPC->PlayerState)
+				{
+					InstigatorPC->PlayerState->SetIsSpectator(false);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Log, TEXT("[Dev] %s 의 플레이어 스테이트가 유효하지 않습니다."),
+						*InstigatorPC->GetName());
+				}
+
+				InstigatorPC->ChangeState(NAME_Playing);
+				InstigatorPC->bPlayerIsWaiting = false;
+
+				UE_LOG(LogTemp, Log, TEXT("[Dev] %s 컨트롤러의 상태를 %s에서 Playing으로 강제 전환했습니다."),
+					*InstigatorPC->GetName(), *CurrentState.ToString());
+			}
+
+			GameMode->RestartPlayer(InstigatorPC);
+
+			UE_LOG(LogTemp, Warning, TEXT("[Dev] %s 플레이어가 스스로 RestartPlayer를 실행했습니다."), *InstigatorPC->GetName());
 		}
+	}
 	else if (CommandName == FName("GrantItem"))
 	{
 		if (InstigatorPC)
@@ -346,6 +385,10 @@ void UPTWDeveloperSubsystem::ToggleFlyMode()
 void UPTWDeveloperSubsystem::KillSelf() 
 { 
 	SendCommandToServer(FName("KillSelf")); 
+}
+void UPTWDeveloperSubsystem::RespawnSelf()
+{
+	SendCommandToServer(FName("RespawnSelf"));
 }
 void UPTWDeveloperSubsystem::GrantItem(FString ItemID) 
 { 

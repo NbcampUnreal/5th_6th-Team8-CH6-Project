@@ -8,7 +8,6 @@
 
 class APlayerState;
 class AActor;
-class APostProcessVolume;
 
 UCLASS()
 class PTW_API APTWAbyssMiniGameMode : public APTWMiniGameMode
@@ -26,12 +25,6 @@ protected:
 private:
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Weapon")
 	FGameplayTag AbyssDefaultWeaponTag;
-	
-	UPROPERTY()
-	TObjectPtr<APostProcessVolume> AbyssPP = nullptr;
-
-	void SetAbyssDark(bool bEnable);
-	void CacheAbyssPP();
 
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")
 	float IdleRevealTime = 3.0f;

@@ -8,7 +8,9 @@
 #include "HttpModule.h"
 #include "JsonObjectConverter.h"
 #include "PTWHTTPRequestTypes.h"
+#include "GameFramework/PlayerState.h"
 #include "Interfaces/IHttpResponse.h"
+#include "System/Session/PTWSessionConfig.h"
 
 void UPTWHTTPRequestManager::RequestListFleets()
 {
@@ -57,6 +59,22 @@ void UPTWHTTPRequestManager::FindOrCreateGameSession_Response(FHttpRequestPtr Re
 	bool bWasSuccessful)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Find or Create GAme Session Response Received");
+	
+	TSharedPtr<FJsonObject> JsonObject;
+	
+	
+}
+
+void UPTWHTTPRequestManager::CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response,
+	bool bWasSuccessful)
+{
+	TSharedPtr<FJsonObject> JsonObject;
+	FAWSSessionConfig GameSession;
+	FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession);
+	
+	const FString GameSessionId = GameSession.GameSessionId;
+	const FString GameSessionStatus = GameSession.Status;
+	HandleGameSessionStatus(GameSessionStatus, GameSessionId);
 }
 
 void UPTWHTTPRequestManager::JoinGameSession()
@@ -104,4 +122,53 @@ void UPTWHTTPRequestManager::DumpMetadata(TSharedPtr<FJsonObject> JsonObject)
 			
 		PTWMetaData.Dump();
 	}
+}
+
+FString UPTWHTTPRequestManager::GetUniquePlayerId() const
+{
+	if (APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld()))
+	{
+		if (APlayerState* LocalPlayerState = LocalPlayerController->GetPlayerState<APlayerState>())
+		{
+			if (LocalPlayerState->GetUniqueId().IsValid())
+			{
+				const FString UniqueId = TEXT("Player_") + FString::FromInt(LocalPlayerState->GetUniqueID());
+				return UniqueId;
+			}
+		}
+	}
+	return FString();
+}
+
+void UPTWHTTPRequestManager::HandleGameSessionStatus(const FString& Status, const FString& SessionId)
+{
+	if (Status.Equals(TEXT("ACTIVE")))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Found active Game Session. Creating a Player Session..."));
+		TryCreatePlayerSession(GetUniquePlayerId(), SessionId);
+	}
+	else if (Status.Equals(TEXT("ACTIVATING")))
+	{
+		// UE_LOG(LogTemp, Error, TEXT("Game Session Status: ACTIVATING"));
+		
+		FTimerDelegate CreateSessionDelegate;
+		// CreateSessionDelegate.BindLambda([this]()
+		// {
+		// 	JoinGameSession();
+		// });
+		CreateSessionDelegate.BindUObject(this, &ThisClass::JoinGameSession);
+		if (APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld()))
+		{
+			LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer, CreateSessionDelegate, 0.5f, false);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Unknown Status %s"), *Status);
+	}
+}
+
+void UPTWHTTPRequestManager::TryCreatePlayerSession(const FString& PlayerId, const FString& GameSessionId)
+{
+	
 }

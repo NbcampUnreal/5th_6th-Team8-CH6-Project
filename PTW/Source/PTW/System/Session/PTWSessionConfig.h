@@ -117,3 +117,4 @@ struct FAWSSessionConfig
 	
 	void Dump() const;
 };
+

@@ -46,6 +46,11 @@ void APTWAbyssMiniGameMode::StartRound()
 			IdleCheckInterval,
 			true
 		);
+
+		if (bUseLightningFlash)
+		{
+			ScheduleLightningFlash();
+		}
 	}
 }
 
@@ -85,6 +90,8 @@ void APTWAbyssMiniGameMode::EndRound()
 	if (HasAuthority())
 	{
 		GetWorldTimerManager().ClearTimer(IdleRevealTimerHandle);
+		GetWorldTimerManager().ClearTimer(LightningTimerHandle);
+		GetWorldTimerManager().ClearTimer(LightningRestoreTimerHandle);
 
 		for (auto& Pair : RevealMarkerMap)
 		{
@@ -177,5 +184,59 @@ void APTWAbyssMiniGameMode::HideReveal(AController* Controller)
 			(*Found)->Destroy();
 		}
 		RevealMarkerMap.Remove(PS);
+	}
+}
+
+void APTWAbyssMiniGameMode::ScheduleLightningFlash()
+{
+	if (!HasAuthority() || !GetWorld()) return;
+
+	const float NextInterval = FMath::FRandRange(LightningMinInterval, LightningMaxInterval);
+
+	GetWorldTimerManager().SetTimer(
+		LightningTimerHandle,
+		this,
+		&ThisClass::TriggerLightningFlash,
+		NextInterval,
+		false
+	);
+}
+
+void APTWAbyssMiniGameMode::TriggerLightningFlash()
+{
+	if (!HasAuthority() || !GetWorld()) return;
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		{
+			PC->Client_SetAbyssDark(false);
+		}
+	}
+
+	GetWorldTimerManager().SetTimer(
+		LightningRestoreTimerHandle,
+		this,
+		&ThisClass::RestoreAbyssDark,
+		LightningFlashDuration,
+		false
+	);
+}
+
+void APTWAbyssMiniGameMode::RestoreAbyssDark()
+{
+	if (!HasAuthority() || !GetWorld()) return;
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		{
+			PC->Client_SetAbyssDark(true);
+		}
+	}
+
+	if (bUseLightningFlash)
+	{
+		ScheduleLightningFlash();
 	}
 }

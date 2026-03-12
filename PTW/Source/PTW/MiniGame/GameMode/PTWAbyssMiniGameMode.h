@@ -21,6 +21,25 @@ protected:
 	virtual void StartRound() override;
 	virtual void EndRound() override;
 	virtual void SpawnDefaultWeapon(AController* NewPlayer) override;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Lightning")
+	bool bUseLightningFlash = true;
+
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Lightning")
+	float LightningFlashDuration = 0.2f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Lightning")
+	float LightningMinInterval = 5.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Lightning")
+	float LightningMaxInterval = 10.0f;
+
+	FTimerHandle LightningTimerHandle;
+	FTimerHandle LightningRestoreTimerHandle;
+
+	void ScheduleLightningFlash();
+	void TriggerLightningFlash();
+	void RestoreAbyssDark();
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Weapon")

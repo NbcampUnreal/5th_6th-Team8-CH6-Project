@@ -424,7 +424,8 @@ void APTWPlayerController::BeginPlay()
 
 	CreateUI();
 	
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] BeginPlay - CreateUI 함수 호출됨."));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 BeginPlay - CreateUI 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -437,7 +438,8 @@ void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	
 	Super::EndPlay(EndPlayReason);
 	
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] EndPlay 함수 호출됨."));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 EndPlay 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::OnRep_PlayerState()
@@ -460,16 +462,19 @@ void APTWPlayerController::OnRep_PlayerState()
 
 	//CreateUI();
 	
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnRep_PlayerState 함수 호출됨."));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnRep_PlayerState 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnRep_Pawn 함수 호출됨."));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnRep_Pawn 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 
 	CreateUI();
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnRep_Pawn - CreateUI 함수 호출됨."));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnRep_Pawn - CreateUI 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::OnPossess(APawn* InPawn)
@@ -479,23 +484,27 @@ void APTWPlayerController::OnPossess(APawn* InPawn)
 	/* 로딩완료 */
 	Server_ReportLoadingComplete();
 	
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] 플레이어 컨트롤러 Possess 함수 호출됨."));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 컨트롤러 Possess 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 
 	CreateUI();
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnPossess - CreateUI 함수 호출됨."));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnPossess - CreateUI 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::OnUnPossess()
 {
 	Super::OnUnPossess();
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] OnUnPossess 함수 호출됨."));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnUnPossess 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::BeginSpectatingState()
 {
 	Super::BeginSpectatingState();
 	
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] BeginSpectatingState 함수 호출됨."));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 BeginSpectatingState 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 ASpectatorPawn* APTWPlayerController::SpawnSpectatorPawn()
@@ -639,7 +648,7 @@ void APTWPlayerController::HandleRoulettePhaseChanged(FPTWRouletteData RouletteD
 	const UEnum* EnumPtr = StaticEnum<EPTWRoulettePhase>();
 	FString PhaseName = EnumPtr ? EnumPtr->GetNameStringByValue((int64)RouletteData.CurrentPhase) : TEXT("Invalid");
 
-	UE_LOG(LogTemp, Error, TEXT("PTWPlayerController : HandleRoulettePhaseChanged - %s"), *PhaseName);
+	UE_LOG(LogTemp, Warning, TEXT("PTWPlayerController : HandleRoulettePhaseChanged - %s"), *PhaseName);
 
 	if (!UISubsystem)
 	{
@@ -782,7 +791,8 @@ void APTWPlayerController::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
 
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] PostSeamlessTravel 함수 호출됨."));
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 PostSeamlessTravel 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 
 	// 로컬 컨트롤러인지 다시 확인
 	if (IsLocalController())

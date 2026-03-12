@@ -275,43 +275,106 @@ void APTWGameMode::HandlePlayerJoined(AController* JoinedController)
 
 void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	if (APlayerController* PC = Cast<APlayerController>(C))
+	// 1. 함수 진입 확인
+	UE_LOG(LogTemp, Warning, TEXT("======================================="));
+	UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] HandleSeamlessTravelPlayer 호출됨! Controller: %s"), 
+		C ? *C->GetName() : TEXT("NULL"));
+
+	APlayerController* PC = Cast<APlayerController>(C);
+	if (!PC)
 	{
-		if (PC->PlayerState)
-		{
-			PC->PlayerState->SetIsSpectator(false);
-			PC->PlayerState->SetIsOnlyASpectator(false);
-			PC->bPlayerIsWaiting = false;
-		}
+		UE_LOG(LogTemp, Error, TEXT("[TravelPlayer] 전달된 Controller가 PlayerController가 아닙니다."));
+		Super::HandleSeamlessTravelPlayer(C);
+		return;
 	}
 
+	// 2. PlayerState 유효성 및 상태 해제 확인
+	if (PC->PlayerState)
+	{
+		UE_LOG(LogTemp, Log, TEXT("[TravelPlayer] %s: PlayerState 확인. 관전 플래그 해제 시도."), 
+			*PC->PlayerState->GetPlayerName());
+		PC->PlayerState->SetIsSpectator(false);
+		PC->PlayerState->SetIsOnlyASpectator(false);
+		PC->bPlayerIsWaiting = false;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[TravelPlayer] 치명적 에러: %s의 PlayerState가 Null입니다! 관전 해제 불가!"), 
+			*PC->GetName());
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] Super 호출 전 현재 State: %s"), 
+		*PC->GetStateName().ToString());
+
+	// 3. 엔진 기본 트래블 로직 실행
 	Super::HandleSeamlessTravelPlayer(C);
 
-	if (APlayerController* PC = Cast<APlayerController>(C))
+	UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] Super 호출 후 State: %s, 현재 Pawn: %s"), 
+		*PC->GetStateName().ToString(), PC->GetPawn() ? *PC->GetPawn()->GetName() : TEXT("None"));
+
+	// 4. 관전자 상태 변경 로직 검증
+	const FName CurrentState = PC->GetStateName();
+	if (CurrentState == NAME_Spectating || CurrentState == NAME_Inactive)
 	{
-		const FName CurrentState = PC->GetStateName();
-		if (CurrentState == NAME_Spectating || CurrentState == NAME_Inactive)
-		{
-			PC->ChangeState(NAME_Playing);
-			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 상태를 %s에서 Playing으로 전환"), *PC->PlayerState->GetPlayerName(), *CurrentState.ToString());
-		}
+		PC->ChangeState(NAME_Playing);
+		PC->ClientGotoState(NAME_Playing);
 
-		if (APawn* CurrentPawn = PC->GetPawn())
-		{
-			CurrentPawn->Destroy();
-			UE_LOG(Log_GameMode, Warning, TEXT("[TravelPlayer] %s의 폰 제거"), *PC->PlayerState->GetPlayerName());
-		}
-
-		 GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
-		 	{
-		 		if (PC && !PC->GetPawn())
-		 		{
-		 			RestartPlayer(PC);
-		 			PC->SetViewTarget(PC);
-		 			UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 플레이어 Pawn 재스폰 완료"), *PC->PlayerState->GetPlayerName());
-		 		}
-		 	});
+		UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s 상태를 %s에서 Playing으로 강제 전환 및 클라이언트 동기화 완료"), 
+			PC->PlayerState ? *PC->PlayerState->GetPlayerName() : *PC->GetName(), *CurrentState.ToString());
 	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("[TravelPlayer] %s는 이미 %s 상태입니다. 상태 전환 건너뜀."), 
+			PC->PlayerState ? *PC->PlayerState->GetPlayerName() : *PC->GetName(), *CurrentState.ToString());
+	}
+
+	// 5. 폰 제거 로직 추적
+	if (APawn* CurrentPawn = PC->GetPawn())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s의 기존 폰(%s) 파괴 시도"), 
+			PC->PlayerState ? *PC->PlayerState->GetPlayerName() : *PC->GetName(), *CurrentPawn->GetName());
+		CurrentPawn->Destroy();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer] %s는 파괴할 기존 폰이 없습니다."), 
+			PC->PlayerState ? *PC->PlayerState->GetPlayerName() : *PC->GetName());
+	}
+
+	// 6. 다음 틱(NextTick) 재스폰 람다 추적
+	GetWorld()->GetTimerManager().SetTimerForNextTick([PC, this]()
+		{
+			if (!PC)
+			{
+				UE_LOG(LogTemp, Error, TEXT("[TravelPlayer_NextTick] PC가 날아가서 재스폰이 취소되었습니다!"));
+				return;
+			}
+
+			if (!PC->GetPawn())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer_NextTick] %s 폰 재스폰(RestartPlayer) 시도..."), 
+					PC->PlayerState ? *PC->PlayerState->GetPlayerName() : *PC->GetName());
+
+				RestartPlayer(PC);
+
+				if (PC->GetPawn())
+				{
+					PC->SetViewTarget(PC);
+					UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer_NextTick] %s 새 Pawn(%s) 재스폰 및 뷰타겟 세팅 완벽 성공!"), 
+						PC->PlayerState ? *PC->PlayerState->GetPlayerName() : *PC->GetName(), *PC->GetPawn()->GetName());
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("[TravelPlayer_NextTick] 실패! %s RestartPlayer 호출 후에도 폰이 없습니다! (스폰 포인트가 없거나 게임모드 로직 문제)"), 
+						PC->PlayerState ? *PC->PlayerState->GetPlayerName() : *PC->GetName());
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[TravelPlayer_NextTick] %s는 이미 폰(%s)을 가지고 있어 재스폰을 건너뜁니다."), 
+					PC->PlayerState ? *PC->PlayerState->GetPlayerName() : *PC->GetName(), *PC->GetPawn()->GetName());
+			}
+		});
 }
 
 void APTWGameMode::StartTimer(float TimeDuration)

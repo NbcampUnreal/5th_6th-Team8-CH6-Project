@@ -26,6 +26,7 @@ void UPTWDevWidget::NativeConstruct()
 	if (IsValid(Btn_SuperJump)) Btn_SuperJump->OnClicked.AddDynamic(this, &ThisClass::OnSuperJumpClicked);
 	if (IsValid(Btn_FlyMode)) Btn_FlyMode->OnClicked.AddDynamic(this, &ThisClass::OnFlyModeClicked);
 	if (IsValid(Btn_KillSelf)) Btn_KillSelf->OnClicked.AddDynamic(this, &ThisClass::OnKillSelfClicked);
+	if (IsValid(Btn_RespawnSelf)) Btn_RespawnSelf->OnClicked.AddDynamic(this, &ThisClass::OnRespawnSelfClicked);
 
 	if (IsValid(Btn_GrantItem)) Btn_GrantItem->OnClicked.AddDynamic(this, &ThisClass::OnGrantItemClicked);
 	if (IsValid(Btn_ShowFPS)) Btn_ShowFPS->OnClicked.AddDynamic(this, &ThisClass::OnShowFPSClicked);
@@ -115,6 +116,10 @@ void UPTWDevWidget::OnFlyModeClicked()
 void UPTWDevWidget::OnKillSelfClicked()
 {
 	if (UPTWDeveloperSubsystem* DevSys = GetWorld()->GetSubsystem<UPTWDeveloperSubsystem>()) DevSys->KillSelf();
+}
+void UPTWDevWidget::OnRespawnSelfClicked()
+{
+	if (UPTWDeveloperSubsystem* DevSys = GetWorld()->GetSubsystem<UPTWDeveloperSubsystem>()) DevSys->RespawnSelf();
 }
 
 // ----------------------------------------------------

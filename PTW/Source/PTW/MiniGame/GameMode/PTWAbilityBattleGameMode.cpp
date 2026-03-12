@@ -16,14 +16,14 @@ void APTWAbilityBattleGameMode::StartGame()
 	Super::StartGame();
 	
 	GrandAbilityBattleAttributeSet();
-
-	RandomDraftSystem = NewObject<UPTWRandomDraftSystem>(this);
-	
+	InitAttributeSet();
 }
 
 void APTWAbilityBattleGameMode::InitAttributeSet()
 {
 	if (!InitAttributeEffectClass) return;
+
+	UE_LOG(Log_AbilityBattle, Warning, TEXT("InitAttributeSet"));
 	
 	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 	{
@@ -36,11 +36,11 @@ void APTWAbilityBattleGameMode::InitAttributeSet()
 		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
 		FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(InitAttributeEffectClass, 1.f, Context);
 
-		if (Spec.IsValid()) continue;
-		
+		if (!Spec.IsValid()) continue;
+
+		UE_LOG(Log_AbilityBattle, Warning, TEXT("ApplyInitAttributeSet"));
 		ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
 	}
-
 }
 
 void APTWAbilityBattleGameMode::GrandAbilityBattleAttributeSet()

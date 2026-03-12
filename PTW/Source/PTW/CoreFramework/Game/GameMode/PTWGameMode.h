@@ -33,7 +33,6 @@ protected:
 	virtual void InitGameState() override;
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void BeginPlay() override;
-
 	
 	/** 플레이어 로그인 시 호출(접속 인원/시작 조건 갱신) */
 	virtual void PostLogin(APlayerController* NewPlayer) override;

@@ -20,6 +20,8 @@ APTWLobbyGameMode::APTWLobbyGameMode()
 {
 	RoundEventManager = CreateDefaultSubobject<UPTWRoundEventManager>(TEXT("RoundEventManager"));
 	LobbyItemManager = CreateDefaultSubobject<UPTWLobbyItemManager>(TEXT("LobbyItemManager"));
+
+	bStartPlayersAsSpectators = false;
 }
 
 void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)

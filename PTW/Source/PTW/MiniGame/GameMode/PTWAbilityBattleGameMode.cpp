@@ -8,6 +8,7 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "Debug/PTWLogCategorys.h"
 #include "GAS/PTWAbilityBattleAttributeSet.h"
+#include "MiniGame/Data/AbilityBattle/PTWAbilityRow.h"
 #include "MiniGame/Manager/AbilityBattle/PTWRandomDraftSystem.h"
 
 
@@ -17,6 +18,7 @@ void APTWAbilityBattleGameMode::StartGame()
 	
 	GrandAbilityBattleAttributeSet();
 	InitAttributeSet();
+	InitializeAbilityPool();
 }
 
 void APTWAbilityBattleGameMode::InitAttributeSet()
@@ -43,6 +45,45 @@ void APTWAbilityBattleGameMode::InitAttributeSet()
 	}
 }
 
+void APTWAbilityBattleGameMode::InitializeAbilityPool()
+{
+	if (!AbilityDataTable) return;
+	
+	for (auto& Row : AbilityDataTable->GetRowMap())
+	{
+		FPTWAbilityRow* Data = (FPTWAbilityRow*)Row.Value;
+		if (!Data || !Data->AbilityDefinition) continue;
+
+		TierAbilityPool.FindOrAdd(Data->AbilityDefinition->Tier).Add(Data->AbilityDefinition);
+	}
+}
+
+TArray<TObjectPtr<UPTWAbilityDefinition>> APTWAbilityBattleGameMode::GenerateDraftOptions(int32 Tier)
+{
+	TArray<TObjectPtr<UPTWAbilityDefinition>> Result;
+
+	TArray<TSoftObjectPtr<UPTWAbilityDefinition>>* Pool = TierAbilityPool.Find(Tier);
+	if (!Pool) return Result;
+	
+	for (int i = 0; i < DraftOptionCount; i++)
+	{
+		int32 RandIndex = FMath::RandRange(0, Pool->Num() - 1);
+		
+		UPTWAbilityDefinition* Ability = (*Pool)[RandIndex].LoadSynchronous();
+		if (!Ability) continue;
+
+		Result.Add(Ability);
+		Pool->RemoveAt(RandIndex);
+	}
+	
+	return Result;
+}
+
+void APTWAbilityBattleGameMode::StartDraft()
+{
+	
+}
+
 void APTWAbilityBattleGameMode::GrandAbilityBattleAttributeSet()
 {
 
@@ -62,3 +103,7 @@ void APTWAbilityBattleGameMode::GrandAbilityBattleAttributeSet()
 		ASC->AddSpawnedAttribute(NewASC);
 	}
 }
+
+
+
+

@@ -25,7 +25,10 @@ public:
 	void ListFleets_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void JoinGameSession();
+	void CreateGameSession();
+	
 	UPROPERTY()
 	FOnListFleetsResponseReceived OnListFleetsResponseReceived;
 protected:
@@ -33,6 +36,7 @@ protected:
 	bool ContainErrors(TSharedPtr<FJsonObject> JsonObject);
 	void DumpMetadata(TSharedPtr<FJsonObject> JsonObject);
 	
+	FString SerializeJsonContent(const TMap<FString, FString>& Params);
 private:
 	FString GetUniquePlayerId() const;
 	

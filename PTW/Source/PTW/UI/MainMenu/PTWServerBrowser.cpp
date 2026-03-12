@@ -163,7 +163,7 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	if (SessionConfig.bIsDedicatedServer)
 	{
 		// Dedicated Server는 AWS GameLift에서 원격으로 Fleet Instance에 빈 프로세스를 선택하고 GameSession을 생성.
-		
+		HTTPRequestManager->CreateGameSession();
 	}
 	else
 	{

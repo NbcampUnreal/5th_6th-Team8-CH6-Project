@@ -10,6 +10,7 @@
 #include "PTWHTTPRequestTypes.h"
 #include "GameFramework/PlayerState.h"
 #include "Interfaces/IHttpResponse.h"
+#include "Kismet/GameplayStatics.h"
 #include "System/Session/PTWSessionConfig.h"
 
 void UPTWHTTPRequestManager::RequestListFleets()
@@ -61,15 +62,28 @@ void UPTWHTTPRequestManager::FindOrCreateGameSession_Response(FHttpRequestPtr Re
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Find or Create GAme Session Response Received");
 	
 	TSharedPtr<FJsonObject> JsonObject;
-	
-	
+	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
+	{
+		if (ContainErrors(JsonObject))
+		{
+			;
+		}
+		
+		FGameLiftGameSession GameSession;
+		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession);
+		
+		const FString GameSessionId = GameSession.GameSessionId;
+		const FString GameSessionStatus = GameSession.Status;
+		HandleGameSessionStatus(GameSessionStatus, GameSessionId);
+	}
 }
 
 void UPTWHTTPRequestManager::CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response,
 	bool bWasSuccessful)
 {
 	TSharedPtr<FJsonObject> JsonObject;
-	FAWSSessionConfig GameSession;
+	FGameLiftGameSession GameSession;
 	FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession);
 	
 	const FString GameSessionId = GameSession.GameSessionId;
@@ -83,6 +97,19 @@ void UPTWHTTPRequestManager::JoinGameSession()
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::FindOrCreateGameSession_Response);
 	
 	const FString APIUrl = APIData->GEtAPIEndPoint(GameplayServerTags::GameSessionsAPI::FindOrCreateGameSession);
+	
+	Request->SetURL(APIUrl);
+	Request->SetVerb(TEXT("POST"));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	Request->ProcessRequest();
+}
+
+void UPTWHTTPRequestManager::CreateGameSession()
+{
+	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CreatePlayerSession_Response);
+	
+	const FString APIUrl = APIData->GEtAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreateGameSession);
 	
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
@@ -124,6 +151,25 @@ void UPTWHTTPRequestManager::DumpMetadata(TSharedPtr<FJsonObject> JsonObject)
 	}
 }
 
+FString UPTWHTTPRequestManager::SerializeJsonContent(const TMap<FString, FString>& Params)
+{
+	TSharedPtr<FJsonObject> ContentJsonObject = MakeShareable(new FJsonObject());
+	
+	// Lambda 함수와 동일한 필드로 설정.
+	// ContentJsonObject->SetStringField(TEXT("playerId"), PlayerId);
+	// ContentJsonObject->SetStringField(TEXT("gameSessionId"), GameSessionId);
+	for (const auto& Param : Params)
+	{
+		ContentJsonObject->SetStringField(Param.Key, Param.Value);
+	}
+	
+	FString Content;
+	TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&Content);
+	FJsonSerializer::Serialize(ContentJsonObject.ToSharedRef(), JsonWriter);
+	
+	return Content;
+}
+
 FString UPTWHTTPRequestManager::GetUniquePlayerId() const
 {
 	if (APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld()))
@@ -156,7 +202,7 @@ void UPTWHTTPRequestManager::HandleGameSessionStatus(const FString& Status, cons
 		// {
 		// 	JoinGameSession();
 		// });
-		CreateSessionDelegate.BindUObject(this, &ThisClass::JoinGameSession);
+		CreateSessionDelegate.BindUObject(this, &ThisClass::CreateGameSession);
 		if (APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld()))
 		{
 			LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer, CreateSessionDelegate, 0.5f, false);
@@ -170,5 +216,46 @@ void UPTWHTTPRequestManager::HandleGameSessionStatus(const FString& Status, cons
 
 void UPTWHTTPRequestManager::TryCreatePlayerSession(const FString& PlayerId, const FString& GameSessionId)
 {
+	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CreatePlayerSession_Response);
 	
+	const FString APIUrl = APIData->GEtAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreatePlayerSession);
+	Request->SetURL(APIUrl);
+	Request->SetVerb(TEXT("POST"));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	
+	TMap<FString, FString> Params = {
+		{ TEXT("playerId"), PlayerId },
+		{ TEXT("gameSessionId"), GameSessionId }
+	};
+	
+	const FString Content = SerializeJsonContent(Params);
+	
+	Request->SetContentAsString(Content);
+	Request->ProcessRequest();
+}
+
+void UPTWHTTPRequestManager::CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response,
+	bool bWasSuccessful)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Create PlayerSession Response Received"));
+	
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "CreatePlayerSession_Response");
+	
+	TSharedPtr<FJsonObject> JsonObject;
+	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
+	{
+		if (ContainErrors(JsonObject))
+		{
+			;
+		}
+		
+		FGameLiftPlayerSession PlayerSession;
+		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &PlayerSession);
+		
+		const FString IpAndPort = PlayerSession.IPAddress + TEXT(":") + FString::FromInt(PlayerSession.Port);
+		const FName Address = FName(*IpAndPort);
+		UGameplayStatics::OpenLevel(this, Address);
+	}
 }

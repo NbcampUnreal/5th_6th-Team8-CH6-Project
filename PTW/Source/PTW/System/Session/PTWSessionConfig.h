@@ -2,6 +2,9 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#if WITH_GAMELIFT
+#include "GameLiftServerSDKModels.h"
+#endif
 #include "PTWSessionConfig.generated.h"
 
 UENUM(BlueprintType)
@@ -54,66 +57,52 @@ struct FPTWSessionConfig
 };
 
 USTRUCT(BlueprintType)
-struct FAWSSessionConfig
+struct FGameLiftGameSession
 {
 	GENERATED_BODY()
+
+	// Json Serialization UPROPERTY
+	UPROPERTY() FString CreationTime{};
+	UPROPERTY() FString CreatorId{};
+	UPROPERTY() int32 CurrentPlayerSessionCount{};
+	UPROPERTY() FString DnsName{};
+	UPROPERTY() FString FleetArn{};
+	UPROPERTY() FString FleetId;
+	UPROPERTY() TMap<FString, FString> GameProperties{};
+	UPROPERTY() FString GameSessionData{};
+	UPROPERTY() FString GameSessionId{};
+	UPROPERTY() FString IPAddress{};
+	UPROPERTY() FString Location{};
+	UPROPERTY() FString MatchMakerData{};
+	UPROPERTY() int32 MaximumPlayerSessionCount{};
+	UPROPERTY() FString Name{};
+	UPROPERTY() FString PlayerSessionCreationPolicy{};
+	UPROPERTY() int32 Port{};
+	UPROPERTY() FString Status{};
+	UPROPERTY() FString StatusReason{};
+	UPROPERTY() FString TerminationTime{};
 	
-	UPROPERTY()
-	double CreationTime{};
-	
-	UPROPERTY()
-	FString CreatorId{};
-	
-	UPROPERTY()
-	int32 CurrentPlayerSessionCount{};
-	
-	UPROPERTY()
-	FString DNSName{};
-	
-	UPROPERTY()
-	FString FleetArn{};
-	
-	UPROPERTY()
-	FString FleetId;
-	
-	UPROPERTY()
-	TMap<FString, FString> GameProperties{};
-	
-	UPROPERTY()
-	FString GameSessionData{};
-	
-	UPROPERTY()
-	FString GameSessionId{};
-	
-	UPROPERTY()
-	FString IPAddress{};
-	
-	UPROPERTY()
-	FString Location{};
-	
-	UPROPERTY()
-	FString MatchMakerData{};
-	
-	UPROPERTY()
-	int32 MaximumPlayerSessionCount{};
-	
-	UPROPERTY()
-	FString Name{};
-	
-	UPROPERTY()
-	FString PlayerSessionCreationPolicy{};
-	
-	UPROPERTY()
-	int32 Port{};
-	
-	UPROPERTY()
-	FString Status{};
-	
-	UPROPERTY()
-	FString StatusReason{};
-	
-	UPROPERTY()
-	double TerminationTime{};
+	void Dump() const;
+};
+
+USTRUCT(BlueprintType)
+struct FGameLiftPlayerSession
+{
+	GENERATED_BODY()
+
+	// Json Serialization UPROPERTY
+	UPROPERTY() FString CreationTime{};
+	UPROPERTY() FString DnsName{};
+	UPROPERTY() FString FleetArn{};
+	UPROPERTY() FString FleetId;
+	UPROPERTY() FString GameSessionId{};
+	UPROPERTY() FString IPAddress{};
+	UPROPERTY() FString PlayerData{};
+	UPROPERTY() FString PlayerId{};
+	UPROPERTY() FString PlayerSessionId{};
+	UPROPERTY() int32 Port{};
+	UPROPERTY() FString Status{};
+	UPROPERTY() FString TerminationTime{};
 	
 	void Dump() const;
 };

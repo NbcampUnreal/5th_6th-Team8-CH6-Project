@@ -33,6 +33,10 @@ public:
 	
 	/* 충전 완료*/
 	void EndBatteryCharge(APTWPlayerCharacter* TargetCharacter);
+	
+	void SetPlayerSpawnLocation(APTWPlayerController* PC, FVector NewLocation);
+	
+	FTransform GetPlayerSpawnTransform(APTWPlayerController* PC);
 
 protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
@@ -80,4 +84,6 @@ private:
 	TObjectPtr<UPTWDeliveryControllerComponent> DeliveryComp;
 	
 	int32 FinalCount = 10;
+	
+	TMap<APTWPlayerController*, FVector> PlayerSpawnPoints; 
 };

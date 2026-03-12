@@ -58,6 +58,21 @@ void APTWDeliveryGameMode::EndBatteryCharge(APTWPlayerCharacter* TargetCharacter
 	
 }
 
+void APTWDeliveryGameMode::SetPlayerSpawnLocation(APTWPlayerController* PC, FVector NewLocation)
+{
+	PlayerSpawnPoints.FindOrAdd(PC) = NewLocation;
+}
+
+FTransform APTWDeliveryGameMode::GetPlayerSpawnTransform(APTWPlayerController* PC)
+{
+	if (FVector* SpawnLoc = PlayerSpawnPoints.Find(PC))
+	{
+		return FTransform(FRotator::ZeroRotator, *SpawnLoc);
+	}
+	
+	return FTransform();
+}
+
 void APTWDeliveryGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {
 	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(KillActor);

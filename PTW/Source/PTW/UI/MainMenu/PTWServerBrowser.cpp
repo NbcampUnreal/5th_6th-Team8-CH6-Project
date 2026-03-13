@@ -105,6 +105,11 @@ void UPTWServerBrowser::NativeConstruct()
 	{
 		ServerMaxPlayerEditableText->SetText(FText::FromString(TEXT("16")));
 	}
+	
+	if (!IsValid(HTTPRequestManager))
+	{
+		HTTPRequestManager = NewObject<UPTWHTTPRequestManager>(this, HTTPRequestManagerClass);
+	}
 }
 
 void UPTWServerBrowser::NativeDestruct()
@@ -234,11 +239,6 @@ void UPTWServerBrowser::OnFindSessionsComplete(const TArray<FOnlineSessionSearch
 
 void UPTWServerBrowser::OnClickedTestButton()
 {
-	if (!IsValid(HTTPRequestManager))
-	{
-		HTTPRequestManager = NewObject<UPTWHTTPRequestManager>(this, HTTPRequestManagerClass);
-	}
-
 	/*
 	HTTPRequestManager->OnListFleetsResponseReceived.AddUniqueDynamic(this, &ThisClass::OnListFleetsResponseReceived);
 	HTTPRequestManager->RequestListFleets();

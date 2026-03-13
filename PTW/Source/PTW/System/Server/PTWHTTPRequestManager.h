@@ -21,18 +21,13 @@ public:
 	TObjectPtr<UPTWAPIData> APIData;
 	
 	void RequestListFleets();
-	
-	void ListFleets_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void JoinGameSession();
 	void CreateGameSession();
-	
+	void DescribeGameSession(const FString& SessionId);
+	void SearchGameSessions();
 	UPROPERTY()
 	FOnListFleetsResponseReceived OnListFleetsResponseReceived;
 protected:
-	
 	bool ContainErrors(TSharedPtr<FJsonObject> JsonObject);
 	void DumpMetadata(TSharedPtr<FJsonObject> JsonObject);
 	
@@ -42,6 +37,11 @@ private:
 	
 	void HandleGameSessionStatus(const FString& Status, const FString& SessionId);
 	void TryCreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
-	
+	void ListFleets_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void DescribeGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	FTimerHandle CreateSessionTimer;
 };

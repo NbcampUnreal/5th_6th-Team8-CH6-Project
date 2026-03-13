@@ -3,6 +3,8 @@
 
 #include "PTWServerEntryGameMode.h"
 #include "CoreFramework/Game/GameSession/PTWGameSession.h"
+#include "System/PTWSessionSubsystem.h"
+#include "System/Session/PTWSessionConfig.h"
 
 DEFINE_LOG_CATEGORY(GameServerLog);
 
@@ -25,6 +27,28 @@ void APTWServerEntryGameMode::BeginPlay()
 void APTWServerEntryGameMode::InitGameLift()
 {
 	UE_LOG(GameServerLog, Log, TEXT("Calling InitGameLift..."));
+	
+	if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::UseGameLift.ToString()))
+	{
+		if (UPTWSessionSubsystem* SessionSubsystem = GetGameInstance()->GetSubsystem<UPTWSessionSubsystem>())
+		{
+			FPTWSessionConfig SessionConfig;
+			SessionConfig.ServerName = TEXT("NonGameLiftServer");
+			SessionConfig.MaxPlayers = 16;
+			SessionConfig.bIsDedicatedServer = UE_SERVER;
+		
+			const TCHAR* CommandLine = FCommandLine::Get();
+		
+			FString ServerName_cmd = FString::Printf(TEXT("-%s="), *PTWSessionKey::ServerName.ToString());
+			FString MaxPlayers_cmd = FString::Printf(TEXT("-%s="), *PTWSessionKey::MaxPlayers.ToString());
+		
+			FParse::Value(CommandLine, *ServerName_cmd, SessionConfig.ServerName);
+			FParse::Value(CommandLine, *MaxPlayers_cmd, SessionConfig.MaxPlayers);
+		
+			SessionSubsystem->CreateGameSession(SessionConfig);
+			return;
+		}
+	}
 	
 	// Getting the module first.
 	// 먼저 모듈을 가져옵니다.

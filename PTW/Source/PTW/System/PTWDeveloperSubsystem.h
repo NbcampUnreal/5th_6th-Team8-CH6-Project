@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "Minigame/PTWMiniGameMapRow.h"
 #include "PTWDeveloperSubsystem.generated.h"
 
 
@@ -30,6 +31,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Dev") void ForceRoundEnd();
 	UFUNCTION(BlueprintCallable, Category = "Dev") void ForceWin();
 	UFUNCTION(BlueprintCallable, Category = "Dev") void ForceLose();
+	UFUNCTION(BlueprintCallable, Category = "Dev") void SetNextMapByEnum(EMiniGameMapType MapType);
 
 	// --- 3. 캐릭터 제어  ---
 	UFUNCTION(BlueprintCallable, Category = "Dev") void ToggleGodMode();

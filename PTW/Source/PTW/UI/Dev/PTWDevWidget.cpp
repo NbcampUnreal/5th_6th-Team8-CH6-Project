@@ -5,10 +5,11 @@
 #include "UI/PTWButton.h" 
 #include "Components/EditableTextBox.h"
 #include "System/PTWDeveloperSubsystem.h"
+#include "Components/ComboBoxString.h"
 
-void UPTWDevWidget::NativeConstruct()
+void UPTWDevWidget::NativeOnInitialized()
 {
-	Super::NativeConstruct();
+	Super::NativeOnInitialized();
 
 	if (IsValid(Btn_AddBot)) Btn_AddBot->OnClicked.AddDynamic(this, &ThisClass::OnAddBotClicked);
 	if (IsValid(Btn_RemoveBot)) Btn_RemoveBot->OnClicked.AddDynamic(this, &ThisClass::OnRemoveBotClicked);
@@ -20,6 +21,7 @@ void UPTWDevWidget::NativeConstruct()
 	if (IsValid(Btn_ForceEnd)) Btn_ForceEnd->OnClicked.AddDynamic(this, &ThisClass::OnForceEndClicked);
 	if (IsValid(Btn_ForceWin)) Btn_ForceWin->OnClicked.AddDynamic(this, &ThisClass::OnForceWinClicked);
 	if (IsValid(Btn_ForceLose)) Btn_ForceLose->OnClicked.AddDynamic(this, &ThisClass::OnForceLoseClicked);
+	if (IsValid(Btn_SetNextMap))Btn_SetNextMap->OnClicked.AddDynamic(this, &ThisClass::OnSetNextMapClicked);
 
 	if (IsValid(Btn_GodMode)) Btn_GodMode->OnClicked.AddDynamic(this, &ThisClass::OnGodModeClicked);
 	if (IsValid(Btn_SuperSpeed)) Btn_SuperSpeed->OnClicked.AddDynamic(this, &ThisClass::OnSuperSpeedClicked);
@@ -32,6 +34,24 @@ void UPTWDevWidget::NativeConstruct()
 	if (IsValid(Btn_ShowFPS)) Btn_ShowFPS->OnClicked.AddDynamic(this, &ThisClass::OnShowFPSClicked);
 	if (IsValid(Btn_ToggleHUD)) Btn_ToggleHUD->OnClicked.AddDynamic(this, &ThisClass::OnToggleHUDClicked);
 	if (IsValid(Btn_ShowCollision)) Btn_ShowCollision->OnClicked.AddDynamic(this, &ThisClass::OnShowCollisionClicked);
+
+
+	if (IsValid(Combo_MapSelect))
+	{
+		Combo_MapSelect->ClearOptions();
+		const UEnum* MapEnum = StaticEnum<EMiniGameMapType>();
+
+		if (MapEnum)
+		{
+			for (int32 i = 0; i < MapEnum->NumEnums() - 1; ++i)
+			{
+				FText DisplayName = MapEnum->GetDisplayNameTextByIndex(i);
+				Combo_MapSelect->AddOption(DisplayName.ToString());
+			}
+
+			Combo_MapSelect->SetSelectedIndex(0);
+		}
+	}
 }
 
 // ----------------------------------------------------
@@ -84,6 +104,22 @@ void UPTWDevWidget::OnForceWinClicked()
 void UPTWDevWidget::OnForceLoseClicked()
 {
 	if (UPTWDeveloperSubsystem* DevSys = GetWorld()->GetSubsystem<UPTWDeveloperSubsystem>()) DevSys->ForceLose(); // TODO: 패배 처리 로직 연결
+}
+void UPTWDevWidget::OnSetNextMapClicked()
+{
+	if (UPTWDeveloperSubsystem* DevSys = GetWorld()->GetSubsystem<UPTWDeveloperSubsystem>())
+	{
+		if (IsValid(Combo_MapSelect))
+		{
+			int32 SelectedIndex = Combo_MapSelect->GetSelectedIndex();
+
+			if (SelectedIndex >= 0)
+			{
+				EMiniGameMapType SelectedMap = static_cast<EMiniGameMapType>(SelectedIndex);
+				DevSys->SetNextMapByEnum(SelectedMap);
+			}
+		}
+	}
 }
 
 // ----------------------------------------------------

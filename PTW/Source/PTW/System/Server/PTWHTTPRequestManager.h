@@ -7,6 +7,9 @@
 #include "PTWHTTPRequestManager.generated.h"
 
 class UPTWAPIData;
+class FJsonObject;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnListFleetsResponseReceived, const FPTWListFleetsResponse&, ListFleetsResponse, bool, bwasSuccessful);
 
 UCLASS(Blueprintable, BlueprintType)
 class PTW_API UPTWHTTPRequestManager : public UObject
@@ -18,6 +21,27 @@ public:
 	TObjectPtr<UPTWAPIData> APIData;
 	
 	void RequestListFleets();
+	void JoinGameSession();
+	void CreateGameSession();
+	void DescribeGameSession(const FString& SessionId);
+	void SearchGameSessions();
+	UPROPERTY()
+	FOnListFleetsResponseReceived OnListFleetsResponseReceived;
+protected:
+	bool ContainErrors(TSharedPtr<FJsonObject> JsonObject);
+	void DumpMetadata(TSharedPtr<FJsonObject> JsonObject);
 	
+	FString SerializeJsonContent(const TMap<FString, FString>& Params);
+private:
+	FString GetUniquePlayerId() const;
+	
+	void HandleGameSessionStatus(const FString& Status, const FString& SessionId);
+	void TryCreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
 	void ListFleets_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void DescribeGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	FTimerHandle CreateSessionTimer;
 };

@@ -4,13 +4,17 @@
 #include "PTWServerBrowser.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
+#include "Components/CheckBox.h"
 #include "Components/VerticalBox.h"
 #include "Components/EditableText.h"
+#include "Components/TextBlock.h"
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "PTW/UI/MainMenu/PTWServerListRow.h"
 #include "PTW/System/PTWSessionSubsystem.h"
+#include "System/Server/GameplayServerTags.h"
 #include "System/Server/PTWHTTPRequestManager.h"
+#include "System/Server/PTWHTTPRequestTypes.h"
 #include "System/Session/PTWSessionConfig.h"
 
 #define LOCTEXT_NAMESPACE "ServerBrowser"
@@ -101,6 +105,11 @@ void UPTWServerBrowser::NativeConstruct()
 	{
 		ServerMaxPlayerEditableText->SetText(FText::FromString(TEXT("16")));
 	}
+	
+	if (!IsValid(HTTPRequestManager))
+	{
+		HTTPRequestManager = NewObject<UPTWHTTPRequestManager>(this, HTTPRequestManagerClass);
+	}
 }
 
 void UPTWServerBrowser::NativeDestruct()
@@ -153,15 +162,25 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	{
 		SessionConfig.MaxRounds = GetMaxRoundsByLimit(RoundLimit);
 	}
-	SessionConfig.bIsDedicatedServer = UE_SERVER;
+	// SessionConfig.bIsDedicatedServer = UE_SERVER;
+	SessionConfig.bIsDedicatedServer = DedicatedCheckBox->IsChecked();
 	
-	UGameInstance* GameInstance = GetGameInstance();
-	if (!IsValid(GameInstance)) return;
+	if (SessionConfig.bIsDedicatedServer)
+	{
+		// Dedicated Server는 AWS GameLift에서 원격으로 Fleet Instance에 빈 프로세스를 선택하고 GameSession을 생성.
+		HTTPRequestManager->CreateGameSession();
+	}
+	else
+	{
+		// Listen Server는 현재 Desktop 에서 실행.
+		UGameInstance* GameInstance = GetGameInstance();
+		if (!IsValid(GameInstance)) return;
 	
-	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
-	if (!IsValid(SessionSubsystem)) return;
+		UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
+		if (!IsValid(SessionSubsystem)) return;
 	
-	SessionSubsystem->CreateGameSession(SessionConfig);
+		SessionSubsystem->CreateGameSession(SessionConfig);
+	}
 }
 
 void UPTWServerBrowser::OnClickedFindServerButton()
@@ -220,12 +239,50 @@ void UPTWServerBrowser::OnFindSessionsComplete(const TArray<FOnlineSessionSearch
 
 void UPTWServerBrowser::OnClickedTestButton()
 {
-	if (!IsValid(HTTPRequestManager))
-	{
-		HTTPRequestManager = NewObject<UPTWHTTPRequestManager>(this, HTTPRequestManagerClass);
-	}
-	
+	/*
+	HTTPRequestManager->OnListFleetsResponseReceived.AddUniqueDynamic(this, &ThisClass::OnListFleetsResponseReceived);
 	HTTPRequestManager->RequestListFleets();
+	TestButton->SetIsEnabled(false);
+	*/
+	
+	HTTPRequestManager->JoinGameSession();
+	TestButton->SetIsEnabled(false);
+}
+
+void UPTWServerBrowser::OnListFleetsResponseReceived(const struct FPTWListFleetsResponse& ListFleetsResponse,
+	bool bwasSuccessful)
+{
+	if (HTTPRequestManager->OnListFleetsResponseReceived.IsAlreadyBound(this, &ThisClass::OnListFleetsResponseReceived))
+	{
+		HTTPRequestManager->OnListFleetsResponseReceived.RemoveDynamic(this, &ThisClass::OnListFleetsResponseReceived);
+	}
+	ServerListVerticalBox->ClearChildren();
+	if (bwasSuccessful)
+	{
+		for (const FString& FleetId : ListFleetsResponse.FleetIds)
+		{
+			UPTWServerListRow* ServerListRow = CreateWidget<UPTWServerListRow>(this, ServerListRowClass);
+			ServerListRow->GetServerName()->SetText(FText::FromString(FleetId));
+			ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
+		}
+	}
+	else
+	{
+		UPTWServerListRow* ServerListRow = CreateWidget<UPTWServerListRow>(this, ServerListRowClass);
+		ServerListRow->GetServerName()->SetText(FText::FromString("Something went wrong!"));
+		ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
+	}
+	TestButton->SetIsEnabled(true);
+	
+	if (!IsValid(ServerNameEditableText)) return;
+	
+	UGameInstance* GameInstance = GetGameInstance();
+	if (!IsValid(GameInstance)) return;
+	
+	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
+	if (!IsValid(SessionSubsystem)) return;
+	
+	SessionSubsystem->FindGameSession();
 }
 
 void UPTWServerBrowser::DevJoinAction()

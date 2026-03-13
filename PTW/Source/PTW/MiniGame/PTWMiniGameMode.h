@@ -9,11 +9,13 @@
 #include "System/Prop/PTWPropData.h"
 #include "PTWMiniGameMode.generated.h"
 
+class APTWPlayerController;
+class UPTWBaseControllerComponent;
 class UPTWItemInstance;
 class IPTWPlayerRoundDataInterface;
 class UPTWChaosEventManager;
 class UGameplayEffect;
-class APTWPlayerController;
+class AController;
 class APTWPlayerState;
 class UPTWItemDefinition;
 class APTWWeaponActor;
@@ -55,6 +57,9 @@ protected:
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 
 	virtual void PlayerReadyToPlay(APlayerController* Controller) override;
+
+	//* UI Component PlayerController에 연결 */
+	virtual void AttachUIComponent(AController* Controller);
 	
 	//* 미니 게임 시작 */
 	UFUNCTION()
@@ -72,7 +77,6 @@ protected:
 	//* 미니 게임이 완전히 끝났을 때 호출하는 함수 */
 	virtual void EndGame();
 	
-
 	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
 	void AddKillDeathCount(APlayerState* DeadPlayerState, APlayerState* KillPlayerState);
 	/** 설정된 점수 부여. */
@@ -135,6 +139,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")
 	TObjectPtr<UPTWItemDefinition> ItemDefinition;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UPTWBaseControllerComponent> ControllerComponentClass;
+	
 	//UPROPERTY()
 	//TArray<TObjectPtr<APlayerStart>> PlayerStarts;
 

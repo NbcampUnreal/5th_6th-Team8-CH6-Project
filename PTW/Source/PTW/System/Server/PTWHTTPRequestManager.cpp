@@ -91,15 +91,19 @@ void UPTWHTTPRequestManager::CreateGameSession_Response(FHttpRequestPtr Request,
 	
 	TSharedPtr<FJsonObject> JsonObject;
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-	if (!FJsonSerializer::Deserialize(JsonReader, JsonObject)) return;
-	FString BodyString;
-	
-	FPTWGameLiftGameSession GameSession;
-	if (FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession))
+	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
 	{
-		const FString GameSessionId = GameSession.GameSessionId;
-		const FString GameSessionStatus = GameSession.Status;
-		HandleGameSessionStatus(GameSessionStatus, GameSessionId);
+		const TSharedPtr<FJsonObject>* GameSessionJsonPtr = nullptr;
+		if (JsonObject->TryGetObjectField(TEXT("gameSession"), GameSessionJsonPtr) && GameSessionJsonPtr != nullptr)
+		{
+			FPTWGameLiftGameSession GameSession;
+			if (FJsonObjectConverter::JsonObjectToUStruct((*GameSessionJsonPtr).ToSharedRef(), &GameSession))
+			{
+				const FString GameSessionId = GameSession.GameSessionId;
+				const FString GameSessionStatus = GameSession.Status;
+				HandleGameSessionStatus(GameSessionStatus, GameSessionId);
+			}
+		}
 	}
 }
 
@@ -230,19 +234,6 @@ void UPTWHTTPRequestManager::HandleGameSessionStatus(const FString& Status, cons
 	}
 	else if (Status.Equals(TEXT("ACTIVATING")))
 	{
-		// UE_LOG(LogTemp, Error, TEXT("Game Session Status: ACTIVATING"));
-		
-		FTimerDelegate CreateSessionDelegate;
-		// CreateSessionDelegate.BindLambda([this]()
-		// {
-		// 	JoinGameSession();
-		// });
-		// CreateSessionDelegate.BindUObject(this, &ThisClass::CreateGameSession);
-		// if (APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld()))
-		// {
-		// 	LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer, CreateSessionDelegate, 2.0f, false);
-		// }
-		
 		FTimerDelegate CheckSessionDelegate;
 		CheckSessionDelegate.BindLambda([this, SessionId]()
 		{
@@ -286,10 +277,9 @@ void UPTWHTTPRequestManager::CreatePlayerSession_Response(FHttpRequestPtr Reques
 	UE_LOG(LogTemp, Warning, TEXT("Create PlayerSession Response Received"));
 	
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "CreatePlayerSession_Response");
-	FString RawResponse = Response->GetContentAsString();
 	
 	TSharedPtr<FJsonObject> JsonObject;
-	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(RawResponse);
+	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 	
 	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
 	{

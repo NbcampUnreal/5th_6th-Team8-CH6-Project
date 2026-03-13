@@ -4,6 +4,7 @@
 #include "PTWCopsAndRobbersGameMode.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayAbilitySpec.h"
+#include "Algo/RandomShuffle.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "MiniGame/Actor/CopsAndRobbers/PTWCitizenSpawner.h"
@@ -96,55 +97,53 @@ void APTWCopsAndRobbersGameMode::WaitingToStartRound()
 {
 	Super::WaitingToStartRound();
 	
-	TArray<APlayerState*> Players = PTWGameState->PlayerArray;
+	for (int32 i = PTWGameState->GetTeams().Num(); i < MiniGameRule.TeamRule.NumTeams; ++i)
+	{
+		FPTWTeamInfo NewTeam;
+		NewTeam.TeamID = i;
+		PTWGameState->GetTeams().Add(NewTeam);
+	}
+	
 	FPTWTeamInfo& RobbersTeam = PTWGameState->GetTeams()[ROBBERS];
 	FPTWTeamInfo& CopsTeam = PTWGameState->GetTeams()[COPS];
-	
-	TArray<APlayerState*> AllPlayers;
-	AllPlayers.Append(RobbersTeam.Members);
-	AllPlayers.Append(CopsTeam.Members);
-	
+
 	RobbersTeam.Members.Empty();
 	CopsTeam.Members.Empty();
-	const int32 TotalPlayers = AllPlayers.Num();
-	if (TotalPlayers > 0)
-	{
-		for (int32 i = TotalPlayers - 1; i > 0; --i)
-		{
-			int32 RandomIndex = FMath::RandRange(0, i);
-			AllPlayers.Swap(i, RandomIndex);
-		}
-	}
 	
-	int32 MaxCopsSize = FMath::CeilToInt(TotalPlayers / 4.0f);
-	for (int32 i = 0; i < TotalPlayers; ++i)
+	TArray<APlayerState*> ValidPlayers;
+	for (APlayerState* PS : PTWGameState->AlivePlayers)
 	{
-		APlayerState* PS = AllPlayers[i];
 		if (IsValid(PS)) 
 		{
-			IPTWPlayerRoundDataInterface* RoundData = Cast<IPTWPlayerRoundDataInterface>(PS);
-
-			if (i < MaxCopsSize)
-			{
-				CopsTeam.Members.Add(PS);
-				if (RoundData)
-				{
-					RoundData->SetTeamId(COPS);
-				}
-			}
-			else
-			{
-				RobbersTeam.Members.Add(PS);
-				if (RoundData)
-				{
-					RoundData->SetTeamId(ROBBERS);
-				}
-			}
+			ValidPlayers.Add(PS);
 		}
 	}
+
+	if (ValidPlayers.Num() == 0) return;
+	Algo::RandomShuffle(ValidPlayers);
+
+	const int32 MaxCopsSize = FMath::CeilToInt(ValidPlayers.Num() / 4.0f);
 	
-	// FPTWTeamInfo& RobbersTeam = PTWGameState->GetTeams()[ROBBERS];
-	// FPTWTeamInfo& CopsTeam = PTWGameState->GetTeams()[COPS];
+	CopsTeam.Members.Reserve(MaxCopsSize);
+	RobbersTeam.Members.Reserve(ValidPlayers.Num() - MaxCopsSize);
+	
+	for (int32 Index = 0; Index < ValidPlayers.Num(); ++Index)
+	{
+		APlayerState* PS = ValidPlayers[Index];
+
+		const bool bAssignToCops = (Index < MaxCopsSize);
+   
+		FPTWTeamInfo& TargetTeam = bAssignToCops ? CopsTeam : RobbersTeam;
+		const int32 TargetTeamId = bAssignToCops ? COPS : ROBBERS;
+    
+		TargetTeam.Members.Add(PS);
+    
+		if (IPTWPlayerRoundDataInterface* RoundData = Cast<IPTWPlayerRoundDataInterface>(PS))
+		{
+			RoundData->SetTeamId(TargetTeamId);
+		}
+	}
+
 	
 	for (APlayerState* Robber : RobbersTeam.Members)
 	{

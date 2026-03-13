@@ -232,7 +232,6 @@ void UPTWInventoryComponent::DropItem()
 	
 	if (SpawnManager)
 	{
-		UPTWWeaponInstance* WeaponInstance = Cast<UPTWWeaponInstance>(CurrentWeapon);
 		UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
 		if (!ASC) return;
 

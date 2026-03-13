@@ -17,6 +17,8 @@
 #include "Camera/CameraActor.h"
 #include "Engine/TargetPoint.h"
 #include "AIController.h"
+#include "ControllerComponent/PTWBaseControllerComponent.h"
+#include "ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
 #include "Debug/PTWLogCategorys.h"
 #include "Gameplay/Actor/PTWResultCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
@@ -153,6 +155,8 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	//{
 	//	RestartPlayer(NewPlayer);
 	//}
+
+	AttachUIComponent(NewPlayer);
 }
 
 
@@ -163,6 +167,7 @@ void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	
 	Super::HandleSeamlessTravelPlayer(C);
 
+	
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
@@ -195,6 +200,27 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 			}
 		}), 3.f, false);
 	}
+}
+
+void APTWMiniGameMode::AttachUIComponent(AController* Controller)
+{
+	if (!Controller || !ControllerComponentClass) return;
+
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (!PlayerController) return;
+
+	UPTWBaseControllerComponent* ControllerComponent = NewObject<UPTWBaseControllerComponent>(PlayerController, ControllerComponentClass);
+	if (!ControllerComponent) return;
+	
+	PlayerController->AddInstanceComponent(ControllerComponent);
+	
+	ControllerComponent->RegisterComponent();
+
+	// 이 아래는 테스트
+	UPTWAbilityControllerComponent* AbilityControllerComponent = Cast<UPTWAbilityControllerComponent>(ControllerComponent);
+	if (!AbilityControllerComponent) return;
+
+	AbilityControllerComponent->ShowDraftUI();
 }
 
 void APTWMiniGameMode::StartGame()

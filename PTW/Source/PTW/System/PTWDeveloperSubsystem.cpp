@@ -188,6 +188,15 @@ void UPTWDeveloperSubsystem::ProcessServerCommand(APlayerController* InstigatorP
 		}
 		UE_LOG(LogTemp, Warning, TEXT("[Dev] Force Lose! 전원 캐릭터 파괴 (모두 패배)."));
 	}
+	else if (CommandName == FName("SetNextMap"))
+	{
+		if (APTWGameMode* GM = Cast<APTWGameMode>(World->GetAuthGameMode()))
+		{
+			// 게임모드의 다음 이동 맵을 강제로 덮어씌움
+			GM->SetTravelLevelName(StringParam);
+			UE_LOG(LogTemp, Warning, TEXT("[Dev] 강제로 다음 트래블 맵이 변경되었습니다: %s"), *StringParam);
+		}
+	}
 	else if (CommandName == FName("ToggleGodMode"))
 	{
 		if (InstigatorPC)
@@ -366,6 +375,31 @@ void UPTWDeveloperSubsystem::ForceLose()
 {
 	SendCommandToServer(FName("ForceLose"));
 }
+
+void UPTWDeveloperSubsystem::SetNextMapByEnum(EMiniGameMapType MapType)
+{
+	const UEnum* EnumPtr = StaticEnum<EMiniGameMapType>();
+	FName RowName = FName(*EnumPtr->GetNameStringByValue((int64)MapType));
+
+	FString DataTablePath = TEXT("/Game/_PTW/Maps/DT_Map.DT_Map");
+	UDataTable* MapTable = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, *DataTablePath));
+
+	if (MapTable)
+	{
+		if (FPTWMiniGameMapRow* RowData = MapTable->FindRow<FPTWMiniGameMapRow>(RowName, TEXT("DevMapLookup")))
+		{
+			FString MapPath = RowData->Map.ToSoftObjectPath().GetLongPackageName();
+
+			SendCommandToServer(FName("SetNextMap"), 0, 0.f, MapPath);
+			UE_LOG(LogTemp, Warning, TEXT("[Dev] 데이터 테이블 기반 다음 맵 설정 완료: %s"), *MapPath);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("[Dev] 데이터 테이블에 '%s' 라는 이름의 Row가 없습니다!"), *RowName.ToString());
+		}
+	}
+}
+
 void UPTWDeveloperSubsystem::ToggleGodMode()
 {
 	SendCommandToServer(FName("ToggleGodMode"));

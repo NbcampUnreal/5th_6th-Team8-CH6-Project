@@ -3,12 +3,13 @@
 
 #include "GAS/Abilities/PTWGA_Emote.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 UPTWGA_Emote::UPTWGA_Emote()
 {
-	AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability.Action.Emote")));
+	AbilityTags.AddTag(GameplayTags::Ability::Action::Emote);
 
-	ActivationOwnedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("State.Status.Emoting")));
+	ActivationOwnedTags.AddTag(GameplayTags::State::Emoting);
 
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
 

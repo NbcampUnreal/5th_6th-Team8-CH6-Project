@@ -11,3 +11,11 @@ void UPTWPlayerName::SetPlayerName(const FString& InName)
 		PlayerNameText->SetText(FText::FromString(InName));
 	}
 }
+
+void UPTWPlayerName::SetNameColor(FLinearColor NewColor)
+{
+	if (PlayerNameText)
+	{
+		PlayerNameText->SetColorAndOpacity(NewColor);
+	}
+}

@@ -18,6 +18,7 @@ class PTW_API UPTWPlayerName : public UUserWidget
 public:
 	void SetPlayerName(const FString& InName);
 
+	void SetNameColor(FLinearColor NewColor);
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> PlayerNameText;

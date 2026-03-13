@@ -7,6 +7,8 @@
 #include "PTWGhostChaseMiniGameMode.generated.h"
 
 class UPTWItemDefinition;
+class UPTWGhostChaseControllerComponent;
+
 /**
  * 
  */

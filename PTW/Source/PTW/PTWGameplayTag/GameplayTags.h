@@ -15,6 +15,11 @@ namespace GameplayTags
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Banana);
 		}
+
+		namespace Action
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Emote);
+		}
 	}
 	
 
@@ -67,6 +72,8 @@ namespace GameplayTags
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Reload);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Sprint);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Drop);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Emote);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Interact);
 	}
 	
 	namespace State
@@ -81,6 +88,8 @@ namespace GameplayTags
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Slowing);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Stealth);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Charge);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Emoting);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Idle);
 		
 		namespace Passive
 		{
@@ -97,6 +106,10 @@ namespace GameplayTags
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Invisible);
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Revealed);
+		}
+		namespace Posture
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Crouching);
 		}
 	}
 	namespace Item
@@ -142,6 +155,11 @@ namespace GameplayTags
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Basic);
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Special);
 		}
+		
+		namespace Melee
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Knife);
+		}
 	}
 	
 	namespace GameplayCue
@@ -172,6 +190,14 @@ namespace GameplayTags
 		namespace MiniGame
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Delivery);
+		}
+	}
+
+	namespace GameState
+	{
+		namespace MiniGame
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Bomb);
 		}
 	}
 	

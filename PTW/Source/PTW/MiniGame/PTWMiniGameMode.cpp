@@ -23,6 +23,7 @@
 #include "Gameplay/Actor/PTWResultCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/Instance/PTWItemInstance.h"
+#include "MiniGame/PTWMiniGameMapRow.h"
 
 class UPTWScoreSubsystem;
 
@@ -109,6 +110,30 @@ void APTWMiniGameMode::BeginPlay()
 		
 	}), 10.f, false);
 	
+	APTWGameState* GS = GetGameState<APTWGameState>();
+	if (!GS || !MiniGameMapTable) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	const FString CurrentMapPath = World->RemovePIEPrefix(World->GetPathName());
+
+	FPTWRouletteData Data = GS->GetRouletteData();
+
+	for (const auto& Pair : MiniGameMapTable->GetRowMap())
+	{
+		FName RowName = Pair.Key;
+		const FPTWMiniGameMapRow* Row = reinterpret_cast<FPTWMiniGameMapRow*>(Pair.Value);
+
+		if (!Row) continue;
+
+		if (Row->Map.ToSoftObjectPath().GetAssetPathString() == CurrentMapPath)
+		{
+			Data.MapRowName = RowName;
+			GS->SetRouletteData(Data);
+			return;
+		}
+	}
 }
 
 void APTWMiniGameMode::Logout(AController* Exiting)

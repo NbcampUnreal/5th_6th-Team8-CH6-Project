@@ -89,24 +89,13 @@ void UPTWHTTPRequestManager::CreateGameSession_Response(FHttpRequestPtr Request,
 		return;
 	}
 	
-	TSharedPtr<FJsonObject> OuterJsonObject;
-	TSharedRef<TJsonReader<>> OutJsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-	// FString RawResponse = Response->GetContentAsString();
-	// UE_LOG(LogTemp, Warning, TEXT("Raw Server Response: %s"), *RawResponse);
-	if (!FJsonSerializer::Deserialize(OutJsonReader, OuterJsonObject)) return;
+	TSharedPtr<FJsonObject> JsonObject;
+	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+	if (!FJsonSerializer::Deserialize(JsonReader, JsonObject)) return;
 	FString BodyString;
-	if (!OuterJsonObject->TryGetStringField(TEXT("body"), BodyString))
-	{
-		UE_LOG(LogTemp, Error, TEXT("응답에 'body' 필드가 없습니다."));
-		return;
-	}
-	
-	TSharedPtr<FJsonObject> InnerJsonObject;
-	TSharedRef<TJsonReader<>> InnerReader = TJsonReaderFactory<>::Create(BodyString);
-	if (!FJsonSerializer::Deserialize(InnerReader, InnerJsonObject)) return;
 	
 	FPTWGameLiftGameSession GameSession;
-	if (FJsonObjectConverter::JsonObjectToUStruct(InnerJsonObject.ToSharedRef(), &GameSession))
+	if (FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession))
 	{
 		const FString GameSessionId = GameSession.GameSessionId;
 		const FString GameSessionStatus = GameSession.Status;

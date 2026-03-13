@@ -86,6 +86,7 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Charge, "State.Charge");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Emoting, "State.Emoting");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Idle, "State.Idle");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Bomb, "State.Bomb");
 		
 		namespace Passive
 		{
@@ -198,6 +199,19 @@ namespace GameplayTags
 		namespace MiniGame
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Bomb, "GameState.MiniGame.Bomb");
+		}
+	}
+	
+	namespace ChaosEvent
+	{
+		namespace Buff
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(MoveSpeed, "ChaosEvent.Buff.MoveSpeed");
+		}
+		
+		namespace Debuff
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(MoveSpeed, "ChaosEvent.DeBuff.MoveSpeed");
 		}
 	}
 	

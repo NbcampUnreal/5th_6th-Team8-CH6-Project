@@ -4,40 +4,46 @@ namespace GameplayTags
 {
 	namespace AbilityBlockTag
 	{
-		UE_DEFINE_GAMEPLAY_TAG(Fire, "Ability.Block.Fire");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Fire, "Ability.Block.Fire");
 	}
 
 	namespace Ability
 	{
 		namespace CoolDown
 		{
-			UE_DEFINE_GAMEPLAY_TAG(Banana, "Ability.CoolDown.Banana");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Banana, "Ability.CoolDown.Banana");
+		}
+		
+		namespace Action
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Emote, "Ability.Action.Emote");
 		}
 	}
 	
 	namespace Data
 	{
-		UE_DEFINE_GAMEPLAY_TAG(Damage, "Data.Damage");
-		UE_DEFINE_GAMEPLAY_TAG(Duration, "Data.Duration");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Damage, "Data.Damage");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Duration, "Data.Duration");
 	}
 	
 	namespace Event
 	{
-		UE_DEFINE_GAMEPLAY_TAG(Bomb_Explode, "Event.Bomb.Explode");
-		UE_DEFINE_GAMEPLAY_TAG(Gimmick_Collect, "Event.Gimmick.Collect");
-		UE_DEFINE_GAMEPLAY_TAG(Weapon_ReloadReFill, "Event.Weapon.ReloadReFill");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Bomb_Explode, "Event.Bomb.Explode");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Gimmick_Collect, "Event.Gimmick.Collect");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Weapon_ReloadReFill, "Event.Weapon.ReloadReFill");
 		
 		namespace Round
 		{
-			UE_DEFINE_GAMEPLAY_TAG(DwarfPotion, "Event.Chaos.DwarfPotion");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Economy_Depression, "Event.Round.Economy.Depression");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Economy_Inflation, "Event.Round.Economy.Inflation");
 		}
 		namespace Chaos
 		{
-			
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(DwarfPotion, "Event.Chaos.DwarfPotion");
 		}
 		namespace Melee
 		{
-			UE_DEFINE_GAMEPLAY_TAG(Hit, "Event.Melee.Hit");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Hit, "Event.Melee.Hit");
 		}
 	}
 	
@@ -62,6 +68,8 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Reload, "Input.Action.Reload");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Sprint, "Input.Action.Sprint");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Drop, "Input.Action.Drop");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Emote, "Input.Action.Emote");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Interact, "Input.Action.Interact");
 	}
 	
 	namespace State
@@ -76,6 +84,8 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Slowing, "State.DebuffSlow");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Stealth, "State.Stealth");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Charge, "State.Charge");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Emoting, "State.Emoting");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Idle, "State.Idle");
 		
 		namespace Passive
 		{
@@ -90,8 +100,13 @@ namespace GameplayTags
 		
 		namespace Ghost
 		{
-			UE_DEFINE_GAMEPLAY_TAG(Invisible, "State.Ghost.Invisible");
-			UE_DEFINE_GAMEPLAY_TAG(Revealed, "State.Ghost.Revealed");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Invisible, "State.Ghost.Invisible");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Revealed, "State.Ghost.Revealed");
+		}
+		
+		namespace Posture
+		{
+			UE_DEFINE_GAMEPLAY_TAG(Crouching, "State.Posture.Crouching");
 		}
 	}
 	
@@ -137,6 +152,11 @@ namespace GameplayTags
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Basic, "Weapon.EquipType.Basic");
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Special, "Weapon.EquipType.Special");
 		}
+		
+		namespace Melee
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Knife, "Weapon.Melee.Knife");
+		}
 	}
 	
 	namespace GameplayCue
@@ -170,6 +190,14 @@ namespace GameplayTags
 		namespace MiniGame
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Delivery, "GameplayCue.MiniGame.Delivery");
+		}
+	}
+
+	namespace GameState
+	{
+		namespace MiniGame
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Bomb, "GameState.MiniGame.Bomb");
 		}
 	}
 	

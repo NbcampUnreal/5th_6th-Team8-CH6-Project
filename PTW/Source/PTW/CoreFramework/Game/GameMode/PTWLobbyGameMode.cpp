@@ -173,10 +173,9 @@ void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
 
 void APTWLobbyGameMode::StartGameLobby()
 {
-	ClearTimer();
-
 	if (bIsGameStarted) return;
-
+	if (!IsValid(PTWGameState)) return;
+	
 	bIsGameStarted = true;
 
 	// 최대 라운드에 도달 하면 게임 종료
@@ -191,7 +190,7 @@ void APTWLobbyGameMode::StartGameLobby()
 	
 	PTWGameState->AdvanceRound();
 	
-	if (!IsValid(PTWGameState)) return;
+	
 
 	// 대기 로비에서 게임 로비로 이동 했을 때 모든 플레이어 시작 위치로 이동
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)

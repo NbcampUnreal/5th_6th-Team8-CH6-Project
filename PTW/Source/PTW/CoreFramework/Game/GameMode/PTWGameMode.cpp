@@ -394,6 +394,7 @@ void APTWGameMode::StartTimer(float TimeDuration)
 
 void APTWGameMode::ClearTimer()
 {
+	UE_LOG(Log_GameMode, Log, TEXT("Clearing Timer") );
 	GetWorldTimerManager().ClearTimer(TimerHandle);
 }
 

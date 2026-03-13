@@ -181,7 +181,7 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	//	RestartPlayer(NewPlayer);
 	//}
 
-	AttachUIComponent(NewPlayer);
+	
 }
 
 
@@ -192,7 +192,7 @@ void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	
 	Super::HandleSeamlessTravelPlayer(C);
 
-	
+	AttachControllerComponent(C);
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
@@ -227,7 +227,7 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 	}
 }
 
-void APTWMiniGameMode::AttachUIComponent(AController* Controller)
+void APTWMiniGameMode::AttachControllerComponent(AController* Controller)
 {
 	if (!Controller || !ControllerComponentClass) return;
 
@@ -354,26 +354,10 @@ void APTWMiniGameMode::RemoveTags(AController* Controller)
 
 void APTWMiniGameMode::TickCountDown()
 {
-	// CurrentCountDown--;
-	//
-	// if (APTWGameState* GS = GetGameState<APTWGameState>())
-	// {
-	// 	GS->SetMiniGameCountdown(CurrentCountDown);
-	// }
-
+	
 	if (!PTWGameState) return;
 
 	PTWGameState->DecreaseCoundDown();
-	
-	// if (CurrentCountDown > 0)
-	// {
-	// 	UE_LOG(LogTemp, Warning, TEXT("CountDown : %d"), CurrentCountDown);
-	// 	return;
-	// }
-	// // 0이되면 카운트 다운 종료 -> 라운드 시작
-	// GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
-	//
-	// OnCountDownFinished();
 }
 
 void APTWMiniGameMode::OnCountDownFinished()

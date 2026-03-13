@@ -58,8 +58,8 @@ protected:
 
 	virtual void PlayerReadyToPlay(APlayerController* Controller) override;
 
-	//* UI Component PlayerController에 연결 */
-	virtual void AttachUIComponent(AController* Controller);
+	//* Controller Component PlayerController에 연결 */
+	virtual void AttachControllerComponent(AController* Controller);
 	
 	//* 미니 게임 시작 */
 	UFUNCTION()

@@ -59,7 +59,7 @@ protected:
 	virtual void PlayerReadyToPlay(APlayerController* Controller) override;
 
 	//* Controller Component PlayerController에 연결 */
-	virtual void AttachControllerComponent(AController* Controller);
+	virtual void AttachControllerComponent(AController* Controller, UActorComponent* Component = nullptr);
 	
 	//* 미니 게임 시작 */
 	UFUNCTION()
@@ -140,7 +140,7 @@ protected:
 	TObjectPtr<UPTWItemDefinition> ItemDefinition;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UPTWBaseControllerComponent> ControllerComponentClass;
+	TSubclassOf<UActorComponent> ControllerComponentClass;
 	
 	//UPROPERTY()
 	//TArray<TObjectPtr<APlayerStart>> PlayerStarts;

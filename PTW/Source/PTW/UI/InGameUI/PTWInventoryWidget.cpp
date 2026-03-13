@@ -3,8 +3,12 @@
 
 #include "UI/InGameUI/PTWInventoryWidget.h"
 #include "UI/InGameUI/PTWItemSlot.h"
+
 #include "Components/UniformGridPanel.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "GameFramework/GameModeBase.h"
+#include "GameFramework/GameStateBase.h"
+#include "CoreFramework/Game/GameMode/PTWLobbyGameMode.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "Gameplay/Shop/PTWShopItemData.h" 
 #include "Engine/DataTable.h"
@@ -47,8 +51,6 @@ void UPTWInventoryWidget::BindDelegates()
 		/* 최신 데이터로 초기화 */
 		OnInventoryUpdated(CachedPlayerState->GetPlayerData());
 	}
-
-	
 }
 
 void UPTWInventoryWidget::UnbindDelegates()
@@ -62,17 +64,21 @@ void UPTWInventoryWidget::UnbindDelegates()
 
 void UPTWInventoryWidget::OnInventoryUpdated(const FPTWPlayerData& NewData)
 {
-	if (!InventoryGrid || !SlotWidgetClass || !ItemDataTable)
+	if (!ItemDataTable || !SlotWidgetClass)
 		return;
 
-	InventoryGrid->ClearChildren();
+	if (WeaponGrid) WeaponGrid->ClearChildren();
+	if (ActiveItemGrid) ActiveItemGrid->ClearChildren();
+	if (PassiveItemGrid) PassiveItemGrid->ClearChildren();
 
-	for (int32 i = 0; i < NewData.InventoryItemIDs.Num(); ++i)
+	int32 WeaponIndex = 0;
+	int32 ActiveIndex = 0;
+	int32 PassiveIndex = 0;
+
+	for (const FString& ItemID : NewData.InventoryItemIDs)
 	{
-		const FString& ItemID = NewData.InventoryItemIDs[i];
-
-		// DataTable에서 행 찾기
 		FName RowName(*ItemID);
+
 		FShopItemRow* Row = ItemDataTable->FindRow<FShopItemRow>(
 			RowName,
 			TEXT("Inventory Lookup")
@@ -84,7 +90,6 @@ void UPTWInventoryWidget::OnInventoryUpdated(const FPTWPlayerData& NewData)
 			continue;
 		}
 
-		// ItemDefinition 꺼내기
 		UPTWItemDefinition* ItemDef = Row->ItemDefinition.LoadSynchronous();
 
 		if (!ItemDef)
@@ -93,15 +98,46 @@ void UPTWInventoryWidget::OnInventoryUpdated(const FPTWPlayerData& NewData)
 			continue;
 		}
 
-		UPTWItemSlot* NewSlot = CreateWidget<UPTWItemSlot>(this, SlotWidgetClass);
-		if (!NewSlot)
-			continue;
+		/* 아이템 타입에 따라 Grid 분류 */
 
-		NewSlot->SetupSlot(ItemDef);
+		switch (ItemDef->ItemType)
+		{
 
-		int32 RowIdx = i / MaxColumns;
-		int32 ColIdx = i % MaxColumns;
+		case EItemType::Weapon:
+			CreateSlot(WeaponGrid, ItemDef, WeaponIndex++);
+			break;
 
-		InventoryGrid->AddChildToUniformGrid(NewSlot, RowIdx, ColIdx);
+		case EItemType::Active:
+			CreateSlot(ActiveItemGrid, ItemDef, ActiveIndex++);
+			break;
+
+		case EItemType::Passive:
+			CreateSlot(PassiveItemGrid, ItemDef, PassiveIndex++);
+			break;
+
+		default:
+			break;
+		}
 	}
+}
+
+void UPTWInventoryWidget::CreateSlot(UUniformGridPanel* TargetGrid, UPTWItemDefinition* ItemDef, int32 Index)
+{
+	if (!TargetGrid)
+		return;
+
+	UPTWItemSlot* NewSlot = CreateWidget<UPTWItemSlot>(
+		this,
+		SlotWidgetClass
+	);
+
+	if (!NewSlot)
+		return;
+
+	NewSlot->SetupSlot(ItemDef);
+
+	int32 RowIdx = Index / MaxColumns;
+	int32 ColIdx = Index % MaxColumns;
+
+	TargetGrid->AddChildToUniformGrid(NewSlot, RowIdx, ColIdx);
 }

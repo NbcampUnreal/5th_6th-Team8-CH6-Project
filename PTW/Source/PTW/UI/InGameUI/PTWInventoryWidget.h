@@ -10,6 +10,9 @@
 class UUniformGridPanel;
 class UPTWItemSlot;
 class APTWPlayerState;
+class UDataTable;
+class UPTWItemDefinition;
+
 /**
  * 
  */
@@ -33,12 +36,20 @@ protected:
 	UFUNCTION()
 	void OnInventoryUpdated(const FPTWPlayerData& NewData);
 
+	void CreateSlot(UUniformGridPanel* TargetGrid, UPTWItemDefinition* ItemDef, int32 Index);
+
 	/* 데이터 테이블 */
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 	TObjectPtr<UDataTable> ItemDataTable;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UUniformGridPanel> InventoryGrid;
+	TObjectPtr<UUniformGridPanel> WeaponGrid;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UUniformGridPanel> ActiveItemGrid;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UUniformGridPanel> PassiveItemGrid;
 
 	/* 에디터에서 PTWItemSlot 블루프린트 클래스를 할당하기 위한 변수 */
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")

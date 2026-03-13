@@ -5,6 +5,7 @@
 #include "PTWGameplayTag/GameplayTags.h"
 #include "AbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GAS/PTWAbilitySystemComponent.h"
 #include "GAS/PTWAttributeSet.h"
 #include "MiniGame/PTWMiniGameMode.h"
 
@@ -14,6 +15,10 @@ APTWCARCitizen::APTWCARCitizen()
 	
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AttributeSet = CreateDefaultSubobject<UPTWAttributeSet>(TEXT("AttributeSet"));
+	
+	AbilitySystemComponent = CreateDefaultSubobject<UPTWAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 	
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -75,4 +80,3 @@ void APTWCARCitizen::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
-

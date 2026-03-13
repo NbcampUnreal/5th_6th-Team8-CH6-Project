@@ -377,6 +377,11 @@ void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		});
 }
 
+void APTWGameMode::SetTravelLevelName(const FString& InLevelName)
+{ 
+	TravelLevelName = InLevelName; 
+}
+
 void APTWGameMode::StartTimer(float TimeDuration)
 {
 	if (PTWGameState)
@@ -389,6 +394,7 @@ void APTWGameMode::StartTimer(float TimeDuration)
 
 void APTWGameMode::ClearTimer()
 {
+	UE_LOG(Log_GameMode, Log, TEXT("Clearing Timer") );
 	GetWorldTimerManager().ClearTimer(TimerHandle);
 }
 

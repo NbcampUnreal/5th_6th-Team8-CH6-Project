@@ -2,6 +2,11 @@
 
 #include "PTWHTTPRequestTypes.generated.h"
 
+namespace HTTPStatusMessages
+{
+	extern PTW_API const FString SomethingWentWrong;
+}
+
 USTRUCT()
 struct FPTWMetaData
 {

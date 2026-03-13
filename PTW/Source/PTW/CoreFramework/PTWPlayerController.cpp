@@ -814,6 +814,8 @@ void APTWPlayerController::PostSeamlessTravel()
 
 void APTWPlayerController::CreateUI()
 {
+	if (!IsLocalPlayerController()) return;
+
 	if (UISubsystem)
 	{
 		UISubsystem->StackReset();
@@ -835,7 +837,7 @@ void APTWPlayerController::CreateUI()
 			UISubsystem->SetChatListClass(ChatListClass);
 			bAbleChat = true;
 		}
-		if (UISubsystem)
+		if (ChatInputClass)
 		{
 			UISubsystem->SetChatInputClass(ChatInputClass);
 		}

@@ -66,6 +66,9 @@ public:
 	/* 트래블후 플레이어 초기 세팅 함수 */
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 
+	/* 외부에서 다음 트래블 맵을 강제로 설정하기 위한 함수 */
+	void SetTravelLevelName(const FString& InLevelName);
+
 protected:
 	/** 지정한 시간(초) 기준으로 타이머를 시작 */
 	void StartTimer(float TimeDuration);

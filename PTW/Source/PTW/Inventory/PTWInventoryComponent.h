@@ -30,7 +30,6 @@ public:
 	UPTWInventoryComponent();
 	
 	void AddItem(TObjectPtr<UPTWItemInstance>);
-	void SwapWeapon(int32 SlotIndex);
 	
 	UFUNCTION(BlueprintCallable)
 	void EquipWeapon(int32 SlotIndex);
@@ -99,10 +98,7 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
 	int32 CurSelectingWeaponSlot = -1;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSubclassOf<UGameplayAbility> Test;
-	
+
 private:
 	TArray<TObjectPtr<UPTWWeaponInstance>> WeaponArr;
 	

@@ -90,6 +90,7 @@ namespace GameplayTags
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Charge);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Emoting);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Idle);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Bomb);
 		
 		namespace Passive
 		{
@@ -198,6 +199,19 @@ namespace GameplayTags
 		namespace MiniGame
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Bomb);
+		}
+	}
+	
+	namespace ChaosEvent
+	{
+		namespace Buff
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(MoveSpeed);
+		}
+
+		namespace Debuff
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(MoveSpeed);
 		}
 	}
 	

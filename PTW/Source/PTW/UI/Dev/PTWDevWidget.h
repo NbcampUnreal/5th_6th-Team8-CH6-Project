@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Minigame/PTWMiniGameMapRow.h"
 #include "PTWDevWidget.generated.h"
 
 class UPTWButton;
 class UEditableTextBox;
+class UComboBoxString;
 
 UCLASS()
 class PTW_API UPTWDevWidget : public UUserWidget
@@ -15,7 +17,7 @@ class PTW_API UPTWDevWidget : public UUserWidget
 	GENERATED_BODY()
 	
 protected:
-	virtual void NativeConstruct() override;
+	virtual void NativeOnInitialized() override;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UEditableTextBox> Input_Gold;
@@ -27,6 +29,8 @@ protected:
 	TObjectPtr<UEditableTextBox> Input_Jump;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UEditableTextBox> Input_ItemID;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UComboBoxString> Combo_MapSelect;
 
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_AddBot;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_RemoveBot;
@@ -37,6 +41,7 @@ protected:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_ForceEnd;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_ForceWin;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_ForceLose;
+	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_SetNextMap;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_GodMode;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_SuperSpeed;
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UPTWButton> Btn_SuperJump;
@@ -58,6 +63,7 @@ protected:
 	UFUNCTION() void OnForceEndClicked();
 	UFUNCTION() void OnForceWinClicked();
 	UFUNCTION() void OnForceLoseClicked();
+	UFUNCTION() void OnSetNextMapClicked();
 
 	UFUNCTION() void OnGodModeClicked();
 	UFUNCTION() void OnSuperSpeedClicked();

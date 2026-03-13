@@ -17,10 +17,13 @@
 #include "Camera/CameraActor.h"
 #include "Engine/TargetPoint.h"
 #include "AIController.h"
+#include "ControllerComponent/PTWBaseControllerComponent.h"
+#include "ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
 #include "Debug/PTWLogCategorys.h"
 #include "Gameplay/Actor/PTWResultCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/Instance/PTWItemInstance.h"
+#include "MiniGame/PTWMiniGameMapRow.h"
 
 class UPTWScoreSubsystem;
 
@@ -107,6 +110,30 @@ void APTWMiniGameMode::BeginPlay()
 		
 	}), 10.f, false);
 	
+	APTWGameState* GS = GetGameState<APTWGameState>();
+	if (!GS || !MiniGameMapTable) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	const FString CurrentMapPath = World->RemovePIEPrefix(World->GetPathName());
+
+	FPTWRouletteData Data = GS->GetRouletteData();
+
+	for (const auto& Pair : MiniGameMapTable->GetRowMap())
+	{
+		FName RowName = Pair.Key;
+		const FPTWMiniGameMapRow* Row = reinterpret_cast<FPTWMiniGameMapRow*>(Pair.Value);
+
+		if (!Row) continue;
+
+		if (Row->Map.ToSoftObjectPath().GetAssetPathString() == CurrentMapPath)
+		{
+			Data.MapRowName = RowName;
+			GS->SetRouletteData(Data);
+			return;
+		}
+	}
 }
 
 void APTWMiniGameMode::Logout(AController* Exiting)
@@ -153,6 +180,8 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	//{
 	//	RestartPlayer(NewPlayer);
 	//}
+
+	
 }
 
 
@@ -163,6 +192,7 @@ void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	
 	Super::HandleSeamlessTravelPlayer(C);
 
+	AttachControllerComponent(C);
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
@@ -195,6 +225,27 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 			}
 		}), 3.f, false);
 	}
+}
+
+void APTWMiniGameMode::AttachControllerComponent(AController* Controller)
+{
+	if (!Controller || !ControllerComponentClass) return;
+
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (!PlayerController) return;
+
+	UPTWBaseControllerComponent* ControllerComponent = NewObject<UPTWBaseControllerComponent>(PlayerController, ControllerComponentClass);
+	if (!ControllerComponent) return;
+	
+	PlayerController->AddInstanceComponent(ControllerComponent);
+	
+	ControllerComponent->RegisterComponent();
+
+	// 이 아래는 테스트
+	UPTWAbilityControllerComponent* AbilityControllerComponent = Cast<UPTWAbilityControllerComponent>(ControllerComponent);
+	if (!AbilityControllerComponent) return;
+
+	AbilityControllerComponent->ShowDraftUI();
 }
 
 void APTWMiniGameMode::StartGame()
@@ -303,26 +354,10 @@ void APTWMiniGameMode::RemoveTags(AController* Controller)
 
 void APTWMiniGameMode::TickCountDown()
 {
-	// CurrentCountDown--;
-	//
-	// if (APTWGameState* GS = GetGameState<APTWGameState>())
-	// {
-	// 	GS->SetMiniGameCountdown(CurrentCountDown);
-	// }
-
+	
 	if (!PTWGameState) return;
 
 	PTWGameState->DecreaseCoundDown();
-	
-	// if (CurrentCountDown > 0)
-	// {
-	// 	UE_LOG(LogTemp, Warning, TEXT("CountDown : %d"), CurrentCountDown);
-	// 	return;
-	// }
-	// // 0이되면 카운트 다운 종료 -> 라운드 시작
-	// GetWorldTimerManager().ClearTimer(CountDownTimerHandle);
-	//
-	// OnCountDownFinished();
 }
 
 void APTWMiniGameMode::OnCountDownFinished()

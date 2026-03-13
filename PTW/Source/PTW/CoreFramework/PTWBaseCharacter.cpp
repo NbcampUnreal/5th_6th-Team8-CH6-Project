@@ -125,7 +125,7 @@ void APTWBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (HasAuthority())
+	if (HasAuthority() && AbilitySystemComponent->HasMatchingGameplayTag(GameplayTags::State::Status_Dead))
 	{
 		AbilitySystemComponent->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
 	}

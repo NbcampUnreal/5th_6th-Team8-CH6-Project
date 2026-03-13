@@ -227,25 +227,24 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 	}
 }
 
-void APTWMiniGameMode::AttachControllerComponent(AController* Controller)
+void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActorComponent* Component)
 {
-	if (!Controller || !ControllerComponentClass) return;
+	if (!Controller) return;
 
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);
 	if (!PlayerController) return;
 
-	UPTWBaseControllerComponent* ControllerComponent = NewObject<UPTWBaseControllerComponent>(PlayerController, ControllerComponentClass);
-	if (!ControllerComponent) return;
-	
-	PlayerController->AddInstanceComponent(ControllerComponent);
-	
-	ControllerComponent->RegisterComponent();
+	UActorComponent* ActorComponent = Component;
 
-	// 이 아래는 테스트
-	UPTWAbilityControllerComponent* AbilityControllerComponent = Cast<UPTWAbilityControllerComponent>(ControllerComponent);
-	if (!AbilityControllerComponent) return;
-
-	AbilityControllerComponent->ShowDraftUI();
+	if (!ActorComponent && ControllerComponentClass)
+	{
+		ActorComponent = NewObject<UActorComponent>(PlayerController, ControllerComponentClass);
+	}
+	if (!ActorComponent) return;
+	
+	PlayerController->AddInstanceComponent(ActorComponent);
+	
+	ActorComponent->RegisterComponent();
 }
 
 void APTWMiniGameMode::StartGame()

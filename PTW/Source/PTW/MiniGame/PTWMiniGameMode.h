@@ -158,6 +158,9 @@ protected:
 	FTimerHandle CoinSpawnTimerHandle;
 	FTimerHandle ResultTimerHandle;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Data")
+	TObjectPtr<UDataTable> MiniGameMapTable;
+
 private:
 	/** 플레이어에게 미니 게임 태그 적용 */
 	void ApplyMiniGameTag(AController* NewPlayer);

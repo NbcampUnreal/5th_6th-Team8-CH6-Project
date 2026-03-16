@@ -16,11 +16,9 @@ class PTW_API AGC_Blind : public AGameplayCueNotify_Actor
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	AGC_Blind();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
 	virtual bool OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) override;
@@ -29,13 +27,13 @@ protected:
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Post Process")
-	UMaterialInterface* PostProcessMaterial;
+	TObjectPtr<UMaterialInterface> PostProcessMaterial;
 
 	UPROPERTY()
-	UPostProcessComponent* PostProcessComponent;
+	TObjectPtr<UPostProcessComponent> PostProcessComponent;
 	
 	UPROPERTY()
-	UMaterialInstanceDynamic* DynamicMaterial;
+	TObjectPtr<UMaterialInstanceDynamic> DynamicMaterial;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Blind Effect")
 	FName OpacityParamName = FName("BlindOpacity");
@@ -43,10 +41,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Blind Effect")
 	float FadeSpeed = 5.0f;
 
-	float CurrentOpacity;
-	float TargetOpacity;
+	float CurrentOpacity = 0.0f;
+	float TargetOpacity = 0.0f;
 	
-	bool bIsFadingOut;
+	bool bIsFadingOut = false;
 	
 public:
 	virtual void Tick(float DeltaTime) override;

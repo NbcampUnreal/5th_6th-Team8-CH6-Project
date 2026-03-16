@@ -102,9 +102,15 @@ public:
 		ENotificationPriority InPriority = ENotificationPriority::Normal,
 		float InDuration = 2.f,
 		bool bInterrupt = false);
+
+	/* ControllerComponent 저장 */
+	void SetControllerComponent(UActorComponent* NewControllerComponent);
 	
 	/* UISubsystem Getter*/
 	FORCEINLINE UPTWUISubsystem* GetUISubSystem() const {return UISubsystem;}
+	
+	/* Controller Component Getter*/
+	FORCEINLINE UActorComponent* GetControllerComponent() const {return BaseControllerComponent;}
 
 protected:
 	virtual void BeginPlay() override;
@@ -170,6 +176,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UPTWUIControllerComponent> UIControllerComponent;
 
+
+	
 protected:
 	/* 캐싱된 Ability System Component */
 	UPROPERTY()
@@ -189,6 +197,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UPTWGhostChaseControllerComponent> GhostChaseComponent;
 
+	/* 각기 다른 미니 게임에서 사용하는 액터 컴퍼넌트 저장*/
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UActorComponent> BaseControllerComponent;
+	
 	/* 씬 캡처 결과가 저장될 렌더 타겟 메모리 리소스 */
 	UPROPERTY()
 	TObjectPtr<UTextureRenderTarget2D> TargetPOVRT;

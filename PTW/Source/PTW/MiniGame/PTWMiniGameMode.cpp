@@ -181,7 +181,7 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	//	RestartPlayer(NewPlayer);
 	//}
 
-	
+	AttachControllerComponent(NewPlayer);
 }
 
 
@@ -192,7 +192,7 @@ void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	
 	Super::HandleSeamlessTravelPlayer(C);
 
-	AttachControllerComponent(C);
+	
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
@@ -231,7 +231,7 @@ void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActor
 {
 	if (!Controller) return;
 
-	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Controller);
 	if (!PlayerController) return;
 
 	UActorComponent* ActorComponent = Component;
@@ -245,6 +245,8 @@ void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActor
 	PlayerController->AddInstanceComponent(ActorComponent);
 	
 	ActorComponent->RegisterComponent();
+
+	PlayerController->SetControllerComponent(ActorComponent);
 }
 
 void APTWMiniGameMode::StartGame()
@@ -970,7 +972,7 @@ void APTWMiniGameMode::FinishEndGameSequence()
 	
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		APlayerController* PC = It->Get();
+		APTWPlayerController* PC = Cast<APTWPlayerController> (It->Get());
 		if (!PC) continue;
 
 		PC->ChangeState(NAME_Playing);
@@ -981,6 +983,8 @@ void APTWMiniGameMode::FinishEndGameSequence()
 			PC->PlayerState->SetIsSpectator(false);
 			PC->PlayerState->SetIsOnlyASpectator(false);
 		}
+
+		PC->SetControllerComponent(nullptr);
 	}
 
 	// 로비로 이동 전 구매한 카오스 아이템 목록 삭제

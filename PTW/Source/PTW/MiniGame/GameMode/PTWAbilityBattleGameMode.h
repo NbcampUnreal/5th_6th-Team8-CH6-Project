@@ -19,7 +19,7 @@ class PTW_API APTWAbilityBattleGameMode : public APTWMiniGameMode
 protected:
 
 	virtual void StartGame() override;
-
+	
 	void InitAttributeSet();
 	
 	/** 티어별로 AbilityPool 분류*/

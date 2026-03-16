@@ -40,7 +40,7 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 	if (!HasAuthority() || !AbilitySystemComponent) return;
 
 	FGameplayEventData Payload;
-	Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("State.Status.Dead"));
+	Payload.EventTag = GameplayTags::State::Status_Dead;
 	Payload.Instigator = Attacker;
 	Payload.Target = this;
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, Payload.EventTag, Payload);
@@ -125,7 +125,7 @@ void APTWBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (HasAuthority())
+	if (HasAuthority() && AbilitySystemComponent->HasMatchingGameplayTag(GameplayTags::State::Status_Dead))
 	{
 		AbilitySystemComponent->RemoveLooseGameplayTag(GameplayTags::State::Status_Dead);
 	}

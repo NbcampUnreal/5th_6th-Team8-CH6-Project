@@ -1,5 +1,10 @@
 ﻿#include "PTWHTTPRequestTypes.h"
 
+namespace HTTPStatusMessages
+{
+	const FString SomethingWentWrong{TEXT("Something went wrong")};
+}
+
 void FPTWMetaData::Dump() const
 {
 	UE_LOG(LogTemp, Warning, TEXT("MetaData: "));

@@ -30,6 +30,7 @@ namespace PTWSessionKey
 	inline const FName MapName =	FName(TEXT("MAP_NAME"));
 	inline const FName MaxPlayers =	FName(TEXT("MAX_PLAYERS"));
 	inline const FName MaxRounds =	FName(TEXT("MAX_ROUNDS"));
+	inline const FName UseGameLift =	FName(TEXT("USE_GAMELIFT"));
 }
 
 USTRUCT(BlueprintType)
@@ -51,4 +52,69 @@ struct FPTWSessionConfig
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
 	int32 MaxRounds = 5;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
+	bool bUseGameLift = false;
 };
+
+USTRUCT()
+struct FPTWGameProperty
+{
+	GENERATED_BODY()
+
+	UPROPERTY() FString Key{};
+	UPROPERTY() FString Value{};
+};
+
+USTRUCT(BlueprintType)
+struct FPTWGameLiftGameSession
+{
+	GENERATED_BODY()
+
+	// Json Serialization UPROPERTY
+	UPROPERTY() FString CreationTime{};
+	UPROPERTY() FString CreatorId{};
+	UPROPERTY() int32 CurrentPlayerSessionCount{};
+	UPROPERTY() FString DnsName{};
+	UPROPERTY() FString FleetArn{};
+	UPROPERTY() FString FleetId;
+	// UPROPERTY() TMap<FString, FString> GameProperties{};
+	UPROPERTY() TArray<FPTWGameProperty> GameProperties{};
+	UPROPERTY() FString GameSessionData{};
+	UPROPERTY() FString GameSessionId{};
+	UPROPERTY() FString IpAddress{};
+	UPROPERTY() FString Location{};
+	UPROPERTY() FString MatchMakerData{};
+	UPROPERTY() int32 MaximumPlayerSessionCount{};
+	UPROPERTY() FString Name{};
+	UPROPERTY() FString PlayerSessionCreationPolicy{};
+	UPROPERTY() int32 Port{};
+	UPROPERTY() FString Status{};
+	UPROPERTY() FString StatusReason{};
+	UPROPERTY() FString TerminationTime{};
+	
+	void Dump() const;
+};
+
+USTRUCT(BlueprintType)
+struct FPTWGameLiftPlayerSession
+{
+	GENERATED_BODY()
+
+	// Json Serialization UPROPERTY
+	UPROPERTY() FString CreationTime{};
+	UPROPERTY() FString DnsName{};
+	UPROPERTY() FString FleetArn{};
+	UPROPERTY() FString FleetId;
+	UPROPERTY() FString GameSessionId{};
+	UPROPERTY() FString IpAddress{};
+	UPROPERTY() FString PlayerData{};
+	UPROPERTY() FString PlayerId{};
+	UPROPERTY() FString PlayerSessionId{};
+	UPROPERTY() int32 Port{};
+	UPROPERTY() FString Status{};
+	UPROPERTY() FString TerminationTime{};
+	
+	void Dump() const;
+};
+

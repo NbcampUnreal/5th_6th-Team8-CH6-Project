@@ -35,11 +35,6 @@ void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemInstance> ItemClass)
 	OnItemInstanceCreated(ItemClass);
 }
 
-void UPTWInventoryComponent::SwapWeapon(int32 SlotIndex)
-{
-	
-}
-
 void UPTWInventoryComponent::EquipWeapon(int32 SlotIndex)
 {
 	// TODO: 장착 GA 실행
@@ -232,7 +227,6 @@ void UPTWInventoryComponent::DropItem()
 	
 	if (SpawnManager)
 	{
-		UPTWWeaponInstance* WeaponInstance = Cast<UPTWWeaponInstance>(CurrentWeapon);
 		UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
 		if (!ASC) return;
 

@@ -19,6 +19,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Setup(const FOnlineSessionSearchResultBP& SearchResult);
 	
+	FORCEINLINE UTextBlock* GetServerID() const { return ServerID; };
+	FORCEINLINE UTextBlock* GetServerName() const { return ServerName; };
+	
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;

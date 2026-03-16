@@ -612,6 +612,11 @@ void APTWPlayerController::SendMessage(const FText& InText,ENotificationPriority
 	UIControllerComponent->SendMessage(InText, InPriority, InDuration, bInterrupt);
 }
 
+void APTWPlayerController::SetControllerComponent(UActorComponent* NewControllerComponent)
+{
+	BaseControllerComponent = NewControllerComponent;
+}
+
 void APTWPlayerController::HandleBombOwnerChanged(APawn* NewOwnerPawn)
 {
 	if (!IsLocalController()) return;

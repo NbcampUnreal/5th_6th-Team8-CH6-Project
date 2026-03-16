@@ -8,6 +8,8 @@
 #include "PTWAbilityControllerComponent.generated.h"
 
 
+class UPTWAbilityDraftWidget;
+
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PTW_API UPTWAbilityControllerComponent : public UPTWBaseControllerComponent
 {
@@ -16,12 +18,13 @@ class PTW_API UPTWAbilityControllerComponent : public UPTWBaseControllerComponen
 public:	
 	UPTWAbilityControllerComponent();
 
-	void ShowDraftUI();
+	UFUNCTION(Client, Reliable)
+	void Client_ShowDraftUI();
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> DraftWidgetClass;
 
 	UPROPERTY()
-	TObjectPtr<UUserWidget> DraftWidget;
+	TObjectPtr<UPTWAbilityDraftWidget> DraftWidget;
 		
 };

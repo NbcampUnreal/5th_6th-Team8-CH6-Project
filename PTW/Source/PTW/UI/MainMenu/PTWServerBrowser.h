@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "System/Session/PTWSessionConfig.h"
 #include "PTWServerBrowser.generated.h"
 
 class UBorder;
@@ -12,7 +13,6 @@ class UVerticalBox;
 class UEditableText;
 class UCheckBox;
 class UPTWServerListRow;
-class UPTWHTTPRequestManager;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnServerBackAction);
 
@@ -49,13 +49,13 @@ protected:
 	void OnClickedLongRoundButton();
 	
 	UFUNCTION()
-	void OnFindSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults);
+	void OnFindSteamSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults);
+	
+	UFUNCTION()
+	void OnFindGameLiftSessionsComplete(const TArray<FPTWGameLiftGameSession>& SearchResults);
 	
 	UFUNCTION()
 	void OnClickedTestButton();
-	
-	UFUNCTION()
-	void OnListFleetsResponseReceived(const struct FPTWListFleetsResponse& ListFleetsResponse, bool bwasSuccessful);
 	
 	UFUNCTION()
 	void DevJoinAction();
@@ -115,12 +115,6 @@ protected:
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> TestButton;
-	
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UPTWHTTPRequestManager> HTTPRequestManagerClass;
-	
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UPTWHTTPRequestManager> HTTPRequestManager;
 	
 private:
 	EPTWRoundLimit RoundLimit;

@@ -175,11 +175,16 @@ void APTWServerEntryGameMode::InitGameLift()
 	// 게임 속성 및 기타 설정이 들어있는 GameSession 객체를 함께 전달합니다.
 	// 여기에서 게임 서버는 GameSession 객체를 바탕으로 필요한 동작을 수행해야 합니다.
 	// 플레이어 접속을 받을 준비가 되면, GameLiftServerAPI.ActivateGameSession()을 호출해야 합니다.
-	ProcessParameters->OnStartGameSession.BindLambda([=](Aws::GameLift::Server::Model::GameSession InGameSession)
+	ProcessParameters->OnStartGameSession.BindLambda([=, this](Aws::GameLift::Server::Model::GameSession InGameSession)
         {
             FString GameSessionId = FString(InGameSession.GetGameSessionId());
             UE_LOG(GameServerLog, Log, TEXT("GameSession Initializing: %s"), *GameSessionId);
             GameLiftSdkModule->ActivateGameSession();
+		
+			if (UWorld* World = GetWorld())
+			{
+				World->ServerTravel(TEXT("Lobby"));
+			}
         });
 
     //OnProcessTerminate callback. Amazon GameLift Servers will invoke this callback before shutting down an instance hosting this game server.
@@ -214,6 +219,7 @@ void APTWServerEntryGameMode::InitGameLift()
                     error.m_errorMessage.IsEmpty() ? TEXT("Unknown error") : *error.m_errorMessage);
                 }
             }
+    	FGenericPlatformMisc::RequestExit(false);
         });
          
     //This is the HealthCheck callback.

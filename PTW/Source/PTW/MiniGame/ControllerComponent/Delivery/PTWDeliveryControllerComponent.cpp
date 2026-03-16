@@ -71,12 +71,12 @@ void UPTWDeliveryControllerComponent::ClientRPC_AddBatteryUI_Implementation()
 		return;
 	}
 	
-	UUserWidget* WidetInstance = UISubsystem->CreatePersistentWidget(BatteryWidgetClass);
+	UUserWidget* WidetInstance = UISubsystem->CreatePersistentWidget(DeliveryHUDClass);
 	if (!WidetInstance) return;
 	
-	if (UPTWDeliveryHUD* BatterLevelWidget = Cast<UPTWDeliveryHUD>(WidetInstance))
+	if (UPTWDeliveryHUD* HUDWidget = Cast<UPTWDeliveryHUD>(WidetInstance))
 	{
-		DeliveryHUDWidgetInstance = BatterLevelWidget;
+		DeliveryHUDWidgetInstance = HUDWidget;
 		DeliveryHUDWidgetInstance->SetVisibility(ESlateVisibility::Visible);
 		DeliveryHUDWidgetInstance->InitBatterLevelWidget(UISubsystem->GetLocalPlayerASC());
 	}

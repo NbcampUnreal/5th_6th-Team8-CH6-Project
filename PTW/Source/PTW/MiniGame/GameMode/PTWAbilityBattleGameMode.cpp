@@ -4,10 +4,12 @@
 #include "MiniGame/GameMode/PTWAbilityBattleGameMode.h"
 
 #include "AbilitySystemComponent.h"
+#include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "Debug/PTWLogCategorys.h"
 #include "GAS/PTWAbilityBattleAttributeSet.h"
+#include "MiniGame/ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
 #include "MiniGame/Data/AbilityBattle/PTWAbilityRow.h"
 #include "MiniGame/Manager/AbilityBattle/PTWRandomDraftSystem.h"
 
@@ -19,7 +21,11 @@ void APTWAbilityBattleGameMode::StartGame()
 	GrandAbilityBattleAttributeSet();
 	InitAttributeSet();
 	InitializeAbilityPool();
+
+	StartDraft();
 }
+
+
 
 void APTWAbilityBattleGameMode::InitAttributeSet()
 {
@@ -81,7 +87,16 @@ TArray<TObjectPtr<UPTWAbilityDefinition>> APTWAbilityBattleGameMode::GenerateDra
 
 void APTWAbilityBattleGameMode::StartDraft()
 {
-	
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APTWPlayerController* PlayerController = Cast<APTWPlayerController>(It->Get());
+		if (!PlayerController) continue;
+
+		UPTWAbilityControllerComponent* AbilityControllerComponent =  Cast<UPTWAbilityControllerComponent>(PlayerController->GetControllerComponent());
+		if (!AbilityControllerComponent) continue;
+
+		AbilityControllerComponent->Client_ShowDraftUI();
+	}
 }
 
 void APTWAbilityBattleGameMode::GrandAbilityBattleAttributeSet()

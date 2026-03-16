@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "MiniGame/ControllerComponent/PTWBaseControllerComponent.h"
 #include "PTWDeliveryControllerComponent.generated.h"
 
 class UPTWDeliveryHUD;
 class UPTWBatterLevelWidget;
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class PTW_API UPTWDeliveryControllerComponent : public UActorComponent
+UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+class PTW_API UPTWDeliveryControllerComponent : public UPTWBaseControllerComponent
 {
 	GENERATED_BODY()
 
@@ -35,7 +36,7 @@ protected:
 
 protected:
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<UUserWidget> BatteryWidgetClass;
+	TSubclassOf<UUserWidget> DeliveryHUDClass;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UPTWDeliveryHUD> DeliveryHUDWidgetInstance;

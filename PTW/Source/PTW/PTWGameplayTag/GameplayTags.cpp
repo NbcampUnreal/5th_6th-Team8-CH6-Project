@@ -50,6 +50,7 @@ namespace GameplayTags
 	namespace MiniGame
 	{
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Bomb, "MiniGame.Bomb");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Delivery, "MiniGame.Delivery");
 	}
 	
 	namespace Role

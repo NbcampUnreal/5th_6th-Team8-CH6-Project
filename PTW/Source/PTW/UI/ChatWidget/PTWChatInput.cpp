@@ -7,6 +7,7 @@
 #include "Components/EditableText.h"
 #include "CoreFramework/PTWPlayerController.h"
 
+
 void UPTWChatInput::HandleEnterPressed()
 {
 	if (!Edit_ChatInput) return;
@@ -25,8 +26,10 @@ void UPTWChatInput::HandleEnterPressed()
 		PC->Server_SendChatMessage(Message);
 	}
 
-	// 전송 후 입력창 닫기
-	PC->OnChatInputFinished();
+	if (PC && PC->UIControllerComponent)
+	{
+		PC->OnChatInputFinished();
+	}
 }
 
 void UPTWChatInput::NativeConstruct()

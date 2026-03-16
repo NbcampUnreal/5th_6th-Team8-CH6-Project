@@ -12,6 +12,7 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "GAS/PTWDeliveryAttributeSet.h"
 #include "MiniGame/ControllerComponent/Delivery/PTWDeliveryControllerComponent.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 APTWDeliveryGameMode::APTWDeliveryGameMode()
 {
@@ -46,18 +47,6 @@ void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter, TSub
 	ApplyGameEffect(TargetCharacter, EffectToApply);
 }
 
-void APTWDeliveryGameMode::StartBatteryCharge(APTWPlayerCharacter* TargetCharacter)
-{
-	// GE 적용(움직임 제한, 배터리 충전(Lerp))
-	
-}
-
-void APTWDeliveryGameMode::EndBatteryCharge(APTWPlayerCharacter* TargetCharacter)
-{
-	// GE 해제(움직임 제한 해제, 배터리 충전 해제, 이동속도 잠깐 증가)
-	
-}
-
 void APTWDeliveryGameMode::SetPlayerSpawnLocation(APTWPlayerController* PC, FVector NewLocation)
 {
 	PlayerSpawnPoints.FindOrAdd(PC) = NewLocation;
@@ -78,12 +67,34 @@ void APTWDeliveryGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActo
 	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(KillActor);
 	ApplyGameEffect(TargetCharacter, KillBonusEffect);
 	
+	APTWPlayerCharacter* DeadCharacter = Cast<APTWPlayerCharacter>(DeadActor);
+	
+	IPTWCombatInterface* DeadCombatInterface = CastToPTWCombatInterface(DeadCharacter);
+	if (!DeadCombatInterface) return;
+	
+	DeadCombatInterface->RemoveEffectWithTag(GameplayTags::MiniGame::Delivery);
+	
 	Super::HandlePlayerDeath(DeadActor, KillActor);
+}
+
+void APTWDeliveryGameMode::RestartPlayer(AController* NewPlayer)
+{
+	Super::RestartPlayer(NewPlayer);
+	
+	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn());
+	if (!TargetCharacter) return;
+	
+	if (CheckingDeadPlayer(NewPlayer))
+	{
+		IPTWCombatInterface* CombatInterface = CastToPTWCombatInterface(TargetCharacter);
+		if (!CombatInterface) return;
+		CombatInterface->ApplyGameplayEffectToSelf(RestartPlayerEffect, 1.0f, FGameplayEffectContextHandle());
+	}
 }
 
 void APTWDeliveryGameMode::ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect)
 {
-	IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(Target);
+	IPTWCombatInterface* CombatInterface = CastToPTWCombatInterface(Target);
 	if (!CombatInterface) return;
 	CombatInterface->ApplyGameplayEffectToSelf(TargetGameplayEffect, 1.0f, FGameplayEffectContextHandle());
 }
@@ -112,6 +123,20 @@ void APTWDeliveryGameMode::StopCountDown()
 	
 	FTimerHandle EndTimerWaitHandle;
 	GetWorld()->GetTimerManager().SetTimer(EndTimerWaitHandle, this, &APTWDeliveryGameMode::EndTimer, 3.0f, false);
+}
+
+bool APTWDeliveryGameMode::CheckingDeadPlayer(AController* NewPlayer)
+{
+	APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
+	check(PTWPlayerState);
+	
+	return PTWPlayerState->GetPlayerRoundData().DeathCount != 0;
+}
+
+IPTWCombatInterface* APTWDeliveryGameMode::CastToPTWCombatInterface(APTWPlayerCharacter* PlayerCharacter)
+{
+	IPTWCombatInterface* PTWCombatInterface = Cast<IPTWCombatInterface>(PlayerCharacter);
+	return PTWCombatInterface;
 }
 
 void APTWDeliveryGameMode::GivingDefaultWeapon(APTWPlayerCharacter* TargetCharacter)

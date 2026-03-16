@@ -28,7 +28,7 @@ bool AGC_Delivery::WhileActive_Implementation(AActor* MyTarget, const FGameplayC
 bool AGC_Delivery::OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters)
 {
 	// TODO : Attach 제거
-	
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	return Super::OnRemove_Implementation(MyTarget, Parameters);
 }
 

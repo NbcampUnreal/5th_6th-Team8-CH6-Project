@@ -40,10 +40,14 @@ public:
 
 protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
+	virtual void RestartPlayer(AController* NewPlayer) override;
 	void ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect);
 	void StartEndCountDown();
 	void UpdateCountDown();
-	void StopCountDown();	
+	void StopCountDown();
+	bool CheckingDeadPlayer(AController* NewPlayer);
+	
+	IPTWCombatInterface* CastToPTWCombatInterface(APTWPlayerCharacter* PlayerCharacter);
 	
 private:
 	
@@ -65,6 +69,9 @@ private:
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
 	TSubclassOf<UGameplayEffect> KillBonusEffect;
+	
+	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
+	TSubclassOf<UGameplayEffect> RestartPlayerEffect;
 	
 	/* 등수 표시를 위한 도착 지점에 도착한 플레이어 배열*/
 	UPROPERTY(VisibleAnywhere, Category = "Game|Winner")

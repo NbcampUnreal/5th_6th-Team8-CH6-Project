@@ -33,6 +33,8 @@ void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemInstance> ItemClass)
 	ItemArr.Add(ItemClass);
 	
 	OnItemInstanceCreated(ItemClass);
+
+	OnInventoryChanged.Broadcast();
 }
 
 void UPTWInventoryComponent::EquipWeapon(int32 SlotIndex)
@@ -360,6 +362,8 @@ bool UPTWInventoryComponent::EquipActiveItem(UPTWItemInstance* ActiveItemInstanc
 		ActiveItemAbilityHandle = ASC->GiveAbility(FGameplayAbilitySpec(CurrentActiveItemSlot->ItemDef->AbilityToGrant, 1));
 	}
 	
+	OnInventoryChanged.Broadcast();
+
 	return true;
 }
 

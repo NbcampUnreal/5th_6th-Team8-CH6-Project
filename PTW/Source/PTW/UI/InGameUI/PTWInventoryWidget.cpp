@@ -136,8 +136,8 @@ void UPTWInventoryWidget::CreateSlot(UUniformGridPanel* TargetGrid, UPTWItemDefi
 
 	NewSlot->SetupSlot(ItemDef);
 
-	int32 RowIdx = Index / MaxColumns;
-	int32 ColIdx = Index % MaxColumns;
+	int32 RowIdx = Index % MaxRowsPerColumn;
+	int32 ColIdx = Index / MaxRowsPerColumn;
 
 	TargetGrid->AddChildToUniformGrid(NewSlot, RowIdx, ColIdx);
 }

@@ -17,7 +17,7 @@ class UPTWItemDefinition;
 class UAbilitySystemComponent;
 class UPTWWeaponInstance;
 
-
+DECLARE_MULTICAST_DELEGATE(FOnInventoryChanged);
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -103,4 +103,8 @@ private:
 	TArray<TObjectPtr<UPTWWeaponInstance>> WeaponArr;
 	
 	FGameplayAbilitySpecHandle CurrentWeaponAbilitySpec;
+
+public:
+	/* 델리게이트 */
+	FOnInventoryChanged OnInventoryChanged;
 };

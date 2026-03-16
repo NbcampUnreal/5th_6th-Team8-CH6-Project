@@ -4,13 +4,18 @@
 #include "PTWInGameHUD.h"
 #include "AbilitySystemComponent.h" // ASC 
 
+#include "CoreFramework/Game/GameState/PTWGameState.h"
+
 #include "InGameUI/PTWHealthBar.h"
 #include "InGameUI/PTWKillLogUI.h"
 #include "InGameUI/PTWTimer.h"
 #include "InGameUI/PTWAmmoWidget.h"
 #include "InGameUI/PTWCrosshair.h"
 #include "InGameUI/PTWInventoryWidget.h"
+#include "InGameUI/PTWMiniGameInventory.h"
 #include "InGameUI/PTWNotificationWidget.h"
+
+#include "Inventory/PTWInventoryComponent.h"
 
 void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 {
@@ -21,6 +26,8 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 	}
 	UE_LOG(LogTemp, Error, TEXT("UPTWInGameHUD: ASC."));
 
+	BindGamePhase();
+
 	/* HealthBar 초기화 */
 	if (HealthBar) HealthBar->InitWithASC(ASC);
 	/* AmmoWidget 초기화*/
@@ -29,6 +36,18 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 	if (CrosshairWidget) CrosshairWidget->InitWithASC(ASC);
 	/* 인벤토리 위젯 초기화 */
 	if (InventoryWidget) InventoryWidget->InitPS();
+	/* 미니게임인벤토리 위젯 초기화 */
+	if (MiniGameInventoryWidget)
+	{
+		if (APawn* Pawn = GetOwningPlayerPawn())
+		{
+			if (UPTWInventoryComponent* Inventory =
+				Pawn->FindComponentByClass<UPTWInventoryComponent>())
+			{
+				MiniGameInventoryWidget->InitInventory(Inventory);
+			}
+		}
+	}
 }
 
 void UPTWInGameHUD::ShowNotification(const FNotificationData& Data)
@@ -110,4 +129,48 @@ void UPTWInGameHUD::HandleNotificationFinished()
 	bIsShowingNotification = false;
 
 	TryShowNextNotification();
+}
+
+void UPTWInGameHUD::HandleGamePhaseChanged(EPTWGamePhase Phase)
+{
+	if (!InventoryWidget || !MiniGameInventoryWidget)
+		return;
+
+	switch (Phase)
+	{
+	case EPTWGamePhase::PostGameLobby:
+	{
+		InventoryWidget->SetVisibility(ESlateVisibility::Visible);
+		MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+		break;
+	}
+
+	case EPTWGamePhase::MiniGame:
+	{
+		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+		MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Visible);
+		break;
+	}
+
+	default:
+	{
+		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+		MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+		break;
+	}
+	}
+}
+
+void UPTWInGameHUD::BindGamePhase()
+{
+	APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>();
+	if (!GS) return;
+
+	GS->OnGamePhaseChanged.AddDynamic(
+		this,
+		&UPTWInGameHUD::HandleGamePhaseChanged
+	);
+
+	// 현재 상태 즉시 동기화
+	HandleGamePhaseChanged(GS->GetCurrentGamePhase());
 }

@@ -56,7 +56,7 @@ protected:
 	TSubclassOf<UPTWItemSlot> SlotWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
-	int32 MaxColumns = 5;
+	int32 MaxRowsPerColumn = 10;
 
 private:
 	TWeakObjectPtr<APTWPlayerState> CachedPlayerState;

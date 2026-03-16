@@ -22,6 +22,7 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
+#include "CoreFramework/Character/Component/PTWUIControllerComponent.h"
 #include "GameFramework/SpectatorPawn.h"
 #include "UI/PTWUISubsystem.h"
 #include "UI/PTWHUD.h"
@@ -52,6 +53,7 @@
 APTWPlayerController::APTWPlayerController()
 {
 	DeveloperComponent = CreateDefaultSubobject<UPTWDeveloperComponent>(TEXT("DevComponent"));
+	UIControllerComponent = CreateDefaultSubobject<UPTWUIControllerComponent>(TEXT("UIControllerComponent"));
 	AbyssControllerComponent = CreateDefaultSubobject<UPTWAbyssControllerComponent>(TEXT("AbyssControllerComponent"));
 	GhostChaseComponent = CreateDefaultSubobject<UPTWGhostChaseControllerComponent>(TEXT("GhostChaseComponent"));
 }
@@ -71,14 +73,6 @@ void APTWPlayerController::MulticastRPC_StartSpectating_Implementation()
 		UnPossess();
 		ChangeState(NAME_Spectating);
 		ClientGotoState(NAME_Spectating);
-	}
-}
-
-void APTWPlayerController::ClientRPC_ShowDamageIndicator_Implementation(FVector DamageCauserLocation)
-{
-	if (IsLocalController())
-	{
-		UISubsystem->ShowDamageIndicator(DamageCauserLocation);
 	}
 }
 
@@ -104,22 +98,6 @@ void APTWPlayerController::Server_SendChatMessage_Implementation(const FString& 
 	{
 		GS->BroadcastChatMessage(SenderName, Message);
 	}
-}
-
-void APTWPlayerController::OnChatInputFinished()
-{
-	if (UISubsystem)
-	{
-		/* 리스트 위젯을 다시 투명 모드로 되돌림 */
-		if (UPTWChatList* ChatList = Cast<UPTWChatList>(UISubsystem->GetOrCreateWidget(ChatListClass)))
-		{
-			ChatList->SetInteractionMode(false);
-		}
-
-		UISubsystem->PopWidget();
-	}
-
-	bAbleChat = true;
 }
 
 void APTWPlayerController::Client_PrepareLoadingScreen_Implementation(ELoadingScreenType Type, FName MapRowName)
@@ -148,14 +126,6 @@ void APTWPlayerController::Client_OpenMainMenu_Implementation()
 		SessionSubsystem->LeaveGameSession();
 	}
 }
-
-//void APTWPlayerController::Server_NotifyReadyToPlay_Implementation()
-//{
-//	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
-//	{
-//		GameMode->PlayerReadyToPlay(this);
-//	}
-//}
 
 void APTWPlayerController::BindBombDelegate(APTWBombActor* NewBomb)
 {
@@ -231,39 +201,6 @@ void APTWPlayerController::OnVoiceReleased()
 			}
 		}
 	}
-}
-
-void APTWPlayerController::Client_ShowNotification_Implementation(const FNotificationData& Data)
-{
-	if (!IsLocalController()) return;
-
-	if (UISubsystem)
-	{
-		UISubsystem->PushNotification(Data);
-	}
-}
-
-void APTWPlayerController::ShowLocalNotification(const FNotificationData& Data)
-{
-	if (!IsLocalController()) return;
-
-	if (UISubsystem)
-	{
-		UISubsystem->PushNotification(Data);
-	}
-}
-
-void APTWPlayerController::SendMessage(const FText& InText, ENotificationPriority InPriority, float InDuration, bool bInterrupt)
-{
-	if (!HasAuthority()) return; // 서버에서만 호출
-
-	FNotificationData Data;
-	Data.Message = InText;
-	Data.Priority = InPriority;
-	Data.Duration = InDuration;
-	Data.bInterrupt = bInterrupt;
-
-	Client_ShowNotification(Data);
 }
 
 void APTWPlayerController::UpdateTargetPOV(APawn* NewTarget)
@@ -387,16 +324,12 @@ void APTWPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (!IsLocalController())
+	if (!IsLocalController()) return;
+
+	/*if (UIControllerComponent)
 	{
-		return;
-	}
-
-	//EquipTag = FGameplayTag::RequestGameplayTag(TEXT("Weapon.State.Equip"));
-	//SprintTag = FGameplayTag::RequestGameplayTag(TEXT("State.Movement.Sprinting"));
-
-	/* 플레이어 이름 가시성 체크 타이머 */
-	GetWorldTimerManager().SetTimer(NameTagTimerHandle, this, &APTWPlayerController::UpdateNameTagsVisibility, NameTagUpdateInterval, true);
+		UIControllerComponent->InitializeUIComponent(this);
+	}*/
 
 	/* UI 서브시스템 등록 */
 	if (ULocalPlayer* LP = GetLocalPlayer())
@@ -414,11 +347,7 @@ void APTWPlayerController::BeginPlay()
 		}
 	}
 
-	// BindGameStateDelegates();
-
 	UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::GameOnly);
-
-	BindGameStateDelegates();
 
 	/* 게임설정 */
 	if (UPTWGameUserSettings* Settings = Cast<UPTWGameUserSettings>(UGameUserSettings::GetGameUserSettings()))
@@ -427,19 +356,12 @@ void APTWPlayerController::BeginPlay()
 	}
 
 	CreateUI();
-	
 	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 BeginPlay - CreateUI 함수 호출됨."), 
 		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (HasAuthority())
-	{
-		GetWorldTimerManager().ClearTimer(RespawnTimerHandle);
-		GetWorldTimerManager().ClearTimer(GameStateBindRetryHandle);
-	}
-	
 	Super::EndPlay(EndPlayReason);
 	
 	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 EndPlay 함수 호출됨."), 
@@ -461,13 +383,6 @@ void APTWPlayerController::OnRep_PlayerState()
 	{
 		ASC = PS->GetAbilitySystemComponent();
 	}
-
-	BindGameStateDelegates();
-
-	//CreateUI();
-	
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnRep_PlayerState 함수 호출됨."), 
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::OnRep_Pawn()
@@ -578,151 +493,6 @@ void APTWPlayerController::NotifyLoadedWorld(FName WorldPackageName, bool bFinal
 	}
 }
 
-void APTWPlayerController::BindGameStateDelegates()
-{
-	APTWGameState* GS = GetWorld() ? GetWorld()->GetGameState<APTWGameState>() : nullptr;
-	if (!GS)
-	{
-		// 아직 GameState 안 왔으면 0.2초 후 재시도
-		GetWorldTimerManager().SetTimer(
-			GameStateBindRetryHandle,
-			this,
-			&APTWPlayerController::BindGameStateDelegates,
-			0.2f,
-			false
-		);
-		return;
-	}
-	GetWorldTimerManager().ClearTimer(GameStateBindRetryHandle);
-
-	// 중복 바인딩 방지
-	UnbindGameStateDelegates();
-
-	// 델리게이트 바인드
-	GS->OnMiniGameCountdownChanged.AddDynamic(this, &ThisClass::OnMiniGameCountdownChanged);
-	GS->OnRoulettePhaseChanged.AddDynamic(this, &ThisClass::HandleRoulettePhaseChanged);
-	GS->OnGamePhaseChanged.AddDynamic(this, &ThisClass::HandleGamePhaseChanged);
-
-	// 현재상태 반영
-	OnMiniGameCountdownChanged(GS->IsMiniGameCountdown());
-	HandleRoulettePhaseChanged(GS->GetRouletteData());
-	HandleGamePhaseChanged(GS->GetCurrentGamePhase());
-	
-	//Server_NotifyReadyToPlay();
-	
-}
-
-void APTWPlayerController::UnbindGameStateDelegates()
-{
-	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
-	{
-		GS->OnMiniGameCountdownChanged.RemoveAll(this);
-		GS->OnRoulettePhaseChanged.RemoveAll(this);
-		GS->OnGamePhaseChanged.RemoveAll(this);
-	}
-}
-
-void APTWPlayerController::OnMiniGameCountdownChanged(bool bStarted)
-{
-	if (!UISubsystem || !GameStartTimerClass)
-		return;
-
-	if (bStarted)
-	{
-		UISubsystem->ShowSystemWidget(GameStartTimerClass, 70);
-	}
-	else
-	{
-		UISubsystem->HideSystemWidget(GameStartTimerClass);
-	}
-}
-
-//void APTWPlayerController::BindASCDelegates()
-//{
-//	
-//}
-//
-//void APTWPlayerController::UnbindASCDelegates()
-//{
-//	
-//}
-
-void APTWPlayerController::HandleRoulettePhaseChanged(FPTWRouletteData RouletteData)
-{
-	const UEnum* EnumPtr = StaticEnum<EPTWRoulettePhase>();
-	FString PhaseName = EnumPtr ? EnumPtr->GetNameStringByValue((int64)RouletteData.CurrentPhase) : TEXT("Invalid");
-
-	UE_LOG(LogTemp, Warning, TEXT("PTWPlayerController : HandleRoulettePhaseChanged - %s"), *PhaseName);
-
-	if (!UISubsystem)
-	{
-		return;
-	}
-
-	switch (RouletteData.CurrentPhase)
-	{
-	case EPTWRoulettePhase::MapRoulette:
-		if (MapRouletteWidgetClass)
-		{
-			UISubsystem->ShowSystemWidget(MapRouletteWidgetClass, 85);
-		}
-		break;
-	case EPTWRoulettePhase::RoundEventRoulette:
-		if (MapRouletteWidgetClass)
-		{
-			UISubsystem->HideSystemWidget(MapRouletteWidgetClass);
-		}
-		break;
-	case EPTWRoulettePhase::Finished:
-		if (MapRouletteWidgetClass)
-		{
-			UISubsystem->HideSystemWidget(MapRouletteWidgetClass);
-		}
-		break;
-
-	default:
-		break;
-	}
-}
-
-void APTWPlayerController::HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase)
-{
-	const UEnum* EnumPtr = StaticEnum<EPTWGamePhase>();
-	FString PhaseName = EnumPtr ? EnumPtr->GetNameStringByValue((int64)CurrentGamePhase) : TEXT("Invalid");
-
-	if (!UISubsystem)
-	{
-		return;
-	}
-
-	switch (CurrentGamePhase)
-	{
-	case EPTWGamePhase::GameResult:
-		if (RankingBoardClass)
-		{
-			UISubsystem->SetWidgetVisibility(RankingBoardClass, true);
-			bAbleRankingBoard = false;
-		}
-		break;
-
-	case EPTWGamePhase::MiniGameResult:
-		if (RankingBoardClass)
-		{
-			UISubsystem->SetWidgetVisibility(RankingBoardClass, true);
-			bAbleRankingBoard = false;
-		}
-		break;
-
-	default:
-		if (RankingBoardClass)
-		{
-			UISubsystem->SetWidgetVisibility(RankingBoardClass, false);
-			bAbleRankingBoard = true;
-		}		
-		break;
-	}
-}
-
 void APTWPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -772,13 +542,13 @@ void APTWPlayerController::SetupInputComponent()
 			VoiceAction,
 			ETriggerEvent::Started,
 			this,
-			&ThisClass::OnVoicePressed
+			&APTWPlayerController::OnVoicePressed
 		);
 		EIC->BindAction(
 			VoiceAction,
 			ETriggerEvent::Completed,
 			this,
-			&ThisClass::OnVoiceReleased
+			&APTWPlayerController::OnVoiceReleased
 		);
 
 		// 개발자용 UI (F6)
@@ -812,224 +582,35 @@ void APTWPlayerController::PostSeamlessTravel()
 	}
 }
 
-void APTWPlayerController::CreateUI()
+void APTWPlayerController::ClientRPC_ShowDamageIndicator_Implementation(FVector DamageCauserLocation)
 {
-	if (!IsLocalPlayerController()) return;
-
-	if (UISubsystem)
-	{
-		UISubsystem->StackReset();
-		if (HUDClass)
-		{
-			UISubsystem->ShowHUD(HUDClass);
-		}
-		if (RankingBoardClass)
-		{
-			UISubsystem->CreatePersistentWidget(RankingBoardClass, 10);
-			bAbleRankingBoard = true;
-		}
-		if (ChatListClass)
-		{
-			if (UUserWidget* ChatListWidget = UISubsystem->CreatePersistentWidget(ChatListClass, 70))
-			{
-				ChatListWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			}
-			UISubsystem->SetChatListClass(ChatListClass);
-			bAbleChat = true;
-		}
-		if (ChatInputClass)
-		{
-			UISubsystem->SetChatInputClass(ChatInputClass);
-		}
-		if (DamageIndicatorClass)
-		{
-			UISubsystem->SetDamageIndicatorClass(DamageIndicatorClass);
-		}
-		if (KeyGuideWidgetClass)
-		{
-			UISubsystem->CreatePersistentWidget(KeyGuideWidgetClass, 15);
-			UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, true);
-			bKeyGuideOn = true;
-		}
-	}
+	UIControllerComponent->ShowDamageIndicator(DamageCauserLocation);
 }
 
-void APTWPlayerController::OnRankingPressed()
+void APTWPlayerController::OnChatInputFinished()
 {
-	if(UISubsystem && bAbleRankingBoard)
-	{
-		UISubsystem->SetWidgetVisibility(RankingBoardClass, true);
-	}
+	UIControllerComponent->ChatInputFinished();
 }
 
-void APTWPlayerController::OnRankingReleased()
+void APTWPlayerController::CreateUI() 
 {
-	if (UISubsystem && bAbleRankingBoard)
+	if (UIControllerComponent)
 	{
-		UISubsystem->SetWidgetVisibility(RankingBoardClass, false);
+		UIControllerComponent->InitializeUIComponent(this);
+		UIControllerComponent->CreateUI();
 	}
 }
+void APTWPlayerController::OnRankingPressed() { UIControllerComponent->ToggleRankingBoard(true); }
+void APTWPlayerController::OnRankingReleased() { UIControllerComponent->ToggleRankingBoard(false); }
+void APTWPlayerController::HandleMenuInput() { UIControllerComponent->TogglePauseMenu(); }
+void APTWPlayerController::OnChatPressed() { UIControllerComponent->ToggleChat(); }
+void APTWPlayerController::OnKeyGuidePressed() { UIControllerComponent->ToggleKeyGuide(); }
+void APTWPlayerController::ToggleDevUI() { UIControllerComponent->ToggleDevUI(); }
 
-void APTWPlayerController::HandleMenuInput()
+void APTWPlayerController::SendMessage(const FText& InText,ENotificationPriority InPriority, float InDuration, bool bInterrupt)
 {
-	if (!IsLocalController()) return;
-
-	if (!UISubsystem->IsStackEmpty())
-	{
-		// UI 스택의 최상단 위젯을 닫음 
-		UISubsystem->PopWidget();
-	}
-	else
-	{
-		// 아무런 위젯이 없을 때는 PauseMenu 띄우기
-		if (PauseMenuClass)
-		{
-			UISubsystem->PushWidget(PauseMenuClass, EUIInputPolicy::GameAndUI);
-		}
-	}
+	UIControllerComponent->SendMessage(InText, InPriority, InDuration, bInterrupt);
 }
-
-void APTWPlayerController::OnChatPressed()
-{
-	if (!UISubsystem || !ChatInputClass || !ChatListClass) return;
-
-	/* 이미 채팅 입력창이 떠 있는지 확인 */
-	if (bAbleChat)
-	{
-		/* 채팅창 새로 열기(Push) */
-		UISubsystem->PushWidget(ChatInputClass, EUIInputPolicy::GameAndUI);
-
-		/* ChatList를 찾아 활성화 */
-		if (UPTWChatList* ChatList = Cast<UPTWChatList>(UISubsystem->GetOrCreateWidget(ChatListClass)))
-		{
-			ChatList->SetInteractionMode(true);
-		}
-
-		bAbleChat = false;
-	}
-}
-
-void APTWPlayerController::OnKeyGuidePressed()
-{
-	if (!KeyGuideWidgetClass) return;
-
-	bKeyGuideOn = !bKeyGuideOn;
-
-	if (UISubsystem)
-	{
-		UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, bKeyGuideOn);
-	}
-}
-
-
-void APTWPlayerController::UpdateNameTagsVisibility()
-{
-	APawn* MyPawn = GetPawn();
-	if (!MyPawn || !PlayerCameraManager) return;
-
-	const FVector CameraLocation = PlayerCameraManager->GetCameraLocation();
-	const FVector CameraForward = PlayerCameraManager->GetActorForwardVector();
-	const float   MaxDistSq = FMath::Square(NameTagMaxDistance);
-
-	for (TActorIterator<APTWPlayerCharacter> It(GetWorld()); It; ++It)
-	{
-		APTWPlayerCharacter* TargetChar = *It;
-		if (!TargetChar) continue;
-
-		// 자기 자신 / 사망 체크
-		if (TargetChar == MyPawn || TargetChar->IsDead() || TargetChar->GetStealthMode())
-		{
-			if (UWidgetComponent* WidgetComp = TargetChar->GetNameTagWidget())
-			{
-				WidgetComp->SetVisibility(false);
-			}
-			continue;
-		}
-
-		UWidgetComponent* WidgetComp = TargetChar->GetNameTagWidget();
-		if (!WidgetComp) continue;
-
-		// 거리 체크 (DistSquared)
-		const FVector TargetLocation = TargetChar->GetActorLocation();
-		const float DistSq = FVector::DistSquared(CameraLocation, TargetLocation);
-
-		if (DistSq > MaxDistSq)
-		{
-			WidgetComp->SetVisibility(false);
-			continue;
-		}
-
-		// 시야각(FOV) 체크
-		const FVector ToTarget = (TargetLocation - CameraLocation).GetSafeNormal();
-		const float Dot = FVector::DotProduct(CameraForward, ToTarget);
-
-		if (Dot < 0.3f) // 약 72도
-		{
-			WidgetComp->SetVisibility(false);
-			continue;
-		}
-
-		// 벽 가림 체크 (Line Trace)
-		const FVector TraceEnd = WidgetComp->GetComponentLocation();
-
-		FHitResult HitResult;
-		FCollisionQueryParams Params(SCENE_QUERY_STAT(NameTagTrace), false);
-		Params.AddIgnoredActor(MyPawn);
-		Params.AddIgnoredActor(TargetChar);
-
-		const bool bHit = GetWorld()->LineTraceSingleByChannel(
-			HitResult,
-			CameraLocation,
-			TraceEnd,
-			ECC_Visibility,
-			Params
-		);
-
-		// 가시성 설정 및 스케일 조절 추가
-		if (!bHit)
-		{
-			WidgetComp->SetVisibility(true);
-
-			// 거리에 따른 스케일 계산 
-			const float CurrentDist = FMath::Sqrt(DistSq);
-
-			// 거리 0(스케일 1.0) ~ MaxDist(스케일 MinScale) 사이를 매핑
-			float TargetScale = FMath::GetMappedRangeValueClamped(
-				FVector2D(0.f, NameTagMaxDistance),
-				FVector2D(1.0f, NameTagMinScale),
-				CurrentDist
-			);
-
-			// 위젯의 RenderScale을 조절 (해상도 저하 없이 크기만 조절)
-			if (UUserWidget* UserW = WidgetComp->GetUserWidgetObject())
-			{
-				UserW->SetRenderScale(FVector2D(TargetScale, TargetScale));
-
-				if (auto* GCComp = FindComponentByClass<UPTWGhostChaseControllerComponent>())
-				{
-					GCComp->ApplyNameTagHighlight(TargetChar, WidgetComp);
-				}
-				else
-				{
-					// 컴포넌트가 없으면 기본 색상 유지
-					UserW->SetColorAndOpacity(FLinearColor::White);
-				}
-			}
-		}
-		else
-		{
-			WidgetComp->SetVisibility(false);
-		}
-	}
-}
-
-//void APTWPlayerController::Server_NotifyMapLoaded_Implementation()
-//{
-//	if (APTWGameMode* GameMode = GetWorld()->GetAuthGameMode<APTWGameMode>())
-//	{
-//		GameMode->PlayerReadyToPlay(this);
-//	}
-//}
 
 void APTWPlayerController::HandleBombOwnerChanged(APawn* NewOwnerPawn)
 {
@@ -1059,32 +640,7 @@ void APTWPlayerController::HideBombUI()
 	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, false);
 }
 
-void APTWPlayerController::ToggleDevUI()
-{
-	if (DevWidgetInstance && DevWidgetInstance->IsInViewport())
-	{
-		DevWidgetInstance->RemoveFromParent();
-		SetInputMode(FInputModeGameOnly());
-		bShowMouseCursor = false;
-	}
-	else if (DevWidgetClass)
-	{
-		if (!DevWidgetInstance)
-		{
-			DevWidgetInstance = CreateWidget<UPTWDevWidget>(this, DevWidgetClass);
-		}
 
-		if (DevWidgetInstance)
-		{
-			DevWidgetInstance->AddToViewport(999);
-
-			FInputModeGameAndUI InputMode;
-			InputMode.SetWidgetToFocus(DevWidgetInstance->TakeWidget());
-			SetInputMode(InputMode);
-			bShowMouseCursor = true;
-		}
-	}
-}
 
 void APTWPlayerController::CaptureTargetPOV()
 {

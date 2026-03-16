@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "System/Session/PTWSessionConfig.h"
 #include "OnlineSessionSettings.h"
 #include "PTWServerListRow.generated.h"
 
@@ -17,7 +18,10 @@ class PTW_API UPTWServerListRow : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void Setup(const FOnlineSessionSearchResultBP& SearchResult);
+	void SetupSteamInfo(const FOnlineSessionSearchResultBP& SearchResult);
+	
+	UFUNCTION(BlueprintCallable)
+	void SetupGameLiftInfo(const FPTWGameLiftGameSession& SearchResult);
 	
 	FORCEINLINE UTextBlock* GetServerID() const { return ServerID; };
 	FORCEINLINE UTextBlock* GetServerName() const { return ServerName; };
@@ -40,5 +44,7 @@ protected:
 	TObjectPtr<UButton> JoinButton;
 	
 protected:
-	FOnlineSessionSearchResult SessionData;
+	FPTWSessionConfig SessionConfig;
+	FOnlineSessionSearchResult SteamSessionInfo;
+	FPTWGameLiftGameSession GameLiftSessionInfo;
 };

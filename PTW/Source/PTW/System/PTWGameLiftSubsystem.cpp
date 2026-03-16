@@ -154,7 +154,7 @@ void UPTWGameLiftSubsystem::CreateGameSession()
 
 void UPTWGameLiftSubsystem::DescribeGameSession(const FString& SessionId)
 {
-	if (!APIData)
+	if (!IsValid(APIData))
 	{
 		UE_LOG(LogTemp, Error, TEXT("DescribeGameSession Failed: APIData is NULL!"));
 		return;
@@ -168,9 +168,9 @@ void UPTWGameLiftSubsystem::DescribeGameSession(const FString& SessionId)
 	
 	RefinedURL += TEXT("?gameSessionId=") + FGenericPlatformHttp::UrlEncode(SessionId);
 	
-	TMap<FString, FString> Params = {
-		{ TEXT("gameSessionId"), SessionId }
-	};
+	// TMap<FString, FString> Params = {
+	// 	{ TEXT("gameSessionId"), SessionId }
+	// };
 	// const FString Content = SerializeJsonContent(Params);
 	// Request->SetContentAsString(Content);
 	

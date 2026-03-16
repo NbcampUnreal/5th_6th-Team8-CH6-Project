@@ -24,7 +24,6 @@ public:
 	
 protected:
 	virtual void BeginPlay() override;
-	
 private:
 #if WITH_GAMELIFT
 	void InitGameLift();

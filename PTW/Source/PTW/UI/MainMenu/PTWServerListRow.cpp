@@ -5,18 +5,29 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "PTW/System/PTWSessionSubsystem.h"
+#include "System/PTWGameLiftSubsystem.h"
 #include "System/Session/PTWSessionConfig.h"
 
-void UPTWServerListRow::Setup(const FOnlineSessionSearchResultBP& SearchResult)
+void UPTWServerListRow::SetupSteamInfo(const FOnlineSessionSearchResultBP& SearchResult)
 {
-	SessionData = SearchResult.OnlineSessionSearchResult;
-	const FSessionSettings& SessionSettings = SessionData.Session.SessionSettings.Settings;
+	SteamSessionInfo = SearchResult.OnlineSessionSearchResult;
+	const FSessionSettings& SessionSettings = SteamSessionInfo.Session.SessionSettings.Settings;
 	
 	if (SessionSettings.Find(PTWSessionKey::ServerName))
 	{
-		FString ServerNameStr = SessionSettings.Find(PTWSessionKey::ServerName)->ToString();
-		ServerName->SetText(FText::FromString(ServerNameStr));
+		SessionConfig.ServerName = SessionSettings.Find(PTWSessionKey::ServerName)->ToString();
+		ServerName->SetText(FText::FromString(SessionConfig.ServerName));
 	}
+	SessionConfig.bUseGameLift = false;
+}
+
+void UPTWServerListRow::SetupGameLiftInfo(const FPTWGameLiftGameSession& SearchResult)
+{
+	GameLiftSessionInfo = SearchResult;
+	SessionConfig.ServerName = GameLiftSessionInfo.Name;
+	ServerName->SetText(FText::FromString(SessionConfig.ServerName));
+	
+	SessionConfig.bUseGameLift = true;
 }
 
 void UPTWServerListRow::NativeConstruct()
@@ -44,8 +55,18 @@ void UPTWServerListRow::OnClickedJoinButton()
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!IsValid(GameInstance)) return;
 	
-	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
-	if (!IsValid(SessionSubsystem)) return;
-	
-	SessionSubsystem->JoinGameSession(FOnlineSessionSearchResultBP(SessionData));
+	if (!SessionConfig.bUseGameLift)
+	{
+		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
+		{
+			SessionSubsystem->JoinGameSession(FOnlineSessionSearchResultBP(SteamSessionInfo));
+		}
+	}
+	else
+	{
+		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+		{
+			GameLiftSubsystem->DescribeGameSession(GameLiftSessionInfo.GameSessionId);
+		}
+	}
 }

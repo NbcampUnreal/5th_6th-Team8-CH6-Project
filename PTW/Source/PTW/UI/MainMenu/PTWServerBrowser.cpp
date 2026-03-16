@@ -7,14 +7,11 @@
 #include "Components/CheckBox.h"
 #include "Components/VerticalBox.h"
 #include "Components/EditableText.h"
-#include "Components/TextBlock.h"
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "PTW/UI/MainMenu/PTWServerListRow.h"
 #include "PTW/System/PTWSessionSubsystem.h"
-#include "System/Server/GameplayServerTags.h"
-#include "System/Server/PTWHTTPRequestManager.h"
-#include "System/Server/PTWHTTPRequestTypes.h"
+#include "System/PTWGameLiftSubsystem.h"
 #include "System/Session/PTWSessionConfig.h"
 
 #define LOCTEXT_NAMESPACE "ServerBrowser"
@@ -27,10 +24,6 @@ void UPTWServerBrowser::NativeConstruct()
 	if (!IsValid(ServerListRowClass))
 	{
 		ServerListRowClass = UPTWServerListRow::StaticClass();
-	}
-	if (!IsValid(HTTPRequestManagerClass))
-	{
-		HTTPRequestManagerClass = UPTWHTTPRequestManager::StaticClass();
 	}
 	
 	if (IsValid(BackButton))
@@ -85,12 +78,17 @@ void UPTWServerBrowser::NativeConstruct()
 	UGameInstance* GameInstance = GetGameInstance();
 	if (IsValid(GameInstance))
 	{
-		UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
-		if (IsValid(SessionSubsystem))
+		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
 		{
-			SessionSubsystem->OnSessionSearchComplete.AddDynamic(this, &ThisClass::OnFindSessionsComplete);
+			SessionSubsystem->OnSessionSearchComplete.AddDynamic(this, &ThisClass::OnFindSteamSessionsComplete);
+		}
+		
+		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+		{
+			GameLiftSubsystem->OnSessionSearchComplete.AddDynamic(this, &ThisClass::OnFindGameLiftSessionsComplete);
 		}
 	}
+	
 	
 	if (IsValid(ServerNameEditableText))
 	{
@@ -104,11 +102,6 @@ void UPTWServerBrowser::NativeConstruct()
 	if (IsValid(ServerMaxPlayerEditableText))
 	{
 		ServerMaxPlayerEditableText->SetText(FText::FromString(TEXT("16")));
-	}
-	
-	if (!IsValid(HTTPRequestManager))
-	{
-		HTTPRequestManager = NewObject<UPTWHTTPRequestManager>(this, HTTPRequestManagerClass);
 	}
 }
 
@@ -168,7 +161,13 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	if (SessionConfig.bIsDedicatedServer)
 	{
 		// Dedicated Server는 AWS GameLift에서 원격으로 Fleet Instance에 빈 프로세스를 선택하고 GameSession을 생성.
-		HTTPRequestManager->CreateGameSession();
+		if (UGameInstance* GameInstance = GetGameInstance())
+		{
+			if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+			{
+				GameLiftSubsystem->CreateGameSession();
+			}
+		}
 	}
 	else
 	{
@@ -192,10 +191,14 @@ void UPTWServerBrowser::OnClickedFindServerButton()
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!IsValid(GameInstance)) return;
 	
-	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
-	if (!IsValid(SessionSubsystem)) return;
-	
-	SessionSubsystem->FindGameSession();
+	if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
+	{
+		SessionSubsystem->FindGameSession();
+	}	
+	if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+	{
+		GameLiftSubsystem->SearchGameSessions();
+	}
 }
 
 void UPTWServerBrowser::OnClickedQuickMatchButton()
@@ -225,14 +228,26 @@ void UPTWServerBrowser::OnClickedLongRoundButton()
 	ShortRoundButton->SetBackgroundColor(FLinearColor::White);
 }
 
-void UPTWServerBrowser::OnFindSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults)
+void UPTWServerBrowser::OnFindSteamSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults)
 {
 	if (SearchResults.IsEmpty()) return;
 	
 	for (const FOnlineSessionSearchResultBP& SearchResult : SearchResults)
 	{
 		UPTWServerListRow* ServerListRow = CreateWidget<UPTWServerListRow>(this, ServerListRowClass);
-		ServerListRow->Setup(SearchResult);
+		ServerListRow->SetupSteamInfo(SearchResult);
+		ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
+	}
+}
+
+void UPTWServerBrowser::OnFindGameLiftSessionsComplete(const TArray<FPTWGameLiftGameSession>& SearchResults)
+{
+	if (SearchResults.IsEmpty()) return;
+	
+	for (const FPTWGameLiftGameSession& SearchResult : SearchResults)
+	{
+		UPTWServerListRow* ServerListRow = CreateWidget<UPTWServerListRow>(this, ServerListRowClass);
+		ServerListRow->SetupGameLiftInfo(SearchResult);
 		ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
 	}
 }
@@ -245,44 +260,8 @@ void UPTWServerBrowser::OnClickedTestButton()
 	TestButton->SetIsEnabled(false);
 	*/
 	
-	HTTPRequestManager->JoinGameSession();
+	// HTTPRequestManager->JoinGameSession();
 	TestButton->SetIsEnabled(false);
-}
-
-void UPTWServerBrowser::OnListFleetsResponseReceived(const struct FPTWListFleetsResponse& ListFleetsResponse,
-	bool bwasSuccessful)
-{
-	if (HTTPRequestManager->OnListFleetsResponseReceived.IsAlreadyBound(this, &ThisClass::OnListFleetsResponseReceived))
-	{
-		HTTPRequestManager->OnListFleetsResponseReceived.RemoveDynamic(this, &ThisClass::OnListFleetsResponseReceived);
-	}
-	ServerListVerticalBox->ClearChildren();
-	if (bwasSuccessful)
-	{
-		for (const FString& FleetId : ListFleetsResponse.FleetIds)
-		{
-			UPTWServerListRow* ServerListRow = CreateWidget<UPTWServerListRow>(this, ServerListRowClass);
-			ServerListRow->GetServerName()->SetText(FText::FromString(FleetId));
-			ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
-		}
-	}
-	else
-	{
-		UPTWServerListRow* ServerListRow = CreateWidget<UPTWServerListRow>(this, ServerListRowClass);
-		ServerListRow->GetServerName()->SetText(FText::FromString("Something went wrong!"));
-		ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
-	}
-	TestButton->SetIsEnabled(true);
-	
-	if (!IsValid(ServerNameEditableText)) return;
-	
-	UGameInstance* GameInstance = GetGameInstance();
-	if (!IsValid(GameInstance)) return;
-	
-	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
-	if (!IsValid(SessionSubsystem)) return;
-	
-	SessionSubsystem->FindGameSession();
 }
 
 void UPTWServerBrowser::DevJoinAction()

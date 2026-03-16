@@ -326,10 +326,10 @@ void APTWPlayerController::BeginPlay()
 
 	if (!IsLocalController()) return;
 
-	if (UIControllerComponent)
+	/*if (UIControllerComponent)
 	{
 		UIControllerComponent->InitializeUIComponent(this);
-	}
+	}*/
 
 	/* UI 서브시스템 등록 */
 	if (ULocalPlayer* LP = GetLocalPlayer())
@@ -592,7 +592,14 @@ void APTWPlayerController::OnChatInputFinished()
 	UIControllerComponent->ChatInputFinished();
 }
 
-void APTWPlayerController::CreateUI() { UIControllerComponent->CreateUI(); }
+void APTWPlayerController::CreateUI() 
+{
+	if (UIControllerComponent)
+	{
+		UIControllerComponent->InitializeUIComponent(this);
+		UIControllerComponent->CreateUI();
+	}
+}
 void APTWPlayerController::OnRankingPressed() { UIControllerComponent->ToggleRankingBoard(true); }
 void APTWPlayerController::OnRankingReleased() { UIControllerComponent->ToggleRankingBoard(false); }
 void APTWPlayerController::HandleMenuInput() { UIControllerComponent->TogglePauseMenu(); }

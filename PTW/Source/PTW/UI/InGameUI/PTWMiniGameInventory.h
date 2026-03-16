@@ -6,9 +6,11 @@
 #include "Blueprint/UserWidget.h"
 #include "PTWMiniGameInventory.generated.h"
 
+class UUniformGridPanel;
 class UPTWMiniGameItemSlot;
 class UPTWInventoryComponent;
 class UPTWItemInstance;
+class UAbilitySystemComponent;
 
 /**
  * 
@@ -22,29 +24,43 @@ public:
 
 	void InitInventory(UPTWInventoryComponent* InInventory);
 
-	void RefreshInventory();
-
 protected:
 
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
-protected:
+private:
 
-	UPROPERTY(meta = (BindWidget))
-	TArray<TObjectPtr<UPTWMiniGameItemSlot>> WeaponSlots;
+	void RefreshInventory();
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWMiniGameItemSlot> ActiveItemSlot;
+	void SetupWeapons(const TArray<UPTWItemInstance*>& WeaponItems);
 
-	UPROPERTY(meta = (BindWidget))
-	TArray<TObjectPtr<UPTWMiniGameItemSlot>> PassiveSlots;
+	void SetupActive(UPTWItemInstance* ActiveItem);
+	void EraseActive();
+
+	void SetupPassives(const TArray<UPTWItemInstance*>& PassiveItems);
+
+	UPTWMiniGameItemSlot* CreateSlot();
 
 private:
 
 	UPROPERTY()
 	TObjectPtr<UPTWInventoryComponent> InventoryComp;
 
-	void SetupWeapons(const TArray<UPTWItemInstance*>& WeaponItems);
-	void SetupActive(UPTWItemInstance* ActiveItem);
-	void SetupPassives(const TArray<UPTWItemInstance*>& PassiveItems);
+	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UPTWMiniGameItemSlot> ItemSlotClass;
+
+protected:
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UUniformGridPanel> WeaponGrid;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UUniformGridPanel> PassiveGrid;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWMiniGameItemSlot> ActiveItemSlot;
 };

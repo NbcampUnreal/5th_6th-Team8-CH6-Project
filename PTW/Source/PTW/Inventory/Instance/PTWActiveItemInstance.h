@@ -7,6 +7,8 @@
 #include "Inventory/PTWItemDefinition.h"
 #include "PTWActiveItemInstance.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnCurrentCountChanged, int32);
+DECLARE_MULTICAST_DELEGATE(FOnItemDepleted);
 /**
  * 
  */
@@ -20,6 +22,13 @@ public:
 	bool UsingActiveItem();
 	FORCEINLINE void SetCurrentCount(){ CurrentCount =  CurrentCount == 0 ? ItemDef->MaxUsage - 1 : CurrentCount; }
 	FORCEINLINE int32 GetCurrentCount() const { return CurrentCount; }
+
+	UFUNCTION()
+	void OnRep_CurrentCount();
+
+public:
+	FOnCurrentCountChanged OnCurrentCountChanged;
+	FOnItemDepleted OnItemDepleted;
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "ItemDefault")

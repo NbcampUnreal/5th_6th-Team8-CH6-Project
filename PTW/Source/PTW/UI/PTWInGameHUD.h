@@ -15,6 +15,7 @@ class UPTWTimer;
 class UPTWAmmoWidget;
 class UPTWCrosshair;
 class UPTWInventoryWidget;
+class UPTWMiniGameInventory;
 class UPTWNotificationWidget;
 
 /**
@@ -51,6 +52,9 @@ public:
 	/* 인벤토리 위젯 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWInventoryWidget> InventoryWidget;
+	/* 미니게임인벤토리 위젯 */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWMiniGameInventory> MiniGameInventoryWidget;
 	/* 알림 위젯 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWNotificationWidget> NotificationWidget;
@@ -63,6 +67,11 @@ protected:
 
 	UFUNCTION()
 	void HandleNotificationFinished();
+
+	UFUNCTION()
+	void HandleGamePhaseChanged(EPTWGamePhase Phase);
+
+	void BindGamePhase();
 
 	UPROPERTY()
 	TArray<FNotificationData> NotificationQueue;

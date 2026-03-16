@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "GameplayTagContainer.h"
 #include "PTWMiniGameItemSlot.generated.h"
 
 class UImage;
 class UTextBlock;
-class UMaterialInstanceDynamic;
+class UProgressBar;
+class UAbilitySystemComponent; 
 class UPTWItemInstance;
 
 /**
@@ -23,23 +25,34 @@ public:
 
 	void SetItemInstance(UPTWItemInstance* InItem);
 
-	void UpdateCount(int32 NewCount);
+	void InitCooldown(UAbilitySystemComponent* ASC, const FGameplayTag& InCooldownTag);
 
-	void UpdateCooldown(float RemainingTime, float TotalTime);
+	void UpdateCount(int32 NewCount);
 
 	void ClearSlot();
 
-protected:
-
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	void ResetCooldownUI();
 
 protected:
+
+	virtual void NativeDestruct() override;
+
+private:
+
+	void OnCooldownTagChanged(const FGameplayTag Tag, int32 NewCount);
+
+	void UpdateCooldownDisplay();
+
+private:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> ItemIcon;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UImage> CooldownImage;
+	TObjectPtr<UProgressBar> CooldownProgressBar;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> CooldownText;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> CountText;
@@ -50,8 +63,11 @@ private:
 	TObjectPtr<UPTWItemInstance> ItemInstance;
 
 	UPROPERTY()
-	TObjectPtr<UMaterialInstanceDynamic> CooldownMID;
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
-	float CooldownRemaining = 0.f;
-	float CooldownDuration = 0.f;
+	FGameplayTag CooldownTag;
+
+	FDelegateHandle CooldownTagDelegateHandle;
+
+	FTimerHandle CooldownUpdateTimer;
 };

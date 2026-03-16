@@ -19,7 +19,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	bool UsingActiveItem();
 	FORCEINLINE void SetCurrentCount(){ CurrentCount =  CurrentCount == 0 ? ItemDef->MaxUsage - 1 : CurrentCount; }
-	
+	FORCEINLINE int32 GetCurrentCount() const { return CurrentCount; }
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "ItemDefault")
 	int32 CurrentCount;

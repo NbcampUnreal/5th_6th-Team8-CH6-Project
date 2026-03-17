@@ -42,6 +42,7 @@ public:
 protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	virtual void RestartPlayer(AController* NewPlayer) override;
+	virtual void BeginPlay() override;
 	void ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect);
 	void StartEndCountDown();
 	void UpdateCountDown();
@@ -96,7 +97,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Game|Ranking")
 	TObjectPtr<ARaceTrack> RaceTrackSpline; 
-	
+
 private:
 	FTimerHandle CountDownTimerHandle;
 	FTimerHandle RankingTimerHandle;

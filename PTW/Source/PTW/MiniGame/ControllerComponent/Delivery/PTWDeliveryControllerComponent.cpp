@@ -9,8 +9,7 @@
 UPTWDeliveryControllerComponent::UPTWDeliveryControllerComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-
-
+	SetIsReplicatedByDefault(true);
 }
 
 void UPTWDeliveryControllerComponent::AddBatteryUI()
@@ -97,6 +96,7 @@ void UPTWDeliveryControllerComponent::OnRep_CurrentRank()
 		Total = GetWorld()->GetGameState()->PlayerArray.Num();
 	}
 	
+	UE_LOG(LogTemp, Warning, TEXT("%d"), MyCurrentRank);
 	OnRankChanged.Broadcast(MyCurrentRank, Total);
 }
 

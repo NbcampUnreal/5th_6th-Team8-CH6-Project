@@ -16,6 +16,8 @@
 #include "MiniGame/Actor/Delivery/RaceTrack.h"
 #include "MiniGame/ControllerComponent/Delivery/PTWDeliveryControllerComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
+#include "Debug/PTWLogCategorys.h"
+#include "Kismet/GameplayStatics.h"
 
 APTWDeliveryGameMode::APTWDeliveryGameMode()
 {
@@ -93,6 +95,16 @@ void APTWDeliveryGameMode::RestartPlayer(AController* NewPlayer)
 		IPTWCombatInterface* CombatInterface = CastToPTWCombatInterface(TargetCharacter);
 		if (!CombatInterface) return;
 		CombatInterface->ApplyGameplayEffectToSelf(RestartPlayerEffect, 1.0f, FGameplayEffectContextHandle());
+	}
+}
+
+void APTWDeliveryGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	if (!RaceTrackSpline)
+	{
+		RaceTrackSpline = Cast<ARaceTrack>(UGameplayStatics::GetActorOfClass(GetWorld(), ARaceTrack::StaticClass()));
 	}
 }
 
@@ -177,6 +189,8 @@ float APTWDeliveryGameMode::GetDistanceForActor(AActor* TargetActor)
 		float Key = Spline->FindInputKeyClosestToWorldLocation(ActorLoc);
 		float Distance = Spline->GetDistanceAlongSplineAtSplineInputKey(Key);
 		
+		UE_LOG(Log_Delivery, Warning, TEXT("%f"), Distance);
+		
 		return Distance;
 	}
 	
@@ -214,7 +228,7 @@ void APTWDeliveryGameMode::UpdateAllPlayerRanks()
 	{
 		UPTWDeliveryControllerComponent* DeliveryControllerComp =  Cast<UPTWDeliveryControllerComponent>(PCList[i]->GetControllerComponent());
 		if (!DeliveryControllerComp) return;
-		DeliveryControllerComp->SetRank(i + 1);
+		DeliveryControllerComp->MyCurrentRank = i + 1;
 	}
 	
 }

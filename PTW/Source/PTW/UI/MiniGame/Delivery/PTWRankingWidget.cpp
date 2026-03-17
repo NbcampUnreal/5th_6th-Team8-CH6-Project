@@ -31,4 +31,5 @@ void UPTWRankingWidget::UpdateRank(int32 NewRank, int32 Total)
 {
 	FString RankString = FString::Printf(TEXT("%d / %d"), NewRank, Total);
 	RankingTextBlock->SetText(FText::FromString(RankString));
+	UE_LOG(LogTemp, Warning, TEXT("UpdateRank 호출"));
 }

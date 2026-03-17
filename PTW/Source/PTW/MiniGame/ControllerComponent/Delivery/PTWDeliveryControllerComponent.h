@@ -32,6 +32,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnRankChangedSignature OnRankChanged;
 	
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentRank)
+	int32 MyCurrentRank = 0;
+	
 protected:
 	virtual void BeginPlay() override;
 	
@@ -54,8 +57,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UPTWDeliveryHUD> DeliveryHUDWidgetInstance;
 	
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentRank)
-	int32 MyCurrentRank = 0;
+
 	
 	UPROPERTY()
 	float TraveledDistance = 0.0f;

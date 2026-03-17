@@ -40,7 +40,14 @@ public:
 	// 3. [Public] Getter / Setter (FORCEINLINE 권장)
 	FORCEINLINE UPTWWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
 	FORCEINLINE UCameraComponent* GetPlayerCamera() const { return PlayerCamera; }
-	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return Cast<APTWPlayerState>(GetPlayerState())->GetInventoryComponent(); }
+	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const
+	{
+		if (APTWPlayerState* PS = Cast<APTWPlayerState>(GetPlayerState()))
+		{
+			return PS->GetInventoryComponent();
+		}
+		return nullptr;
+	}
 	FORCEINLINE UWidgetComponent* GetNameTagWidget() const { return NameTagWidget; }
 	UFUNCTION(BlueprintPure, Category = "Mesh")
 	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }

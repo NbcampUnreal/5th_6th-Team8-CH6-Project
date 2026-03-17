@@ -13,6 +13,7 @@
 #include "GAS/PTWDeliveryAttributeSet.h"
 #include "CoreFramework/Game/Gamestate/PTWGamestate.h"
 #include "CoreFramework/PTWPlayerController.h"
+#include "Inventory/PTWInventoryComponent.h"
 
 APTWPlayerState::APTWPlayerState()
 {
@@ -25,6 +26,8 @@ APTWPlayerState::APTWPlayerState()
 
 	AttributeSet = CreateDefaultSubobject<UPTWAttributeSet>(TEXT("AttributeSet"));
 	WeaponAttributeSet = CreateDefaultSubobject<UPTWWeaponAttributeSet>(TEXT("WeaponAttributeSet"));
+	
+	InventoryComponent = CreateDefaultSubobject<UPTWInventoryComponent>(TEXT("Inventory"));
 	
 	CurrentPlayerData.PlayerName = "";
 	CurrentPlayerData.TotalWinPoints = 0;

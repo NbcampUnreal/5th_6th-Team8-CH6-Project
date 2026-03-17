@@ -10,6 +10,7 @@
 #include "PTWPlayerState.generated.h"
 
 
+class UPTWInventoryComponent;
 class UPTWDeliveryAttributeSet;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDataChanged, const FPTWPlayerData&, NewData);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerRoundDataChanged, const FPTWPlayerRoundData&, NewData);
@@ -33,6 +34,8 @@ public:
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
+	
+	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
 protected:
 	/** Seamless Travel시 데이터 복사를 위해 사용되는 함수 */
@@ -107,6 +110,8 @@ protected:
 	TObjectPtr<UAttributeSet> AttributeSet;
 	UPROPERTY()
 	TObjectPtr<UPTWWeaponAttributeSet> WeaponAttributeSet;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UPTWInventoryComponent> InventoryComponent;
 
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentPlayerData, VisibleAnywhere, BlueprintReadOnly, Category = "Data")
 	FPTWPlayerData CurrentPlayerData;

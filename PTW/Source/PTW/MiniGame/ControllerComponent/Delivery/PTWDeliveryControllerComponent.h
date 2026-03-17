@@ -10,6 +10,8 @@
 class UPTWDeliveryHUD;
 class UPTWBatterLevelWidget;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRankChangedSignature, int32, NewRank, int32, TotalPlayers);
+
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class PTW_API UPTWDeliveryControllerComponent : public UPTWBaseControllerComponent
 {
@@ -21,7 +23,15 @@ public:
 	void AddBatteryUI();
 	void ShowCountDownWidget();
 	void SetCountDownText(int32 Count);
-
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	FORCEINLINE void SetRank(int32 Rank) {MyCurrentRank = Rank;};
+	FORCEINLINE void SetTraveledDistance(float NewTraveledDistance) { TraveledDistance = NewTraveledDistance;}
+	FORCEINLINE float GetTraveledDistance() const { return TraveledDistance;}
+	
+public:
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnRankChangedSignature OnRankChanged;
+	
 protected:
 	virtual void BeginPlay() override;
 	
@@ -33,6 +43,9 @@ protected:
 	
 	UFUNCTION(Client, Reliable)
 	void ClientRPC_SetCountDownText(int32 Count);
+	
+	UFUNCTION()
+	void OnRep_CurrentRank();
 
 protected:
 	UPROPERTY(EditAnywhere)
@@ -40,4 +53,10 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UPTWDeliveryHUD> DeliveryHUDWidgetInstance;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentRank)
+	int32 MyCurrentRank = 0;
+	
+	UPROPERTY()
+	float TraveledDistance = 0.0f;
 };

@@ -49,8 +49,8 @@ APTWPlayerCharacter::APTWPlayerCharacter()
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	CrouchedEyeHeight = 40.0f;
 
-	InventoryComponent = CreateDefaultSubobject<UPTWInventoryComponent>(TEXT("InventoryComponent"));
-	InventoryComponent->SetIsReplicated(true);
+	// InventoryComponent = CreateDefaultSubobject<UPTWInventoryComponent>(TEXT("InventoryComponent"));
+	// InventoryComponent->SetIsReplicated(true);
 
 	/* PlayerNameTag */
 	NameTagWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("NameTagWidget"));
@@ -626,7 +626,7 @@ void APTWPlayerCharacter::SetStealthMode(bool bSetStealthMode)
 
 void APTWPlayerCharacter::ServerRPCUseActiveItem_Implementation()
 {
-	if (InventoryComponent)
+	if (UPTWInventoryComponent* InventoryComponent = GetInventoryComponent())
 	{
 		InventoryComponent->UseActiveItem();
 	}
@@ -634,7 +634,7 @@ void APTWPlayerCharacter::ServerRPCUseActiveItem_Implementation()
 
 void APTWPlayerCharacter::ServerRPCEquipWeapon_Implementation(int32 SelectIndex)
 {
-	if (InventoryComponent)
+	if (UPTWInventoryComponent* InventoryComponent = GetInventoryComponent())
 	{
 		InventoryComponent->EquipWeapon(SelectIndex);
 	}

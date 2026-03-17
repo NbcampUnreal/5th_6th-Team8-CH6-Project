@@ -6,6 +6,7 @@
 #include "PTWBaseCharacter.h"
 #include "InputActionValue.h"
 #include "PTWInputConfig.h"
+#include "PTWPlayerState.h"
 #include "CoreFramework/PTWPlayerData.h"
 #include "PTWPlayerCharacter.generated.h"
 
@@ -39,7 +40,7 @@ public:
 	// 3. [Public] Getter / Setter (FORCEINLINE 권장)
 	FORCEINLINE UPTWWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
 	FORCEINLINE UCameraComponent* GetPlayerCamera() const { return PlayerCamera; }
-	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+	FORCEINLINE UPTWInventoryComponent* GetInventoryComponent() const { return Cast<APTWPlayerState>(GetPlayerState())->GetInventoryComponent(); }
 	FORCEINLINE UWidgetComponent* GetNameTagWidget() const { return NameTagWidget; }
 	UFUNCTION(BlueprintPure, Category = "Mesh")
 	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
@@ -162,8 +163,8 @@ protected:
 	TObjectPtr<UCameraComponent> PlayerCamera;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> Mesh1P;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UPTWInventoryComponent> InventoryComponent;
+	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	// TObjectPtr<UPTWInventoryComponent> InventoryComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UPTWWeaponComponent> WeaponComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

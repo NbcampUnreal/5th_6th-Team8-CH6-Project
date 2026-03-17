@@ -650,17 +650,17 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 		DeadPlayerState = DeadPawn->GetPlayerState();
 	}
 	
-	// ItemInstance의 Outer 변경
-	if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(DeadActor))
-	{
-		UPTWInventoryComponent* InventoryComponent = PlayerCharacter->GetInventoryComponent();
-		if (!InventoryComponent) return;
-		
-		TArray<TObjectPtr<UPTWItemInstance>> Items = InventoryComponent->GetAllItems();
-		InventoryComponent->RemoveActiveItemGameplayAbilityHandle();
-		SetOldPlayerItemInstanceOuter(Items);
-		PendingRespawnItems.Add(DeadPlayerController, {Items});
-	}
+	// // ItemInstance의 Outer 변경
+	// if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(DeadActor))
+	// {
+	// 	UPTWInventoryComponent* InventoryComponent = PlayerCharacter->GetInventoryComponent();
+	// 	if (!InventoryComponent) return;
+	// 	
+	// 	TArray<TObjectPtr<UPTWItemInstance>> Items = InventoryComponent->GetAllItems();
+	// 	InventoryComponent->RemoveActiveItemGameplayAbilityHandle();
+	// 	SetOldPlayerItemInstanceOuter(Items);
+	// 	PendingRespawnItems.Add(DeadPlayerController, {Items});
+	// }
 	
 	APlayerState* KillPlayerState = nullptr;
 	if (IsValid(KillActor))

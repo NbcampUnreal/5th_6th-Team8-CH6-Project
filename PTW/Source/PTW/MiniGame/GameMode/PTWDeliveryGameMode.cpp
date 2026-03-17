@@ -5,6 +5,7 @@
 
 
 #include "AbilitySystemComponent.h"
+#include "Components/SplineComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "System/PTWItemSpawnManager.h"
@@ -12,6 +13,7 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "GameFramework/PlayerStart.h"
 #include "GAS/PTWDeliveryAttributeSet.h"
+#include "MiniGame/Actor/Delivery/RaceTrack.h"
 #include "MiniGame/ControllerComponent/Delivery/PTWDeliveryControllerComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
 
@@ -23,6 +25,7 @@ void APTWDeliveryGameMode::StartRound()
 {
 	SetMiniGameRule();
 	GrantDeliveryAttributeSet();
+	GetWorld()->GetTimerManager().SetTimer(RankingTimerHandle, this, &APTWDeliveryGameMode::UpdateAllPlayerRanks, 1.0f, true);
 	Super::StartRound();
 }
 
@@ -121,6 +124,7 @@ void APTWDeliveryGameMode::UpdateCountDown()
 void APTWDeliveryGameMode::StopCountDown()
 {
 	GetWorld()->GetTimerManager().ClearTimer(CountDownTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(RankingTimerHandle);
 	
 	FTimerHandle EndTimerWaitHandle;
 	GetWorld()->GetTimerManager().SetTimer(EndTimerWaitHandle, this, &APTWDeliveryGameMode::EndTimer, 3.0f, false);
@@ -161,6 +165,58 @@ AActor* APTWDeliveryGameMode::FindPlayerStart_Implementation(AController* Player
 	}
 	
 	return Super::FindPlayerStart_Implementation(Player, IncomingName);
+}
+
+float APTWDeliveryGameMode::GetDistanceForActor(AActor* TargetActor)
+{
+	if (RaceTrackSpline && RaceTrackSpline->GetSplineComponent())
+	{
+		USplineComponent* Spline = RaceTrackSpline->GetSplineComponent();
+		FVector ActorLoc = TargetActor->GetActorLocation();
+		
+		float Key = Spline->FindInputKeyClosestToWorldLocation(ActorLoc);
+		float Distance = Spline->GetDistanceAlongSplineAtSplineInputKey(Key);
+		
+		return Distance;
+	}
+	
+	return 0.0f;
+}
+
+void APTWDeliveryGameMode::UpdateAllPlayerRanks()
+{
+	TArray<APTWPlayerController*> PCList;
+	
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		{
+			UPTWDeliveryControllerComponent* DeliveryControllerComp =  Cast<UPTWDeliveryControllerComponent>(PC->GetControllerComponent());
+			if (!DeliveryControllerComp) return;
+			
+			if (PC->GetPawn())
+			{
+				DeliveryControllerComp->SetTraveledDistance(GetDistanceForActor(PC->GetPawn()));
+			}
+			PCList.Add(PC);
+		}
+	}
+	
+	PCList.Sort([](const APTWPlayerController& A, const APTWPlayerController& B) 
+	{
+		UPTWDeliveryControllerComponent* DeliveryCompA = Cast<UPTWDeliveryControllerComponent>(A.GetControllerComponent());
+		UPTWDeliveryControllerComponent* DeliveryCompB = Cast<UPTWDeliveryControllerComponent>(B.GetControllerComponent());
+		return DeliveryCompA->GetTraveledDistance() > DeliveryCompB->GetTraveledDistance();
+	});
+
+	// 3. 등수 부여
+	for (int32 i = 0; i < PCList.Num(); ++i)
+	{
+		UPTWDeliveryControllerComponent* DeliveryControllerComp =  Cast<UPTWDeliveryControllerComponent>(PCList[i]->GetControllerComponent());
+		if (!DeliveryControllerComp) return;
+		DeliveryControllerComp->SetRank(i + 1);
+	}
+	
 }
 
 void APTWDeliveryGameMode::GivingDefaultWeapon(APTWPlayerCharacter* TargetCharacter)

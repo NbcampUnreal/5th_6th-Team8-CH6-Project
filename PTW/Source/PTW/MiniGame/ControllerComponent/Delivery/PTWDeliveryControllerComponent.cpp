@@ -1,6 +1,7 @@
 ﻿#include "PTWDeliveryControllerComponent.h"
 
 #include "CoreFramework/PTWPlayerController.h"
+#include "Net/UnrealNetwork.h"
 #include "UI/PTWUISubsystem.h"
 #include "UI/MiniGame/Delivery/PTWBatterLevelWidget.h"
 #include "UI/MiniGame/Delivery/PTWDeliveryHUD.h"
@@ -34,6 +35,12 @@ void UPTWDeliveryControllerComponent::SetCountDownText(int32 Count)
 	{
 		ClientRPC_SetCountDownText(Count);
 	}
+}
+
+void UPTWDeliveryControllerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ThisClass, MyCurrentRank);
 }
 
 
@@ -80,6 +87,17 @@ void UPTWDeliveryControllerComponent::ClientRPC_AddBatteryUI_Implementation()
 		DeliveryHUDWidgetInstance->SetVisibility(ESlateVisibility::Visible);
 		DeliveryHUDWidgetInstance->InitBatterLevelWidget(UISubsystem->GetLocalPlayerASC());
 	}
+}
+
+void UPTWDeliveryControllerComponent::OnRep_CurrentRank()
+{
+	int32 Total = 0;
+	if (GetWorld() && GetWorld()->GetGameState())
+	{
+		Total = GetWorld()->GetGameState()->PlayerArray.Num();
+	}
+	
+	OnRankChanged.Broadcast(MyCurrentRank, Total);
 }
 
 

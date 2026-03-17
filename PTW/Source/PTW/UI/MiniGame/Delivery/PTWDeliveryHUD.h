@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "PTWDeliveryHUD.generated.h"
 
+class UPTWRankingWidget;
 class UAbilitySystemComponent;
 class UPTWCountDownWidget;
 class UPTWBatterLevelWidget;
@@ -28,4 +29,7 @@ public:
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UPTWCountDownWidget> CountDownWidget;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UPTWRankingWidget> RankingWidget;
 };

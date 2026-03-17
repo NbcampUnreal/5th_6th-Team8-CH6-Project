@@ -6,6 +6,7 @@
 #include "MiniGame/PTWMiniGameMode.h"
 #include "PTWDeliveryGameMode.generated.h"
 
+class ARaceTrack;
 class UAbilitySystemComponent;
 class APTWPlayerCharacter;
 class IPTWCombatInterface;
@@ -51,6 +52,10 @@ protected:
 	
 	virtual AActor* FindPlayerStart_Implementation(AController* Player, const FString& IncomingName) override;
 	
+	float GetDistanceForActor(AActor* TargetActor);
+	
+	void UpdateAllPlayerRanks();
+	
 private:
 	
 	/* 미니 게임 시작 무기 지급*/
@@ -89,8 +94,12 @@ protected:
 	UPROPERTY()
 	TObjectPtr<APlayerStart> SharedCheckPointStart;
 	
+	UPROPERTY(EditAnywhere, Category = "Game|Ranking")
+	TObjectPtr<ARaceTrack> RaceTrackSpline; 
+	
 private:
 	FTimerHandle CountDownTimerHandle;
+	FTimerHandle RankingTimerHandle;
 	
 	UPROPERTY()
 	TObjectPtr<UPTWDeliveryControllerComponent> DeliveryComp;

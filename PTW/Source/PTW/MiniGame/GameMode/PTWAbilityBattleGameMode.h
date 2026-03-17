@@ -26,13 +26,14 @@ protected:
 	void InitializeAbilityPool();
 	
 	/** 랜덤 선택지 생성*/
-	TArray<TObjectPtr<UPTWAbilityDefinition>> GenerateDraftOptions(int32 Tier);
+	TArray<FName> GenerateDraftOptions(int32 Tier);
 
-	void StartDraft();
+	void StartDraft(int32 Tier);
+
 private:
 	void GrandAbilityBattleAttributeSet();
 
-	TMap<int32, TArray<TSoftObjectPtr<UPTWAbilityDefinition>>> TierAbilityPool;
+	TMap<int32, TArray<FName>> TierAbilityPool;
 	
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UDataTable> AbilityDataTable;

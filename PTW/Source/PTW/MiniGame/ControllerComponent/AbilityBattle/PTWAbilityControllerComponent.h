@@ -19,12 +19,17 @@ public:
 	UPTWAbilityControllerComponent();
 
 	UFUNCTION(Client, Reliable)
-	void Client_ShowDraftUI();
+	void Client_ShowDraftUI(const TArray<FName>& RowId);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SelectedAbility(FName RowId);
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> DraftWidgetClass;
 
 	UPROPERTY()
 	TObjectPtr<UPTWAbilityDraftWidget> DraftWidget;
-		
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UDataTable> AbilityDataTable;
 };

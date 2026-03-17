@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "PTWAbilityDraftWidget.generated.h"
 
+class UPTWAbilityBoxWidget;
 class UHorizontalBox;
 /**
  * 
@@ -15,13 +16,22 @@ class PTW_API UPTWAbilityDraftWidget : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-	void GenerateAbilityBoxes(int32 Count);
+	void GenerateAbilityBoxes(TArray<FName> RowId);
+
+	UFUNCTION()
+	void OnDraftSelected(FName RowId);
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UHorizontalBox> HorizontalBox;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
-	TSubclassOf<UUserWidget> AbilityBoxClass;
+	TSubclassOf<UPTWAbilityBoxWidget> AbilityBoxClass;
+	
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TObjectPtr<UDataTable> AbilityDraftDataTable;
 
 	
+	
+private:
+	bool bIsSelected = false;
 };

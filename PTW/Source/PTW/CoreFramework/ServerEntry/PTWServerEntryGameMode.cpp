@@ -193,6 +193,7 @@ void APTWServerEntryGameMode::InitGameLift()
 					SessionConfig.bUseGameLift = true;
 					if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
 					{
+						GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
 						GameLiftSubsystem->SetupMapLoadDelegateHandle();
 					}
 					SessionSubsystem->CreateGameSession(SessionConfig);

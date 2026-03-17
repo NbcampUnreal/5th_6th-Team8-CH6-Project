@@ -299,8 +299,11 @@ void UPTWGameLiftSubsystem::CreatePlayerSession_Response(FHttpRequestPtr Request
 	if (ParseDataFromJson<FPTWGameLiftPlayerSession>(Response->GetContentAsString(), PlayerSession))
 	{
 		const FString IpAndPort = PlayerSession.IpAddress + TEXT(":") + FString::FromInt(PlayerSession.Port);
-		const FName Address = FName(*IpAndPort);
-		UGameplayStatics::OpenLevel(this, Address);
+		// const FName Address = FName(*IpAndPort);
+		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+		{
+			PC->ClientTravel(IpAndPort, TRAVEL_Absolute, false);
+		}
 	}
 }
 

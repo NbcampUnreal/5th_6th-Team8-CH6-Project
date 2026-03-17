@@ -389,6 +389,11 @@ void UPTWGA_Fire::PlayEmptyClickCue()
 	FPTWGameplayCueMakingInfo Infos;
 	FPTWFireConext Context = GetFireContext();
 	Infos.PlayerCharacter = Context.PC;
+	if (!Context.WeaponInst)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayEmptyClickCue: WeaponInst is NULL!"));
+		return; 
+	}
 	Infos.Weapon1P = Context.WeaponInst->SpawnedWeapon1P;
 	MakeGameplayCue(Infos, GameplayTags::GameplayCue::Weapon::Empty);
 }

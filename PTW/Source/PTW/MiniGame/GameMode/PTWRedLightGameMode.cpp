@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "System/PTWItemSpawnmanager.h"
+#include "EngineUtils.h"
 
 void APTWRedLightGameMode::AssignTagger(APlayerController* TaggerPC)
 {
@@ -121,4 +122,29 @@ void APTWRedLightGameMode::StartRound()
 	{
 		UE_LOG(LogTemp, Error, TEXT("[RedLight] 에러: 참가 중인 플레이어가 없거나 TaggerClass가 설정되지 않았습니다!"));
 	}
+}
+
+AActor* APTWRedLightGameMode::ChoosePlayerStart_Implementation(AController* Player)
+{
+	TArray<APlayerStart*> NormalStarts;
+
+	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+	{
+		APlayerStart* Start = *It;
+		if (Start)
+		{
+			if (Start->PlayerStartTag != TEXT("DollSpawn"))
+			{
+				NormalStarts.Add(Start);
+			}
+		}
+	}
+
+	if (NormalStarts.Num() > 0)
+	{
+		int32 RandomIndex = FMath::RandRange(0, NormalStarts.Num() - 1);
+		return NormalStarts[RandomIndex];
+	}
+
+	return Super::ChoosePlayerStart_Implementation(Player);
 }

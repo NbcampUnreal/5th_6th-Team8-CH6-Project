@@ -32,6 +32,9 @@ public:
 	bool IsPlayerCaught(ACharacter* PlayerToCheck) const;
 
 protected:
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+
+protected:
 	FTimerHandle MovementCheckTimer;
 
 	UPROPERTY()

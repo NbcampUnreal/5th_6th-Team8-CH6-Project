@@ -22,10 +22,8 @@ void APTWAbilityBattleGameMode::StartGame()
 	InitAttributeSet();
 	InitializeAbilityPool();
 
-	StartDraft();
+	StartDraft(1);
 }
-
-
 
 void APTWAbilityBattleGameMode::InitAttributeSet()
 {
@@ -57,35 +55,43 @@ void APTWAbilityBattleGameMode::InitializeAbilityPool()
 	
 	for (auto& Row : AbilityDataTable->GetRowMap())
 	{
+		FName RowName = Row.Key;
 		FPTWAbilityRow* Data = (FPTWAbilityRow*)Row.Value;
-		if (!Data || !Data->AbilityDefinition) continue;
+		if (!Data) continue;
 
-		TierAbilityPool.FindOrAdd(Data->AbilityDefinition->Tier).Add(Data->AbilityDefinition);
+		if (Data->AbilityDefinition.IsNull()) continue;
+        
+		TierAbilityPool.FindOrAdd(Data->Tier).Add(RowName);
 	}
 }
 
-TArray<TObjectPtr<UPTWAbilityDefinition>> APTWAbilityBattleGameMode::GenerateDraftOptions(int32 Tier)
+TArray<FName> APTWAbilityBattleGameMode::GenerateDraftOptions(int32 Tier)
 {
-	TArray<TObjectPtr<UPTWAbilityDefinition>> Result;
+	TArray<FName> Result;
 
-	TArray<TSoftObjectPtr<UPTWAbilityDefinition>>* Pool = TierAbilityPool.Find(Tier);
-	if (!Pool) return Result;
+	TArray<FName>* Pool = TierAbilityPool.Find(Tier);
+	if (!Pool)
+	{
+		UE_LOG(Log_AbilityBattle, Warning, TEXT("Pool is nullptr"));
+		return Result;
+	}
 	
 	for (int i = 0; i < DraftOptionCount; i++)
 	{
 		int32 RandIndex = FMath::RandRange(0, Pool->Num() - 1);
 		
-		UPTWAbilityDefinition* Ability = (*Pool)[RandIndex].LoadSynchronous();
-		if (!Ability) continue;
+		FName RowId = (*Pool)[RandIndex];
 
-		Result.Add(Ability);
+		Result.Add(RowId);
 		Pool->RemoveAt(RandIndex);
 	}
+
+	UE_LOG(Log_AbilityBattle, Warning, TEXT("Draft Count %d"), Result.Num());
 	
 	return Result;
 }
 
-void APTWAbilityBattleGameMode::StartDraft()
+void APTWAbilityBattleGameMode::StartDraft(int32 Tier)
 {
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
@@ -95,7 +101,7 @@ void APTWAbilityBattleGameMode::StartDraft()
 		UPTWAbilityControllerComponent* AbilityControllerComponent =  Cast<UPTWAbilityControllerComponent>(PlayerController->GetControllerComponent());
 		if (!AbilityControllerComponent) continue;
 
-		AbilityControllerComponent->Client_ShowDraftUI();
+		AbilityControllerComponent->Client_ShowDraftUI(GenerateDraftOptions(Tier));
 	}
 }
 

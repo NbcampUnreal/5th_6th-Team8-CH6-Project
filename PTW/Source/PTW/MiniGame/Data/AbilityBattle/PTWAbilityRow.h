@@ -13,6 +13,9 @@ USTRUCT(BlueprintType)
 struct FPTWAbilityRow : public FTableRowBase
 {
 	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	int32 Tier;
 	
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UPTWAbilityDefinition> AbilityDefinition;

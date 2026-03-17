@@ -11,6 +11,7 @@ class UAbilitySystemComponent;
 class APTWPlayerCharacter;
 class IPTWCombatInterface;
 class UPTWDeliveryControllerComponent;
+class APlayerStart;
 /**
  * 
  */

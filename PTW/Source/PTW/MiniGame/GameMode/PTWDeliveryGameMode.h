@@ -49,6 +49,8 @@ protected:
 	
 	IPTWCombatInterface* CastToPTWCombatInterface(APTWPlayerCharacter* PlayerCharacter);
 	
+	virtual AActor* FindPlayerStart_Implementation(AController* Player, const FString& IncomingName) override;
+	
 private:
 	
 	/* 미니 게임 시작 무기 지급*/
@@ -83,6 +85,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Game|Weapon")
 	TObjectPtr<UPTWItemDefinition> DeliveryDefaultWeapon;
+	
+	UPROPERTY()
+	TObjectPtr<APlayerStart> SharedCheckPointStart;
 	
 private:
 	FTimerHandle CountDownTimerHandle;

@@ -10,6 +10,7 @@
 #include "System/PTWItemSpawnManager.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "GameFramework/PlayerStart.h"
 #include "GAS/PTWDeliveryAttributeSet.h"
 #include "MiniGame/ControllerComponent/Delivery/PTWDeliveryControllerComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
@@ -137,6 +138,29 @@ IPTWCombatInterface* APTWDeliveryGameMode::CastToPTWCombatInterface(APTWPlayerCh
 {
 	IPTWCombatInterface* PTWCombatInterface = Cast<IPTWCombatInterface>(PlayerCharacter);
 	return PTWCombatInterface;
+}
+
+AActor* APTWDeliveryGameMode::FindPlayerStart_Implementation(AController* Player, const FString& IncomingName)
+{
+	APTWPlayerController* PC = Cast<APTWPlayerController>(Player);
+	
+	if (PC && PlayerSpawnPoints.Contains(PC))
+	{
+		if (!SharedCheckPointStart)
+		{
+			SharedCheckPointStart = GetWorld()->SpawnActor<APlayerStart>(APlayerStart::StaticClass());
+			
+			if (SharedCheckPointStart && SharedCheckPointStart->GetRootComponent())
+			{
+				SharedCheckPointStart->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+			}
+		}
+		
+		SharedCheckPointStart->SetActorLocation(PlayerSpawnPoints[PC]);
+		return SharedCheckPointStart;
+	}
+	
+	return Super::FindPlayerStart_Implementation(Player, IncomingName);
 }
 
 void APTWDeliveryGameMode::GivingDefaultWeapon(APTWPlayerCharacter* TargetCharacter)

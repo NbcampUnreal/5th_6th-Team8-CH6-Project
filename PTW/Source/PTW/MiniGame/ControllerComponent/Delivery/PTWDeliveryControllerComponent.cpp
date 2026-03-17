@@ -88,16 +88,31 @@ void UPTWDeliveryControllerComponent::ClientRPC_AddBatteryUI_Implementation()
 	}
 }
 
-void UPTWDeliveryControllerComponent::OnRep_CurrentRank()
+void UPTWDeliveryControllerComponent::RaceRankUpdate()
 {
-	int32 Total = 0;
-	if (GetWorld() && GetWorld()->GetGameState())
-	{
-		Total = GetWorld()->GetGameState()->PlayerArray.Num();
-	}
+	if (GetNetMode() == NM_DedicatedServer) return;
 	
-	UE_LOG(LogTemp, Warning, TEXT("%d"), MyCurrentRank);
-	OnRankChanged.Broadcast(MyCurrentRank, Total);
+	APlayerController* PC = Cast<APlayerController>(GetOwner());
+	if (PC && PC->IsLocalPlayerController())
+	{
+		if (DeliveryHUDWidgetInstance)
+		{
+			int32 Total = 0;
+			if (GetWorld() && GetWorld()->GetGameState())
+			{
+				Total = GetWorld()->GetGameState()->PlayerArray.Num();
+			}
+			DeliveryHUDWidgetInstance->UpdateRank(MyCurrentRank, Total);
+		}
+	}
+}
+
+void UPTWDeliveryControllerComponent::OnRep_CurrentRank(int32 OldRank)
+{
+	if (MyCurrentRank != OldRank)
+	{
+		RaceRankUpdate();
+	}
 }
 
 

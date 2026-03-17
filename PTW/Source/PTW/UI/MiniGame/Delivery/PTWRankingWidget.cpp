@@ -4,32 +4,14 @@
 #include "PTWRankingWidget.h"
 
 #include "CoreFramework/PTWPlayerController.h"
-#include "MiniGame/ControllerComponent/Delivery/PTWDeliveryControllerComponent.h"
 
 void UPTWRankingWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	APTWPlayerController* PC = Cast<APTWPlayerController>(GetOwningPlayer());
-	
-	if (PC)
-	{
-		if (UPTWDeliveryControllerComponent* DeliveryComp = Cast<UPTWDeliveryControllerComponent>(PC->GetControllerComponent()))
-		{
-			DeliveryComp->OnRankChanged.AddUniqueDynamic(this, &UPTWRankingWidget::UpdateRank);
-			
-			int32 Total = 0;
-			if (GetWorld() && GetWorld()->GetGameState())
-			{
-				Total = GetWorld()->GetGameState()->PlayerArray.Num();
-			}
-			UpdateRank(0, Total);
-		}
-	}
 }
 
 void UPTWRankingWidget::UpdateRank(int32 NewRank, int32 Total)
 {
 	FString RankString = FString::Printf(TEXT("%d / %d"), NewRank, Total);
 	RankingTextBlock->SetText(FText::FromString(RankString));
-	UE_LOG(LogTemp, Warning, TEXT("UpdateRank 호출"));
 }

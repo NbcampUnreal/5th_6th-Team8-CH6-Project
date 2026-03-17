@@ -22,6 +22,7 @@ public:
 	void InitBatterLevelWidget(UAbilitySystemComponent* ASC);
 	void InitCountDownWidget();
 	void UpdateCountDownWidgetCount(int32 Count);
+	void UpdateRank(int32 CurRank, int32 Total);
 	
 public:
 	UPROPERTY(meta=(BindWidget))

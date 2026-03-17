@@ -8,6 +8,7 @@
 #include "Instance/PTWItemInstance.h"
 #include "../Weapon/PTWWeaponActor.h"
 #include "CoreFramework/PTWCombatInterface.h"
+#include "CoreFramework/PTWPlayerState.h"
 #include "Engine/ActorChannel.h"
 #include "GAS/PTWGameplayAbility.h"
 #include "GAS/PTWWeaponAttributeSet.h"
@@ -39,11 +40,7 @@ void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemInstance> ItemClass)
 
 void UPTWInventoryComponent::EquipWeapon(int32 SlotIndex)
 {
-	// TODO: 장착 GA 실행
-	APawn* Pawn = Cast<APawn>(GetOwner());
-	if (!Pawn) return;
-	
-	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn);
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
 	if (!ASC) return;
 	
 	SendEquipEventToASC(SlotIndex);
@@ -194,7 +191,10 @@ void UPTWInventoryComponent::ApplyWeaponData()
 	
 	if (Inst->ItemDef->EffectToGrant)
 	{
-		IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(GetOwner());
+		APTWPlayerState* PS = Cast<APTWPlayerState>(GetOwner());
+		if (!PS) return;
+		
+		IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(PS->GetPawn());
 		if (CombatInt)
 		{
 			CombatInt->ApplyGameplayEffectToSelf(Inst->ItemDef->EffectToGrant, 1.0f, FGameplayEffectContextHandle());

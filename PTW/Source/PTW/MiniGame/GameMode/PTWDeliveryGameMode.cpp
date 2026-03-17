@@ -27,7 +27,7 @@ void APTWDeliveryGameMode::StartRound()
 {
 	SetMiniGameRule();
 	GrantDeliveryAttributeSet();
-	GetWorld()->GetTimerManager().SetTimer(RankingTimerHandle, this, &APTWDeliveryGameMode::UpdateAllPlayerRanks, 1.0f, true);
+	GetWorld()->GetTimerManager().SetTimer(RankingTimerHandle, this, &APTWDeliveryGameMode::UpdateAllPlayerRanks, 0.1f, true);
 	Super::StartRound();
 }
 
@@ -189,8 +189,6 @@ float APTWDeliveryGameMode::GetDistanceForActor(AActor* TargetActor)
 		float Key = Spline->FindInputKeyClosestToWorldLocation(ActorLoc);
 		float Distance = Spline->GetDistanceAlongSplineAtSplineInputKey(Key);
 		
-		UE_LOG(Log_Delivery, Warning, TEXT("%f"), Distance);
-		
 		return Distance;
 	}
 	
@@ -199,7 +197,7 @@ float APTWDeliveryGameMode::GetDistanceForActor(AActor* TargetActor)
 
 void APTWDeliveryGameMode::UpdateAllPlayerRanks()
 {
-	TArray<APTWPlayerController*> PCList;
+	RankPCList.Empty();
 	
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
@@ -212,21 +210,21 @@ void APTWDeliveryGameMode::UpdateAllPlayerRanks()
 			{
 				DeliveryControllerComp->SetTraveledDistance(GetDistanceForActor(PC->GetPawn()));
 			}
-			PCList.Add(PC);
+			RankPCList.Add(PC);
 		}
 	}
 	
-	PCList.Sort([](const APTWPlayerController& A, const APTWPlayerController& B) 
+	RankPCList.Sort([](const APTWPlayerController& A, const APTWPlayerController& B) 
 	{
 		UPTWDeliveryControllerComponent* DeliveryCompA = Cast<UPTWDeliveryControllerComponent>(A.GetControllerComponent());
 		UPTWDeliveryControllerComponent* DeliveryCompB = Cast<UPTWDeliveryControllerComponent>(B.GetControllerComponent());
-		return DeliveryCompA->GetTraveledDistance() > DeliveryCompB->GetTraveledDistance();
+		return DeliveryCompA->GetTraveledDistance() < DeliveryCompB->GetTraveledDistance();
 	});
 
 	// 3. 등수 부여
-	for (int32 i = 0; i < PCList.Num(); ++i)
+	for (int32 i = 0; i < RankPCList.Num(); ++i)
 	{
-		UPTWDeliveryControllerComponent* DeliveryControllerComp =  Cast<UPTWDeliveryControllerComponent>(PCList[i]->GetControllerComponent());
+		UPTWDeliveryControllerComponent* DeliveryControllerComp =  Cast<UPTWDeliveryControllerComponent>(RankPCList[i]->GetControllerComponent());
 		if (!DeliveryControllerComp) return;
 		DeliveryControllerComp->MyCurrentRank = i + 1;
 	}

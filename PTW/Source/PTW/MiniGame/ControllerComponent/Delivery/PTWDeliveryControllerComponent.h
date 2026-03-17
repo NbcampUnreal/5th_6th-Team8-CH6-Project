@@ -10,8 +10,6 @@
 class UPTWDeliveryHUD;
 class UPTWBatterLevelWidget;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRankChangedSignature, int32, NewRank, int32, TotalPlayers);
-
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class PTW_API UPTWDeliveryControllerComponent : public UPTWBaseControllerComponent
 {
@@ -29,9 +27,6 @@ public:
 	FORCEINLINE float GetTraveledDistance() const { return TraveledDistance;}
 	
 public:
-	UPROPERTY(BlueprintAssignable, Category = "Events")
-	FOnRankChangedSignature OnRankChanged;
-	
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentRank)
 	int32 MyCurrentRank = 0;
 	
@@ -48,7 +43,10 @@ protected:
 	void ClientRPC_SetCountDownText(int32 Count);
 	
 	UFUNCTION()
-	void OnRep_CurrentRank();
+	void RaceRankUpdate();
+	
+	UFUNCTION()
+	void OnRep_CurrentRank(int32 OldRank);
 
 protected:
 	UPROPERTY(EditAnywhere)
@@ -56,8 +54,6 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UPTWDeliveryHUD> DeliveryHUDWidgetInstance;
-	
-
 	
 	UPROPERTY()
 	float TraveledDistance = 0.0f;

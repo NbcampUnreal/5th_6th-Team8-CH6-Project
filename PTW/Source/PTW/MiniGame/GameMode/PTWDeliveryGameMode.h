@@ -108,4 +108,6 @@ private:
 	int32 FinalCount = 10;
 	
 	TMap<APTWPlayerController*, FVector> PlayerSpawnPoints; 
+	
+	TArray<APTWPlayerController*> RankPCList;
 };

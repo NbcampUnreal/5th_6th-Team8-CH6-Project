@@ -22,7 +22,43 @@ UPTWGameLiftSubsystem::UPTWGameLiftSubsystem()
 	{
 		APIData = DataAssetFinder.Object; 
 	}
+}
+
+void UPTWGameLiftSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
 	
+	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
+}
+
+void UPTWGameLiftSubsystem::Deinitialize()
+{
+	if (MapLoadDelegateHandle.IsValid())
+	{
+		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(MapLoadDelegateHandle);
+		MapLoadDelegateHandle.Reset();
+	}
+	Super::Deinitialize();
+}
+
+void UPTWGameLiftSubsystem::OnMapLoaded(UWorld* LoadedWorld)
+{
+	if (!LoadedWorld) return;
+#if WITH_GAMELIFT && UE_SERVER
+	if (GameLiftSdkModule)
+	{
+		GameLiftSdkModule->ActivateGameSession();
+	}
+#endif
+}
+
+void UPTWGameLiftSubsystem::SetupMapLoadDelegateHandle()
+{
+	if (MapLoadDelegateHandle.IsValid())
+	{
+		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(MapLoadDelegateHandle);
+	}
+	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
 }
 
 FString UPTWGameLiftSubsystem::SerializeJsonContent(const TMap<FString, FString>& Parameters)
@@ -284,13 +320,6 @@ void UPTWGameLiftSubsystem::SearchGameSessions_Response(FHttpRequestPtr Request,
 	{
 		OnSessionSearchComplete.Broadcast(GameSessions);
 	}
-	
-	// for (FPTWGameLiftGameSession& GameSession : GameSessions)
-	// {
-	// 	FString SessionId = GameSession.GameSessionId;
-	// 	int32 CurrentPlayers = GameSession.CurrentPlayerSessionCount;
-	// 	UE_LOG(LogTemp, Log, TEXT("Found Session: %s (Players: %d)"), *SessionId, CurrentPlayers);
-	// }
 }
 
 FString UPTWGameLiftSubsystem::GetUniquePlayerId() const

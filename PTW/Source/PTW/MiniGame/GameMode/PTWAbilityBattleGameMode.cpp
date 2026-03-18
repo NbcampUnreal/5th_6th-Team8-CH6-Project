@@ -9,10 +9,24 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "Debug/PTWLogCategorys.h"
 #include "GAS/PTWAbilityBattleAttributeSet.h"
+#include "Inventory/PTWInventoryComponent.h"
 #include "MiniGame/ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
 #include "MiniGame/Data/AbilityBattle/PTWAbilityRow.h"
 #include "MiniGame/Manager/AbilityBattle/PTWRandomDraftSystem.h"
 
+
+void APTWAbilityBattleGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(C);
+	if (!PlayerController) return;
+
+	FInputModeUIOnly InputModeUIOnly;
+	PlayerController->SetInputMode(InputModeUIOnly);
+	PlayerController->bShowMouseCursor = true;
+	PlayerController->FlushPressedKeys();
+
+	Super::HandleSeamlessTravelPlayer(C);
+}
 
 void APTWAbilityBattleGameMode::StartGame()
 {
@@ -23,6 +37,17 @@ void APTWAbilityBattleGameMode::StartGame()
 	InitializeAbilityPool();
 
 	StartDraft(1);
+
+	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (!PTWPlayerState) continue;
+
+		 UPTWInventoryComponent* InventoryComponent = PTWPlayerState->GetInventoryComponent();
+		if (!InventoryComponent) return;
+
+		InventoryComponent->SendEquipEventToASC(0);
+	}
 }
 
 void APTWAbilityBattleGameMode::InitAttributeSet()

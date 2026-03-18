@@ -25,6 +25,8 @@ public:
 	void Server_SelectedAbility(FName RowId);
 
 	void SetGameInputMode();
+	void SetUIInputMode(APlayerController* InPlayerController = nullptr);
+	
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> DraftWidgetClass;

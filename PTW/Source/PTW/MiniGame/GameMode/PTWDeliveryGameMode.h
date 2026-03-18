@@ -75,6 +75,8 @@ private:
 	
 	/* UI */
 	void DeliveryUISetting(APTWPlayerCharacter* TargetCharacter);
+	
+	void Test_GiveItems();
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
@@ -99,6 +101,13 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Game|Ranking")
 	TObjectPtr<ARaceTrack> RaceTrackSpline; 
+	
+	
+	UPROPERTY(EditAnywhere, Category = "Game|Test")
+	TObjectPtr<UPTWItemDefinition> TestItemDef;
+	
+	UPROPERTY(EditAnywhere, Category = "Game|Test")
+	TObjectPtr<UPTWItemDefinition> TestPassive;
 
 private:
 	FTimerHandle CountDownTimerHandle;

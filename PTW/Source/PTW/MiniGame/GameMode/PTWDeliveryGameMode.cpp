@@ -28,6 +28,11 @@ void APTWDeliveryGameMode::StartRound()
 	SetMiniGameRule();
 	GrantDeliveryAttributeSet();
 	GetWorld()->GetTimerManager().SetTimer(RankingTimerHandle, this, &APTWDeliveryGameMode::UpdateAllPlayerRanks, 0.1f, true);
+	
+#if WITH_EDITOR
+	Test_GiveItems();
+#endif
+	
 	Super::StartRound();
 }
 
@@ -317,4 +322,17 @@ void APTWDeliveryGameMode::DeliveryUISetting(APTWPlayerCharacter* TargetCharacte
 			DeliveryComp->AddBatteryUI();
 		}
 	}
+}
+
+void APTWDeliveryGameMode::Test_GiveItems()
+{
+	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
+	if (!SpawnManager) return;
+	
+	for (APlayerState* AS : PTWGameState->AlivePlayers)
+	{
+		SpawnManager->SpawnSingleItem(Cast<APTWPlayerState>(AS), TestItemDef);
+		SpawnManager->SpawnSingleItem(Cast<APTWPlayerState>(AS), TestPassive);
+	}
+	
 }

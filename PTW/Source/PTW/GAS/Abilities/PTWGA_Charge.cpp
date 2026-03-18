@@ -57,6 +57,6 @@ void UPTWGA_Charge::OnRechargeCompleted()
 	IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(GetAvatarActorFromActorInfo());
 	if (!CombatInterface) return;
 	
-	CombatInterface->RemoveEffectWithTag(GameplayTags::State::Charge);
+	CombatInterface->RemoveEffectWithTag(GameplayTags::State::Stun);
 	CombatInterface->ApplyGameplayEffectToSelf(ChargeCompleteGEClass, 1.0f, FGameplayEffectContextHandle());
 }

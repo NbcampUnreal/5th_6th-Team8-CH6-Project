@@ -382,6 +382,7 @@ void UPTWGameLiftSubsystem::OnMapLoaded(UWorld* LoadedWorld)
 	if (MapLoadDelegateHandle.IsValid())
 	{
 		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(MapLoadDelegateHandle);
+		MapLoadDelegateHandle.Reset();
 	}
 }
 
@@ -391,6 +392,7 @@ void UPTWGameLiftSubsystem::SetupMapLoadDelegateHandle()
 	if (MapLoadDelegateHandle.IsValid())
 	{
 		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(MapLoadDelegateHandle);
+		MapLoadDelegateHandle.Reset();
 	}
 	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
 }

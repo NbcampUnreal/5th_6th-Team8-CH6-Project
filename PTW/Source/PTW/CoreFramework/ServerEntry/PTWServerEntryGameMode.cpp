@@ -186,12 +186,14 @@ void APTWServerEntryGameMode::InitGameLift()
 			{
 				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
 				{
-					GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
-					GameLiftSubsystem->SetupMapLoadDelegateHandle();
-					if(const UWorld* World = GetWorld())
+					GameLiftSdkModule->ActivateGameSession();
+					// GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
+					// GameLiftSubsystem->SetupMapLoadDelegateHandle();
+					
+					if(UWorld* World = GetWorld())
 					{
-						UGameplayStatics::OpenLevel(World, "Lobby");
-						// World->ServerTravel("Lobby");
+						// UGameplayStatics::OpenLevel(World, "Lobby");
+						World->ServerTravel(TEXT("Lobby"));
 					}
 				}
 			}

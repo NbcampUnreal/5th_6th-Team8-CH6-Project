@@ -36,6 +36,13 @@ public:
 
 	// 2. [Public] 인터페이스 함수 (외부에서 호출하는 함수)
 	FORCEINLINE UInputMappingContext* GetDefaultMappingContext() const { return DefaultMappingContext; }
+	
+	/* 캐릭터 외곽선 */
+	UFUNCTION(BlueprintCallable, Category = "Outline")
+	void SetOutlineStencil(int32 StencilValue);
+
+	UFUNCTION(BlueprintCallable, Category = "Outline")
+	void ClearOutlineStencil();
 
 	// 3. [Public] Getter / Setter (FORCEINLINE 권장)
 	FORCEINLINE UPTWWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }

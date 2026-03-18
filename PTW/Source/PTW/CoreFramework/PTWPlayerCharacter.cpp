@@ -670,3 +670,21 @@ void APTWPlayerCharacter::OnPlayerDataLoaded(const FPTWPlayerData& NewData)
 		PS->OnPlayerDataUpdated.RemoveDynamic(this, &APTWPlayerCharacter::OnPlayerDataLoaded);;
 	}
 }
+
+void APTWPlayerCharacter::SetOutlineStencil(int32 StencilValue)
+{
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		MeshComp->SetRenderCustomDepth(StencilValue > 0);
+		MeshComp->SetCustomDepthStencilValue(StencilValue);
+	}
+}
+
+void APTWPlayerCharacter::ClearOutlineStencil()
+{
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		MeshComp->SetRenderCustomDepth(false);
+		MeshComp->SetCustomDepthStencilValue(0);
+	}
+}

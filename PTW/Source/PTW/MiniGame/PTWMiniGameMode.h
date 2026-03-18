@@ -124,6 +124,9 @@ protected:
 	void SpawnPlayerSavedItems(AController* Controller);
 
 	void StartChaosEvent();
+	
+	virtual bool ShouldUseTeamOutline() const;
+	void RefreshTeamOutlineForAllPlayers(bool bEnable);
 
 protected:
 	

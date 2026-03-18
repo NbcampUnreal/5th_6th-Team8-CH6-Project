@@ -249,6 +249,25 @@ void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActor
 	PlayerController->SetControllerComponent(ActorComponent);
 }
 
+bool APTWMiniGameMode::ShouldUseTeamOutline() const
+{
+	return MiniGameRule.TeamRule.bUseTeam;
+}
+
+void APTWMiniGameMode::RefreshTeamOutlineForAllPlayers(bool bEnable)
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
+		if (!PC) continue;
+
+		PC->Client_RefreshTeamOutline(bEnable, ShouldUseTeamOutline());
+	}
+}
+
 void APTWMiniGameMode::StartGame()
 {
 	if (!PTWGameState) return;
@@ -305,6 +324,8 @@ void APTWMiniGameMode::StartCountDown()
 	// }
 
 	if (!PTWGameState) return;
+	
+	RefreshTeamOutlineForAllPlayers(false);
 	
 	PTWGameState->SetMiniGameCountdown(MiniGameRule.TimeRule.CountDown);
 	PTWGameState->SetbMiniGameCountdown(true);
@@ -392,6 +413,8 @@ void APTWMiniGameMode::EndRound()
 	
 	ChaosEventManager->EndChaosEvent();
 	
+	RefreshTeamOutlineForAllPlayers(false);
+	
 	if (!PTWGameState) return;
 	
 	if (PTWGameState->GetCurrentMiniGameRound() >= PTWGameState->GetMaxMiniGameRound())
@@ -446,6 +469,8 @@ void APTWMiniGameMode::StartRound()
 	{
 		GetWorldTimerManager().SetTimer(CoinSpawnTimerHandle, this, &APTWMiniGameMode::OnCoinSpawnTimerElapsed, CoinSpawnInterval, true);
 	}
+	
+	RefreshTeamOutlineForAllPlayers(true);
 }
 
 void APTWMiniGameMode::UpdateTimer()
@@ -603,6 +628,11 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	{
 		BaseCharacter->OnCharacterDied.RemoveDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
 		BaseCharacter->OnCharacterDied.AddDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
+	}
+	
+	if (APTWPlayerController* PC = Cast<APTWPlayerController>(NewPlayer))
+	{
+		PC->Client_RefreshTeamOutline(false, ShouldUseTeamOutline());
 	}
 }
 
@@ -770,7 +800,7 @@ void APTWMiniGameMode::AssignTeam()
 	for (int i = 0; i < Players.Num(); i++)
 	{
 		int32 AssignTeamId = i % NumTeams;
-		PTWGameState->GetTeams()[i].Members.Add(Players[i]);
+		PTWGameState->GetTeams()[AssignTeamId].Members.Add(Players[i]);
 		Cast<IPTWPlayerRoundDataInterface>(Players[i])->SetTeamId(AssignTeamId); 
 	}
 }

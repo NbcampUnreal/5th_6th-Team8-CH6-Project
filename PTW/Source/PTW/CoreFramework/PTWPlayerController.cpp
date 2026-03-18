@@ -712,3 +712,58 @@ void APTWPlayerController::Client_SetAbyssDark_Implementation(bool bEnable)
 		AbyssControllerComponent->SetAbyssDark(bEnable);
 	}
 }
+
+namespace PTWOutlineStencil
+{
+	static constexpr int32 None = 0;
+	static constexpr int32 Friendly = 1;
+	static constexpr int32 Enemy = 2;
+}
+
+void APTWPlayerController::Client_RefreshTeamOutline_Implementation(bool bEnable, bool bUseTeam)
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	APTWPlayerState* LocalPS = GetPlayerState<APTWPlayerState>();
+	APawn* LocalPawn = GetPawn();
+
+	for (TActorIterator<APTWPlayerCharacter> It(World); It; ++It)
+	{
+		APTWPlayerCharacter* TargetCharacter = *It;
+		if (!TargetCharacter) continue;
+
+		APTWPlayerState* TargetPS = TargetCharacter->GetPlayerState<APTWPlayerState>();
+		if (!TargetPS)
+		{
+			TargetCharacter->ClearOutlineStencil();
+			continue;
+		}
+
+		if (!bEnable)
+		{
+			TargetCharacter->ClearOutlineStencil();
+			continue;
+		}
+
+		if (bUseTeam)
+		{
+			const bool bIsFriendly = (LocalPS && LocalPS->GetTeamId() == TargetPS->GetTeamId());
+			TargetCharacter->SetOutlineStencil(
+				bIsFriendly ? PTWOutlineStencil::Friendly : PTWOutlineStencil::Enemy
+			);
+		}
+		else
+		{
+			// 개인전
+			if (TargetCharacter == LocalPawn)
+			{
+				TargetCharacter->ClearOutlineStencil();
+			}
+			else
+			{
+				TargetCharacter->SetOutlineStencil(PTWOutlineStencil::Enemy);
+			}
+		}
+	}
+}

@@ -16,6 +16,9 @@ class PTW_API UPTWTimer : public UUserWidget
 {
 	GENERATED_BODY()
 	
+public:
+	void InitTimer();
+
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
@@ -36,4 +39,5 @@ protected:
 	UPROPERTY()
 	APTWGameState* PTWGameState;
 
+	FTimerHandle TimerHandle_InitGameState;
 };

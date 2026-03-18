@@ -7,6 +7,8 @@
 #include "System/PTWItemSpawnManager.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "MiniGame/ControllerComponent/GhostChase/PTWGhostChaseControllerComponent.h"
+#include "CoreFramework/Character/Component/PTWUIControllerComponent.h"
+#include "CoreFramework/PTWPlayerController.h"
 
 APTWGhostChaseMiniGameMode::APTWGhostChaseMiniGameMode()
 {
@@ -39,24 +41,35 @@ void APTWGhostChaseMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* Ki
 
 void APTWGhostChaseMiniGameMode::OnPlayerEliminated(AController* EliminatedController)
 {
-	if (!EliminatedController || ActiveChasers.Num() <= 1) return;
+	if (!EliminatedController || ActiveChasers.Num() == 0) return;
 
 	int32 ElimIndex = ActiveChasers.Find(EliminatedController);
 	if (ElimIndex == INDEX_NONE) return;
 
+	if (ActiveChasers.Num() <= 1)
+	{
+		ActiveChasers.RemoveAt(ElimIndex);
+		TargetMap.Remove(EliminatedController);
+		EndGame();
+		return;
+	}
+
+	int32 NumChasers = ActiveChasers.Num();
+
 	// 누구의 타겟이었는지 찾기 (내 앞 사람)
-	int32 ChaserIndex = (ElimIndex - 1 + ActiveChasers.Num()) % ActiveChasers.Num();
+	int32 ChaserIndex = (ElimIndex - 1 + NumChasers) % NumChasers;
 	AController* ChaserOfDeadPlayer = ActiveChasers[ChaserIndex];
 
 	// 나의 다음 타겟 찾기 (내 뒷 사람)
-	int32 NewTargetIndex = (ElimIndex + 1) % ActiveChasers.Num();
+	int32 NewTargetIndex = (ElimIndex + 1) % NumChasers;
 	AController* NewTargetForChaser = ActiveChasers[NewTargetIndex];
 
 	// 배열에서 제거
 	ActiveChasers.RemoveAt(ElimIndex);
+	TargetMap.Remove(EliminatedController);
 
 	// 타겟 재설정: 죽은 자를 쫓던 사람(Chaser)이 죽은 자의 타겟(NewTarget)을 쫓게 함
-	if (ChaserOfDeadPlayer != NewTargetForChaser) // 1대1 상황이 아니면
+	if (ChaserOfDeadPlayer && NewTargetForChaser && ChaserOfDeadPlayer != NewTargetForChaser)
 	{
 		TargetMap.Add(ChaserOfDeadPlayer, NewTargetForChaser);
 		UpdatePlayerTargetUI(ChaserOfDeadPlayer, NewTargetForChaser);
@@ -97,9 +110,6 @@ void APTWGhostChaseMiniGameMode::WaitingToStartRound()
 {
 	Super::WaitingToStartRound();
 
-	// 타겟 체인 구성
-	SetupTargetChain();
-
 	// 필요 시 대기 시간 동안 플레이어 움직임을 제한하는 등의 로직 추가
 }
 
@@ -107,8 +117,14 @@ void APTWGhostChaseMiniGameMode::StartRound()
 {
 	Super::StartRound();
 
+	// 타겟 체인 구성
+	SetupTargetChain();
+
 	// 기본무기 지급
 	GiveBaseWeaponToAll();
+
+	// 닉네임 구분시작
+	StartNameDistinguish();
 
 	// 투명화 적용
 	//ApplyInvisibilityToAll();
@@ -123,7 +139,7 @@ void APTWGhostChaseMiniGameMode::SetupTargetChain()
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		APlayerController* PC = It->Get();
-		if (PC && PC->GetPawn())
+		if (IsValid(PC) && IsValid(PC->GetPawn()))
 		{
 			ActiveChasers.Add(PC);
 		}
@@ -157,14 +173,14 @@ void APTWGhostChaseMiniGameMode::ApplyInvisibilityToAll()
 
 void APTWGhostChaseMiniGameMode::UpdatePlayerTargetUI(AController* Chaser, AController* NewTarget)
 {
-	if (!Chaser || !NewTarget) return;
+	if (!IsValid(Chaser) || !IsValid(NewTarget)) return;
 
 	// Chaser의 PlayerState
 	APTWPlayerState* ChaserPS = Chaser->GetPlayerState<APTWPlayerState>();
 	// Target의 Pawn
 	APawn* TargetPawn = NewTarget->GetPawn();
 
-	if (ChaserPS && TargetPawn)
+	if (IsValid(ChaserPS) && IsValid(TargetPawn)) 
 	{
 		// 이 변수가 Replicated이므로, 서버에서 설정하면 클라이언트의 OnRep_CurrentTargetPawn이 실행됩니다.
 		ChaserPS->CurrentTargetPawn = TargetPawn;
@@ -175,10 +191,12 @@ void APTWGhostChaseMiniGameMode::UpdatePlayerTargetUI(AController* Chaser, ACont
 			ChaserPS->OnRep_CurrentTargetPawn();
 		}
 	}
-
-	if (auto* GCComp = Chaser->FindComponentByClass<UPTWGhostChaseControllerComponent>())
+	if (IsValid(Chaser))
 	{
-		GCComp->SetTarget(NewTarget->GetPawn());
+		if (auto* GCComp = Chaser->FindComponentByClass<UPTWGhostChaseControllerComponent>())
+		{
+			GCComp->SetTarget(NewTarget->GetPawn());
+		}
 	}
 }
 
@@ -204,6 +222,21 @@ void APTWGhostChaseMiniGameMode::GiveBaseWeaponToAll()
 			if (UPTWInventoryComponent* Inven = PC->GetInventoryComponent())
 			{
 				Inven->EquipWeapon(0);
+			}
+		}
+	}
+}
+
+void APTWGhostChaseMiniGameMode::StartNameDistinguish()
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		{
+			// PC 내부의 UI 컴포넌트를 찾아 초기화 함수 호출
+			if (auto* UIComp = PC->FindComponentByClass<UPTWUIControllerComponent>())
+			{
+				UIComp->Client_FindGhostChaseComponent();
 			}
 		}
 	}

@@ -50,6 +50,9 @@ private:
 	/* 기본무기 지급 로직 */
 	void GiveBaseWeaponToAll();
 
+	/* 닉네임 강조 로직 */
+	void StartNameDistinguish();
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "GE")
 	TSubclassOf<UGameplayEffect> InvisibilityEffectClass;

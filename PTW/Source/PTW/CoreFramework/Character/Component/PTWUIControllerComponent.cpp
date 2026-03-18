@@ -15,6 +15,7 @@
 #include "Components/WidgetComponent.h"
 #include "EngineUtils.h"
 
+#include "MiniGame/ControllerComponent/GhostChase/PTWGhostChaseControllerComponent.h"
 #include "UI/PTWInGameHUD.h"
 #include "UI/RankBoard/PTWRankingBoard.h"
 #include "UI/ChatWidget/PTWChatList.h"
@@ -471,6 +472,11 @@ void UPTWUIControllerComponent::UpdateNameTagsVisibility()
 				FVector2D(1.0f, NameTagMinScale),
 				CurrentDist
 			);
+
+			if (CachedGhostChaseComp)
+			{
+				CachedGhostChaseComp->ApplyNameTagHighlight(TargetChar, WidgetComp);
+			}
 		}
 	}
 }
@@ -496,6 +502,8 @@ void UPTWUIControllerComponent::BindGameStateDelegates()
 	}
 	World->GetTimerManager().ClearTimer(GameStateBindRetryHandle);
 
+	CachedGameState = GS;
+
 	// 중복 바인딩 방지
 	UnbindGameStateDelegates();
 
@@ -512,10 +520,20 @@ void UPTWUIControllerComponent::BindGameStateDelegates()
 
 void UPTWUIControllerComponent::UnbindGameStateDelegates()
 {
-	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	if (IsValid(CachedGameState))
 	{
-		GS->OnMiniGameCountdownChanged.RemoveAll(this);
-		GS->OnRoulettePhaseChanged.RemoveAll(this);
-		GS->OnGamePhaseChanged.RemoveAll(this);
+		CachedGameState->OnMiniGameCountdownChanged.RemoveAll(this);
+		CachedGameState->OnRoulettePhaseChanged.RemoveAll(this);
+		CachedGameState->OnGamePhaseChanged.RemoveAll(this);
+	}
+
+	CachedGameState = nullptr;
+}
+
+void UPTWUIControllerComponent::Client_FindGhostChaseComponent_Implementation()
+{
+	if (AActor* OwnerActor = GetOwner())
+	{
+		CachedGhostChaseComp = OwnerActor->FindComponentByClass<UPTWGhostChaseControllerComponent>();
 	}
 }

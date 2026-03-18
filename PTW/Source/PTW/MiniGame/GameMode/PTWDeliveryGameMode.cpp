@@ -301,6 +301,7 @@ void APTWDeliveryGameMode::InitializeAttributeSet(UAbilitySystemComponent* Targe
 {
 	if (!TargetASC) return;
 	TargetASC->SetNumericAttributeBase(UPTWDeliveryAttributeSet::GetMaxBatteryLevelAttribute(), 1.0f);
+	TargetASC->SetNumericAttributeBase(UPTWDeliveryAttributeSet::GetChargeSpeedAttribute(), 1.0f);
 	float MaxValue = TargetASC->GetNumericAttribute(UPTWDeliveryAttributeSet::GetMaxBatteryLevelAttribute());
 	TargetASC->SetNumericAttributeBase(UPTWDeliveryAttributeSet::GetBatteryLevelAttribute(), MaxValue);
 }

@@ -35,7 +35,7 @@ void UPTWGA_Charge::TickReCharge()
 	float CurrentBattery = DAS->GetBatteryLevel();
 	float MaxBatteryLevel = 1.0f;
 	
-	float NewBattery = FMath::FInterpTo(CurrentBattery, MaxBatteryLevel, 0.05f, RechargeSpeed);
+	float NewBattery = FMath::FInterpTo(CurrentBattery, MaxBatteryLevel, 0.05f, DAS->GetChargeSpeed());
 	DAS->SetBatteryLevel(NewBattery);
 	
 	if (NewBattery >= MaxBatteryLevel - 0.01f)

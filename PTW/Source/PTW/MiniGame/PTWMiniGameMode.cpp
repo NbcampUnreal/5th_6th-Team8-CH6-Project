@@ -285,6 +285,19 @@ void APTWMiniGameMode::StartGame()
 	bIsGameStarted = true;
 	
 	AssignTeam();
+
+	AGameStateBase* GS = GetWorld()->GetGameState();
+	if (!GS) return;
+
+	for (APlayerState* PS : GS->PlayerArray)
+	{
+		if (!PS) continue;
+
+		APlayerController* PC = Cast<APlayerController>(PS->GetOwner());
+		if (!PC) continue;
+
+		SpawnDefaultWeapon(PC);
+	}
 	
 	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
 	
@@ -625,7 +638,7 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	ApplyMiniGameTag(NewPlayer);
 	RemoveTags(NewPlayer);
 	InitPlayerHealth(NewPlayer);
-	//SpawnDefaultWeapon(NewPlayer);
+	
 	
 	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
 	{

@@ -29,6 +29,21 @@ void UPTWAbilityControllerComponent::SetGameInputMode()
 	PlayerController->bShowMouseCursor = false;
 }
 
+void UPTWAbilityControllerComponent::SetUIInputMode(APlayerController* InPlayerController)
+{
+	if (!InPlayerController)
+	{
+		InPlayerController = Cast<APTWPlayerController>(GetOwner());
+	}
+	if (!InPlayerController) return;
+	
+	FInputModeUIOnly InputModeUIOnly;
+	InputModeUIOnly.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	InPlayerController->SetInputMode(InputModeUIOnly);
+	InPlayerController->bShowMouseCursor = true;
+	InPlayerController->FlushPressedKeys();
+}
+
 void UPTWAbilityControllerComponent::Server_SelectedAbility_Implementation(FName RowId)
 {
 	if (!AbilityDataTable) return;
@@ -66,15 +81,13 @@ void UPTWAbilityControllerComponent::Client_ShowDraftUI_Implementation(const TAr
 	{
 		if (DraftWidget && PlayerController)
 		{
-			FInputModeUIOnly InputModeUIOnly;
-			InputModeUIOnly.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			PlayerController->SetInputMode(InputModeUIOnly);
-
+			
+			SetUIInputMode(PlayerController);
+			
 			// FInputModeGameAndUI InputModeGameAndUI;
 			// InputModeGameAndUI.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 			// PlayerController->SetInputMode(InputModeGameAndUI);
 			
-			PlayerController->bShowMouseCursor = true;
 			
 		}
 	});

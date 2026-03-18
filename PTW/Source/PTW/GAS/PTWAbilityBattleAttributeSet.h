@@ -61,6 +61,10 @@ public:
 	FGameplayAttributeData HealPower;
 	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, HealPower);
 
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_DamageMultiplier, Category = "AttributeBattle|Attributes")
+	FGameplayAttributeData DamageMultiplier;
+	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, DamageMultiplier);
+
 protected:
 	UFUNCTION()
 	void OnRep_Armor(const FGameplayAttributeData& OldArmor);
@@ -88,4 +92,7 @@ protected:
 
 	UFUNCTION()
 	void OnRep_HealPower(const FGameplayAttributeData& OldHealPower);
+
+	UFUNCTION()
+	void OnRep_DamageMultiplier (const FGameplayAttributeData& OldDamageMultiplier);
 };

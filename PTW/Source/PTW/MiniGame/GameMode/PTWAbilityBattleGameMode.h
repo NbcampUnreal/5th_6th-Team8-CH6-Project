@@ -17,7 +17,7 @@ class PTW_API APTWAbilityBattleGameMode : public APTWMiniGameMode
 	GENERATED_BODY()
 
 protected:
-
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 	virtual void StartGame() override;
 	
 	void InitAttributeSet();

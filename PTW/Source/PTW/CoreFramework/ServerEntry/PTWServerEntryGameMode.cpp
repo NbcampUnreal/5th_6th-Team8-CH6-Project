@@ -3,6 +3,7 @@
 
 #include "PTWServerEntryGameMode.h"
 #include "CoreFramework/Game/GameSession/PTWGameSession.h"
+#include "System/PTWGameLiftSubsystem.h"
 #include "System/PTWSessionSubsystem.h"
 #include "System/Session/PTWSessionConfig.h"
 
@@ -179,11 +180,17 @@ void APTWServerEntryGameMode::InitGameLift()
         {
             FString GameSessionId = FString(InGameSession.GetGameSessionId());
             UE_LOG(GameServerLog, Log, TEXT("GameSession Initializing: %s"), *GameSessionId);
-            GameLiftSdkModule->ActivateGameSession();
 		
-			if (UWorld* World = GetWorld())
+			if (UGameInstance* GI = GetGameInstance())
 			{
-				World->ServerTravel(TEXT("Lobby"));
+				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
+				{
+					GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
+					if(UWorld* World = GetWorld())
+					{
+						World->ServerTravel("Lobby");
+					}
+				}
 			}
         });
 
@@ -196,12 +203,15 @@ void APTWServerEntryGameMode::InitGameLift()
     ProcessParameters->OnTerminate.BindLambda([=]()
         {
             UE_LOG(GameServerLog, Log, TEXT("Game Server Process is terminating"));
+    	
             // First call ProcessEnding()
     		// 먼저 ProcessEnding()을 호출합니다.
             FGameLiftGenericOutcome processEndingOutcome = GameLiftSdkModule->ProcessEnding();
+    	
             // Then call Destroy() to free the SDK from memory
     		// 그 다음 Destroy()를 호출하여 SDK를 메모리에서 해제합니다.
             FGameLiftGenericOutcome destroyOutcome = GameLiftSdkModule->Destroy();
+    	
             // Exit the process with success or failure
     		// 성공/실패 여부에 따라 프로세스를 종료합니다.
             if (processEndingOutcome.IsSuccess() && destroyOutcome.IsSuccess()) {
@@ -219,7 +229,7 @@ void APTWServerEntryGameMode::InitGameLift()
                     error.m_errorMessage.IsEmpty() ? TEXT("Unknown error") : *error.m_errorMessage);
                 }
             }
-    	FGenericPlatformMisc::RequestExit(false);
+    	// FGenericPlatformMisc::RequestExit(false);
         });
          
     //This is the HealthCheck callback.

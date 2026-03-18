@@ -39,6 +39,9 @@ struct FPTWSessionConfig
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
+	FString ServerID = TEXT("0");
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
 	FString ServerName = TEXT("Server");
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")

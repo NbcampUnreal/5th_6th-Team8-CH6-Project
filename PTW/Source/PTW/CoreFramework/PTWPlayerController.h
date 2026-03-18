@@ -122,7 +122,8 @@ protected:
 	virtual void BeginSpectatingState() override;
 	virtual ASpectatorPawn* SpawnSpectatorPawn() override;
 	virtual void NotifyLoadedWorld(FName WorldPackageName, bool bFinalDest) override;
-
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	
 	virtual void SetupInputComponent() override;
 	virtual void PostSeamlessTravel() override;
 
@@ -198,7 +199,7 @@ protected:
 	TObjectPtr<UPTWGhostChaseControllerComponent> GhostChaseComponent;
 
 	/* 각기 다른 미니 게임에서 사용하는 액터 컴퍼넌트 저장*/
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(Replicated,VisibleAnywhere)
 	TObjectPtr<UActorComponent> BaseControllerComponent;
 	
 	/* 씬 캡처 결과가 저장될 렌더 타겟 메모리 리소스 */

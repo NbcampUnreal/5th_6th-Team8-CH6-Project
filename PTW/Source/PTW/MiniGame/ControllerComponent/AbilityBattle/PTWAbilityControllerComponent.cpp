@@ -4,6 +4,7 @@
 #include "MiniGame/ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
 
 #include "Blueprint/UserWidget.h"
+#include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "MiniGame/Data/AbilityBattle/PTWAbilityDefinition.h"
@@ -18,10 +19,23 @@ UPTWAbilityControllerComponent::UPTWAbilityControllerComponent()
 	SetIsReplicatedByDefault(true);
 }
 
+void UPTWAbilityControllerComponent::SetGameInputMode()
+{
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(GetOwner());
+	if (!PlayerController) return;
+
+	FInputModeGameOnly InputModeGameOnly;
+	PlayerController->SetInputMode(InputModeGameOnly);
+	PlayerController->bShowMouseCursor = false;
+}
+
 void UPTWAbilityControllerComponent::Server_SelectedAbility_Implementation(FName RowId)
 {
 	if (!AbilityDataTable) return;
-	APTWPlayerState* PlayerState = Cast<APTWPlayerState>(GetOwner());
+
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(GetOwner());
+	if (!PlayerController) return;
+	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
 	if (!PlayerState) return;
 
 	FPTWAbilityRow* Row = AbilityDataTable->FindRow<FPTWAbilityRow>(RowId, TEXT(""));
@@ -31,6 +45,8 @@ void UPTWAbilityControllerComponent::Server_SelectedAbility_Implementation(FName
 	if (!Definition) return;
 	
 	PlayerState->InjectEffect(Definition->EffectClass);
+
+	UE_LOG(LogTemp, Log, TEXT("Server_SelectedAbility_Implementation"));
 }
 
 void UPTWAbilityControllerComponent::Client_ShowDraftUI_Implementation(const TArray<FName>& RowId)

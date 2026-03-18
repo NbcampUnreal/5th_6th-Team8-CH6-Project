@@ -3,7 +3,7 @@
 
 #include "PTWAPIData.h"
 
-FString UPTWAPIData::GEtAPIEndPoint(const FGameplayTag& APIEndPoint)
+FString UPTWAPIData::GetAPIEndPoint(const FGameplayTag& APIEndPoint)
 {
 	const FString ResourceName = Resources.FindChecked(APIEndPoint);
 	

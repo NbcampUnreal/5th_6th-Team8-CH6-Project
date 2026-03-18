@@ -6,11 +6,11 @@
 #include "Server/PTWAPIData.h"
 #include "HttpModule.h"
 #include "JsonObjectConverter.h"
+#include "PTWSessionSubsystem.h"
 #include "Server/PTWHTTPRequestTypes.h"
 #include "GameFramework/PlayerState.h"
 #include "GenericPlatform/GenericPlatformHttp.h"
 #include "Interfaces/IHttpResponse.h"
-#include "Kismet/GameplayStatics.h"
 #include "Session/PTWSessionConfig.h"
 #include "UObject/Object.h"
 
@@ -26,9 +26,11 @@ UPTWGameLiftSubsystem::UPTWGameLiftSubsystem()
 
 void UPTWGameLiftSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	Super::Initialize(Collection);
-	
+#if WITH_GAMELIFT
 	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
+#endif
+	
+	Super::Initialize(Collection);
 }
 
 void UPTWGameLiftSubsystem::Deinitialize()
@@ -39,26 +41,6 @@ void UPTWGameLiftSubsystem::Deinitialize()
 		MapLoadDelegateHandle.Reset();
 	}
 	Super::Deinitialize();
-}
-
-void UPTWGameLiftSubsystem::OnMapLoaded(UWorld* LoadedWorld)
-{
-	if (!LoadedWorld) return;
-#if WITH_GAMELIFT && UE_SERVER
-	if (GameLiftSdkModule)
-	{
-		GameLiftSdkModule->ActivateGameSession();
-	}
-#endif
-}
-
-void UPTWGameLiftSubsystem::SetupMapLoadDelegateHandle()
-{
-	if (MapLoadDelegateHandle.IsValid())
-	{
-		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(MapLoadDelegateHandle);
-	}
-	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
 }
 
 FString UPTWGameLiftSubsystem::SerializeJsonContent(const TMap<FString, FString>& Parameters)
@@ -88,7 +70,7 @@ void UPTWGameLiftSubsystem::RequestListFleets()
 	
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::ListFleets_Response);
 	
-	const FString APIUrl = APIData->GEtAPIEndPoint(GameplayServerTags::GameSessionsAPI::ListFleets);
+	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::ListFleets);
 	
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("GET"));
@@ -103,7 +85,7 @@ void UPTWGameLiftSubsystem::JoinGameSession()
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::FindOrCreateGameSession_Response);
 	
-	const FString APIUrl = APIData->GEtAPIEndPoint(GameplayServerTags::GameSessionsAPI::FindOrCreateGameSession);
+	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::FindOrCreateGameSession);
 	
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
@@ -111,21 +93,29 @@ void UPTWGameLiftSubsystem::JoinGameSession()
 	Request->ProcessRequest();
 }
 
-void UPTWGameLiftSubsystem::CreateGameSession()
+void UPTWGameLiftSubsystem::CreateGameSession(FPTWSessionConfig& SessionConfig)
 {
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CreateGameSession_Response);
 	
-	const FString APIUrl = APIData->GEtAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreateGameSession);
+	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreateGameSession);
 	
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	
+	TMap<FString, FString> Params = {
+		{ TEXT("name"),							SessionConfig.ServerName },
+		{ TEXT("maximumPlayerSessionCount"),	FString::FromInt(SessionConfig.MaxPlayers) }
+	};
+	
+	const FString Content = SerializeJsonContent(Params);
 	Request->ProcessRequest();
 }
 
 void UPTWGameLiftSubsystem::DescribeGameSession(const FString& SessionId)
 {
+	UPTWSessionSubsystem::SetNetDriverToIP();
 	if (!IsValid(APIData))
 	{
 		UE_LOG(LogTemp, Error, TEXT("DescribeGameSession Failed: APIData is NULL!"));
@@ -135,16 +125,10 @@ void UPTWGameLiftSubsystem::DescribeGameSession(const FString& SessionId)
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::DescribeGameSession_Response);
 	
-	const FString APIUrl = APIData->GEtAPIEndPoint(GameplayServerTags::GameSessionsAPI::DescribeGameSession);
+	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::DescribeGameSession);
 	FString RefinedURL = APIUrl;
 	
 	RefinedURL += TEXT("?gameSessionId=") + FGenericPlatformHttp::UrlEncode(SessionId);
-	
-	// TMap<FString, FString> Params = {
-	// 	{ TEXT("gameSessionId"), SessionId }
-	// };
-	// const FString Content = SerializeJsonContent(Params);
-	// Request->SetContentAsString(Content);
 	
 	Request->SetURL(RefinedURL);
 	Request->SetVerb(TEXT("GET"));
@@ -157,7 +141,7 @@ void UPTWGameLiftSubsystem::CreatePlayerSession(const FString& PlayerId, const F
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CreatePlayerSession_Response);
 	
-	const FString APIUrl = APIData->GEtAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreatePlayerSession);
+	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreatePlayerSession);
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -180,7 +164,7 @@ void UPTWGameLiftSubsystem::SearchGameSessions()
 	
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::SearchGameSessions_Response);
 	
-	const FString APIUrl = APIData->GEtAPIEndPoint(GameplayServerTags::GameSessionsAPI::SearchGameSessions);
+	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::SearchGameSessions);
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("GET"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -365,8 +349,6 @@ void UPTWGameLiftSubsystem::ListFleets_Response(FHttpRequestPtr Request, FHttpRe
 	}
 }
 
-
-
 void UPTWGameLiftSubsystem::FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Find or Create GAme Session Response Received");
@@ -388,3 +370,29 @@ void UPTWGameLiftSubsystem::FindOrCreateGameSession_Response(FHttpRequestPtr Req
 		TryJoinGameSession(GameSessionStatus, GameSessionId);
 	}
 }
+
+#if WITH_GAMELIFT
+void UPTWGameLiftSubsystem::OnMapLoaded(UWorld* LoadedWorld)
+{
+	if (!LoadedWorld) return;
+	if (!IsRunningDedicatedServer()) return;
+	if (GameLiftSdkModule)
+	{
+		GameLiftSdkModule->ActivateGameSession();
+	}
+	if (MapLoadDelegateHandle.IsValid())
+	{
+		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(MapLoadDelegateHandle);
+	}
+}
+
+void UPTWGameLiftSubsystem::SetupMapLoadDelegateHandle()
+{
+	if (!IsRunningDedicatedServer()) return;
+	if (MapLoadDelegateHandle.IsValid())
+	{
+		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(MapLoadDelegateHandle);
+	}
+	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
+}
+#endif

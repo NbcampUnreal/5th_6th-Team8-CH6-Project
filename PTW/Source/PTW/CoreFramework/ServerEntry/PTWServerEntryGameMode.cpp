@@ -181,22 +181,15 @@ void APTWServerEntryGameMode::InitGameLift()
             FString GameSessionId = FString(InGameSession.GetGameSessionId());
             UE_LOG(GameServerLog, Log, TEXT("GameSession Initializing: %s"), *GameSessionId);
 		
-			// 대충 델리게이트 만들고, 스팀 세션 생성하고 레벨이동까지 마치고 나서, ACTIVE 상태로 만들면 되겠어.
 			if (UGameInstance* GI = GetGameInstance())
 			{
-				if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
+				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
 				{
-					FPTWSessionConfig SessionConfig;
-					SessionConfig.ServerName = GameSession.GetName().IsEmpty() ? TEXT("GameLiftServer") : GameSession.GetName();
-					SessionConfig.MaxPlayers = GameSession->MaxPlayers;
-					SessionConfig.bIsDedicatedServer = UE_SERVER;
-					SessionConfig.bUseGameLift = true;
-					if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
+					GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
+					if(UWorld* World = GetWorld())
 					{
-						GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
-						GameLiftSubsystem->SetupMapLoadDelegateHandle();
+						World->ServerTravel("Lobby");
 					}
-					SessionSubsystem->CreateGameSession(SessionConfig);
 				}
 			}
         });

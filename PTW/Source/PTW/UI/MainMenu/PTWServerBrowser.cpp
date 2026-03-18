@@ -141,6 +141,9 @@ void UPTWServerBrowser::OnClickedServerMenuButton()
 
 void UPTWServerBrowser::OnClickedCreateServerButton()
 {
+	UGameInstance* GameInstance = GetGameInstance();
+	if (!IsValid(GameInstance)) return;
+	
 	FPTWSessionConfig SessionConfig;
 	if (IsValid(ServerNameEditableText))
 	{
@@ -160,25 +163,21 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	
 	if (SessionConfig.bIsDedicatedServer)
 	{
+		SessionConfig.bUseGameLift = true;
 		// Dedicated Server는 AWS GameLift에서 원격으로 Fleet Instance에 빈 프로세스를 선택하고 GameSession을 생성.
-		if (UGameInstance* GameInstance = GetGameInstance())
+		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
 		{
-			if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
-			{
-				GameLiftSubsystem->CreateGameSession();
-			}
+			GameLiftSubsystem->CreateGameSession(SessionConfig);
 		}
 	}
 	else
 	{
+		SessionConfig.bUseGameLift = false;
 		// Listen Server는 현재 Desktop 에서 실행.
-		UGameInstance* GameInstance = GetGameInstance();
-		if (!IsValid(GameInstance)) return;
-	
-		UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
-		if (!IsValid(SessionSubsystem)) return;
-	
-		SessionSubsystem->CreateGameSession(SessionConfig);
+		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
+		{
+			SessionSubsystem->CreateGameSession(SessionConfig);
+		}
 	}
 }
 

@@ -13,7 +13,7 @@ class PTW_API UPTWAPIData : public UDataAsset
 	GENERATED_BODY()
 	
 public:
-	FString GEtAPIEndPoint(const FGameplayTag& APIEndPoint);
+	FString GetAPIEndPoint(const FGameplayTag& APIEndPoint);
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	FString Name;

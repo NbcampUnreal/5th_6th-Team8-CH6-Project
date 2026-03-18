@@ -28,8 +28,6 @@ protected:
 	virtual void Deinitialize() override;
 	
 public:
-	virtual void  OnMapLoaded(UWorld* LoadedWorld);
-	void SetupMapLoadDelegateHandle();
 	FString SerializeJsonContent(const TMap<FString, FString>& Params);
 	template <typename T> requires (std::is_same_v<T, FPTWGameLiftGameSession> || std::is_same_v<T, FPTWGameLiftPlayerSession>)
 	bool ParseDataFromJson(const FString& JsonString, T& OutStruct)
@@ -68,7 +66,7 @@ public:
 	}
 	void RequestListFleets();
 	void JoinGameSession();
-	void CreateGameSession();
+	void CreateGameSession(FPTWSessionConfig& SessionConfig);
 	void DescribeGameSession(const FString& SessionId);
 	void CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
 	void SearchGameSessions();
@@ -100,6 +98,8 @@ private:
 	FDelegateHandle MapLoadDelegateHandle;
 #if WITH_GAMELIFT
 public:
+	virtual void  OnMapLoaded(UWorld* LoadedWorld);
+	void SetupMapLoadDelegateHandle();
 	FGameLiftServerSDKModule* GetGameLiftSdkModule() const { return GameLiftSdkModule; };
 	void SetGameLiftSdkModule(FGameLiftServerSDKModule* InGameLiftSdkModule) { GameLiftSdkModule = InGameLiftSdkModule; };
 protected:

@@ -13,9 +13,16 @@ void UPTWServerListRow::SetupSteamInfo(const FOnlineSessionSearchResultBP& Searc
 	SteamSessionInfo = SearchResult.OnlineSessionSearchResult;
 	const FSessionSettings& SessionSettings = SteamSessionInfo.Session.SessionSettings.Settings;
 	
-	if (SessionSettings.Find(PTWSessionKey::ServerName))
+	FString SessionId = SteamSessionInfo.Session.SessionInfo->GetSessionId().ToString();
+	FString HexRoomCode = FString::Printf(TEXT("%llX"), *SessionId);
+	
+	SessionConfig.ServerID = TEXT("STEAM-") + HexRoomCode;
+	ServerID->SetText(FText::FromString(SessionConfig.ServerID));
+	
+	FString PureSessionName;
+	if (SteamSessionInfo.Session.SessionSettings.Get(FName(PTWSessionKey::ServerName), PureSessionName))
 	{
-		SessionConfig.ServerName = SessionSettings.Find(PTWSessionKey::ServerName)->ToString();
+		SessionConfig.ServerName = PureSessionName;
 		ServerName->SetText(FText::FromString(SessionConfig.ServerName));
 	}
 	SessionConfig.bUseGameLift = false;
@@ -24,6 +31,30 @@ void UPTWServerListRow::SetupSteamInfo(const FOnlineSessionSearchResultBP& Searc
 void UPTWServerListRow::SetupGameLiftInfo(const FPTWGameLiftGameSession& SearchResult)
 {
 	GameLiftSessionInfo = SearchResult;
+	
+	FString SessionId = GameLiftSessionInfo.GameSessionId;
+	FString RoomCode; // FString::Printf(TEXT("%llX"), SessionId);
+	int32 LastSlashIndex;
+	if (SessionId.FindLastChar('/', LastSlashIndex))
+	{
+		FString UUIDString = SessionId.RightChop(LastSlashIndex + 1);
+		FString LeftPart, RightPart;
+		if (UUIDString.Split(TEXT("-"), &LeftPart, &RightPart))
+		{
+			RoomCode = LeftPart;
+		}
+		else
+		{
+			RoomCode = UUIDString.Left(8);
+		}
+	}
+	else
+	{
+		RoomCode = SessionId.Left(8);
+	}
+	SessionConfig.ServerID = TEXT("AWS-") + RoomCode;
+	ServerID->SetText(FText::FromString(SessionConfig.ServerID));
+	
 	SessionConfig.ServerName = GameLiftSessionInfo.Name;
 	ServerName->SetText(FText::FromString(SessionConfig.ServerName));
 	

@@ -39,7 +39,7 @@ void APTWDeliveryGameMode::GiveDeliveryItems(APTWPlayerCharacter* TargetCharacte
 	ApplyGameEffect(TargetCharacter, EffectToApply);
 	GivingDefaultWeapon(TargetCharacter);
 	DeliveryUISetting(TargetCharacter);
-	DeliveredCharacters.Add(TargetCharacter->GetController());
+	DeliveredCharacters.AddUnique(TargetCharacter->GetController());
 }
 
 void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter, TSubclassOf<UGameplayEffect> EffectToApply)
@@ -117,7 +117,15 @@ void APTWDeliveryGameMode::ApplyGameEffect(APTWPlayerCharacter* Target, TSubclas
 
 void APTWDeliveryGameMode::StartEndCountDown()
 {
-	DeliveryComp->ShowCountDownWidget();
+	for (APTWPlayerController* PC : RankPCList)
+	{
+		UPTWDeliveryControllerComponent* DeliveryComp = Cast<UPTWDeliveryControllerComponent>(PC->GetControllerComponent());
+		if (DeliveryComp)
+		{
+			DeliveryComp->ShowCountDownWidget();
+		}
+	}
+
 	UpdateCountDown();
 	GetWorld()->GetTimerManager().SetTimer(CountDownTimerHandle, this, &APTWDeliveryGameMode::UpdateCountDown,1.0f,true);
 }
@@ -126,10 +134,19 @@ void APTWDeliveryGameMode::UpdateCountDown()
 {
 	if (FinalCount == 0)
 	{
+		GiveRoundScore();
 		StopCountDown();
 	}
-		
-	DeliveryComp->SetCountDownText(FinalCount);
+	
+	for (APTWPlayerController* PC : RankPCList)
+	{
+		UPTWDeliveryControllerComponent* DeliveryComp = Cast<UPTWDeliveryControllerComponent>(PC->GetControllerComponent());
+		if (DeliveryComp)
+		{
+			DeliveryComp->SetCountDownText(FinalCount);
+		}
+	}
+	
 	FinalCount--;
 }
 
@@ -148,6 +165,23 @@ bool APTWDeliveryGameMode::CheckingDeadPlayer(AController* NewPlayer)
 	check(PTWPlayerState);
 	
 	return PTWPlayerState->GetPlayerRoundData().DeathCount != 0;
+}
+
+void APTWDeliveryGameMode::GiveRoundScore()
+{
+	int32 FirstScore = 6;
+	for (int32 i = 0; i < RankPCList.Num(); i++)
+	{
+		UPTWDeliveryControllerComponent* DeliveryComp = Cast<UPTWDeliveryControllerComponent>(RankPCList[i]->GetControllerComponent());
+		if (!DeliveryComp) return;
+		
+		AddRoundScore(RankPCList[i]->GetPlayerState<APlayerState>(), FirstScore);
+		
+		if (FirstScore > 2)
+		{
+			FirstScore--;
+		}
+	}
 }
 
 IPTWCombatInterface* APTWDeliveryGameMode::CastToPTWCombatInterface(APTWPlayerCharacter* PlayerCharacter)
@@ -275,7 +309,7 @@ void APTWDeliveryGameMode::DeliveryUISetting(APTWPlayerCharacter* TargetCharacte
 {
 	if (APTWPlayerController* PlayerController = Cast<APTWPlayerController>(TargetCharacter->GetController()))
 	{
-		DeliveryComp = Cast<UPTWDeliveryControllerComponent>(PlayerController->GetComponentByClass(UPTWDeliveryControllerComponent::StaticClass()));
+		UPTWDeliveryControllerComponent* DeliveryComp = Cast<UPTWDeliveryControllerComponent>(PlayerController->GetControllerComponent());
 		
 		if (DeliveryComp)
 		{

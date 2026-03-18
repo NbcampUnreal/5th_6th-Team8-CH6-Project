@@ -81,15 +81,14 @@ void APTWLobbyGameMode::BeginPlay()
 	if (PTWGameState->GetCurrentGamePhase() != EPTWGamePhase::PreGameLobby)
 	{
 #if WITH_EDITOR
-		// PIE에서는 딜레이 후 강제 시작
-		FTimerHandle PIEStartTimer;
-		GetWorldTimerManager().SetTimer(PIEStartTimer, this, &APTWLobbyGameMode::StartGameLobby, 2.f, false);
+		GetWorldTimerManager().SetTimer(TestTimer, this, &APTWLobbyGameMode::StartGameLobby, 2.f, false);
+		UE_LOG(Log_LobbyGameMode, Warning, TEXT("현재 빌드: WITH_EDITOR"));
+
+#else
+		GetWorldTimerManager().SetTimer(TestTimer, this, &APTWLobbyGameMode::StartGameLobby, 10.f, false);
+		UE_LOG(Log_LobbyGameMode, Warning, TEXT("현재 빌드: Not WITH_EDITOR"));
 #endif
-
-		FTimerHandle StartGameTimer;
-		GetWorldTimerManager().SetTimer(StartGameTimer, this, &APTWLobbyGameMode::StartGameLobby, 10.f, false);
 	}
-
 	
 }
 
@@ -107,9 +106,12 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 			GameFlowRule.bAutoStartWhenMinPlayersMet)
 		{
 			if (bAllPlayerReady) return;
-			
-			StartGameLobby();
 
+			if (!bIsGameStarted)
+			{
+				StartGameLobby();
+			}
+			
 			return;
 		}
 		
@@ -132,6 +134,8 @@ void APTWLobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	UE_LOG(Log_LobbyGameMode, Warning, TEXT("[로비게임모드] HandleSeamlessTravelPlayer: %s"), *C->GetName());
 	
 	Super::HandleSeamlessTravelPlayer(C);
+	
+	PlayerReadyToPlay(Cast<APTWPlayerController>(C));
 }
 void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
@@ -174,10 +178,11 @@ void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
 void APTWLobbyGameMode::StartGameLobby()
 {
 	if (bIsGameStarted) return;
-	if (!IsValid(PTWGameState)) return;
-	
 	bIsGameStarted = true;
+	if (!IsValid(PTWGameState)) return;
 
+	GetWorldTimerManager().ClearTimer(TestTimer);
+	ClearTimer();
 	// 최대 라운드에 도달 하면 게임 종료
 	if (PTWGameState->GetCurrentRound() >= GameFlowRule.MaxRound)
 	{
@@ -190,8 +195,6 @@ void APTWLobbyGameMode::StartGameLobby()
 	
 	PTWGameState->AdvanceRound();
 	
-	
-
 	// 대기 로비에서 게임 로비로 이동 했을 때 모든 플레이어 시작 위치로 이동
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
 	{

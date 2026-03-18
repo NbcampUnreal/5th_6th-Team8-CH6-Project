@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -17,6 +17,9 @@ class PTW_API APTWMainMenuPlayerController : public APlayerController
 public:
 	APTWMainMenuPlayerController();
 	
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	void Popup(const FText& InText);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -27,4 +30,8 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "UI")
 	TObjectPtr<UPTWMainMenu> MainMenuInstance;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> PopupWidgetClass;
+
 };

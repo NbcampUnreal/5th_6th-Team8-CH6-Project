@@ -612,6 +612,11 @@ void APTWPlayerController::SendMessage(const FText& InText,ENotificationPriority
 	UIControllerComponent->SendMessage(InText, InPriority, InDuration, bInterrupt);
 }
 
+void APTWPlayerController::Popup(const FText& InText)
+{
+	UIControllerComponent->Popup(InText);
+}
+
 void APTWPlayerController::SetControllerComponent(UActorComponent* NewControllerComponent)
 {
 	BaseControllerComponent = NewControllerComponent;

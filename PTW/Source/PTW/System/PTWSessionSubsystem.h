@@ -31,6 +31,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	bool IsUsingSteamSubsystem();
 	
+	static void SetNetDriverToIP();
+	static void SetNetDriverToSteam();
+	
 	// 세셩 생성
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void CreateGameSession(FPTWSessionConfig SessionConfig);

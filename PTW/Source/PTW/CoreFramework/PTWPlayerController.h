@@ -103,6 +103,8 @@ public:
 		float InDuration = 2.f,
 		bool bInterrupt = false);
 
+	void Popup(const FText& InText);
+
 	/* ControllerComponent 저장 */
 	void SetControllerComponent(UActorComponent* NewControllerComponent);
 	

@@ -493,6 +493,13 @@ void APTWPlayerController::NotifyLoadedWorld(FName WorldPackageName, bool bFinal
 	}
 }
 
+void APTWPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, BaseControllerComponent);
+}
+
 void APTWPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -619,6 +626,7 @@ void APTWPlayerController::Popup(const FText& InText)
 
 void APTWPlayerController::SetControllerComponent(UActorComponent* NewControllerComponent)
 {
+	if (!HasAuthority()) return;
 	BaseControllerComponent = NewControllerComponent;
 }
 

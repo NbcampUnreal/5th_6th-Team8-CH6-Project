@@ -23,6 +23,8 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void Server_SelectedAbility(FName RowId);
+
+	void SetGameInputMode();
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> DraftWidgetClass;

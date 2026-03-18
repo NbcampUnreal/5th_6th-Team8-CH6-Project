@@ -63,14 +63,24 @@ void UPTWAbilityDraftWidget::OnDraftSelected(FName RowId)
 
 	bIsSelected = true;
 	
-	RemoveFromParent();
+	//APlayerController* PlayerController = GetOwningPlayer();
+	//if (!PlayerController) return;
+
+	APTWPlayerController* PTWPlayerController = Cast<APTWPlayerController>(GetOwningPlayer());
+	if (!PTWPlayerController) return;
+
+	UActorComponent* ActorComponent = PTWPlayerController->GetControllerComponent();
+	if (!ActorComponent)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("[DraftWidget] ActorComponent Class: %s"),*ActorComponent->GetClass()->GetName());
+		return;
+	}
 	
-	APTWPlayerController* PlayerController = GetOwningPlayer<APTWPlayerController>();
-	if (!PlayerController) return;
-	
-	UPTWAbilityControllerComponent* ControllerComponent = Cast<UPTWAbilityControllerComponent>(PlayerController->GetControllerComponent());
+	UPTWAbilityControllerComponent* ControllerComponent = Cast<UPTWAbilityControllerComponent>(ActorComponent);
 	if (!ControllerComponent) return;
 
 	ControllerComponent->Server_SelectedAbility(RowId);
+	ControllerComponent->SetGameInputMode();
+	RemoveFromParent();
 	
 }

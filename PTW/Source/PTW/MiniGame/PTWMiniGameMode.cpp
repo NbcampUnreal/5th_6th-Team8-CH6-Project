@@ -235,20 +235,27 @@ void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActor
 
 	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Controller);
 	if (!PlayerController) return;
-
+	
+	if (UActorComponent* BeforeComponent = PlayerController->GetControllerComponent())
+	{
+		BeforeComponent->DestroyComponent();
+	}
+	
 	UActorComponent* ActorComponent = Component;
 
 	if (!ActorComponent && ControllerComponentClass)
 	{
-		ActorComponent = NewObject<UActorComponent>(PlayerController, ControllerComponentClass);
+		ActorComponent = NewObject<UActorComponent>(PlayerController, ControllerComponentClass, TEXT("ControllerComponent"));
 	}
 	if (!ActorComponent) return;
-	
+
+	ActorComponent->SetIsReplicated(true);
 	PlayerController->AddInstanceComponent(ActorComponent);
 	
 	ActorComponent->RegisterComponent();
 
 	PlayerController->SetControllerComponent(ActorComponent);
+
 }
 
 void APTWMiniGameMode::StartGame()

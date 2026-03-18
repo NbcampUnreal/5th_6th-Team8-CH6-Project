@@ -19,10 +19,12 @@
 #include "AIController.h"
 #include "ControllerComponent/PTWBaseControllerComponent.h"
 #include "ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Debug/PTWLogCategorys.h"
 #include "Gameplay/Actor/PTWResultCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/Instance/PTWItemInstance.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
 #include "MiniGame/PTWMiniGameMapRow.h"
 
 class UPTWScoreSubsystem;
@@ -192,7 +194,7 @@ void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	
 	Super::HandleSeamlessTravelPlayer(C);
 
-	
+	PlayerReadyToPlay(Cast<APlayerController>(C));
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
@@ -214,7 +216,7 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
 		
-		AssignTeam();
+		
 		
 		FTimerHandle LoadingDelayTimer;
 		GetWorldTimerManager().SetTimer(LoadingDelayTimer, FTimerDelegate::CreateLambda([this]()
@@ -233,20 +235,27 @@ void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActor
 
 	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Controller);
 	if (!PlayerController) return;
-
+	
+	if (UActorComponent* BeforeComponent = PlayerController->GetControllerComponent())
+	{
+		BeforeComponent->DestroyComponent();
+	}
+	
 	UActorComponent* ActorComponent = Component;
 
 	if (!ActorComponent && ControllerComponentClass)
 	{
-		ActorComponent = NewObject<UActorComponent>(PlayerController, ControllerComponentClass);
+		ActorComponent = NewObject<UActorComponent>(PlayerController, ControllerComponentClass, TEXT("ControllerComponent"));
 	}
 	if (!ActorComponent) return;
-	
+
+	ActorComponent->SetIsReplicated(true);
 	PlayerController->AddInstanceComponent(ActorComponent);
 	
 	ActorComponent->RegisterComponent();
 
 	PlayerController->SetControllerComponent(ActorComponent);
+
 }
 
 bool APTWMiniGameMode::ShouldUseTeamOutline() const
@@ -271,10 +280,11 @@ void APTWMiniGameMode::RefreshTeamOutlineForAllPlayers(bool bEnable)
 void APTWMiniGameMode::StartGame()
 {
 	if (!PTWGameState) return;
-
 	if (bIsGameStarted) return;
 
 	bIsGameStarted = true;
+	
+	AssignTeam();
 	
 	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
 	
@@ -580,15 +590,8 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
 	if (!NewPlayer) return;
 	
-	TArray<TObjectPtr<UPTWItemInstance>> SavedItems;
-	
 	Super::RestartPlayer(NewPlayer);
 	
-	if (PendingRespawnItems.Contains(NewPlayer))
-	{
-		SavedItems = PendingRespawnItems[NewPlayer].Items;
-		PendingRespawnItems.Remove(NewPlayer); 
-	}
 	
 	if (!IsValid(PTWGameState)) return;
 	
@@ -622,7 +625,7 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	ApplyMiniGameTag(NewPlayer);
 	RemoveTags(NewPlayer);
 	InitPlayerHealth(NewPlayer);
-	SpawnDefaultWeapon(NewPlayer);
+	//SpawnDefaultWeapon(NewPlayer);
 	
 	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
 	{
@@ -633,6 +636,32 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	if (APTWPlayerController* PC = Cast<APTWPlayerController>(NewPlayer))
 	{
 		PC->Client_RefreshTeamOutline(false, ShouldUseTeamOutline());
+	}
+
+	if (APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
+	{
+		if (UPTWWeaponComponent* WeaponComp = TargetCharacter->GetWeaponComponent())
+		{
+			if (UPTWInventoryComponent* InvenComp = TargetCharacter->GetInventoryComponent())
+			{
+				FWeaponPair WeaponPairs = InvenComp->GetWeaponActors(NewPlayer);
+				if (WeaponPairs.Weapon1P && WeaponPairs.Weapon3P)
+				{
+					if (UPTWWeaponInstance* WeaponInst = WeaponPairs.Weapon3P->GetWeaponItemInstance())
+					{
+						if (UPTWItemDefinition* Def = WeaponInst->ItemDef)
+						{
+							WeaponComp->AttachWeaponToSocket(
+								WeaponPairs.Weapon1P,
+								WeaponPairs.Weapon3P,
+								Def->WeaponTag
+							);
+						}
+					}
+				}
+			}
+		}
+	}
 	}
 }
 
@@ -678,19 +707,23 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	{
 		DeadPlayerController = DeadPawn->GetController<APTWPlayerController>();
 		DeadPlayerState = DeadPawn->GetPlayerState();
+		
+		/* 리팩토링 필요 */
+		if (APTWPlayerState* PS = Cast<APTWPlayerState>(DeadPlayerState))
+		{
+			UPTWInventoryComponent* InvenComp = PS->GetInventoryComponent();
+			if (!InvenComp) return;
+			FWeaponPair WeaponPair;
+			UPTWWeaponInstance* WeaponInst = Cast<UPTWWeaponInstance>(InvenComp->GetCurrentWeaponInst());
+			if (!WeaponInst) return;
+			WeaponPair.Weapon3P = WeaponInst->SpawnedWeapon3P;
+			WeaponPair.Weapon1P = WeaponInst->SpawnedWeapon1P; 
+			
+			InvenComp->SetSavedWeaponActor(DeadPawn->Controller, WeaponPair); 
+			InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
+		}
+		
 	}
-	
-	// // ItemInstance의 Outer 변경
-	// if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(DeadActor))
-	// {
-	// 	UPTWInventoryComponent* InventoryComponent = PlayerCharacter->GetInventoryComponent();
-	// 	if (!InventoryComponent) return;
-	// 	
-	// 	TArray<TObjectPtr<UPTWItemInstance>> Items = InventoryComponent->GetAllItems();
-	// 	InventoryComponent->RemoveActiveItemGameplayAbilityHandle();
-	// 	SetOldPlayerItemInstanceOuter(Items);
-	// 	PendingRespawnItems.Add(DeadPlayerController, {Items});
-	// }
 	
 	APlayerState* KillPlayerState = nullptr;
 	if (IsValid(KillActor))
@@ -1052,7 +1085,6 @@ void APTWMiniGameMode::SpawnPlayerSavedItems(AController* Controller)
 	APTWPlayerState* PS = Controller->GetPlayerState<APTWPlayerState>();
 	APawn* Pawn = Controller->GetPawn();
 
-	if (PS && Pawn)
 	if (PS && Pawn)
 	{
 		if (UPTWItemSpawnManager* SpawnSys = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())

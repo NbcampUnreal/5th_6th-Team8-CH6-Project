@@ -18,6 +18,40 @@ bool UPTWSessionSubsystem::IsUsingSteamSubsystem()
 	return false;
 }
 
+void UPTWSessionSubsystem::SetNetDriverToIP()
+{
+	if (GEngine)
+	{
+		for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
+		{
+			if (Def.DefName == FName("GameNetDriver"))
+			{
+				Def.DriverClassName = FName("OnlineSubsystemUtils.IpNetDriver");
+				Def.DriverClassNameFallback = FName("OnlineSubsystemUtils.IpNetDriver");
+                
+				UE_LOG(LogTemp, Log, TEXT("✅ 넷드라이버가 순수 IP 모드(IpNetDriver)로 변경되었습니다."));
+				break;
+			}
+		}
+	}
+}
+void UPTWSessionSubsystem::SetNetDriverToSteam()
+{
+	if (GEngine)
+	{
+		for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
+		{
+			if (Def.DefName == FName("GameNetDriver"))
+			{
+				Def.DriverClassName = FName("OnlineSubsystemSteam.SteamNetDriver");
+				Def.DriverClassNameFallback = FName("OnlineSubsystemUtils.IpNetDriver");
+                
+				UE_LOG(LogTemp, Log, TEXT("✅ 넷드라이버가 스팀 모드(SteamNetDriver)로 변경되었습니다."));
+				break;
+			}
+		}
+	}
+}
 void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig)
 {
 	if(!SessionInterface.IsValid()) return;

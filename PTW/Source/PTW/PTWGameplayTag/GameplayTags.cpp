@@ -88,6 +88,7 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Emoting, "State.Emoting");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Idle, "State.Idle");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Bomb, "State.Bomb");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Stun, "State.Stun");
 		
 		namespace Passive
 		{
@@ -133,6 +134,7 @@ namespace GameplayTags
 				PTW_API UE_DEFINE_GAMEPLAY_TAG(Pistol, "Weapon.Gun.Pistol");
 				PTW_API UE_DEFINE_GAMEPLAY_TAG(BombPistol, "Weapon.Gun.Pistol.BombPistol");
 				PTW_API UE_DEFINE_GAMEPLAY_TAG(AbyssPistol, "Weapon.Gun.Pistol.AbyssPistol");
+				PTW_API UE_DEFINE_GAMEPLAY_TAG(StunPistol, "Weapon.Gun.Pistol.StunPistol");
 			}
 
 			namespace Rifle

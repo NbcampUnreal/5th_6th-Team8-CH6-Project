@@ -130,4 +130,7 @@ private:
 	
 	/* ASC get 타이머 */
 	FTimerHandle ASCInitTimerHandle;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> PopupWidgetClass;
 };

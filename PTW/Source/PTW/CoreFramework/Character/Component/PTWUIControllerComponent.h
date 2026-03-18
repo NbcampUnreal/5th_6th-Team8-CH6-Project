@@ -50,6 +50,8 @@ public:
 		float InDuration = 2.f,
 		bool bInterrupt = false);
 
+	void Popup(const FText& InText);
+
 	/* GameState 델리게이트 바인딩 */
 	void BindGameStateDelegates();
 	void UnbindGameStateDelegates();
@@ -113,6 +115,8 @@ public:
 	TSubclassOf<UUserWidget> MapRouletteWidgetClass;
 	UPROPERTY(EditDefaultsOnly, Category = "UI") 
 	TSubclassOf<UUserWidget> KeyGuideWidgetClass;
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> PopupWidgetClass;
 	UPROPERTY(EditAnywhere, Category = "UI") 
 	TSubclassOf<class UPTWDevWidget> DevWidgetClass;
 };

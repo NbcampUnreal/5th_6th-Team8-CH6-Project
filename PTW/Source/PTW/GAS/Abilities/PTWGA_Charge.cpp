@@ -35,7 +35,7 @@ void UPTWGA_Charge::TickReCharge()
 	float CurrentBattery = DAS->GetBatteryLevel();
 	float MaxBatteryLevel = 1.0f;
 	
-	float NewBattery = FMath::FInterpTo(CurrentBattery, MaxBatteryLevel, 0.05f, RechargeSpeed);
+	float NewBattery = FMath::FInterpTo(CurrentBattery, MaxBatteryLevel, 0.05f, DAS->GetChargeSpeed());
 	DAS->SetBatteryLevel(NewBattery);
 	
 	if (NewBattery >= MaxBatteryLevel - 0.01f)
@@ -57,6 +57,6 @@ void UPTWGA_Charge::OnRechargeCompleted()
 	IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(GetAvatarActorFromActorInfo());
 	if (!CombatInterface) return;
 	
-	CombatInterface->RemoveEffectWithTag(GameplayTags::State::Charge);
+	CombatInterface->RemoveEffectWithTag(GameplayTags::State::Stun);
 	CombatInterface->ApplyGameplayEffectToSelf(ChargeCompleteGEClass, 1.0f, FGameplayEffectContextHandle());
 }

@@ -28,7 +28,4 @@ protected:
 	TSubclassOf<UGameplayEffect> ChargeCompleteGEClass;
 	
 	FTimerHandle RechargeTimerHandle;
-	
-	UPROPERTY(EditAnywhere)
-	float RechargeSpeed;
 };

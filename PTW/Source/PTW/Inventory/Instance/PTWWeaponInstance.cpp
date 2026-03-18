@@ -79,7 +79,10 @@ APTWPlayerCharacter* UPTWWeaponInstance::GetItemInstanceOwner()
 	
 	if (OwnerComp)
 	{
-		return Cast<APTWPlayerCharacter>(OwnerComp->GetOwner());
+		APTWPlayerState* PS = Cast<APTWPlayerState>(OwnerComp->GetOwner());
+		if (!PS) return nullptr;
+		
+		return Cast<APTWPlayerCharacter>(PS->GetPawn());
 	}
 	
 	return nullptr;

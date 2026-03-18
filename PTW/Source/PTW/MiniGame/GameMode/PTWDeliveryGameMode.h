@@ -49,6 +49,7 @@ protected:
 	void UpdateCountDown();
 	void StopCountDown();
 	bool CheckingDeadPlayer(AController* NewPlayer);
+	void GiveRoundScore();
 	
 	IPTWCombatInterface* CastToPTWCombatInterface(APTWPlayerCharacter* PlayerCharacter);
 	
@@ -74,6 +75,8 @@ private:
 	
 	/* UI */
 	void DeliveryUISetting(APTWPlayerCharacter* TargetCharacter);
+	
+	void Test_GiveItems();
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
@@ -88,7 +91,7 @@ protected:
 	
 	/* 무기와 배달물을 지급 받은 플레이어 Set */
 	UPROPERTY(VisibleAnywhere, Category = "Game|Default")
-	TSet<APTWPlayerCharacter*> DeliveredCharacters;
+	TArray<AController*> DeliveredCharacters;
 	
 	UPROPERTY(EditAnywhere, Category = "Game|Weapon")
 	TObjectPtr<UPTWItemDefinition> DeliveryDefaultWeapon;
@@ -98,13 +101,20 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Game|Ranking")
 	TObjectPtr<ARaceTrack> RaceTrackSpline; 
+	
+	
+	UPROPERTY(EditAnywhere, Category = "Game|Test")
+	TObjectPtr<UPTWItemDefinition> TestItemDef;
+	
+	UPROPERTY(EditAnywhere, Category = "Game|Test")
+	TObjectPtr<UPTWItemDefinition> TestPassive;
 
 private:
 	FTimerHandle CountDownTimerHandle;
 	FTimerHandle RankingTimerHandle;
 	
-	UPROPERTY()
-	TObjectPtr<UPTWDeliveryControllerComponent> DeliveryComp;
+	// UPROPERTY()
+	// TObjectPtr<UPTWDeliveryControllerComponent> DeliveryComp;
 	
 	int32 FinalCount = 10;
 	

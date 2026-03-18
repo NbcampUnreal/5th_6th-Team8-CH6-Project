@@ -114,4 +114,5 @@ private:
 	bool bWaitingTimerStarted = false;
 
 	FTimerHandle LoadingDelayTimer;
+	FTimerHandle TestTimer;
 };

@@ -6,7 +6,6 @@
 #include "Server/PTWAPIData.h"
 #include "HttpModule.h"
 #include "JsonObjectConverter.h"
-#include "PTWSessionSubsystem.h"
 #include "Server/PTWHTTPRequestTypes.h"
 #include "GameFramework/PlayerState.h"
 #include "GenericPlatform/GenericPlatformHttp.h"
@@ -110,12 +109,12 @@ void UPTWGameLiftSubsystem::CreateGameSession(FPTWSessionConfig& SessionConfig)
 	};
 	
 	const FString Content = SerializeJsonContent(Params);
+	Request->SetContentAsString(Content);
 	Request->ProcessRequest();
 }
 
 void UPTWGameLiftSubsystem::DescribeGameSession(const FString& SessionId)
 {
-	UPTWSessionSubsystem::SetNetDriverToIP();
 	if (!IsValid(APIData))
 	{
 		UE_LOG(LogTemp, Error, TEXT("DescribeGameSession Failed: APIData is NULL!"));
@@ -261,10 +260,10 @@ void UPTWGameLiftSubsystem::TryJoinGameSession(const FString& Status, const FStr
 		if (APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld()))
 		{
 			LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer,
-			                                                       [this, SessionId]()
-			                                                       {
-				                                                       DescribeGameSession(SessionId);
-			                                                       }, 2.0f, false);
+           [this, SessionId]()
+           {
+               DescribeGameSession(SessionId);
+           }, 2.0f, false);
 		}
 	}
 	else

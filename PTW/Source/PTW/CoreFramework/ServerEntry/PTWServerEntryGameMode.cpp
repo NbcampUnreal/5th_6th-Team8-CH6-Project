@@ -3,6 +3,7 @@
 
 #include "PTWServerEntryGameMode.h"
 #include "CoreFramework/Game/GameSession/PTWGameSession.h"
+#include "Kismet/GameplayStatics.h"
 #include "System/PTWGameLiftSubsystem.h"
 #include "System/PTWSessionSubsystem.h"
 #include "System/Session/PTWSessionConfig.h"
@@ -186,9 +187,11 @@ void APTWServerEntryGameMode::InitGameLift()
 				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
 				{
 					GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
-					if(UWorld* World = GetWorld())
+					GameLiftSubsystem->SetupMapLoadDelegateHandle();
+					if(const UWorld* World = GetWorld())
 					{
-						World->ServerTravel("Lobby");
+						UGameplayStatics::OpenLevel(World, "Lobby");
+						// World->ServerTravel("Lobby");
 					}
 				}
 			}

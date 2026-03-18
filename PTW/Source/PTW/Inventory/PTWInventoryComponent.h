@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayAbilitySpecHandle.h"
 #include "Components/ActorComponent.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "PTWInventoryComponent.generated.h"
 
 
@@ -49,6 +50,12 @@ public:
 	void SendEquipEventToASC(int32 SlotIndex);
 	
 	void SetWeaponActorHidden(UPTWItemInstance* Weapon, bool bInHidden);
+	
+	FORCEINLINE int32 GetCurrentSlotIndex() const { return CurSelectingWeaponSlot;}
+	
+	void SetSavedWeaponActor(AController* TargetController, FWeaponPair SavedWeaponActors);
+	
+	FWeaponPair GetWeaponActors(AController* TargetController) const;
 	
 	/*사용 아이템 사용 함수*/
 	UFUNCTION(BlueprintCallable)
@@ -103,6 +110,8 @@ private:
 	TArray<TObjectPtr<UPTWWeaponInstance>> WeaponArr;
 	
 	FGameplayAbilitySpecHandle CurrentWeaponAbilitySpec;
+	
+	TMap<AController*, FWeaponPair> SavedWeaponMaps;
 
 public:
 	/* 델리게이트 */

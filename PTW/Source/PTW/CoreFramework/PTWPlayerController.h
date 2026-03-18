@@ -61,6 +61,10 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_SetAbyssDark(bool bEnable);
 	
+	/* 캐릭터 외곽선 */
+	UFUNCTION(Client, Reliable)
+	void Client_RefreshTeamOutline(bool bEnable, bool bUseTeam);
+	
 	/* 클라이언트가 서버에 메시지 전송을 요청하는 RPC */
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendChatMessage(const FString& Message);

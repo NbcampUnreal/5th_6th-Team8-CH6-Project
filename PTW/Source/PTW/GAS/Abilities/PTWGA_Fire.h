@@ -73,7 +73,8 @@ public:
 	virtual void StopFire();
 	
 	virtual FPTWFireConext GetFireContext() const;
-	
+	// 26.3.18 서원준 추가
+	virtual float CalculateDamage(const FPTWFireConext Context);
 protected:
 	FTimerHandle AutoFireTimer;
 	float FireRate;

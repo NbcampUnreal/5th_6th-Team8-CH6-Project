@@ -258,6 +258,25 @@ void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActor
 
 }
 
+bool APTWMiniGameMode::ShouldUseTeamOutline() const
+{
+	return MiniGameRule.TeamRule.bUseTeam;
+}
+
+void APTWMiniGameMode::RefreshTeamOutlineForAllPlayers(bool bEnable)
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
+		if (!PC) continue;
+
+		PC->Client_RefreshTeamOutline(bEnable, ShouldUseTeamOutline());
+	}
+}
+
 void APTWMiniGameMode::StartGame()
 {
 	if (!PTWGameState) return;
@@ -315,6 +334,8 @@ void APTWMiniGameMode::StartCountDown()
 	// }
 
 	if (!PTWGameState) return;
+	
+	RefreshTeamOutlineForAllPlayers(false);
 	
 	PTWGameState->SetMiniGameCountdown(MiniGameRule.TimeRule.CountDown);
 	PTWGameState->SetbMiniGameCountdown(true);
@@ -402,6 +423,8 @@ void APTWMiniGameMode::EndRound()
 	
 	ChaosEventManager->EndChaosEvent();
 	
+	RefreshTeamOutlineForAllPlayers(false);
+	
 	if (!PTWGameState) return;
 	
 	if (PTWGameState->GetCurrentMiniGameRound() >= PTWGameState->GetMaxMiniGameRound())
@@ -456,6 +479,8 @@ void APTWMiniGameMode::StartRound()
 	{
 		GetWorldTimerManager().SetTimer(CoinSpawnTimerHandle, this, &APTWMiniGameMode::OnCoinSpawnTimerElapsed, CoinSpawnInterval, true);
 	}
+	
+	RefreshTeamOutlineForAllPlayers(true);
 }
 
 void APTWMiniGameMode::UpdateTimer()
@@ -608,6 +633,11 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 		BaseCharacter->OnCharacterDied.AddDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
 	}
 	
+	if (APTWPlayerController* PC = Cast<APTWPlayerController>(NewPlayer))
+	{
+		PC->Client_RefreshTeamOutline(false, ShouldUseTeamOutline());
+	}
+
 	if (APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
 	{
 		if (UPTWWeaponComponent* WeaponComp = TargetCharacter->GetWeaponComponent())
@@ -617,12 +647,16 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 				FWeaponPair WeaponPairs = InvenComp->GetWeaponActors(NewPlayer);
 				if (WeaponPairs.Weapon1P && WeaponPairs.Weapon3P)
 				{
-					UPTWWeaponInstance* WeaponInst = WeaponPairs.Weapon3P->GetWeaponItemInstance();
-					if (!WeaponInst) return;
-					
-					if (UPTWItemDefinition* Def = WeaponInst->ItemDef)
+					if (UPTWWeaponInstance* WeaponInst = WeaponPairs.Weapon3P->GetWeaponItemInstance())
 					{
-						WeaponComp->AttachWeaponToSocket(WeaponPairs.Weapon1P, WeaponPairs.Weapon3P, Def->WeaponTag);
+						if (UPTWItemDefinition* Def = WeaponInst->ItemDef)
+						{
+							WeaponComp->AttachWeaponToSocket(
+								WeaponPairs.Weapon1P,
+								WeaponPairs.Weapon3P,
+								Def->WeaponTag
+							);
+						}
 					}
 				}
 			}
@@ -798,7 +832,7 @@ void APTWMiniGameMode::AssignTeam()
 	for (int i = 0; i < Players.Num(); i++)
 	{
 		int32 AssignTeamId = i % NumTeams;
-		PTWGameState->GetTeams()[i].Members.Add(Players[i]);
+		PTWGameState->GetTeams()[AssignTeamId].Members.Add(Players[i]);
 		Cast<IPTWPlayerRoundDataInterface>(Players[i])->SetTeamId(AssignTeamId); 
 	}
 }
@@ -1050,7 +1084,6 @@ void APTWMiniGameMode::SpawnPlayerSavedItems(AController* Controller)
 	APTWPlayerState* PS = Controller->GetPlayerState<APTWPlayerState>();
 	APawn* Pawn = Controller->GetPawn();
 
-	if (PS && Pawn)
 	if (PS && Pawn)
 	{
 		if (UPTWItemSpawnManager* SpawnSys = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())

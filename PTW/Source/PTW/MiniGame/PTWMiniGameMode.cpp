@@ -662,7 +662,6 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 			}
 		}
 	}
-	}
 }
 
 

@@ -22,6 +22,7 @@
 #include "UI/InGameUI/PTWDamageIndicator.h"
 #include "UI/Dev/PTWDevWidget.h"
 #include "UI/MiniGame/PTWGameStartTimer.h"
+#include "UI/PTWPopupWidget.h"
 
 
 UPTWUIControllerComponent::UPTWUIControllerComponent()
@@ -373,6 +374,22 @@ void UPTWUIControllerComponent::SendMessage(const FText& InText, ENotificationPr
 	Data.bInterrupt = bInterrupt;
 
 	Client_ShowNotification(Data);
+}
+
+void UPTWUIControllerComponent::Popup(const FText& InText)
+{
+	if (!PopupWidgetClass) return;
+
+	if (!UISubsystem) return;
+
+	UISubsystem->PushWidget(PopupWidgetClass, EUIInputPolicy::GameAndUI);
+
+	UUserWidget* TopWidget = UISubsystem->GetTopWidget();
+
+	if (UPTWPopupWidget* Popup = Cast<UPTWPopupWidget>(TopWidget))
+	{
+		Popup->SetMessage(InText);
+	}
 }
 
 void UPTWUIControllerComponent::UpdateNameTagsVisibility()

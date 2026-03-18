@@ -116,6 +116,16 @@ FPTWFireConext UPTWGA_Fire::GetFireContext() const
 	return Context;
 }
 
+float UPTWGA_Fire::CalculateDamage(const FPTWFireConext Context)
+{
+	if (const UPTWWeaponAttributeSet* AS = Cast<UPTWWeaponAttributeSet>(Context.ASC->GetAttributeSet(WeaponAttributeClass)))
+	{
+		return AS->GetDamage();
+	}
+
+	return 0.0f;
+}
+
 void UPTWGA_Fire::MakeGameplayCue(FPTWGameplayCueMakingInfo Infos, FGameplayTag ExecuteTag)
 {
 	FGameplayCueParameters Params;
@@ -325,10 +335,7 @@ void UPTWGA_Fire::HandleHitScan(const FPTWFireConext Context)
 		FGameplayAbilityTargetDataHandle TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(HitResult);
 		float Damage = 0.0f;
 		
-		if (const UPTWWeaponAttributeSet* AS = Cast<UPTWWeaponAttributeSet>(Context.ASC->GetAttributeSet(WeaponAttributeClass)))
-		{
-			Damage = AS->GetDamage();
-		}
+		Damage = CalculateDamage(Context);
 		
 		ApplyDamageToTarget(TargetData, Damage);
 	}

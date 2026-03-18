@@ -9,6 +9,7 @@
 #include "../Weapon/PTWWeaponActor.h"
 #include "CoreFramework/PTWCombatInterface.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Engine/ActorChannel.h"
 #include "GAS/PTWGameplayAbility.h"
 #include "GAS/PTWWeaponAttributeSet.h"
@@ -264,7 +265,11 @@ void UPTWInventoryComponent::SendGameplayEvent(UPTWItemInstance* ItemInstance, F
 	FGameplayEventData Payload;
 	Payload.OptionalObject = ItemInstance;
 	Payload.EventMagnitude = static_cast<float>(SlotIndex);
-	Payload.Instigator = GetOwner();
+	
+	if (APTWPlayerState* PS = Cast<APTWPlayerState>(GetOwner()))
+	{
+		Payload.Instigator = PS->GetPawn();
+	}
 	
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), SendTag, Payload);
 }
@@ -328,6 +333,17 @@ void UPTWInventoryComponent::SetWeaponActorHidden(UPTWItemInstance* Weapon, bool
 		if (WeaponInstance->SpawnedWeapon1P) WeaponInstance->SpawnedWeapon1P->SetActorHiddenInGame(bInHidden);
 		if (WeaponInstance->SpawnedWeapon3P) WeaponInstance->SpawnedWeapon3P->SetActorHiddenInGame(bInHidden);
 	}
+}
+
+void UPTWInventoryComponent::SetSavedWeaponActor(AController* TargetController,
+	FWeaponPair SavedWeaponActors)
+{
+	SavedWeaponMaps.Add(TargetController, SavedWeaponActors);
+}
+
+FWeaponPair UPTWInventoryComponent::GetWeaponActors(AController* TargetController) const
+{
+	return SavedWeaponMaps.Find(TargetController) ? SavedWeaponMaps[TargetController] : FWeaponPair();
 }
 
 void UPTWInventoryComponent::UseActiveItem()

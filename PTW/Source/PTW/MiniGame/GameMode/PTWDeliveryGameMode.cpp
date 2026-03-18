@@ -34,12 +34,12 @@ void APTWDeliveryGameMode::StartRound()
 void APTWDeliveryGameMode::GiveDeliveryItems(APTWPlayerCharacter* TargetCharacter, TSubclassOf<UGameplayEffect> EffectToApply)
 {
 	if (!TargetCharacter) return;
-	if (DeliveredCharacters.Contains(TargetCharacter)) return;
+	if (DeliveredCharacters.Contains(TargetCharacter->GetController())) return;
 	
 	ApplyGameEffect(TargetCharacter, EffectToApply);
 	GivingDefaultWeapon(TargetCharacter);
 	DeliveryUISetting(TargetCharacter);
-	DeliveredCharacters.Add(TargetCharacter);
+	DeliveredCharacters.Add(TargetCharacter->GetController());
 }
 
 void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter, TSubclassOf<UGameplayEffect> EffectToApply)

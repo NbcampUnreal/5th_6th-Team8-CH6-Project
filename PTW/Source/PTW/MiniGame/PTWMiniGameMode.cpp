@@ -607,9 +607,17 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 		{
 			if (UPTWInventoryComponent* InvenComp = TargetCharacter->GetInventoryComponent())
 			{
-				UPTWWeaponInstance* CurItemInstance = Cast<UPTWWeaponInstance>(InvenComp->GetCurrentWeaponInst());
-				if (!CurItemInstance) return;
-				WeaponComp->AttachWeaponToSocket(CurItemInstance->SpawnedWeapon1P, CurItemInstance->SpawnedWeapon3P, CurItemInstance->ItemDef->WeaponTag);
+				FWeaponPair WeaponPairs = InvenComp->GetWeaponActors(NewPlayer);
+				if (WeaponPairs.Weapon1P && WeaponPairs.Weapon3P)
+				{
+					UPTWWeaponInstance* WeaponInst = WeaponPairs.Weapon3P->GetWeaponItemInstance();
+					if (!WeaponInst) return;
+					
+					if (UPTWItemDefinition* Def = WeaponInst->ItemDef)
+					{
+						WeaponComp->AttachWeaponToSocket(WeaponPairs.Weapon1P, WeaponPairs.Weapon3P, Def->WeaponTag);
+					}
+				}
 			}
 		}
 	}
@@ -657,19 +665,23 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	{
 		DeadPlayerController = DeadPawn->GetController<APTWPlayerController>();
 		DeadPlayerState = DeadPawn->GetPlayerState();
+		
+		/* 리팩토링 필요 */
+		if (APTWPlayerState* PS = Cast<APTWPlayerState>(DeadPlayerState))
+		{
+			UPTWInventoryComponent* InvenComp = PS->GetInventoryComponent();
+			if (!InvenComp) return;
+			FWeaponPair WeaponPair;
+			UPTWWeaponInstance* WeaponInst = Cast<UPTWWeaponInstance>(InvenComp->GetCurrentWeaponInst());
+			if (!WeaponInst) return;
+			WeaponPair.Weapon3P = WeaponInst->SpawnedWeapon3P;
+			WeaponPair.Weapon1P = WeaponInst->SpawnedWeapon1P; 
+			
+			InvenComp->SetSavedWeaponActor(DeadPawn->Controller, WeaponPair); 
+			InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
+		}
+		
 	}
-	
-	// // ItemInstance의 Outer 변경
-	// if (APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(DeadActor))
-	// {
-	// 	UPTWInventoryComponent* InventoryComponent = PlayerCharacter->GetInventoryComponent();
-	// 	if (!InventoryComponent) return;
-	// 	
-	// 	TArray<TObjectPtr<UPTWItemInstance>> Items = InventoryComponent->GetAllItems();
-	// 	InventoryComponent->RemoveActiveItemGameplayAbilityHandle();
-	// 	SetOldPlayerItemInstanceOuter(Items);
-	// 	PendingRespawnItems.Add(DeadPlayerController, {Items});
-	// }
 	
 	APlayerState* KillPlayerState = nullptr;
 	if (IsValid(KillActor))

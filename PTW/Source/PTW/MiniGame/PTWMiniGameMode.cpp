@@ -192,7 +192,7 @@ void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	
 	Super::HandleSeamlessTravelPlayer(C);
 
-	
+	PlayerReadyToPlay(Cast<APlayerController>(C));
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
@@ -214,7 +214,7 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
 		
-		AssignTeam();
+		
 		
 		FTimerHandle LoadingDelayTimer;
 		GetWorldTimerManager().SetTimer(LoadingDelayTimer, FTimerDelegate::CreateLambda([this]()
@@ -252,10 +252,11 @@ void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActor
 void APTWMiniGameMode::StartGame()
 {
 	if (!PTWGameState) return;
-
 	if (bIsGameStarted) return;
 
 	bIsGameStarted = true;
+	
+	AssignTeam();
 	
 	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
 	

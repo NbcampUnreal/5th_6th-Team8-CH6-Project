@@ -19,10 +19,12 @@
 #include "AIController.h"
 #include "ControllerComponent/PTWBaseControllerComponent.h"
 #include "ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
+#include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Debug/PTWLogCategorys.h"
 #include "Gameplay/Actor/PTWResultCharacter.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "Inventory/Instance/PTWItemInstance.h"
+#include "Inventory/Instance/PTWWeaponInstance.h"
 #include "MiniGame/PTWMiniGameMapRow.h"
 
 class UPTWScoreSubsystem;
@@ -555,15 +557,8 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 {
 	if (!NewPlayer) return;
 	
-	TArray<TObjectPtr<UPTWItemInstance>> SavedItems;
-	
 	Super::RestartPlayer(NewPlayer);
 	
-	if (PendingRespawnItems.Contains(NewPlayer))
-	{
-		SavedItems = PendingRespawnItems[NewPlayer].Items;
-		PendingRespawnItems.Remove(NewPlayer); 
-	}
 	
 	if (!IsValid(PTWGameState)) return;
 	
@@ -597,12 +592,25 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	ApplyMiniGameTag(NewPlayer);
 	RemoveTags(NewPlayer);
 	InitPlayerHealth(NewPlayer);
-	SpawnDefaultWeapon(NewPlayer);
+	//SpawnDefaultWeapon(NewPlayer);
 	
 	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
 	{
 		BaseCharacter->OnCharacterDied.RemoveDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
 		BaseCharacter->OnCharacterDied.AddDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
+	}
+	
+	if (APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
+	{
+		if (UPTWWeaponComponent* WeaponComp = TargetCharacter->GetWeaponComponent())
+		{
+			if (UPTWInventoryComponent* InvenComp = TargetCharacter->GetInventoryComponent())
+			{
+				UPTWWeaponInstance* CurItemInstance = Cast<UPTWWeaponInstance>(InvenComp->GetCurrentWeaponInst());
+				if (!CurItemInstance) return;
+				WeaponComp->AttachWeaponToSocket(CurItemInstance->SpawnedWeapon1P, CurItemInstance->SpawnedWeapon3P, CurItemInstance->ItemDef->WeaponTag);
+			}
+		}
 	}
 }
 

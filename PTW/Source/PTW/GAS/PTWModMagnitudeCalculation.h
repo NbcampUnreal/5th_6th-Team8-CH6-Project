@@ -14,20 +14,19 @@ struct FPTWDamageStatics
 	FGameplayEffectAttributeCaptureDefinition WeaponDamageDef;
     
 	// 미니게임 A용 배율
-	FGameplayEffectAttributeCaptureDefinition GameADamageMulDef;
+	FGameplayEffectAttributeCaptureDefinition GameADamageMulDef; //
 	// 미니게임 B용 배율
 	FGameplayEffectAttributeCaptureDefinition GameBDamageMulDef;
+	
+	// 방어력 캡쳐
 
 	FPTWDamageStatics()
 	{
 		// 1. 공통 무기 데미지 캐싱
 		WeaponDamageDef = FGameplayEffectAttributeCaptureDefinition(UPTWWeaponAttributeSet::GetDamageAttribute(), EGameplayEffectAttributeCaptureSource::Source, false);
-
-		// 2. 미니게임별 배율 캐싱 (각기 다른 클래스에서 가져옴)
-		//GameADamageMulDef = FGameplayEffectAttributeCaptureDefinition(UPTWAbilityBattleAttributeSet::Get(), EGameplayEffectAttributeCaptureSource::Source, false);
 	}
 	
-	
+	static const FPTWDamageStatics& DamageStatics() { static FPTWDamageStatics DStatics; return DStatics; }
 };
 
 /**
@@ -37,4 +36,9 @@ UCLASS()
 class PTW_API UPTWModMagnitudeCalculation : public UGameplayModMagnitudeCalculation
 {
 	GENERATED_BODY()
+	
+public:
+	UPTWModMagnitudeCalculation();
+	
+	float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
 };

@@ -41,6 +41,7 @@ void APTWPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(APTWPlayerState, CurrentPlayerData);
 	DOREPLIFETIME(APTWPlayerState, PlayerRoundData);
 	DOREPLIFETIME(APTWPlayerState, CurrentTargetPawn);
+	DOREPLIFETIME(APTWPlayerState, MiniGameComponent);
 }
 
 UAbilitySystemComponent* APTWPlayerState::GetAbilitySystemComponent() const
@@ -80,6 +81,14 @@ void APTWPlayerState::SetLobbyItemData(const FPTWLobbyItemData& NewData)
 	if (HasAuthority())
 	{
 		LobbyItemData = NewData;
+	}
+}
+
+void APTWPlayerState::SetMiniGameComponent(UActorComponent* NewMiniGameComponent)
+{
+	if (HasAuthority())
+	{
+		MiniGameComponent = NewMiniGameComponent;
 	}
 }
 

@@ -88,7 +88,7 @@ protected:
 	virtual void WaitingToStartRound();
 	
 	/** 카운트 다운 시작 */
-	void StartCountDown();
+	virtual void StartCountDown();
 	/** 매초마다 카운트다운 감소 */
 	void TickCountDown();
 	

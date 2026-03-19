@@ -104,6 +104,10 @@ void APTWDeliveryGameMode::RestartPlayer(AController* NewPlayer)
 	{
 		CombatInterface->ApplyGameplayEffectToSelf(RestartPlayerEffect, 1.0f, FGameplayEffectContextHandle());
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("RESTART PLAYER"));
+	}
 }
 
 void APTWDeliveryGameMode::BeginPlay()
@@ -114,6 +118,12 @@ void APTWDeliveryGameMode::BeginPlay()
 	{
 		RaceTrackSpline = Cast<ARaceTrack>(UGameplayStatics::GetActorOfClass(GetWorld(), ARaceTrack::StaticClass()));
 	}
+}
+
+void APTWDeliveryGameMode::StartCountDown()
+{
+	SendMessgeBeginPlay();
+	Super::StartCountDown();
 }
 
 void APTWDeliveryGameMode::ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect)
@@ -361,7 +371,6 @@ void APTWDeliveryGameMode::SendMessgeBeginPlay()
  			FText BeginSendMessage = LOCTEXT("DeliveryBeginMsg", "DeliveryBeginMsg");
  #undef LOCTEXT_NAMESPACE
  			PC->SendMessage(BeginSendMessage, ENotificationPriority::Normal, 10);
- 			ApplyBeginPlayEffect(PC);
  		}
  	}
 }

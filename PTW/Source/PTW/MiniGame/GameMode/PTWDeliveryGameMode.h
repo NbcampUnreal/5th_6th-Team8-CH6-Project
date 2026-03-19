@@ -45,6 +45,7 @@ protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	virtual void BeginPlay() override;
+	virtual void StartCountDown() override;
 	void StartEndCountDown();
 	void UpdateCountDown();
 	void StopCountDown();

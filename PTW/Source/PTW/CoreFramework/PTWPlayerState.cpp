@@ -40,7 +40,6 @@ void APTWPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME(APTWPlayerState, CurrentPlayerData);
 	DOREPLIFETIME(APTWPlayerState, PlayerRoundData);
-	DOREPLIFETIME(APTWPlayerState, CurrentTargetPawn);
 	DOREPLIFETIME(APTWPlayerState, MiniGameComponent);
 }
 
@@ -210,14 +209,6 @@ void APTWPlayerState::ApplyInvincible(float Duration)
 		FGameplayTag::RequestGameplayTag("Data.Duration"), Duration);
 
 	AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
-}
-
-void APTWPlayerState::OnRep_CurrentTargetPawn()
-{
-	if (APTWPlayerController* PC = Cast<APTWPlayerController>(GetOwner()))
-	{
-		PC->UpdateTargetPOV(CurrentTargetPawn);
-	}
 }
 
 void APTWPlayerState::SetDeathOrder(int32 Order)

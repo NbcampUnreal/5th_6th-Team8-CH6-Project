@@ -41,7 +41,14 @@ void APTWGhostChaseMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* Ki
 
 void APTWGhostChaseMiniGameMode::OnPlayerEliminated(AController* EliminatedController)
 {
-	if (!EliminatedController || ActiveChasers.Num() == 0) return;
+	if (!EliminatedController) return;
+
+	if (auto* GCComp = EliminatedController->FindComponentByClass<UPTWGhostChaseControllerComponent>())
+	{
+		GCComp->SetTarget(nullptr);
+	}
+
+	if (ActiveChasers.Num() == 0) return;
 
 	int32 ElimIndex = ActiveChasers.Find(EliminatedController);
 	if (ElimIndex == INDEX_NONE) return;
@@ -175,27 +182,14 @@ void APTWGhostChaseMiniGameMode::UpdatePlayerTargetUI(AController* Chaser, ACont
 {
 	if (!IsValid(Chaser) || !IsValid(NewTarget)) return;
 
-	// Chaser의 PlayerState
-	APTWPlayerState* ChaserPS = Chaser->GetPlayerState<APTWPlayerState>();
 	// Target의 Pawn
 	APawn* TargetPawn = NewTarget->GetPawn();
 
-	if (IsValid(ChaserPS) && IsValid(TargetPawn)) 
-	{
-		// 이 변수가 Replicated이므로, 서버에서 설정하면 클라이언트의 OnRep_CurrentTargetPawn이 실행됩니다.
-		ChaserPS->CurrentTargetPawn = TargetPawn;
-
-		// 만약 서버가 호스트 플레이어라면 OnRep이 자동으로 안 돌 수 있으니 직접 호출
-		if (Chaser->IsLocalController())
-		{
-			ChaserPS->OnRep_CurrentTargetPawn();
-		}
-	}
 	if (IsValid(Chaser))
 	{
 		if (auto* GCComp = Chaser->FindComponentByClass<UPTWGhostChaseControllerComponent>())
 		{
-			GCComp->SetTarget(NewTarget->GetPawn());
+			GCComp->SetTarget(TargetPawn);
 		}
 	}
 }

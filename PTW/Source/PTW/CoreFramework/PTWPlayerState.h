@@ -94,14 +94,6 @@ public:
 
 	void ApplyInvincible(float Duration);
 
-	/* 타겟 POV 시스템 */
-	// 타겟이 변경되었을 때 로컬 컨트롤러에 알림
-	UFUNCTION()
-	void OnRep_CurrentTargetPawn();
-	// 현재 추격 중인 타겟 (복제 변수)
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentTargetPawn, VisibleAnywhere, BlueprintReadOnly, Category = "GTS|Target")
-	TObjectPtr<APawn> CurrentTargetPawn;
-
 	/* 심리스 트래블 시 이전 맵의 GAS 를 초기화하는 함수 */
 	UFUNCTION(BlueprintCallable, Category = "GAS")
 	void ClearGAS();

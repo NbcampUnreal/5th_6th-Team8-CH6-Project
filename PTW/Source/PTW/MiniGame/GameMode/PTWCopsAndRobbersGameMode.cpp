@@ -5,9 +5,12 @@
 #include "AbilitySystemComponent.h"
 #include "GameplayAbilitySpec.h"
 #include "Algo/RandomShuffle.h"
+#include "Components/WidgetComponent.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "MiniGame/Actor/CopsAndRobbers/PTWCitizenSpawner.h"
+#include "MiniGame/ControllerComponent/CopsAndRobbers/PTWCARControllerComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
 #include "System/PTWItemSpawnManager.h"
 
@@ -16,7 +19,7 @@ APTWCopsAndRobbersGameMode::APTWCopsAndRobbersGameMode()
 {
 	MiniGameRule.TimeRule.bUseTimer = true;
 	MiniGameRule.TimeRule.Round = 1;
-	MiniGameRule.TimeRule.Timer = 150.0f;
+	MiniGameRule.TimeRule.Timer = 120.0f;
 	
 	MiniGameRule.TimeRule.bUseCountDown = true;
 	MiniGameRule.TimeRule.CountDown = 10.0f;
@@ -32,6 +35,15 @@ APTWCopsAndRobbersGameMode::APTWCopsAndRobbersGameMode()
 	MiniGameRule.TeamRule.bUseTeam = true;
 	MiniGameRule.TeamRule.NumTeams = 2;
 	
+	if (!IsValid(CARControllerComponentClass))
+	{
+		CARControllerComponentClass = UPTWCARControllerComponent::StaticClass();
+	}
+}
+
+void APTWCopsAndRobbersGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
 }
 
 void APTWCopsAndRobbersGameMode::StartGame()
@@ -47,18 +59,11 @@ void APTWCopsAndRobbersGameMode::EndGame()
 void APTWCopsAndRobbersGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
 	Super::HandleSeamlessTravelPlayer(C);
-	
-	// if (APlayerController* PC = Cast<APlayerController>(C))
-	// {
-	// 	PlayerReadyToPlay(PC);
-	// }
 }
 
 void APTWCopsAndRobbersGameMode::AssignTeam()
 {
 	Super::AssignTeam();
-	// ROBBERS : COPS is 3 : 1 (75% : 25%)
-	
 }
 
 void APTWCopsAndRobbersGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
@@ -142,8 +147,17 @@ void APTWCopsAndRobbersGameMode::WaitingToStartRound()
 		{
 			RoundData->SetTeamId(TargetTeamId);
 		}
+		
+		if (APlayerController* PC = PS->GetPlayerController())
+		{
+			if (UPTWCARControllerComponent* ControllerComponent = NewObject<UPTWCARControllerComponent>(PC, CARControllerComponentClass))
+			{
+				ControllerComponent->RegisterComponent();
+				ControllerComponent->SetTeamId(TargetTeamId);
+				// ControllerComponent->AttachToComponent(PC->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+			}
+		}
 	}
-
 	
 	for (APlayerState* Robber : RobbersTeam.Members)
 	{
@@ -181,6 +195,7 @@ void APTWCopsAndRobbersGameMode::WaitingToStartRound()
 		APTWPlayerState* PTWPS = CastChecked<APTWPlayerState>(Cop);
 		SpawnManager->SpawnSingleItem(PTWPS, CopsWeaponDefinition);
 	}
+	
 }
 
 

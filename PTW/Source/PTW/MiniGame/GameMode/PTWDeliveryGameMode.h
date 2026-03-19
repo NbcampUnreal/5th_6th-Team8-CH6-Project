@@ -59,6 +59,12 @@ protected:
 	
 	void UpdateAllPlayerRanks();
 	
+	void RemoveBeginGameplayEffect();
+	
+	void SendMessgeBeginPlay();
+	
+	void ApplyBeginPlayEffect(APTWPlayerController* PC);
+	
 private:
 	
 	/* 미니 게임 시작 무기 지급*/
@@ -77,6 +83,8 @@ private:
 	void DeliveryUISetting(APTWPlayerCharacter* TargetCharacter);
 	
 	void Test_GiveItems();
+	
+	
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
@@ -101,6 +109,10 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Game|Ranking")
 	TObjectPtr<ARaceTrack> RaceTrackSpline; 
+	
+	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
+	TSubclassOf<UGameplayEffect> BeginApplyEffect;
+	
 	
 	
 	UPROPERTY(EditAnywhere, Category = "Game|Test")

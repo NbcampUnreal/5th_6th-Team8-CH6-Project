@@ -18,39 +18,27 @@ bool UPTWSessionSubsystem::IsUsingSteamSubsystem()
 	return false;
 }
 
-void UPTWSessionSubsystem::SetNetDriverToIP()
-{
-	if (GEngine)
-	{
-		for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
-		{
-			if (Def.DefName == FName("GameNetDriver"))
-			{
-				Def.DriverClassName = FName("OnlineSubsystemUtils.IpNetDriver");
-				Def.DriverClassNameFallback = FName("OnlineSubsystemUtils.IpNetDriver");
-                
-				UE_LOG(LogTemp, Log, TEXT("✅ 넷드라이버가 순수 IP 모드(IpNetDriver)로 변경되었습니다."));
-				break;
-			}
-		}
-	}
-}
 void UPTWSessionSubsystem::SetNetDriverToSteam()
 {
-	if (GEngine)
+	if (!IsValid(GEngine))
 	{
-		for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
+		UE_LOG(LogTemp, Error, TEXT("NetDriver change failed: GEngine is null."));
+		return;
+	}
+	
+	FName CurrentNetDriver = NAME_GameNetDriver;
+	FString SteamNetDriver = TEXT("/Script/SteamSockets.SteamSocketsNetDriver");
+	for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
+	{
+		if (Def.DefName == NAME_GameNetDriver)
 		{
-			if (Def.DefName == FName("GameNetDriver"))
-			{
-				Def.DriverClassName = FName("OnlineSubsystemSteam.SteamNetDriver");
-				Def.DriverClassNameFallback = FName("OnlineSubsystemUtils.IpNetDriver");
-                
-				UE_LOG(LogTemp, Log, TEXT("✅ 넷드라이버가 스팀 모드(SteamNetDriver)로 변경되었습니다."));
-				break;
-			}
+			Def.DriverClassName = FName(SteamNetDriver);
+			UE_LOG(LogTemp, Display, TEXT("Successfully updated %s class to: (%s)"), *CurrentNetDriver.ToString(), *SteamNetDriver);
+			break;
 		}
 	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("Failed to change NetDriver: Definition for '%s' not found."), *CurrentNetDriver.ToString());
 }
 void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig)
 {
@@ -96,6 +84,15 @@ void UPTWSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResultBP& B
 	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(
 		FOnJoinSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnJoinSessionComplete));
 	
+	for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
+	{
+		if (Def.DefName == NAME_GameNetDriver)
+		{
+			Def.DriverClassName = TEXT("/Script/SteamSockets.SteamSocketsNetDriver");
+			break;
+		}
+	}
+	
 	if (!SessionInterface->JoinSession(0, NAME_GameSession, SearchResult))
 	{
 		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
@@ -114,9 +111,10 @@ void UPTWSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessi
 	
 	SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
 	FString ConnectString;
-
 	if (SessionInterface->GetResolvedConnectString(SessionName, ConnectString))
 	{
+		SetNetDriverToSteam();
+		
 		if (APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Executing ClientTravel to: %s"), *ConnectString);
@@ -319,8 +317,11 @@ void UPTWSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig Sess
 	{
 		Options += FString::Printf(TEXT("?listen"));
 	}
+	
 	Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
 	Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
+	
+	SetNetDriverToSteam();
 	
 	if (IsRunningDedicatedServer())
 	{

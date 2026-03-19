@@ -42,6 +42,29 @@ void UPTWGameLiftSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+void UPTWGameLiftSubsystem::SetNetDriverToIP()
+{
+	if (!IsValid(GEngine))
+	{
+		UE_LOG(LogTemp, Error, TEXT("NetDriver change failed: GEngine is null."));
+		return;
+	}
+	
+	FName CurrentNetDriver = NAME_GameNetDriver;
+	FString IpNetDriver = TEXT("OnlineSubsystemUtils.IpNetDriver");
+	for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
+	{
+		if (Def.DefName == NAME_GameNetDriver)
+		{
+			Def.DriverClassName = FName(IpNetDriver);
+			UE_LOG(LogTemp, Display, TEXT("Successfully updated %s class to: (%s)"), *CurrentNetDriver.ToString(), *IpNetDriver);
+			break;
+		}
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("Failed to change NetDriver: Definition for '%s' not found."), *CurrentNetDriver.ToString());
+}
+
 FString UPTWGameLiftSubsystem::SerializeJsonContent(const TMap<FString, FString>& Parameters)
 {
 	TSharedPtr<FJsonObject> ContentJsonObject = MakeShareable(new FJsonObject());

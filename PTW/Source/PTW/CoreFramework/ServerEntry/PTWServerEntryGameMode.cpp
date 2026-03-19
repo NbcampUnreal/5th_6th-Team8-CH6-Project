@@ -47,7 +47,16 @@ void APTWServerEntryGameMode::InitGameLift()
 			FParse::Value(CommandLine, *ServerName_cmd, SessionConfig.ServerName);
 			FParse::Value(CommandLine, *MaxPlayers_cmd, SessionConfig.MaxPlayers);
 		
-			SessionSubsystem->CreateGameSession(SessionConfig);
+			if(UWorld* World = GetWorld())
+			{
+				AsyncTask(ENamedThreads::GameThread, [=, this]()
+				{				
+					// UGameplayStatics::OpenLevel(World, "Lobby");
+					// World->ServerTravel(TEXT("Lobby"));
+					SessionSubsystem->CreateGameSession(SessionConfig);
+				});
+			}
+			
 			return;
 		}
 	}
@@ -178,27 +187,28 @@ void APTWServerEntryGameMode::InitGameLift()
 	// 여기에서 게임 서버는 GameSession 객체를 바탕으로 필요한 동작을 수행해야 합니다.
 	// 플레이어 접속을 받을 준비가 되면, GameLiftServerAPI.ActivateGameSession()을 호출해야 합니다.
 	ProcessParameters->OnStartGameSession.BindLambda([=, this](Aws::GameLift::Server::Model::GameSession InGameSession)
-        {
-            FString GameSessionId = FString(InGameSession.GetGameSessionId());
-            UE_LOG(GameServerLog, Log, TEXT("GameSession Initializing: %s"), *GameSessionId);
-		
-			if (UGameInstance* GI = GetGameInstance())
+	{
+        FString GameSessionId = FString(InGameSession.GetGameSessionId());
+        UE_LOG(GameServerLog, Log, TEXT("GameSession Initializing: %s"), *GameSessionId);
+		if (UGameInstance* GI = GetGameInstance())
+		{
+			if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
 			{
-				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
+				GameLiftSdkModule->ActivateGameSession();
+				// GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
+				// GameLiftSubsystem->SetupMapLoadDelegateHandle();
+				
+				if(UWorld* World = GetWorld())
 				{
-					GameLiftSdkModule->ActivateGameSession();
-					// GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
-					// GameLiftSubsystem->SetupMapLoadDelegateHandle();
-					
-					if(UWorld* World = GetWorld())
-					{
+					AsyncTask(ENamedThreads::GameThread, [=, this]()
+					{				
 						// UGameplayStatics::OpenLevel(World, "Lobby");
 						World->ServerTravel(TEXT("Lobby"));
-					}
+					});
 				}
 			}
-        });
-
+		}
+	});
     //OnProcessTerminate callback. Amazon GameLift Servers will invoke this callback before shutting down an instance hosting this game server.
     //It gives this game server a chance to save its state, communicate with services, etc., before being shut down.
     //In this case, we simply tell Amazon GameLift Servers we are indeed going to shutdown.
@@ -286,7 +296,12 @@ void APTWServerEntryGameMode::InitGameLift()
 	// 클라우드에 저장하고, 이후 접근할 수 있게 합니다.
     TArray<FString> Logfiles;
     Logfiles.Add(TEXT("PTW/Saved/Logs/PTW.log"));
-    ProcessParameters->logParameters = Logfiles;
+	
+	FString LogFilePath = FPaths::Combine(FPaths::ProjectLogDir(), TEXT("PTW.log"));
+	FString AbsoluteLogPath = FPaths::ConvertRelativePathToFull(LogFilePath);
+	Logfiles.Add(AbsoluteLogPath);
+    
+	ProcessParameters->logParameters = Logfiles;
 
     //The game server calls ProcessReady() to tell Amazon GameLift Servers it's ready to host game sessions.
 	// 게임 서버는 ProcessReady()를 호출하여 Amazon GameLift Servers에게 “게임 세션을 호스팅할 준비가 완료되었다”는 것을 알립니다.

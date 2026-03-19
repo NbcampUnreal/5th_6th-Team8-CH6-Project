@@ -42,6 +42,29 @@ void UPTWGameLiftSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+void UPTWGameLiftSubsystem::SetNetDriverToIP()
+{
+	if (!IsValid(GEngine))
+	{
+		UE_LOG(LogTemp, Error, TEXT("NetDriver change failed: GEngine is null."));
+		return;
+	}
+	
+	FName CurrentNetDriver = NAME_GameNetDriver;
+	FString IpNetDriver = TEXT("OnlineSubsystemUtils.IpNetDriver");
+	for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
+	{
+		if (Def.DefName == NAME_GameNetDriver)
+		{
+			Def.DriverClassName = FName(IpNetDriver);
+			UE_LOG(LogTemp, Display, TEXT("Successfully updated %s class to: (%s)"), *CurrentNetDriver.ToString(), *IpNetDriver);
+			break;
+		}
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("Failed to change NetDriver: Definition for '%s' not found."), *CurrentNetDriver.ToString());
+}
+
 FString UPTWGameLiftSubsystem::SerializeJsonContent(const TMap<FString, FString>& Parameters)
 {
 	TSharedPtr<FJsonObject> ContentJsonObject = MakeShareable(new FJsonObject());
@@ -251,12 +274,6 @@ void UPTWGameLiftSubsystem::TryJoinGameSession(const FString& Status, const FStr
 	}
 	else if (Status.Equals(TEXT("ACTIVATING")))
 	{
-		// FTimerDelegate CheckSessionDelegate;
-		// CheckSessionDelegate.BindLambda([this, SessionId]()
-		// {
-		// 	DescribeGameSession(SessionId); 
-		// });
-		// LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer, CheckSessionDelegate, 2.0f, false);
 		if (APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld()))
 		{
 			LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer,
@@ -382,6 +399,7 @@ void UPTWGameLiftSubsystem::OnMapLoaded(UWorld* LoadedWorld)
 	if (MapLoadDelegateHandle.IsValid())
 	{
 		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(MapLoadDelegateHandle);
+		MapLoadDelegateHandle.Reset();
 	}
 }
 
@@ -391,6 +409,7 @@ void UPTWGameLiftSubsystem::SetupMapLoadDelegateHandle()
 	if (MapLoadDelegateHandle.IsValid())
 	{
 		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(MapLoadDelegateHandle);
+		MapLoadDelegateHandle.Reset();
 	}
 	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
 }

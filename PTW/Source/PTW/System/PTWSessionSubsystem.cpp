@@ -40,6 +40,7 @@ void UPTWSessionSubsystem::SetNetDriverToSteam()
 	
 	UE_LOG(LogTemp, Warning, TEXT("Failed to change NetDriver: Definition for '%s' not found."), *CurrentNetDriver.ToString());
 }
+
 void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig)
 {
 	if(!SessionInterface.IsValid()) return;

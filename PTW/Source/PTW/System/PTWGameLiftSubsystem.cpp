@@ -274,12 +274,6 @@ void UPTWGameLiftSubsystem::TryJoinGameSession(const FString& Status, const FStr
 	}
 	else if (Status.Equals(TEXT("ACTIVATING")))
 	{
-		// FTimerDelegate CheckSessionDelegate;
-		// CheckSessionDelegate.BindLambda([this, SessionId]()
-		// {
-		// 	DescribeGameSession(SessionId); 
-		// });
-		// LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer, CheckSessionDelegate, 2.0f, false);
 		if (APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld()))
 		{
 			LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer,

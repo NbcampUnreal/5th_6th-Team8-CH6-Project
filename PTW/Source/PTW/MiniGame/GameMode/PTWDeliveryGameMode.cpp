@@ -97,10 +97,11 @@ void APTWDeliveryGameMode::RestartPlayer(AController* NewPlayer)
 	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn());
 	if (!TargetCharacter) return;
 	
+	IPTWCombatInterface* CombatInterface = CastToPTWCombatInterface(TargetCharacter);
+	if (!CombatInterface) return;
+	
 	if (CheckingDeadPlayer(NewPlayer))
 	{
-		IPTWCombatInterface* CombatInterface = CastToPTWCombatInterface(TargetCharacter);
-		if (!CombatInterface) return;
 		CombatInterface->ApplyGameplayEffectToSelf(RestartPlayerEffect, 1.0f, FGameplayEffectContextHandle());
 	}
 }
@@ -112,7 +113,6 @@ void APTWDeliveryGameMode::BeginPlay()
 	if (!RaceTrackSpline)
 	{
 		RaceTrackSpline = Cast<ARaceTrack>(UGameplayStatics::GetActorOfClass(GetWorld(), ARaceTrack::StaticClass()));
-		SendMessgeBeginPlay();
 	}
 }
 
@@ -353,17 +353,17 @@ void APTWDeliveryGameMode::RemoveBeginGameplayEffect()
 
 void APTWDeliveryGameMode::SendMessgeBeginPlay()
 {
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-	{
-		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
-		{
-#define LOCTEXT_NAMESPACE "DeliveryGameMode"
-			FText BeginSendMessage = LOCTEXT("DeliveryBeginMsg", "DeliveryBeginMsg");
-#undef LOCTEXT_NAMESPACE
-			PC->SendMessage(BeginSendMessage, ENotificationPriority::Normal, 10);
-			ApplyBeginPlayEffect(PC);
-		}
-	}
+ 	for (APlayerState* AS : PTWGameState->PlayerArray)
+ 	{
+ 		if (APTWPlayerController* PC = Cast<APTWPlayerController>(AS->GetPlayerController()))
+ 		{
+ #define LOCTEXT_NAMESPACE "DeliveryGameMode"
+ 			FText BeginSendMessage = LOCTEXT("DeliveryBeginMsg", "DeliveryBeginMsg");
+ #undef LOCTEXT_NAMESPACE
+ 			PC->SendMessage(BeginSendMessage, ENotificationPriority::Normal, 10);
+ 			ApplyBeginPlayEffect(PC);
+ 		}
+ 	}
 }
 
 void APTWDeliveryGameMode::ApplyBeginPlayEffect(APTWPlayerController* PC)

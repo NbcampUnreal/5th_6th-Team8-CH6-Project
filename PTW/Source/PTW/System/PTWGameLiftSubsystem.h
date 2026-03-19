@@ -28,6 +28,7 @@ protected:
 	virtual void Deinitialize() override;
 	
 public:
+	static void SetNetDriverToIP();
 	FString SerializeJsonContent(const TMap<FString, FString>& Params);
 	template <typename T> requires (std::is_same_v<T, FPTWGameLiftGameSession> || std::is_same_v<T, FPTWGameLiftPlayerSession>)
 	bool ParseDataFromJson(const FString& JsonString, T& OutStruct)

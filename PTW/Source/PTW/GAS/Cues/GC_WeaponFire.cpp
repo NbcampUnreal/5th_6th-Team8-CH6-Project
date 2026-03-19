@@ -33,7 +33,7 @@ bool UGC_WeaponFire::OnExecute_Implementation(AActor* MyTarget, const FGameplayC
 	{
 		if (UPTWInventoryComponent* InvenComp = PC->GetInventoryComponent())
 		{
-			if (UPTWWeaponInstance* ItemInst = Cast<UPTWWeaponInstance>(InvenComp->GetCurrentWeaponInst()))
+			if (UPTWWeaponInstance* ItemInst = InvenComp->GetCurrentWeaponInst<UPTWWeaponInstance>())
 			{
 				TargetWeapon = ItemInst->SpawnedWeapon3P;
 			}

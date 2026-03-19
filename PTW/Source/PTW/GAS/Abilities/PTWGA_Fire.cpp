@@ -109,7 +109,7 @@ FPTWFireConext UPTWGA_Fire::GetFireContext() const
 		Context.ASC = Context.PC->GetAbilitySystemComponent();
 		if (UPTWInventoryComponent* Inven = Context.PC->GetInventoryComponent())
 		{
-			Context.WeaponInst = Cast<UPTWWeaponInstance>(Inven->GetCurrentWeaponInst());
+			Context.WeaponInst = Inven->GetCurrentWeaponInst<UPTWWeaponInstance>();
 		}
 	}
 	

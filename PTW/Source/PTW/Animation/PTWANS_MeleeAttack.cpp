@@ -24,7 +24,7 @@ void UPTWANS_MeleeAttack::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeq
 	UPTWInventoryComponent* InvenComp = Owner->GetInventoryComponent();
 	if (!InvenComp) return;
 	
-	UPTWWeaponInstance* WeaponInst =  Cast<UPTWWeaponInstance>(InvenComp->GetCurrentWeaponInst());
+	UPTWWeaponInstance* WeaponInst =  InvenComp->GetCurrentWeaponInst<UPTWWeaponInstance>();
 	if (!WeaponInst) return;
 	
 	MeleeWeapon = WeaponInst->SpawnedWeapon3P;

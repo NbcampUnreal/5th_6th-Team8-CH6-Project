@@ -88,7 +88,7 @@ void UPTWAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 		if (Inventory)
 		{
-			UPTWWeaponInstance* CurrentItem = Cast<UPTWWeaponInstance>(Inventory->GetCurrentWeaponInst());
+			UPTWWeaponInstance* CurrentItem = Inventory->GetCurrentWeaponInst<UPTWWeaponInstance>();
 			if (CurrentItem)
 			{
 				UMeshComponent* TargetWeaponMesh = nullptr;

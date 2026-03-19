@@ -63,6 +63,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	void SetLobbyItemData(const FPTWLobbyItemData& NewData);
 	FPTWLobbyItemData& GetLobbyItemData() {return LobbyItemData;}
+
+	void SetMiniGameComponent(UActorComponent* NewMiniGameComponent);
+	FORCEINLINE UActorComponent* GetMiniGameComponent(){return MiniGameComponent;}
 	
 	/** * 상점에 아이템 구매 요청
 	 * @param ItemID : 구매할 아이템 ID (FName)
@@ -112,7 +115,9 @@ protected:
 	TObjectPtr<UPTWWeaponAttributeSet> WeaponAttributeSet;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UPTWInventoryComponent> InventoryComponent;
-
+	UPROPERTY(Replicated)
+	TObjectPtr<UActorComponent> MiniGameComponent;
+	
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentPlayerData, VisibleAnywhere, BlueprintReadOnly, Category = "Data")
 	FPTWPlayerData CurrentPlayerData;
 

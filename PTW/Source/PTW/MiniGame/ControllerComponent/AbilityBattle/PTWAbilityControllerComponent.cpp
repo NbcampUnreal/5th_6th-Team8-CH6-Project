@@ -19,6 +19,14 @@ UPTWAbilityControllerComponent::UPTWAbilityControllerComponent()
 	SetIsReplicatedByDefault(true);
 }
 
+void UPTWAbilityControllerComponent::Client_HideDraftUI_Implementation()
+{
+	if (DraftWidget)
+	{
+		DraftWidget->RemoveFromParent();
+	}
+}
+
 void UPTWAbilityControllerComponent::SetGameInputMode()
 {
 	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(GetOwner());
@@ -28,6 +36,12 @@ void UPTWAbilityControllerComponent::SetGameInputMode()
 	PlayerController->SetInputMode(InputModeGameOnly);
 	PlayerController->bShowMouseCursor = false;
 }
+
+void UPTWAbilityControllerComponent::Client_GameInputMode_Implementation()
+{
+	SetGameInputMode();
+}
+
 
 void UPTWAbilityControllerComponent::SetUIInputMode(APlayerController* InPlayerController)
 {
@@ -87,8 +101,6 @@ void UPTWAbilityControllerComponent::Client_ShowDraftUI_Implementation(const TAr
 			// FInputModeGameAndUI InputModeGameAndUI;
 			// InputModeGameAndUI.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 			// PlayerController->SetInputMode(InputModeGameAndUI);
-			
-			
 		}
 	});
 	

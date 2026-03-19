@@ -30,8 +30,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TObjectPtr<UDataTable> AbilityDraftDataTable;
 
-	
-	
-private:
 	bool bIsSelected = false;
+private:
+	
 };

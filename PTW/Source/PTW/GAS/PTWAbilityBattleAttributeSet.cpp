@@ -23,6 +23,7 @@ void UPTWAbilityBattleAttributeSet::GetLifetimeReplicatedProps(TArray<class FLif
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, DamageReceived, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, ReflectDamagePercent, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, HealPower, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAbilityBattleAttributeSet, DamageMultiplier, COND_None, REPNOTIFY_OnChanged);
 }
 
 void UPTWAbilityBattleAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -99,4 +100,9 @@ void UPTWAbilityBattleAttributeSet::OnRep_ReflectDamagePercent(const FGameplayAt
 void UPTWAbilityBattleAttributeSet::OnRep_HealPower(const FGameplayAttributeData& OldHealPower)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAbilityBattleAttributeSet, HealPower, OldHealPower);
+}
+
+void UPTWAbilityBattleAttributeSet::OnRep_DamageMultiplier(const FGameplayAttributeData& OldDamageMultiplier)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAbilityBattleAttributeSet, DamageMultiplier, OldDamageMultiplier);
 }

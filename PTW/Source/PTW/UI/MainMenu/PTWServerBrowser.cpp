@@ -158,7 +158,6 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	{
 		SessionConfig.MaxRounds = GetMaxRoundsByLimit(RoundLimit);
 	}
-	// SessionConfig.bIsDedicatedServer = UE_SERVER;
 	SessionConfig.bIsDedicatedServer = DedicatedCheckBox->IsChecked();
 	
 	if (SessionConfig.bIsDedicatedServer)

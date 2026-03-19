@@ -39,7 +39,8 @@ public:
 	
 	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
 	
-	FORCEINLINE UPTWItemInstance* GetCurrentWeaponInst() const {return CurrentWeapon;}
+	template<typename T>
+	FORCEINLINE T* GetCurrentWeaponInst() const { return Cast<T>(CurrentWeapon); }
 	
 	void SetCurrentWeaponInst(const UPTWItemInstance* WeaponInst);
 	

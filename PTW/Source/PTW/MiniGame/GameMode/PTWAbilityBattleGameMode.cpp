@@ -4,15 +4,46 @@
 #include "MiniGame/GameMode/PTWAbilityBattleGameMode.h"
 
 #include "AbilitySystemComponent.h"
+#include "HeadMountedDisplayTypes.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "Debug/PTWLogCategorys.h"
+#include "GameFramework/SpectatorPawn.h"
 #include "GAS/PTWAbilityBattleAttributeSet.h"
+#include "GAS/PTWAbilitySystemComponent.h"
+#include "Inventory/PTWInventoryComponent.h"
 #include "MiniGame/ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
 #include "MiniGame/Data/AbilityBattle/PTWAbilityRow.h"
 #include "MiniGame/Manager/AbilityBattle/PTWRandomDraftSystem.h"
+#include "MiniGame/PlayerStateComponent/PTWAbilityBattlePSComponent.h"
+#include "UI/MiniGame/AbilityBattle/PTWAbilityDraftWidget.h"
+#include "GameFramework/GameState.h"
 
+APTWAbilityBattleGameMode::APTWAbilityBattleGameMode()
+{
+	
+}
+
+void APTWAbilityBattleGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+
+	AttachPlayerStateComponent(NewPlayer);
+}
+
+void APTWAbilityBattleGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(C);
+	if (!PlayerController) return;
+	
+	FInputModeUIOnly InputModeUIOnly;
+	PlayerController->SetInputMode(InputModeUIOnly);
+	PlayerController->bShowMouseCursor = true;
+	PlayerController->FlushPressedKeys();
+
+	Super::HandleSeamlessTravelPlayer(C);
+}
 
 void APTWAbilityBattleGameMode::StartGame()
 {
@@ -23,6 +54,24 @@ void APTWAbilityBattleGameMode::StartGame()
 	InitializeAbilityPool();
 
 	StartDraft(1);
+
+	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (!PTWPlayerState) continue;
+
+		 UPTWInventoryComponent* InventoryComponent = PTWPlayerState->GetInventoryComponent();
+		if (!InventoryComponent) continue;
+
+		InventoryComponent->SendEquipEventToASC(0);
+	}
+}
+
+void APTWAbilityBattleGameMode::StartRound()
+{
+	Super::StartRound();
+
+	EndDraft();
 }
 
 void APTWAbilityBattleGameMode::InitAttributeSet()
@@ -75,6 +124,8 @@ TArray<FName> APTWAbilityBattleGameMode::GenerateDraftOptions(int32 Tier)
 		UE_LOG(Log_AbilityBattle, Warning, TEXT("Pool is nullptr"));
 		return Result;
 	}
+
+	TArray<FName> PoolCopy = *Pool;
 	
 	for (int i = 0; i < DraftOptionCount; i++)
 	{
@@ -98,10 +149,56 @@ void APTWAbilityBattleGameMode::StartDraft(int32 Tier)
 		APTWPlayerController* PlayerController = Cast<APTWPlayerController>(It->Get());
 		if (!PlayerController) continue;
 
+		APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
+		if (!PlayerState) return;
+		
 		UPTWAbilityControllerComponent* AbilityControllerComponent =  Cast<UPTWAbilityControllerComponent>(PlayerController->GetControllerComponent());
 		if (!AbilityControllerComponent) continue;
 
-		AbilityControllerComponent->Client_ShowDraftUI(GenerateDraftOptions(Tier));
+		UPTWAbilityBattlePSComponent* AbilityBattlePSComponent = Cast<UPTWAbilityBattlePSComponent>(PlayerState->GetMiniGameComponent());
+		if (!AbilityBattlePSComponent) continue;
+		
+		TArray<FName> CurrentOptions = GenerateDraftOptions(Tier);
+
+		AbilityBattlePSComponent->SetCurrentDraft(CurrentOptions);
+		AbilityControllerComponent->Client_ShowDraftUI(CurrentOptions);
+	}
+
+	
+}
+
+void APTWAbilityBattleGameMode::EndDraft()
+{
+	AGameState* GS = Cast<AGameState>(GetWorld()->GetGameState());
+	if (!GS) return;
+
+	for (APlayerState* PlayerState : GS->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (!PTWPlayerState) continue;
+
+		APTWPlayerController* PlayerController = Cast<APTWPlayerController>(PTWPlayerState->GetPlayerController());
+		if (!PlayerController) continue;
+
+		UPTWAbilityControllerComponent* AbilityControllerComponent = Cast<UPTWAbilityControllerComponent>(PlayerController->GetControllerComponent());
+		if (!AbilityControllerComponent) continue;
+		
+		UPTWAbilityBattlePSComponent* PlayerStateComponent = Cast<UPTWAbilityBattlePSComponent>(PTWPlayerState->GetMiniGameComponent());
+		if (!PlayerStateComponent) continue;
+
+		if (!PlayerStateComponent->bFirstDraftCompleted)
+		{
+			const TArray<FName>& PlayerDrafts = PlayerStateComponent->GetCurrentDraft();
+			if (PlayerDrafts.Num() == 0) continue;
+			
+			int32 RandIndex = FMath::RandRange(0, PlayerDrafts.Num() - 1);
+			FName Draft = PlayerDrafts[RandIndex];
+			AbilityControllerComponent->Server_SelectedAbility_Implementation(Draft);
+
+			AbilityControllerComponent->Client_HideDraftUI();
+		}
+
+		AbilityControllerComponent->Client_GameInputMode();
 	}
 }
 
@@ -125,6 +222,30 @@ void APTWAbilityBattleGameMode::GrandAbilityBattleAttributeSet()
 	}
 }
 
+void APTWAbilityBattleGameMode::AttachPlayerStateComponent(APlayerController* Controller)
+{
+	if (!Controller) return;
 
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Controller);
+	if (!PlayerController) return;
+
+	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
+	if (!PlayerState) return;
+	
+	if (UActorComponent* BeforeComponent = PlayerState->GetMiniGameComponent())
+	{
+		BeforeComponent->DestroyComponent();
+	}
+	
+	UPTWAbilityBattlePSComponent* ActorComponent = NewObject<UPTWAbilityBattlePSComponent>(PlayerState, TEXT("MiniGameComponent"));
+	if (!ActorComponent) return;
+
+	ActorComponent->SetIsReplicated(true);
+	PlayerState->AddInstanceComponent(ActorComponent);
+	
+	ActorComponent->RegisterComponent();
+
+	PlayerState->SetMiniGameComponent(ActorComponent);
+}
 
 

@@ -19,6 +19,7 @@
 #include "Debug/PTWLogCategorys.h"
 #include "Kismet/GameplayStatics.h"
 
+
 APTWDeliveryGameMode::APTWDeliveryGameMode()
 {
 }
@@ -27,6 +28,7 @@ void APTWDeliveryGameMode::StartRound()
 {
 	SetMiniGameRule();
 	GrantDeliveryAttributeSet();
+	RemoveBeginGameplayEffect();
 	GetWorld()->GetTimerManager().SetTimer(RankingTimerHandle, this, &APTWDeliveryGameMode::UpdateAllPlayerRanks, 0.1f, true);
 	
 #if WITH_EDITOR
@@ -110,6 +112,7 @@ void APTWDeliveryGameMode::BeginPlay()
 	if (!RaceTrackSpline)
 	{
 		RaceTrackSpline = Cast<ARaceTrack>(UGameplayStatics::GetActorOfClass(GetWorld(), ARaceTrack::StaticClass()));
+		SendMessgeBeginPlay();
 	}
 }
 
@@ -335,4 +338,38 @@ void APTWDeliveryGameMode::Test_GiveItems()
 		SpawnManager->SpawnSingleItem(Cast<APTWPlayerState>(AS), TestPassive);
 	}
 	
+}
+
+void APTWDeliveryGameMode::RemoveBeginGameplayEffect()
+{
+	for (APlayerState* AS : PTWGameState->AlivePlayers)
+	{
+		if (IPTWCombatInterface* CombatInterface = CastToPTWCombatInterface(Cast<APTWPlayerCharacter>(AS->GetPawn())))
+		{
+			CombatInterface->RemoveEffectWithTag(GameplayTags::State::Stun);
+		}
+	}
+}
+
+void APTWDeliveryGameMode::SendMessgeBeginPlay()
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		{
+#define LOCTEXT_NAMESPACE "DeliveryGameMode"
+			FText BeginSendMessage = LOCTEXT("DeliveryBeginMsg", "DeliveryBeginMsg");
+#undef LOCTEXT_NAMESPACE
+			PC->SendMessage(BeginSendMessage, ENotificationPriority::Normal, 10);
+			ApplyBeginPlayEffect(PC);
+		}
+	}
+}
+
+void APTWDeliveryGameMode::ApplyBeginPlayEffect(APTWPlayerController* PC)
+{
+	IPTWCombatInterface* PTWInter = CastToPTWCombatInterface(Cast<APTWPlayerCharacter>(PC->GetPawn()));
+	if (!PTWInter) return;
+				
+	PTWInter->ApplyGameplayEffectToSelf(BeginApplyEffect, 1.0f, FGameplayEffectContextHandle());
 }

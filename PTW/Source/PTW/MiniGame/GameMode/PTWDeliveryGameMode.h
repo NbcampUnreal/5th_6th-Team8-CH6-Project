@@ -40,11 +40,11 @@ public:
 	
 	FTransform GetPlayerSpawnTransform(APTWPlayerController* PC);
 
+	void ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect);
 protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	virtual void BeginPlay() override;
-	void ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect);
 	void StartEndCountDown();
 	void UpdateCountDown();
 	void StopCountDown();
@@ -58,6 +58,12 @@ protected:
 	float GetDistanceForActor(AActor* TargetActor);
 	
 	void UpdateAllPlayerRanks();
+	
+	void RemoveBeginGameplayEffect();
+	
+	void SendMessgeBeginPlay();
+	
+	void ApplyBeginPlayEffect(APTWPlayerController* PC);
 	
 private:
 	
@@ -77,6 +83,8 @@ private:
 	void DeliveryUISetting(APTWPlayerCharacter* TargetCharacter);
 	
 	void Test_GiveItems();
+	
+	
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
@@ -102,6 +110,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Game|Ranking")
 	TObjectPtr<ARaceTrack> RaceTrackSpline; 
 	
+	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
+	TSubclassOf<UGameplayEffect> BeginApplyEffect;
+	
+	
 	
 	UPROPERTY(EditAnywhere, Category = "Game|Test")
 	TObjectPtr<UPTWItemDefinition> TestItemDef;
@@ -112,9 +124,6 @@ protected:
 private:
 	FTimerHandle CountDownTimerHandle;
 	FTimerHandle RankingTimerHandle;
-	
-	// UPROPERTY()
-	// TObjectPtr<UPTWDeliveryControllerComponent> DeliveryComp;
 	
 	int32 FinalCount = 10;
 	

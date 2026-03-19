@@ -28,6 +28,8 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 
 	BindGamePhase();
 
+	/* Timer 초기화 */
+	if (Timer) Timer->InitTimer();
 	/* HealthBar 초기화 */
 	if (HealthBar) HealthBar->InitWithASC(ASC);
 	/* AmmoWidget 초기화*/

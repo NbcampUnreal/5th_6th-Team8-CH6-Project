@@ -16,9 +16,13 @@ class PTW_API APTWAbilityBattleGameMode : public APTWMiniGameMode
 {
 	GENERATED_BODY()
 
+public:
+	APTWAbilityBattleGameMode();
 protected:
-
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 	virtual void StartGame() override;
+	virtual void StartRound() override;
 	
 	void InitAttributeSet();
 	
@@ -29,10 +33,11 @@ protected:
 	TArray<FName> GenerateDraftOptions(int32 Tier);
 
 	void StartDraft(int32 Tier);
-
+	void EndDraft();
 private:
 	void GrandAbilityBattleAttributeSet();
-
+	void AttachPlayerStateComponent(APlayerController* Controller);
+	
 	TMap<int32, TArray<FName>> TierAbilityPool;
 	
 	UPROPERTY(EditDefaultsOnly)
@@ -41,5 +46,17 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> InitAttributeEffectClass;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ASpectatorPawn> SpectatorPawnClass;
+	
 	int32 DraftOptionCount = 3;
+
+	UPROPERTY(EditDefaultsOnly)
+	int32 FirstDraftTime = 10.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	int32 DraftRechargeTime = 30.f;
+	
+	FTimerHandle FirstDraftTimerHandle;
+	FTimerHandle DraftChargeTimerHandle;
 };

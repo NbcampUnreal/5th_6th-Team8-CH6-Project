@@ -83,7 +83,7 @@ UAnimMontage* UPTWGA_Reload::GetReloadMontage(APTWPlayerCharacter* PC) const
 	UPTWInventoryComponent* Inven = PC->GetInventoryComponent();
 	if (!Inven) return nullptr;
 
-	UPTWWeaponInstance* CurrentItem = Cast<UPTWWeaponInstance>(Inven->GetCurrentWeaponInst());
+	UPTWWeaponInstance* CurrentItem = Inven->GetCurrentWeaponInst<UPTWWeaponInstance>();
 	if (!CurrentItem) return nullptr;
 
 	UPTWWeaponData* WData = CurrentItem->GetWeaponData();

@@ -109,11 +109,21 @@ FPTWFireConext UPTWGA_Fire::GetFireContext() const
 		Context.ASC = Context.PC->GetAbilitySystemComponent();
 		if (UPTWInventoryComponent* Inven = Context.PC->GetInventoryComponent())
 		{
-			Context.WeaponInst = Cast<UPTWWeaponInstance>(Inven->GetCurrentWeaponInst());
+			Context.WeaponInst = Inven->GetCurrentWeaponInst<UPTWWeaponInstance>();
 		}
 	}
 	
 	return Context;
+}
+
+float UPTWGA_Fire::CalculateDamage(const FPTWFireConext Context)
+{
+	if (const UPTWWeaponAttributeSet* AS = Cast<UPTWWeaponAttributeSet>(Context.ASC->GetAttributeSet(WeaponAttributeClass)))
+	{
+		return AS->GetDamage();
+	}
+
+	return 0.0f;
 }
 
 void UPTWGA_Fire::MakeGameplayCue(FPTWGameplayCueMakingInfo Infos, FGameplayTag ExecuteTag)
@@ -325,10 +335,7 @@ void UPTWGA_Fire::HandleHitScan(const FPTWFireConext Context)
 		FGameplayAbilityTargetDataHandle TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(HitResult);
 		float Damage = 0.0f;
 		
-		if (const UPTWWeaponAttributeSet* AS = Cast<UPTWWeaponAttributeSet>(Context.ASC->GetAttributeSet(WeaponAttributeClass)))
-		{
-			Damage = AS->GetDamage();
-		}
+		Damage = CalculateDamage(Context);
 		
 		ApplyDamageToTarget(TargetData, Damage);
 	}

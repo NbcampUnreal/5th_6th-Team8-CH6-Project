@@ -285,6 +285,19 @@ void APTWMiniGameMode::StartGame()
 	bIsGameStarted = true;
 	
 	AssignTeam();
+
+	AGameStateBase* GS = GetWorld()->GetGameState();
+	if (!GS) return;
+
+	for (APlayerState* PS : GS->PlayerArray)
+	{
+		if (!PS) continue;
+
+		APlayerController* PC = Cast<APlayerController>(PS->GetOwner());
+		if (!PC) continue;
+
+		SpawnDefaultWeapon(PC);
+	}
 	
 	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGame);
 	
@@ -625,7 +638,7 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	ApplyMiniGameTag(NewPlayer);
 	RemoveTags(NewPlayer);
 	InitPlayerHealth(NewPlayer);
-	//SpawnDefaultWeapon(NewPlayer);
+	
 	
 	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
 	{
@@ -637,30 +650,25 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	{
 		PC->Client_RefreshTeamOutline(false, ShouldUseTeamOutline());
 	}
+	
+	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn());
+	if (!TargetCharacter) return;
 
-	if (APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn()))
+	UPTWWeaponComponent* WeaponComp = TargetCharacter->GetWeaponComponent();
+	UPTWInventoryComponent* InvenComp = TargetCharacter->GetInventoryComponent();
+	if (!WeaponComp || !InvenComp) return;
+	
+	const FWeaponPair WeaponPairs = InvenComp->GetWeaponActors(NewPlayer);
+	if (!WeaponPairs.Weapon1P || !WeaponPairs.Weapon3P) return;
+	
+	UPTWWeaponInstance* WeaponInst = WeaponPairs.Weapon3P->GetWeaponItemInstance();
+	if (WeaponInst && WeaponInst->ItemDef)
 	{
-		if (UPTWWeaponComponent* WeaponComp = TargetCharacter->GetWeaponComponent())
-		{
-			if (UPTWInventoryComponent* InvenComp = TargetCharacter->GetInventoryComponent())
-			{
-				FWeaponPair WeaponPairs = InvenComp->GetWeaponActors(NewPlayer);
-				if (WeaponPairs.Weapon1P && WeaponPairs.Weapon3P)
-				{
-					if (UPTWWeaponInstance* WeaponInst = WeaponPairs.Weapon3P->GetWeaponItemInstance())
-					{
-						if (UPTWItemDefinition* Def = WeaponInst->ItemDef)
-						{
-							WeaponComp->AttachWeaponToSocket(
-								WeaponPairs.Weapon1P,
-								WeaponPairs.Weapon3P,
-								Def->WeaponTag
-							);
-						}
-					}
-				}
-			}
-		}
+		WeaponComp->AttachWeaponToSocket(
+			WeaponPairs.Weapon1P,
+			WeaponPairs.Weapon3P,
+			WeaponInst->ItemDef->WeaponTag
+		);
 	}
 }
 
@@ -706,21 +714,22 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	{
 		DeadPlayerController = DeadPawn->GetController<APTWPlayerController>();
 		DeadPlayerState = DeadPawn->GetPlayerState();
+
+		APTWPlayerState* PS = Cast<APTWPlayerState>(DeadPlayerState);
+		if (!PS || !DeadPawn) return;
+
+		UPTWInventoryComponent* InvenComp = PS->GetInventoryComponent();
+		if (!InvenComp) return;
 		
-		/* 리팩토링 필요 */
-		if (APTWPlayerState* PS = Cast<APTWPlayerState>(DeadPlayerState))
-		{
-			UPTWInventoryComponent* InvenComp = PS->GetInventoryComponent();
-			if (!InvenComp) return;
-			FWeaponPair WeaponPair;
-			UPTWWeaponInstance* WeaponInst = Cast<UPTWWeaponInstance>(InvenComp->GetCurrentWeaponInst());
-			if (!WeaponInst) return;
-			WeaponPair.Weapon3P = WeaponInst->SpawnedWeapon3P;
-			WeaponPair.Weapon1P = WeaponInst->SpawnedWeapon1P; 
-			
-			InvenComp->SetSavedWeaponActor(DeadPawn->Controller, WeaponPair); 
-			InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
-		}
+		UPTWWeaponInstance* CurrentInst = InvenComp->GetCurrentWeaponInst<UPTWWeaponInstance>(); // 캐스팅 포함된 Getter 권장
+		if (!CurrentInst) return;
+
+		FWeaponPair WeaponPair;
+		WeaponPair.Weapon1P = CurrentInst->SpawnedWeapon1P;
+		WeaponPair.Weapon3P = CurrentInst->SpawnedWeapon3P;
+		
+		InvenComp->SetSavedWeaponActor(DeadPawn->GetController(), WeaponPair);
+		InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
 		
 	}
 	

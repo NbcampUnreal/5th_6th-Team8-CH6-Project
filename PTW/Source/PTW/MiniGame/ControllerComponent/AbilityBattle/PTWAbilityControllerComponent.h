@@ -21,16 +21,28 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_ShowDraftUI(const TArray<FName>& RowId);
 
+	UFUNCTION(Client, Reliable)
+	void Client_HideDraftUI();
+
+	
 	UFUNCTION(Server, Reliable)
 	void Server_SelectedAbility(FName RowId);
 
+	
 	void SetGameInputMode();
+
+	UFUNCTION(Client, Reliable)
+	void Client_GameInputMode();
+	
+	void SetUIInputMode(APlayerController* InPlayerController = nullptr);
+
+	UPROPERTY()
+	TObjectPtr<UPTWAbilityDraftWidget> DraftWidget;
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> DraftWidgetClass;
 
-	UPROPERTY()
-	TObjectPtr<UPTWAbilityDraftWidget> DraftWidget;
+	
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UDataTable> AbilityDataTable;

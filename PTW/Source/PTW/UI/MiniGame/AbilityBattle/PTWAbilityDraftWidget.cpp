@@ -7,7 +7,9 @@
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "CoreFramework/PTWPlayerController.h"
+#include "CoreFramework/PTWPlayerState.h"
 #include "MiniGame/ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
+#include "MiniGame/PlayerStateComponent/PTWAbilityBattlePSComponent.h"
 
 void UPTWAbilityDraftWidget::GenerateAbilityBoxes(TArray<FName> RowId)
 {
@@ -63,12 +65,12 @@ void UPTWAbilityDraftWidget::OnDraftSelected(FName RowId)
 
 	bIsSelected = true;
 	
-	//APlayerController* PlayerController = GetOwningPlayer();
-	//if (!PlayerController) return;
-
 	APTWPlayerController* PTWPlayerController = Cast<APTWPlayerController>(GetOwningPlayer());
 	if (!PTWPlayerController) return;
 
+	UPTWAbilityBattlePSComponent* PlayerStateComponent = Cast<UPTWAbilityBattlePSComponent>(PTWPlayerController->GetPlayerState<APTWPlayerState>()->GetMiniGameComponent());
+	if (!PlayerStateComponent) return;
+	
 	UActorComponent* ActorComponent = PTWPlayerController->GetControllerComponent();
 	if (!ActorComponent)
 	{
@@ -79,8 +81,8 @@ void UPTWAbilityDraftWidget::OnDraftSelected(FName RowId)
 	UPTWAbilityControllerComponent* ControllerComponent = Cast<UPTWAbilityControllerComponent>(ActorComponent);
 	if (!ControllerComponent) return;
 
+	PlayerStateComponent->bFirstDraftCompleted = true;
 	ControllerComponent->Server_SelectedAbility(RowId);
-	ControllerComponent->SetGameInputMode();
 	RemoveFromParent();
 	
 }

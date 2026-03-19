@@ -56,6 +56,10 @@ public:
 	void BindGameStateDelegates();
 	void UnbindGameStateDelegates();
 
+	/* GhostChase */
+	UFUNCTION(Client, Reliable)
+	void Client_FindGhostChaseComponent();
+
 protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
@@ -79,6 +83,9 @@ private:
 	UPROPERTY()
 	TObjectPtr<UPTWUISubsystem> UISubsystem;
 
+	UPROPERTY()
+	TObjectPtr<class APTWGameState> CachedGameState;
+
 	bool bAbleRankingBoard = false;
 	bool bAbleChat = false;
 	bool bKeyGuideOn = false;
@@ -88,6 +95,9 @@ private:
 
 	FTimerHandle NameTagTimerHandle;
 	FTimerHandle GameStateBindRetryHandle;
+
+	UPROPERTY()
+	class UPTWGhostChaseControllerComponent* CachedGhostChaseComp;
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag") 

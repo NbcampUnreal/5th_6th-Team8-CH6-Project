@@ -19,6 +19,14 @@ UPTWAbilityControllerComponent::UPTWAbilityControllerComponent()
 	SetIsReplicatedByDefault(true);
 }
 
+void UPTWAbilityControllerComponent::Client_HideDraftUI_Implementation()
+{
+	if (DraftWidget)
+	{
+		DraftWidget->RemoveFromParent();
+	}
+}
+
 void UPTWAbilityControllerComponent::SetGameInputMode()
 {
 	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(GetOwner());
@@ -27,6 +35,27 @@ void UPTWAbilityControllerComponent::SetGameInputMode()
 	FInputModeGameOnly InputModeGameOnly;
 	PlayerController->SetInputMode(InputModeGameOnly);
 	PlayerController->bShowMouseCursor = false;
+}
+
+void UPTWAbilityControllerComponent::Client_GameInputMode_Implementation()
+{
+	SetGameInputMode();
+}
+
+
+void UPTWAbilityControllerComponent::SetUIInputMode(APlayerController* InPlayerController)
+{
+	if (!InPlayerController)
+	{
+		InPlayerController = Cast<APTWPlayerController>(GetOwner());
+	}
+	if (!InPlayerController) return;
+	
+	FInputModeUIOnly InputModeUIOnly;
+	InputModeUIOnly.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	InPlayerController->SetInputMode(InputModeUIOnly);
+	InPlayerController->bShowMouseCursor = true;
+	InPlayerController->FlushPressedKeys();
 }
 
 void UPTWAbilityControllerComponent::Server_SelectedAbility_Implementation(FName RowId)
@@ -66,16 +95,12 @@ void UPTWAbilityControllerComponent::Client_ShowDraftUI_Implementation(const TAr
 	{
 		if (DraftWidget && PlayerController)
 		{
-			FInputModeUIOnly InputModeUIOnly;
-			InputModeUIOnly.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			PlayerController->SetInputMode(InputModeUIOnly);
-
+			
+			SetUIInputMode(PlayerController);
+			
 			// FInputModeGameAndUI InputModeGameAndUI;
 			// InputModeGameAndUI.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 			// PlayerController->SetInputMode(InputModeGameAndUI);
-			
-			PlayerController->bShowMouseCursor = true;
-			
 		}
 	});
 	

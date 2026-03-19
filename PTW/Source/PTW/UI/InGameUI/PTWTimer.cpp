@@ -6,14 +6,14 @@
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 
-void UPTWTimer::NativeConstruct()
+void UPTWTimer::InitTimer()
 {
-	Super::NativeConstruct();
-
 	PTWGameState = GetWorld() ? GetWorld()->GetGameState<APTWGameState>() : nullptr;
 
 	if (PTWGameState)
 	{
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_InitGameState);
+
 		UE_LOG(LogTemp, Warning, TEXT("Timer : bind"));
 
 		// 델리게이트 바인딩
@@ -29,6 +29,24 @@ void UPTWTimer::NativeConstruct()
 		HandleRemainTimeChanged(PTWGameState->GetRemainTime());
 		MiniGameCountdownChanged(PTWGameState->IsMiniGameCountdown());
 	}
+	else
+	{
+		if (!TimerHandle_InitGameState.IsValid())
+		{
+			GetWorld()->GetTimerManager().SetTimer(
+				TimerHandle_InitGameState,
+				this,
+				&UPTWTimer::InitTimer,
+				0.1f,
+				true
+			);
+		}
+	}
+}
+
+void UPTWTimer::NativeConstruct()
+{
+	Super::NativeConstruct();
 }
 
 void UPTWTimer::NativeDestruct()

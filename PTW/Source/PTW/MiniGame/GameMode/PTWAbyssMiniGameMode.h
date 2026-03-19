@@ -18,9 +18,11 @@ public:
 	APTWAbyssMiniGameMode();
 
 protected:
+	virtual void RestartPlayer(AController* NewPlayer) override;
+	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	virtual void StartRound() override;
 	virtual void EndRound() override;
-	virtual void SpawnDefaultWeapon(AController* NewPlayer) override;
+	
 	
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Lightning")
 	bool bUseLightningFlash = true;
@@ -40,11 +42,10 @@ protected:
 	void ScheduleLightningFlash();
 	void TriggerLightningFlash();
 	void RestoreAbyssDark();
+	void GiveAndEquipDefaultWeapon(AController* NewPlayer);
+	void AbyssRespawnPlayer(APTWPlayerController* SpawnPlayerController);
 
 private:
-	UPROPERTY(EditDefaultsOnly, Category="Abyss|Weapon")
-	FGameplayTag AbyssDefaultWeaponTag;
-
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")
 	float IdleRevealTime = 3.0f;
 

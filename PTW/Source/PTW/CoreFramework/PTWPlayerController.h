@@ -24,9 +24,6 @@ class UPTWDevWidget;
 class UPTWDeveloperComponent;
 class APostProcessVolume;
 class UPTWAbyssControllerComponent;
-class UPTWTargetViewWidget;
-class USceneCaptureComponent2D; 
-class UTextureRenderTarget2D;   
 class UGameplayEffect;
 class UPTWGhostChaseControllerComponent;
 class UPTWUIControllerComponent;
@@ -92,12 +89,6 @@ public:
 	void OnVoicePressed();
 	void OnVoiceReleased();
 
-	/* 타겟 플레이어가 변경되었을 때 호출 */
-	void UpdateTargetPOV(APawn* NewTarget);
-
-	/* 타겟 뷰의 숨김 목록(HiddenActors)을 현재 상태에 맞춰 새로고침 */
-	void RefreshTargetViewHiddenActors();
-
 	/* UI 생성 */
 	virtual void CreateUI();
 
@@ -162,9 +153,6 @@ protected:
 	/* 개발자용 UI 토글 */
 	void ToggleDevUI();
 
-	/* 타겟뷰 호출 */
-	void CaptureTargetPOV();
-
 public:
 	/* KillLog 델리게이트 */
 	FOnKillLog OnKillLog;
@@ -208,16 +196,6 @@ protected:
 	UPROPERTY(Replicated,VisibleAnywhere)
 	TObjectPtr<UActorComponent> BaseControllerComponent;
 	
-	/* 씬 캡처 결과가 저장될 렌더 타겟 메모리 리소스 */
-	UPROPERTY()
-	TObjectPtr<UTextureRenderTarget2D> TargetPOVRT;
-	/* 현재 활성화되어 캡처를 수행 중인 대상의 캡처 컴포넌트 참조 (GC 방지를 위해 Strong Pointer 사용) */
-	UPROPERTY()
-	TObjectPtr<USceneCaptureComponent2D> CurrentActiveCapture;
-
-	/* 캡처 프레임 제한(30FPS)을 위한 타이머 핸들 */
-	FTimerHandle POVCaptureTimerHandle;
-
 	/* ---------- Input ---------- */
 	// 랭킹보드 (Tab)
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -249,7 +227,4 @@ protected:
 	// 폭탄 경고 위젯
 	UPROPERTY(EditDefaultsOnly, Category = "UI|Bomb")
 	TSubclassOf<UPTWBombWarning> BombWarningWidgetClass;
-	// 타겟뷰 위젯
-	UPROPERTY(EditDefaultsOnly, Category = "UI|GhostChase")
-	TSubclassOf<UPTWTargetViewWidget> POVWidgetClass;
 };

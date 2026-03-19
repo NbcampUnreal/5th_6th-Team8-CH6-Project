@@ -11,6 +11,7 @@
 
 class UGameplayAbility;
 class UGameplayEffect;
+class UPTWCARControllerComponent;
 
 UCLASS()
 class PTW_API APTWCopsAndRobbersGameMode : public APTWMiniGameMode
@@ -21,6 +22,7 @@ public:
 	APTWCopsAndRobbersGameMode();
 
 protected:
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void StartGame() override;
 	virtual void EndGame() override;
 	virtual void WaitingToStartRound() override;
@@ -40,4 +42,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cops|Weapon")
 	TObjectPtr<UPTWItemDefinition> CopsWeaponDefinition;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ControllerComponent")
+	TSubclassOf<UPTWCARControllerComponent> CARControllerComponentClass;
 };

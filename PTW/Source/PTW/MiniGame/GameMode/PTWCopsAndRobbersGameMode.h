@@ -13,6 +13,9 @@ class UGameplayAbility;
 class UGameplayEffect;
 class UPTWCARControllerComponent;
 
+/* [경찰과 도둑 게임모드]
+ * [도둑3 : 경찰1] 비율로 팀을 나누는 게임
+ */
 UCLASS()
 class PTW_API APTWCopsAndRobbersGameMode : public APTWMiniGameMode
 {
@@ -41,7 +44,4 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Cops|Weapon")
 	TObjectPtr<UPTWItemDefinition> CopsWeaponDefinition;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "ControllerComponent")
-	TSubclassOf<UPTWCARControllerComponent> CARControllerComponentClass;
 };

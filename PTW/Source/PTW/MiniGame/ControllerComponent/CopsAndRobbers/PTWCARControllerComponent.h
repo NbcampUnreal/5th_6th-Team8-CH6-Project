@@ -22,13 +22,10 @@ protected:
 	
 public:
 	virtual void InitializeController();
-	void DestroyOtherTeamNameTag();
-	void SetTeamId(int32 NewTeamId);	// ServerOnly Invoke
 	
-	UFUNCTION()
-	void OnRep_TeamId();
+	// 인자로 입력된 PlayerState의 NameTagWidget을 파괴하는 ClientRPC 함수
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_TargetDestroyNameTag(APlayerState* TargetState);
 	
 protected:
-	UPROPERTY(ReplicatedUsing=OnRep_TeamId)
-	int32 TeamId = -1;
 };

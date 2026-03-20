@@ -7,6 +7,7 @@
 #include "Algo/RandomShuffle.h"
 #include "Components/WidgetComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
+#include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "MiniGame/Actor/CopsAndRobbers/PTWCitizenSpawner.h"
@@ -35,10 +36,6 @@ APTWCopsAndRobbersGameMode::APTWCopsAndRobbersGameMode()
 	MiniGameRule.TeamRule.bUseTeam = true;
 	MiniGameRule.TeamRule.NumTeams = 2;
 	
-	if (!IsValid(CARControllerComponentClass))
-	{
-		CARControllerComponentClass = UPTWCARControllerComponent::StaticClass();
-	}
 }
 
 void APTWCopsAndRobbersGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -147,16 +144,6 @@ void APTWCopsAndRobbersGameMode::WaitingToStartRound()
 		{
 			RoundData->SetTeamId(TargetTeamId);
 		}
-		
-		if (APlayerController* PC = PS->GetPlayerController())
-		{
-			if (UPTWCARControllerComponent* ControllerComponent = NewObject<UPTWCARControllerComponent>(PC, CARControllerComponentClass))
-			{
-				ControllerComponent->RegisterComponent();
-				ControllerComponent->SetTeamId(TargetTeamId);
-				// ControllerComponent->AttachToComponent(PC->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-			}
-		}
 	}
 	
 	for (APlayerState* Robber : RobbersTeam.Members)
@@ -196,6 +183,24 @@ void APTWCopsAndRobbersGameMode::WaitingToStartRound()
 		SpawnManager->SpawnSingleItem(PTWPS, CopsWeaponDefinition);
 	}
 	
+	// 경찰은 도둑들의 PlayerNameTagWidget을 볼 수 없도록 Widget을 파괴.
+	// 경찰은 도둑과 AI를 구분할 수 없도록 하기 위함.
+	for (APlayerState* Cop : CopsTeam.Members)
+	{
+		if (APlayerController* PC = Cop->GetPlayerController())
+		{
+			if (APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC))
+			{
+				if (UPTWCARControllerComponent* ControllerComponent = Cast<UPTWCARControllerComponent>(PTWPC->GetControllerComponent()))
+				{
+					for (APlayerState* Robber : RobbersTeam.Members)
+					{
+						ControllerComponent->ClientRPC_TargetDestroyNameTag(Robber);
+					}
+				}
+			}
+		}
+	}
 }
 
 

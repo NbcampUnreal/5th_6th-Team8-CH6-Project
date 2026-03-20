@@ -18,7 +18,6 @@ UPTWCARControllerComponent::UPTWCARControllerComponent()
 void UPTWCARControllerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("UPTWCARControllerComponent::BeginPlay()"));
 }
 
 void UPTWCARControllerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -35,55 +34,23 @@ void UPTWCARControllerComponent::TickComponent(float DeltaTime, ELevelTick TickT
 void UPTWCARControllerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ThisClass, TeamId);
+	// DOREPLIFETIME(ThisClass, TeamId);
 }
 
 void UPTWCARControllerComponent::InitializeController()
 {
 }
 
-void UPTWCARControllerComponent::DestroyOtherTeamNameTag()
+void UPTWCARControllerComponent::ClientRPC_TargetDestroyNameTag_Implementation(APlayerState* TargetState)
 {
 	if (IsRunningDedicatedServer()) return;
-	
-	if (TeamId == -1) return;
-	
-	UWorld* World = GetWorld();
-	if (!IsValid(World)) return;
-	
-	APTWGameState* GS = World->GetGameState<APTWGameState>();
-	if (!IsValid(GS)) return;
-	
-	for (APlayerState* TargetPS : GS->PlayerArray)
-	{
-		if (!IsValid(TargetPS)) continue;
+	if (!IsValid(TargetState)) return;
 		
-		if (IPTWPlayerRoundDataInterface* TargetRoundData = Cast<IPTWPlayerRoundDataInterface>(TargetPS))
-		{
-			int32 TargetTeamId = TargetRoundData->GetTeamId();
-			if (TargetTeamId == -1) continue;
-
-			if (TeamId != TargetTeamId)
-			{
-				APTWPlayerCharacter* TargetCharacter = TargetPS->GetPawn<APTWPlayerCharacter>();
-				if (!IsValid(TargetCharacter)) continue;
-		
-				TargetCharacter->GetNameTagWidget()->DestroyComponent();
-			}
-		}
-	}
-}
-
-void UPTWCARControllerComponent::SetTeamId(int32 NewTeamId)
-{
-	TeamId = NewTeamId;
-	if (GetNetMode() != NM_DedicatedServer)
+	if (IPTWPlayerRoundDataInterface* TargetRoundData = Cast<IPTWPlayerRoundDataInterface>(TargetState))
 	{
-		OnRep_TeamId();
+		APTWPlayerCharacter* TargetCharacter = TargetState->GetPawn<APTWPlayerCharacter>();
+		if (!IsValid(TargetCharacter)) return;
+		
+		TargetCharacter->GetNameTagWidget()->DestroyComponent();
 	}
-}
-
-void UPTWCARControllerComponent::OnRep_TeamId()
-{
-	DestroyOtherTeamNameTag();
 }

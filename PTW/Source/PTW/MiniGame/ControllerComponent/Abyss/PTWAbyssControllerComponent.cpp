@@ -28,7 +28,7 @@ void UPTWAbyssControllerComponent::SetAbyssDark(bool bEnable)
 	if (!CachedAbyssPP) return;
 
 	CachedAbyssPP->bEnabled = true;
-	CachedAbyssPP->BlendWeight = bEnable ? 1.0f : 0.0f;
+	CachedAbyssPP->BlendWeight = bEnable ? 0.3f : 0.0f;
 }
 
 void UPTWAbyssControllerComponent::CacheAbyssPP()

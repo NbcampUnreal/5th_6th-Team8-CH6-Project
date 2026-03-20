@@ -4,18 +4,14 @@
 #include "MiniGame/GameMode/PTWAbilityBattleGameMode.h"
 
 #include "AbilitySystemComponent.h"
-#include "HeadMountedDisplayTypes.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "Debug/PTWLogCategorys.h"
-#include "GameFramework/SpectatorPawn.h"
 #include "GAS/PTWAbilityBattleAttributeSet.h"
-#include "GAS/PTWAbilitySystemComponent.h"
 #include "Inventory/PTWInventoryComponent.h"
 #include "MiniGame/ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
 #include "MiniGame/Data/AbilityBattle/PTWAbilityRow.h"
-#include "MiniGame/Manager/AbilityBattle/PTWRandomDraftSystem.h"
 #include "MiniGame/PlayerStateComponent/PTWAbilityBattlePSComponent.h"
 #include "UI/MiniGame/AbilityBattle/PTWAbilityDraftWidget.h"
 #include "GameFramework/GameState.h"
@@ -43,6 +39,8 @@ void APTWAbilityBattleGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	PlayerController->FlushPressedKeys();
 
 	Super::HandleSeamlessTravelPlayer(C);
+
+	//UE_LOG(Log_AbilityBattle, Warning, TEXT("HandleSeamlessTravelPlayer"));
 }
 
 void APTWAbilityBattleGameMode::StartGame()
@@ -53,7 +51,7 @@ void APTWAbilityBattleGameMode::StartGame()
 	InitAttributeSet();
 	InitializeAbilityPool();
 
-	StartDraft(1);
+	StartDraftAllPlayer(1);
 
 	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 	{
@@ -69,9 +67,77 @@ void APTWAbilityBattleGameMode::StartGame()
 
 void APTWAbilityBattleGameMode::StartRound()
 {
+	EndDraft();
+	
 	Super::StartRound();
 
-	EndDraft();
+	StartDraftChargeTimer();
+}
+
+void APTWAbilityBattleGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController)
+{
+	APTWPlayerState* PlayerState = SpawnPlayerController->GetPlayerState<APTWPlayerState>();
+	if (!PlayerState) return;
+
+	UPTWAbilityBattlePSComponent* PSComponent = Cast<UPTWAbilityBattlePSComponent>(PlayerState->GetMiniGameComponent());
+	if (!PSComponent) return;
+	
+	// 게임모드 스폰 관련 부분 함수로 만들고 함수 실행될 때 draftcharges == 0이면 플레이어 스폰 != 0 이면 return
+	// 드래프트 선택 후 draftcharges가 0이면 플레이어 스폰 
+	// 사망 중에는 draftcharges 게이지 안오르게 설정
+
+	// 딜레이 후 UI 표시 해줘야함
+	UPTWAbilityControllerComponent* ControllerComponent = Cast<UPTWAbilityControllerComponent>(SpawnPlayerController->GetControllerComponent());
+	if (!ControllerComponent) return;
+
+	if (PSComponent->DraftCharges > 0)
+	{
+		ControllerComponent->Client_ShowDraftUI(GenerateDraftOptions(1));
+		return;
+	}
+
+	Super::RespawnPlayer(SpawnPlayerController);
+
+	UE_LOG(Log_AbilityBattle, Warning, TEXT("RespawnPlayer"));
+}
+
+void APTWAbilityBattleGameMode::HandleRespawn(APTWPlayerController* PlayerController)
+{
+	//Super::HandleRespawn(PlayerController);
+
+	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
+	if (!PlayerState) return;
+
+	UPTWAbilityControllerComponent* ControllerComponent = Cast<UPTWAbilityControllerComponent>(PlayerController->GetControllerComponent());
+	if (!ControllerComponent) return;
+	
+	UPTWAbilityBattlePSComponent* PSComponent = Cast<UPTWAbilityBattlePSComponent>(PlayerState->GetMiniGameComponent());
+	if (!PSComponent) return;
+
+	
+	if (PSComponent->DraftCharges == 0)
+	{
+		Super::HandleRespawn(PlayerController);
+	}
+	else
+	{
+		ControllerComponent->Client_ShowDraftUI(GenerateDraftOptions(1));
+		return;
+	}
+	
+	UPTWInventoryComponent* InventoryComponent = PlayerState->GetInventoryComponent();
+	if (!InventoryComponent) return;
+	
+	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
+	if (!ASC) return;
+
+	UE_LOG(Log_AbilityBattle, Warning, TEXT("=== After Respawn ==="));
+	UE_LOG(Log_AbilityBattle, Warning, TEXT("Owner: %s"), *GetNameSafe(ASC->GetOwnerActor()));
+	UE_LOG(Log_AbilityBattle, Warning, TEXT("Avatar: %s"), *GetNameSafe(ASC->GetAvatarActor()));
+
+	InventoryComponent->SendEquipEventToASC(0);
+	// 여기서 플레이어의 상태를 스폰 가능 상태로 만들고 드레프트 선택이 끝났을 때 스폰 가능 상태 + DraftCharges가 0일 경우 스폰 
+	
 }
 
 void APTWAbilityBattleGameMode::InitAttributeSet()
@@ -129,12 +195,12 @@ TArray<FName> APTWAbilityBattleGameMode::GenerateDraftOptions(int32 Tier)
 	
 	for (int i = 0; i < DraftOptionCount; i++)
 	{
-		int32 RandIndex = FMath::RandRange(0, Pool->Num() - 1);
+		int32 RandIndex = FMath::RandRange(0, PoolCopy.Num() - 1);
 		
-		FName RowId = (*Pool)[RandIndex];
+		FName RowId = (PoolCopy)[RandIndex];
 
 		Result.Add(RowId);
-		Pool->RemoveAt(RandIndex);
+		PoolCopy.RemoveAt(RandIndex);
 	}
 
 	UE_LOG(Log_AbilityBattle, Warning, TEXT("Draft Count %d"), Result.Num());
@@ -142,7 +208,7 @@ TArray<FName> APTWAbilityBattleGameMode::GenerateDraftOptions(int32 Tier)
 	return Result;
 }
 
-void APTWAbilityBattleGameMode::StartDraft(int32 Tier)
+void APTWAbilityBattleGameMode::StartDraftAllPlayer(int32 Tier)
 {
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
@@ -150,7 +216,7 @@ void APTWAbilityBattleGameMode::StartDraft(int32 Tier)
 		if (!PlayerController) continue;
 
 		APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
-		if (!PlayerState) return;
+		if (!PlayerState) continue;
 		
 		UPTWAbilityControllerComponent* AbilityControllerComponent =  Cast<UPTWAbilityControllerComponent>(PlayerController->GetControllerComponent());
 		if (!AbilityControllerComponent) continue;
@@ -163,8 +229,11 @@ void APTWAbilityBattleGameMode::StartDraft(int32 Tier)
 		AbilityBattlePSComponent->SetCurrentDraft(CurrentOptions);
 		AbilityControllerComponent->Client_ShowDraftUI(CurrentOptions);
 	}
+}
 
-	
+void APTWAbilityBattleGameMode::StartDraftChargeTimer()
+{
+	GetWorldTimerManager().SetTimer(DraftChargeTimerHandle, this, &APTWAbilityBattleGameMode::AddDraftChargeAllPlayers, DraftChargeTime, true);
 }
 
 void APTWAbilityBattleGameMode::EndDraft()
@@ -193,7 +262,7 @@ void APTWAbilityBattleGameMode::EndDraft()
 			
 			int32 RandIndex = FMath::RandRange(0, PlayerDrafts.Num() - 1);
 			FName Draft = PlayerDrafts[RandIndex];
-			AbilityControllerComponent->Server_SelectedAbility_Implementation(Draft);
+			AbilityControllerComponent->Server_SelectedAbility(Draft);
 
 			AbilityControllerComponent->Client_HideDraftUI();
 		}
@@ -204,7 +273,6 @@ void APTWAbilityBattleGameMode::EndDraft()
 
 void APTWAbilityBattleGameMode::GrandAbilityBattleAttributeSet()
 {
-
 	UE_LOG(Log_AbilityBattle, Warning, TEXT("GrandAbilityBattleAttribute"));
 	
 	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
@@ -246,6 +314,22 @@ void APTWAbilityBattleGameMode::AttachPlayerStateComponent(APlayerController* Co
 	ActorComponent->RegisterComponent();
 
 	PlayerState->SetMiniGameComponent(ActorComponent);
+}
+
+void APTWAbilityBattleGameMode::AddDraftChargeAllPlayers()
+{
+	for (APlayerState* PlayerState : GameState->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (!PTWPlayerState) continue;
+
+		UPTWAbilityBattlePSComponent* PSComponent = Cast<UPTWAbilityBattlePSComponent>(PTWPlayerState->GetMiniGameComponent());
+		if (!PSComponent) continue;
+
+		PSComponent->AddDraftCharges();
+	}
+
+	UE_LOG(Log_AbilityBattle, Log, TEXT("AddDraftChargeAllPlayers"));
 }
 
 

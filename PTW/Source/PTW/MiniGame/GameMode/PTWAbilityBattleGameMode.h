@@ -18,11 +18,14 @@ class PTW_API APTWAbilityBattleGameMode : public APTWMiniGameMode
 
 public:
 	APTWAbilityBattleGameMode();
+	
+	virtual void HandleRespawn(APTWPlayerController* PlayerController) override;
 protected:
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 	virtual void StartGame() override;
 	virtual void StartRound() override;
+	virtual void RespawnPlayer(APTWPlayerController* SpawnPlayerController) override;
 	
 	void InitAttributeSet();
 	
@@ -31,12 +34,14 @@ protected:
 	
 	/** 랜덤 선택지 생성*/
 	TArray<FName> GenerateDraftOptions(int32 Tier);
-
-	void StartDraft(int32 Tier);
+	
+	void StartDraftAllPlayer(int32 Tier);
+	void StartDraftChargeTimer();
 	void EndDraft();
 private:
 	void GrandAbilityBattleAttributeSet();
 	void AttachPlayerStateComponent(APlayerController* Controller);
+	void AddDraftChargeAllPlayers();
 	
 	TMap<int32, TArray<FName>> TierAbilityPool;
 	
@@ -55,7 +60,7 @@ private:
 	int32 FirstDraftTime = 10.f;
 
 	UPROPERTY(EditDefaultsOnly)
-	int32 DraftRechargeTime = 30.f;
+	int32 DraftChargeTime = 25.f;
 	
 	FTimerHandle FirstDraftTimerHandle;
 	FTimerHandle DraftChargeTimerHandle;

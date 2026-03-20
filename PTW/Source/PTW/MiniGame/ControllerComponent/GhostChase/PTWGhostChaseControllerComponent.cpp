@@ -108,7 +108,7 @@ void UPTWGhostChaseControllerComponent::UpdateTargetPOV(APawn* NewTarget)
 				POVCaptureTimerHandle,
 				this,
 				&UPTWGhostChaseControllerComponent::CaptureTargetPOV,
-				0.33f,
+				0.033f,
 				true
 			);
 

@@ -31,6 +31,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void EndGame() override;
+
 	/* GameWaiting 단계: 10초 카운트다운 설정 */
 	virtual void WaitingToStartRound() override;
 

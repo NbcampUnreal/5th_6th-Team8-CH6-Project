@@ -13,6 +13,8 @@
 APTWGhostChaseMiniGameMode::APTWGhostChaseMiniGameMode()
 {
 	// 규칙 설정
+	MiniGameRule.WinConditionRule.WinType = EPTWWinType::Survival;
+
 	MiniGameRule.TimeRule.bUseCountDown = true;
 	MiniGameRule.TimeRule.CountDown = 10.f; // 10초 대기
 
@@ -22,7 +24,7 @@ APTWGhostChaseMiniGameMode::APTWGhostChaseMiniGameMode()
 
 void APTWGhostChaseMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {
-	if (!DeadActor) return;
+	Super::HandlePlayerDeath(DeadActor, KillActor);
 
 	AController* DeadController = nullptr;
 
@@ -35,8 +37,6 @@ void APTWGhostChaseMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* Ki
 	{
 		OnPlayerEliminated(DeadController);
 	}
-
-	Super::HandlePlayerDeath(DeadActor, KillActor);
 }
 
 void APTWGhostChaseMiniGameMode::OnPlayerEliminated(AController* EliminatedController)
@@ -111,6 +111,27 @@ bool APTWGhostChaseMiniGameMode::IsValidChaseTarget(AController* Chaser, AContro
 void APTWGhostChaseMiniGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void APTWGhostChaseMiniGameMode::EndGame()
+{
+	if (bIsGameEnded) return;
+
+	if (!PTWGameState) return;
+
+	// 순위 업데이트 수행
+	// WinType이 Survival이므로 [생존자 -> 마지막 사망자 -> ... -> 최초 사망자] 순으로 정렬됨
+	PTWGameState->UpdateRanking(MiniGameRule);
+
+	// 점수 계산 직전에만 잠시 WinType을 Target으로 변경
+	EPTWWinType OriginalType = MiniGameRule.WinConditionRule.WinType;
+	MiniGameRule.WinConditionRule.WinType = EPTWWinType::Target;
+
+	// 내부에서 PTWGameState->ApplyMiniGameRankScore(MiniGameRule)가 실행
+	Super::EndGame();
+
+	// 원래 타입으로 복구
+	MiniGameRule.WinConditionRule.WinType = OriginalType;
 }
 
 void APTWGhostChaseMiniGameMode::WaitingToStartRound()

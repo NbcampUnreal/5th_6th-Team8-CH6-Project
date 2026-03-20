@@ -15,6 +15,8 @@ class UPTWCARControllerComponent;
 
 /* [경찰과 도둑 게임모드]
  * [도둑3 : 경찰1] 비율로 팀을 나누는 게임
+ * 기본적으로 서바이벌 승리 조건을 따름.
+ * 만약 타이머가 종료되면 도둑팀이 승리
  */
 UCLASS()
 class PTW_API APTWCopsAndRobbersGameMode : public APTWMiniGameMode
@@ -28,6 +30,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void StartGame() override;
 	virtual void EndGame() override;
+	virtual void EndTimer() override;
 	virtual void WaitingToStartRound() override;
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 	virtual void AssignTeam() override;

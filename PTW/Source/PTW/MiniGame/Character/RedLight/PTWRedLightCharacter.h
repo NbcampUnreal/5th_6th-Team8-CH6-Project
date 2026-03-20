@@ -6,6 +6,15 @@
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "PTWRedLightCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum class ERedLightPhase : uint8
+{
+	WaitInput       UMETA(DisplayName = "입력대기(파란불)"),
+	InputComplete   UMETA(DisplayName = "입력완료(파란불)"),
+	TimerPlaying    UMETA(DisplayName = "타이머재생(파란불)"),
+	RedLight        UMETA(DisplayName = "빨간불")
+};
+
 class UPTWRedLightMark;
 class USpotLightComponent;
 class UPTWItemDefinition;
@@ -23,17 +32,26 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SpottedPlayer(ACharacter* CaughtPlayer);
 
+	UFUNCTION(BlueprintPure, Category = "RedLight|Charge")
+	float GetChargeProgress() const;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_RemoveSpottedMark(ACharacter* CaughtPlayer);
+
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnPlayerStateChanged(APlayerState* NewPlayerState, APlayerState* OldPlayerState) override;
+	virtual void PawnClientRestart() override;
+	virtual void PossessedBy(AController* NewController) override;
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetLightState(bool bNewState);
+	void Server_SetPhase(ERedLightPhase NewPhase);
 	UFUNCTION(Server, Reliable)
 	void Server_StartGreenLightWithTime(float GreenLightDuration);
+
 	UFUNCTION()
-	void OnRep_IsRedLight();
+	void OnRep_CurrentPhase();
 
 	void TurnOnRedLight();
 
@@ -43,21 +61,33 @@ protected:
 	void OnSpacePressed();
 	void OnSpaceReleased();
 
+	void UpdateTaggerState();
+
+	void OnRedLightTimerEnded();
+
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight")
 	TSubclassOf<UPTWRedLightMark> MarkWidgetClass;
 
-	UPROPERTY(ReplicatedUsing = OnRep_IsRedLight, BlueprintReadOnly, Category = "RedLight")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "RedLight")
 	bool bIsRedLight = false;
 
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentPhase, BlueprintReadOnly, Category = "RedLight")
+	ERedLightPhase CurrentPhase = ERedLightPhase::WaitInput;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight|Input")
+	class UInputAction* JumpAction;
 protected:
-	// 연출용 스포트라이트 (빨간 눈)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RedLight|Lights")
 	TObjectPtr<USpotLightComponent> LeftEyeLight;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RedLight|Lights")
 	TObjectPtr<USpotLightComponent> RightEyeLight;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight|Weapon")
 	TObjectPtr<class UPTWItemDefinition> TaggerWeaponDef;
+	UPROPERTY(BlueprintReadOnly, Category = "RedLight|Charge")
+	bool bIsCharging = false;
+	UPROPERTY()
+	FRotator InitialRotation;
 
 	float SpacePressedTime;
 	

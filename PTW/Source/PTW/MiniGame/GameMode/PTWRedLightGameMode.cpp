@@ -10,6 +10,8 @@
 #include "TimerManager.h"
 #include "System/PTWItemSpawnmanager.h"
 #include "EngineUtils.h"
+#include "CoreFramework/PTWCombatInterface.h"
+#include "GameplayEffect.h"
 
 void APTWRedLightGameMode::AssignTagger(APlayerController* TaggerPC)
 {
@@ -23,6 +25,7 @@ void APTWRedLightGameMode::AssignTagger(APlayerController* TaggerPC)
 
 	AActor* DollStart = FindPlayerStart(TaggerPC, TEXT("DollSpawn"));
 	FVector SpawnLocation = DollStart ? DollStart->GetActorLocation() : FVector(0.f, 0.f, 200.f);
+	FRotator SpawnRotator = DollStart->GetActorRotation();
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
@@ -45,6 +48,27 @@ void APTWRedLightGameMode::OnRedLightStateChanged(bool bIsRedLight, APTWRedLight
 	else
 	{
 		GetWorldTimerManager().ClearTimer(MovementCheckTimer);
+
+		for (ACharacter* CaughtPlayer : CaughtPlayers)
+		{
+			if (IsValid(CaughtPlayer))
+			{
+				if (InvincibleEffectClass)
+				{
+					if (IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(CaughtPlayer))
+					{
+						FGameplayEffectContextHandle EmptyContext;
+						CombatInterface->ApplyGameplayEffectToSelf(InvincibleEffectClass, 1.0f, EmptyContext);
+					}
+				}
+				if (CurrentTagger)
+				{
+					CurrentTagger->Multicast_RemoveSpottedMark(CaughtPlayer);
+				}
+			}
+		}
+
+		CaughtPlayers.Empty();
 	}
 }
 
@@ -66,9 +90,14 @@ void APTWRedLightGameMode::CheckPlayerMovements()
 			if (CurrentSpeed > MaxAllowedSpeed)
 			{
 				CaughtPlayers.Add(Runner);
-				UE_LOG(LogTemp, Warning, TEXT("[RedLight] %s 발각됨! (저격 대기)"), *Runner->GetName());
+				UE_LOG(LogTemp, Warning, TEXT("🚨 [RedLight] %s 발각됨! (무적 해제 및 저격 대기)"), *Runner->GetName());
 
 				CurrentTagger->Multicast_SpottedPlayer(Runner);
+
+				if (IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(Runner))
+				{
+					CombatInterface->RemoveEffectWithTag(InvincibleTag);
+				}
 			}
 		}
 	}
@@ -121,6 +150,27 @@ void APTWRedLightGameMode::StartRound()
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("[RedLight] 에러: 참가 중인 플레이어가 없거나 TaggerClass가 설정되지 않았습니다!"));
+	}
+
+	if (InvincibleEffectClass)
+	{
+		for (FConstControllerIterator It = GetWorld()->GetControllerIterator(); It; ++It)
+		{
+			AController* Controller = It->Get();
+			if (!Controller) continue;
+
+			ACharacter* Runner = Cast<ACharacter>(Controller->GetPawn());
+
+			if (Runner && Runner != CurrentTagger)
+			{
+				if (IPTWCombatInterface* CombatInterface = Cast<IPTWCombatInterface>(Runner))
+				{
+					FGameplayEffectContextHandle EmptyContext;
+					CombatInterface->ApplyGameplayEffectToSelf(InvincibleEffectClass, 1.0f, EmptyContext);
+				}
+			}
+		}
+		UE_LOG(LogTemp, Warning, TEXT("[RedLight] 모든 도망자에게 기본 무적 상태가 부여되었습니다."));
 	}
 }
 

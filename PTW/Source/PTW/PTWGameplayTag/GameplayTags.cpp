@@ -141,6 +141,7 @@ namespace GameplayTags
 			{
 				PTW_API UE_DEFINE_GAMEPLAY_TAG(Rifle, "Weapon.Gun.Rifle");
 				PTW_API UE_DEFINE_GAMEPLAY_TAG(WaterGun, "Weapon.Gun.Rifle.WaterGun");
+				PTW_API UE_DEFINE_GAMEPLAY_TAG(RedLightSniper, "Weapon.Gun.Rifle.RedLightSniper");
 			}
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Rocket, "Weapon.Gun.Rocket");
 		}

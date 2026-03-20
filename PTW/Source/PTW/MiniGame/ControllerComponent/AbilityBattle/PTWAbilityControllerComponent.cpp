@@ -9,6 +9,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "MiniGame/Data/AbilityBattle/PTWAbilityDefinition.h"
 #include "MiniGame/Data/AbilityBattle/PTWAbilityRow.h"
+#include "MiniGame/GameMode/PTWAbilityBattleGameMode.h"
+#include "MiniGame/PlayerStateComponent/PTWAbilityBattlePSComponent.h"
 #include "UI/MiniGame/AbilityBattle/PTWAbilityDraftWidget.h"
 
 
@@ -23,7 +25,7 @@ void UPTWAbilityControllerComponent::Client_HideDraftUI_Implementation()
 {
 	if (DraftWidget)
 	{
-		DraftWidget->RemoveFromParent();
+		DraftWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 
@@ -67,6 +69,9 @@ void UPTWAbilityControllerComponent::Server_SelectedAbility_Implementation(FName
 	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
 	if (!PlayerState) return;
 
+	UPTWAbilityBattlePSComponent* PlayerStateComponent = Cast<UPTWAbilityBattlePSComponent>(PlayerState->GetMiniGameComponent());
+	if (!PlayerStateComponent) return;
+	
 	FPTWAbilityRow* Row = AbilityDataTable->FindRow<FPTWAbilityRow>(RowId, TEXT(""));
 	if (!Row) return;
 
@@ -74,33 +79,44 @@ void UPTWAbilityControllerComponent::Server_SelectedAbility_Implementation(FName
 	if (!Definition) return;
 	
 	PlayerState->InjectEffect(Definition->EffectClass);
+	
+	PlayerStateComponent->DecreaseDraftCharges();
+	// 여기서 게임모드 스폰 함수 호출 하면 될듯
 
+	APTWAbilityBattleGameMode* AbilityBattleGameMode = Cast<APTWAbilityBattleGameMode>(GetWorld()->GetAuthGameMode());
+	if (!AbilityBattleGameMode) return;
+
+	if (PlayerStateComponent->bFirstDraftCompleted)
+	{
+		AbilityBattleGameMode->HandleRespawn(PlayerController);
+	}
+	
+	PlayerStateComponent->bFirstDraftCompleted = true;
+	
 	UE_LOG(LogTemp, Log, TEXT("Server_SelectedAbility_Implementation"));
 }
 
 void UPTWAbilityControllerComponent::Client_ShowDraftUI_Implementation(const TArray<FName>& RowId)
 {
-	if (!DraftWidgetClass || DraftWidget) return;
+	if (!DraftWidgetClass) return;
 	
 	APlayerController* PlayerController = Cast<APlayerController>(GetOwner()); 
 	if (!PlayerController || !PlayerController->IsLocalController()) return;
-	
-	DraftWidget = CreateWidget<UPTWAbilityDraftWidget>(PlayerController,DraftWidgetClass);
-	if (!DraftWidget) return;
-	
+
+	if (!DraftWidget)
+	{
+		DraftWidget = CreateWidget<UPTWAbilityDraftWidget>(PlayerController,DraftWidgetClass);
+		DraftWidget->AddToViewport(50);
+	}
+
 	DraftWidget->GenerateAbilityBoxes(RowId);
-	DraftWidget->AddToViewport(50);
-	
+	DraftWidget->SetVisibility(ESlateVisibility::Visible);
+
 	GetWorld()->GetTimerManager().SetTimerForNextTick([this,PlayerController]()
 	{
 		if (DraftWidget && PlayerController)
 		{
-			
 			SetUIInputMode(PlayerController);
-			
-			// FInputModeGameAndUI InputModeGameAndUI;
-			// InputModeGameAndUI.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			// PlayerController->SetInputMode(InputModeGameAndUI);
 		}
 	});
 	

@@ -143,6 +143,7 @@ namespace GameplayTags
 			namespace Rifle
 			{
 				PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Rifle);
+				PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(CopsRifle);
 				PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(WaterGun);
 			}
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Rocket);

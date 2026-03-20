@@ -5,12 +5,10 @@
 #include "AbilitySystemComponent.h"
 #include "GameplayAbilitySpec.h"
 #include "Algo/RandomShuffle.h"
-#include "Components/WidgetComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
-#include "MiniGame/Actor/CopsAndRobbers/PTWCitizenSpawner.h"
 #include "MiniGame/ControllerComponent/CopsAndRobbers/PTWCARControllerComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
 #include "System/PTWItemSpawnManager.h"
@@ -51,6 +49,16 @@ void APTWCopsAndRobbersGameMode::StartGame()
 void APTWCopsAndRobbersGameMode::EndGame()
 {
 	Super::EndGame();
+}
+
+void APTWCopsAndRobbersGameMode::EndTimer()
+{
+	if (bIsGameEnded) return;
+	
+	// 타이머가 종료되면 도둑팀이 승리
+	PTWGameState->SetWinTeamId(ROBBERS);
+	
+	Super::EndTimer();
 }
 
 void APTWCopsAndRobbersGameMode::HandleSeamlessTravelPlayer(AController*& C)
@@ -179,8 +187,11 @@ void APTWCopsAndRobbersGameMode::WaitingToStartRound()
 		UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
 		check(SpawnManager);
 		
-		APTWPlayerState* PTWPS = CastChecked<APTWPlayerState>(Cop);
-		SpawnManager->SpawnSingleItem(PTWPS, CopsWeaponDefinition);
+		APTWPlayerCharacter* PlayerCharacter = Cop->GetPawn<APTWPlayerCharacter>();
+		check(PlayerCharacter);
+		SpawnManager->SpawnWeaponActor(PlayerCharacter, CopsWeaponDefinition, CopsWeaponDefinition->WeaponTag);;
+		// APTWPlayerState* PTWPS = CastChecked<APTWPlayerState>(Cop);
+		// SpawnManager->SpawnSingleItem(PTWPS, CopsWeaponDefinition, CopsWeaponDefinition->WeaponTag);
 	}
 	
 	// 경찰은 도둑들의 PlayerNameTagWidget을 볼 수 없도록 Widget을 파괴.
@@ -202,5 +213,3 @@ void APTWCopsAndRobbersGameMode::WaitingToStartRound()
 		}
 	}
 }
-
-

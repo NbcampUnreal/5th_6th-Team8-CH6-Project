@@ -379,12 +379,12 @@ bool UPTWGA_Fire::CheckingTeam(AActor* TargetActor)
 	APTWPlayerCharacter* TargetPC = Cast<APTWPlayerCharacter>(TargetActor);
 	APTWPlayerCharacter* MyPC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
 	
-	if (!TargetPC || !MyPC) return false;
+	if (!TargetPC || !MyPC) return true;
 
 	APTWPlayerState* TargetPS = Cast<APTWPlayerState>(TargetPC->GetPlayerState());
 	APTWPlayerState* MyPS = Cast<APTWPlayerState>(MyPC->GetPlayerState());
 	
-	if (!TargetPS || !MyPS) return false;
+	if (!TargetPS || !MyPS) return true;
 	if (TargetPS->GetPlayerRoundData().TeamId == -1) return true; // 개인전인 경우
 	if (TargetPS->GetPlayerRoundData().TeamId == MyPS->GetPlayerRoundData().TeamId) return false; //같은 팀인 경우
 	

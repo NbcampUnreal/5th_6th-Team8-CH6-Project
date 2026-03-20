@@ -709,7 +709,7 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 	
 	APTWPlayerController* DeadPlayerController = nullptr;
 	APlayerState* DeadPlayerState = nullptr;
-
+	
 	if (const APawn* DeadPawn = Cast<APawn>(DeadActor))
 	{
 		DeadPlayerController = DeadPawn->GetController<APTWPlayerController>();
@@ -722,17 +722,17 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 		if (!InvenComp) return;
 		
 		UPTWWeaponInstance* CurrentInst = InvenComp->GetCurrentWeaponInst<UPTWWeaponInstance>(); // 캐스팅 포함된 Getter 권장
-		if (!CurrentInst) return;
-
-		FWeaponPair WeaponPair;
-		WeaponPair.Weapon1P = CurrentInst->SpawnedWeapon1P;
-		WeaponPair.Weapon3P = CurrentInst->SpawnedWeapon3P;
+		if (CurrentInst)
+		{
+			FWeaponPair WeaponPair;
+			WeaponPair.Weapon1P = CurrentInst->SpawnedWeapon1P;
+			WeaponPair.Weapon3P = CurrentInst->SpawnedWeapon3P;
 		
-		InvenComp->SetSavedWeaponActor(DeadPawn->GetController(), WeaponPair);
-		InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
-		
+			InvenComp->SetSavedWeaponActor(DeadPawn->GetController(), WeaponPair);
+			InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
+		}
 	}
-	
+
 	APlayerState* KillPlayerState = nullptr;
 	if (IsValid(KillActor))
 	{

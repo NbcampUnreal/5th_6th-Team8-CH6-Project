@@ -238,6 +238,7 @@ void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActor
 	
 	if (UActorComponent* BeforeComponent = PlayerController->GetControllerComponent())
 	{
+		BeforeComponent->UnregisterComponent();
 		BeforeComponent->DestroyComponent();
 	}
 	
@@ -245,7 +246,7 @@ void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActor
 
 	if (!ActorComponent && ControllerComponentClass)
 	{
-		ActorComponent = NewObject<UActorComponent>(PlayerController, ControllerComponentClass, TEXT("ControllerComponent"));
+		ActorComponent = NewObject<UActorComponent>(PlayerController, ControllerComponentClass, NAME_None);
 	}
 	if (!ActorComponent) return;
 
@@ -901,22 +902,25 @@ void APTWMiniGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController
 		TWeakObjectPtr<APTWPlayerController> WeakDeadController = SpawnPlayerController;
 		GetWorldTimerManager().SetTimer(WeakDeadController->RespawnTimerHandle, [WeakThis, WeakDeadController, this]()
 		{
-			if (WeakThis.IsValid() && WeakDeadController.IsValid())		// 파괴 방어
-			{
-				WeakThis->RestartPlayer(WeakDeadController.Get());
-
-				if (MiniGameRule.SpawnRule.bUseSpawnProtection == true)
-				{
-					APTWPlayerState* PlayerState = WeakDeadController->GetPlayerState<APTWPlayerState>();
-					if (!PlayerState) return;
-
-					PlayerState->ApplyInvincible(MiniGameRule.SpawnRule.SpawnProtectionTime);
-				}
-			}
+			WeakThis->HandleRespawn(WeakDeadController.Get());
+			
 		}, MiniGameRule.SpawnRule.RespawnDelay, false);
 	}
+}
 
-	
+void APTWMiniGameMode::HandleRespawn(APTWPlayerController* PlayerController)
+{
+	if (!IsValid(PlayerController)) return;
+
+	RestartPlayer(PlayerController);
+
+	if (MiniGameRule.SpawnRule.bUseSpawnProtection)
+	{
+		APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
+		if (!PlayerState) return;
+
+		PlayerState->ApplyInvincible(MiniGameRule.SpawnRule.SpawnProtectionTime);
+	}
 }
 
 void APTWMiniGameMode::InitPlayerHealth(AController* Controller)

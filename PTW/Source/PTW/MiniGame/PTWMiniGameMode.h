@@ -98,6 +98,10 @@ protected:
 	
 	void ApplyRoundPropRandom();
 
+	/** 플레이어 리스폰 */
+	virtual void RespawnPlayer(APTWPlayerController* SpawnPlayerController);
+	virtual void HandleRespawn(APTWPlayerController* PlayerController);
+
 	/** 플레이어 모든 태그 제거*/
 	void RemoveTags(AController* Controller);
 	
@@ -177,8 +181,7 @@ private:
 	/**라운드 종료 시 플레이어의 인벤토리 ID 초기화 */
 	void ResetPlayerInventoryID();
 
-	/** 플레이어 리스폰 */
-	void RespawnPlayer(APTWPlayerController* SpawnPlayerController);
+	
 	
 	/** 리스폰 시 플레이어 체력 초기화 */
 	void InitPlayerHealth(AController* Controller);

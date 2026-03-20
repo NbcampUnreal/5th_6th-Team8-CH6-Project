@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "MiniGame/PTWMiniGameMode.h"
+#include "GameplayTagContainer.h"
 #include "PTWRedLightGameMode.generated.h"
 
 class APTWRedLightCharacter;
 class UPTWItemDefinition;
+class UGameplayEffect;
 
 UCLASS()
 class PTW_API APTWRedLightGameMode : public APTWMiniGameMode
@@ -30,6 +32,12 @@ public:
 
 	void OnRedLightStateChanged(bool bIsRedLight, APTWRedLightCharacter* TaggerChar);
 	bool IsPlayerCaught(ACharacter* PlayerToCheck) const;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight|Combat")
+	TSubclassOf<UGameplayEffect> InvincibleEffectClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight|Combat")
+	FGameplayTag InvincibleTag;
 
 protected:
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;

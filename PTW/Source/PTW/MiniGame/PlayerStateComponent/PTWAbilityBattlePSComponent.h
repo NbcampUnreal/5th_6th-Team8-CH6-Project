@@ -16,20 +16,22 @@ class PTW_API UPTWAbilityBattlePSComponent : public UActorComponent
 public:
 	UPTWAbilityBattlePSComponent();
 
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	
 	void AddDraftCharges();
 	void DecreaseDraftCharges();
 	
 	void SetCurrentDraft(const TArray<FName>& NewDraft);
 	void ResetCurrentDraft();
 	
-	UPROPERTY(VisibleAnywhere)
-	int32 DraftCharges;
+	UPROPERTY(Replicated,VisibleAnywhere)
+	int32 DraftCharges = 1;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<FName> CurrentDraft;
 
-	UPROPERTY()
-	bool bFirstDraftCompleted;
+	UPROPERTY(Replicated)
+	bool bFirstDraftCompleted = false;
 
 	FORCEINLINE TArray<FName> GetCurrentDraft() {return CurrentDraft;}
 	

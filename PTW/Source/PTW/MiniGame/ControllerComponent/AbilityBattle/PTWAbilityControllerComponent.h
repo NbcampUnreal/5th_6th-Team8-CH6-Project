@@ -27,7 +27,6 @@ public:
 	
 	UFUNCTION(Server, Reliable)
 	void Server_SelectedAbility(FName RowId);
-
 	
 	void SetGameInputMode();
 

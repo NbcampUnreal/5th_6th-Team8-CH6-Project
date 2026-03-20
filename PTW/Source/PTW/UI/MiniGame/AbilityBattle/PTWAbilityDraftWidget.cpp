@@ -39,6 +39,8 @@ void UPTWAbilityDraftWidget::GenerateAbilityBoxes(TArray<FName> RowId)
 		UE_LOG(LogTemp, Error, TEXT("[DraftWidget] Rowid empty"));
 	}
 	
+	HorizontalBox->ClearChildren();
+	
 	for (int32 i = 0; i < RowId.Num(); i++)
 	{
 		UPTWAbilityBoxWidget* BoxWidget = CreateWidget<UPTWAbilityBoxWidget>(this, AbilityBoxClass);
@@ -81,8 +83,8 @@ void UPTWAbilityDraftWidget::OnDraftSelected(FName RowId)
 	UPTWAbilityControllerComponent* ControllerComponent = Cast<UPTWAbilityControllerComponent>(ActorComponent);
 	if (!ControllerComponent) return;
 
-	PlayerStateComponent->bFirstDraftCompleted = true;
+	//PlayerStateComponent->bFirstDraftCompleted = true;
+	//PlayerStateComponent->DecreaseDraftCharges();
 	ControllerComponent->Server_SelectedAbility(RowId);
-	RemoveFromParent();
-	
+	ControllerComponent->Client_HideDraftUI();
 }

@@ -8,9 +8,14 @@
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/PTWDummyBotController.h"
 #include "Debug/PTWLogCategorys.h"
+#include "Kismet/GameplayStatics.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
+#include "System/PTWGameLiftSubsystem.h"
 #include "System/PTWScoreSubsystem.h"
 
+#if WITH_GAMELIFT
+#include "GameLiftServerSDK.h"
+#endif
 
 APTWGameMode::APTWGameMode()
 {
@@ -122,6 +127,32 @@ void APTWGameMode::Logout(AController* Exiting)
 	
 	Super::Logout(Exiting);
 
+	// 주의: 보통 Controller나 PlayerState에 이 플레이어의 PlayerSessionId를 미리 저장해 두어야 합니다.
+	// (PostLogin 등에서 PlayerSessionId를 PlayerState에 캐싱해두는 것을 추천합니다.)
+	
+#if WITH_GAMELIFT
+	
+	if (APTWPlayerState* PTWPS = Exiting->GetPlayerState<APTWPlayerState>())
+	{
+		FString SessionIdToRemove = PTWPS->GetPlayerSessionId();
+
+		if (!SessionIdToRemove.IsEmpty())
+		{
+			if (UGameInstance* GI = GetGameInstance())
+			{
+				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
+				{
+					if (FGameLiftServerSDKModule* GameLiftSdkModule = GameLiftSubsystem->GetGameLiftSdkModule())
+					{
+						GameLiftSdkModule->RemovePlayerSession(SessionIdToRemove);
+						UE_LOG(LogTemp, Log, TEXT("GameLift 플레이어 세션 제거 완료: %s"), *SessionIdToRemove);
+					}
+				}
+			}
+		}
+	}
+#endif
+
 	if (!IsValid(PTWGameState)) return;
 
 	// 플레이어가 로그 아웃 했을 때 ready 상태였을 경우 ReadyPlayer 감소 
@@ -197,6 +228,25 @@ void APTWGameMode::PrepareAllPlayersLoadingScreen(ELoadingScreenType Type, FName
 			PC->Client_PrepareLoadingScreen(Type, MapRowName);
 		}
 	}
+}
+
+FString APTWGameMode::InitNewPlayer(APlayerController* NewPlayer, const FUniqueNetIdRepl& UniqueId,
+	const FString& Options, const FString& Portal)
+{
+	FString ErrorMessage = Super::InitNewPlayer(NewPlayer, UniqueId, Options, Portal);
+
+	if (ErrorMessage.IsEmpty())
+	{
+		FString PlayerSessionId = UGameplayStatics::ParseOption(Options, TEXT("PlayerSessionId"));
+		
+		if (APTWPlayerState* PTWPS = Cast<APTWPlayerState>(NewPlayer->PlayerState))
+		{
+			PTWPS->SetPlayerSessionId(PlayerSessionId);
+			UE_LOG(LogTemp, Log, TEXT("PlayerSessionId [%s] 캐싱 완료!"), *PlayerSessionId);
+		}
+	}
+
+	return ErrorMessage;
 }
 
 void APTWGameMode::CheckAllPlayersLoaded()
@@ -408,6 +458,45 @@ void APTWGameMode::EndTimer()
 		FTimerHandle DelayTimerHandle;
 		GetWorldTimerManager().SetTimer(DelayTimerHandle, this, &APTWGameMode::TravelLevel, 2.f);
 	}
+}
+
+void APTWGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId,
+	FString& ErrorMessage)
+{
+	
+	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
+	
+#if WITH_GAMELIFT
+	FString PlayerSessionId = UGameplayStatics::ParseOption(Options, TEXT("PlayerSessionId"));
+	
+	if (!PlayerSessionId.IsEmpty())
+	{
+		// Aws::GameLift::GenericOutcome Outcome = Aws::GameLift::Server::AcceptPlayerSession(TCHAR_TO_UTF8(*PlayerSessionId));
+		if (UGameInstance* GI = GetGameInstance())
+		{
+			if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
+			{
+				if (FGameLiftServerSDKModule* GameLiftSdkModule = GameLiftSubsystem->GetGameLiftSdkModule())
+				{
+					FGameLiftGenericOutcome Outcome = GameLiftSdkModule->AcceptPlayerSession(PlayerSessionId);
+        
+					if (Outcome.IsSuccess())
+					{
+						UE_LOG(LogTemp, Log, TEXT("GameLift PlayerSession Accepted: %s"), *PlayerSessionId);
+					}
+					else
+					{
+						UE_LOG(LogTemp, Error, TEXT("Failed to accept GameLift PlayerSession: %s"), *Outcome.GetError().m_errorMessage);
+						// 필요하다면 ErrorMessage에 값을 넣어 접속을 거부할 수도 있습니다.
+						// ErrorMessage = TEXT("Invalid Player Session"); 
+					}
+				}
+			}
+		}
+	}
+#endif
+	// ErrorMessage = GameSession->ApproveLogin(Options);
+	// FGameModeEvents::GameModePreLoginEvent.Broadcast(this, UniqueId, ErrorMessage);
 }
 
 void APTWGameMode::TravelLevel()

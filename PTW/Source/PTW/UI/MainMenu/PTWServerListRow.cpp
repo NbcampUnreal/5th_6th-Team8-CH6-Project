@@ -97,7 +97,7 @@ void UPTWServerListRow::OnClickedJoinButton()
 	{
 		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
 		{
-			GameLiftSubsystem->DescribeGameSession(GameLiftSessionInfo.GameSessionId);
+			GameLiftSubsystem->CheckSessionStatus(GameLiftSessionInfo.GameSessionId);
 		}
 	}
 }

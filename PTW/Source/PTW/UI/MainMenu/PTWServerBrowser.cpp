@@ -69,7 +69,7 @@ void UPTWServerBrowser::NativeConstruct()
 	
 	if (IsValid(DevJoinButton))
 	{
-		#if WITH_EDITOR
+		#if WITH_EDITOR || 1
 		DevJoinButton->SetVisibility(ESlateVisibility::Visible);
 		DevJoinButton->OnClicked.AddDynamic(this, &ThisClass::DevJoinAction);
 		#endif
@@ -175,7 +175,7 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 		// Listen Server는 현재 Desktop 에서 실행.
 		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
 		{
-			SessionSubsystem->CreateGameSession(SessionConfig);
+			SessionSubsystem->CreateGameSession(SessionConfig, true);
 		}
 	}
 }
@@ -264,6 +264,7 @@ void UPTWServerBrowser::OnClickedTestButton()
 
 void UPTWServerBrowser::DevJoinAction()
 {
-	UGameplayStatics::OpenLevel(GetWorld(), TEXT("127.0.0.1"));
+	UPTWGameLiftSubsystem::SetNetDriverToIP();
+	UGameplayStatics::OpenLevel(GetWorld(), TEXT("59.30.255.170:7777"));
 }
 #undef LOCTEXT_NAMESPACE

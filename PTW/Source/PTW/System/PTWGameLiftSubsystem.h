@@ -30,7 +30,7 @@ protected:
 public:
 	static void SetNetDriverToIP();
 	FString SerializeJsonContent(const TMap<FString, FString>& Params);
-	template <typename T> requires (std::is_same_v<T, FPTWGameLiftGameSession> || std::is_same_v<T, FPTWGameLiftPlayerSession>)
+	template <typename T>
 	bool ParseDataFromJson(const FString& JsonString, T& OutStruct)
 	{
 		TSharedPtr<FJsonObject> JsonObject;
@@ -49,7 +49,7 @@ public:
 		}
 		return false;
 	}
-	template <typename T> requires (std::is_same_v<T, FPTWGameLiftGameSession> || std::is_same_v<T, FPTWGameLiftPlayerSession>)
+	template <typename T>
 	bool ParseDataArrayFromJson(const FString& JsonString, TArray<T>& OutArray)
 	{
 	    TSharedPtr<FJsonObject> JsonObject;
@@ -66,8 +66,8 @@ public:
 	    return false;
 	}
 	void RequestListFleets();
-	void JoinGameSession();
 	void CreateGameSession(FPTWSessionConfig& SessionConfig);
+	void CheckSessionStatus(const FString& SessionId);
 	void DescribeGameSession(const FString& SessionId);
 	void CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
 	void SearchGameSessions();
@@ -77,33 +77,44 @@ protected:
 	void DumpMetadata(TSharedPtr<FJsonObject> JsonObject);
 	
 	void CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void CheckSessionStatus_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void DescribeGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void TryJoinGameSession(const FString& Status, const FString& SessionId);
+	void TryJoinGameSession(const FString& SessionId, const FString& SteamId, const FString& Status);
 	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 private:
 	FString GetUniquePlayerId() const;
 	void ListFleets_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UPTWAPIData> APIData;
-
+	TObjectPtr<UPTWAPIData> ClientAPIData;
+	
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UPTWAPIData> ServerAPIData;
 public:
 	FOnGameLiftSessionSearchComplete OnSessionSearchComplete;
 	
 private:
 	FTimerHandle CreateSessionTimer;
 	FDelegateHandle MapLoadDelegateHandle;
-#if WITH_GAMELIFT
+
+#if WITH_GAMELIFT // 서버 전용 로직
 public:
-	virtual void  OnMapLoaded(UWorld* LoadedWorld);
+	void ReportServerInfoToBackend();
+	virtual void OnMapLoaded(UWorld* LoadedWorld);
+	FORCEINLINE FGameLiftServerSDKModule* GetGameLiftSdkModule() const { return GameLiftSdkModule; };
 	void SetupMapLoadDelegateHandle();
-	FGameLiftServerSDKModule* GetGameLiftSdkModule() const { return GameLiftSdkModule; };
 	void SetGameLiftSdkModule(FGameLiftServerSDKModule* InGameLiftSdkModule) { GameLiftSdkModule = InGameLiftSdkModule; };
+	void SetInGameSession(const Aws::GameLift::Server::Model::GameSession& NewGameSession) { InGameSession = NewGameSession; };
+	
+protected:
+	void ReportServerInfoToBackend_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	
 protected:
 	FGameLiftServerSDKModule* GameLiftSdkModule;
+	Aws::GameLift::Server::Model::GameSession InGameSession;
+	
 #endif
 };

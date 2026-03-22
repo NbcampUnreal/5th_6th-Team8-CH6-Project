@@ -46,17 +46,14 @@ void APTWServerEntryGameMode::InitGameLift()
 		
 			FParse::Value(CommandLine, *ServerName_cmd, SessionConfig.ServerName);
 			FParse::Value(CommandLine, *MaxPlayers_cmd, SessionConfig.MaxPlayers);
-		
-			if(UWorld* World = GetWorld())
-			{
-				AsyncTask(ENamedThreads::GameThread, [=, this]()
-				{				
-					// UGameplayStatics::OpenLevel(World, "Lobby");
-					// World->ServerTravel(TEXT("Lobby"));
-					SessionSubsystem->CreateGameSession(SessionConfig);
-				});
-			}
 			
+			if(UWorld* World = GetWorld())
+			{		
+				// UGameplayStatics::OpenLevel(World, "Lobby");
+				// UPTWGameLiftSubsystem::SetNetDriverToIP();
+				// World->ServerTravel(TEXT("Lobby"));
+				SessionSubsystem->CreateGameSession(SessionConfig, true);
+			}
 			return;
 		}
 	}
@@ -190,24 +187,28 @@ void APTWServerEntryGameMode::InitGameLift()
 	{
         FString GameSessionId = FString(InGameSession.GetGameSessionId());
         UE_LOG(GameServerLog, Log, TEXT("GameSession Initializing: %s"), *GameSessionId);
-		if (UGameInstance* GI = GetGameInstance())
-		{
-			if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
-			{
-				GameLiftSdkModule->ActivateGameSession();
-				// GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
-				// GameLiftSubsystem->SetupMapLoadDelegateHandle();
-				
-				if(UWorld* World = GetWorld())
-				{
-					AsyncTask(ENamedThreads::GameThread, [=, this]()
-					{				
-						// UGameplayStatics::OpenLevel(World, "Lobby");
-						World->ServerTravel(TEXT("Lobby"));
-					});
-				}
-			}
-		}
+		
+		UGameInstance* GI = GetGameInstance();
+		if (!IsValid(GI)) return;
+		
+		UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>();
+		if (!IsValid(GameLiftSubsystem)) return;
+		
+		// GameLiftSdkModule->ActivateGameSession();
+		GameLiftSubsystem->SetupMapLoadDelegateHandle();
+		GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
+		
+		AsyncTask(ENamedThreads::GameThread, [=, this]()
+		{	
+			UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>();
+			FPTWSessionConfig SessionConfig;
+			SessionConfig.bIsDedicatedServer = true;
+			SessionSubsystem->CreateGameSession(SessionConfig, true);
+			// UWorld* World = GetWorld();
+			// if (!IsValid(World)) return;
+			// UGameplayStatics::OpenLevel(World, "Lobby");
+			// World->ServerTravel(TEXT("Lobby"));
+		});
 	});
     //OnProcessTerminate callback. Amazon GameLift Servers will invoke this callback before shutting down an instance hosting this game server.
     //It gives this game server a chance to save its state, communicate with services, etc., before being shut down.

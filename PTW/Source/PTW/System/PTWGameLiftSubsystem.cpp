@@ -6,6 +6,7 @@
 #include "Server/PTWAPIData.h"
 #include "HttpModule.h"
 #include "JsonObjectConverter.h"
+#include "PTWSessionSubsystem.h"
 #include "Server/PTWHTTPRequestTypes.h"
 #include "GameFramework/PlayerState.h"
 #include "GenericPlatform/GenericPlatformHttp.h"
@@ -16,10 +17,22 @@
 UPTWGameLiftSubsystem::UPTWGameLiftSubsystem()
 {
 	// TODO: 임시 하드코딩
-	static ConstructorHelpers::FObjectFinder<UPTWAPIData> DataAssetFinder(TEXT("/Game/_PTW/System/Server/DA_GameSessionAPIData.DA_GameSessionAPIData"));
-	if (DataAssetFinder.Succeeded())
+	if (!IsValid(ClientAPIData))
 	{
-		APIData = DataAssetFinder.Object; 
+		static ConstructorHelpers::FObjectFinder<UPTWAPIData> DataAssetFinder(TEXT("/Game/_PTW/System/Server/DA_PTW_GameLift_ClientAPI.DA_PTW_GameLift_ClientAPI"));
+		if (DataAssetFinder.Succeeded())
+		{
+			ClientAPIData = DataAssetFinder.Object; 
+		}
+	}
+	
+	if (!IsValid(ServerAPIData))
+	{
+		static ConstructorHelpers::FObjectFinder<UPTWAPIData> DataAssetFinder(TEXT("/Game/_PTW/System/Server/DA_PTW_GameLift_ServerAPI.DA_PTW_GameLift_ServerAPI"));
+		if (DataAssetFinder.Succeeded())
+		{
+			ServerAPIData = DataAssetFinder.Object; 
+		}
 	}
 }
 
@@ -44,6 +57,7 @@ void UPTWGameLiftSubsystem::Deinitialize()
 
 void UPTWGameLiftSubsystem::SetNetDriverToIP()
 {
+	/*
 	if (!IsValid(GEngine))
 	{
 		UE_LOG(LogTemp, Error, TEXT("NetDriver change failed: GEngine is null."));
@@ -63,6 +77,7 @@ void UPTWGameLiftSubsystem::SetNetDriverToIP()
 	}
 	
 	UE_LOG(LogTemp, Warning, TEXT("Failed to change NetDriver: Definition for '%s' not found."), *CurrentNetDriver.ToString());
+*/
 }
 
 FString UPTWGameLiftSubsystem::SerializeJsonContent(const TMap<FString, FString>& Parameters)
@@ -86,13 +101,13 @@ FString UPTWGameLiftSubsystem::SerializeJsonContent(const TMap<FString, FString>
 
 void UPTWGameLiftSubsystem::RequestListFleets()
 {
-	check(APIData);
+	check(ClientAPIData);
 	
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::ListFleets_Response);
 	
-	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::ListFleets);
+	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::ListFleets);
 	
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("GET"));
@@ -102,25 +117,12 @@ void UPTWGameLiftSubsystem::RequestListFleets()
 	UE_LOG(LogTemp, Warning, TEXT("ListFleets_Response Made"));
 }
 
-void UPTWGameLiftSubsystem::JoinGameSession()
-{
-	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
-	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::FindOrCreateGameSession_Response);
-	
-	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::FindOrCreateGameSession);
-	
-	Request->SetURL(APIUrl);
-	Request->SetVerb(TEXT("POST"));
-	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	Request->ProcessRequest();
-}
-
 void UPTWGameLiftSubsystem::CreateGameSession(FPTWSessionConfig& SessionConfig)
 {
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CreateGameSession_Response);
 	
-	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreateGameSession);
+	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreateGameSession);
 	
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
@@ -136,18 +138,37 @@ void UPTWGameLiftSubsystem::CreateGameSession(FPTWSessionConfig& SessionConfig)
 	Request->ProcessRequest();
 }
 
-void UPTWGameLiftSubsystem::DescribeGameSession(const FString& SessionId)
+void UPTWGameLiftSubsystem::CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	if (!IsValid(APIData))
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Create Game Session Response Received");
+	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
+	{
+		UE_LOG(LogTemp, Error, TEXT("CreateGameSession Failed."));
+		return;
+	}
+	
+	FPTWGameLiftGameSession GameSession;
+	if (ParseDataFromJson<FPTWGameLiftGameSession>(Response->GetContentAsString(), GameSession))
+	{
+		const FString GameSessionId = GameSession.GameSessionId;
+		CheckSessionStatus(GameSessionId);
+	}
+}
+
+void UPTWGameLiftSubsystem::CheckSessionStatus(const FString& SessionId)
+{
+	if (!IsValid(ClientAPIData))
 	{
 		UE_LOG(LogTemp, Error, TEXT("DescribeGameSession Failed: APIData is NULL!"));
 		return;
 	}
 
-	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
-	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::DescribeGameSession_Response);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, "CheckSessionStatus");
 	
-	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::DescribeGameSession);
+	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CheckSessionStatus_Response);
+	
+	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::CheckSessionStatus);
 	FString RefinedURL = APIUrl;
 	
 	RefinedURL += TEXT("?gameSessionId=") + FGenericPlatformHttp::UrlEncode(SessionId);
@@ -158,12 +179,92 @@ void UPTWGameLiftSubsystem::DescribeGameSession(const FString& SessionId)
 	Request->ProcessRequest();
 }
 
+void UPTWGameLiftSubsystem::CheckSessionStatus_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, "CheckSessionStatus_Response");
+	
+	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
+	{
+		UE_LOG(LogTemp, Error, TEXT("CheckSessionStatus 통신 실패."));
+		return;
+	}
+	
+	FGameSessionListsTable GameSessionLists;
+	if (ParseDataFromJson<FGameSessionListsTable>(Response->GetContentAsString(), GameSessionLists))
+	{
+		TryJoinGameSession(GameSessionLists.GameSessionId, GameSessionLists.SteamId, GameSessionLists.Status);
+	}
+}
+
+void UPTWGameLiftSubsystem::TryJoinGameSession(const FString& SessionId, const FString& SteamId, const FString& Status)
+{
+	if (Status.Equals(TEXT("ACTIVE")))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Found active Game Session. Creating a Player Session..."));
+		CreatePlayerSession(GetUniquePlayerId(), SessionId);
+	}
+	else if (Status.Equals(TEXT("ACTIVATING")))
+	{
+		if (APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld()))
+		{
+			LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer,
+		   [this, SessionId]()
+		   {
+			   CheckSessionStatus(SessionId);
+		   }, 2.0f, false);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Unknown Status %s"), *Status);
+	}
+}
+
+void UPTWGameLiftSubsystem::DescribeGameSession(const FString& SessionId)
+{
+	if (!IsValid(ClientAPIData))
+	{
+		UE_LOG(LogTemp, Error, TEXT("DescribeGameSession Failed: APIData is NULL!"));
+		return;
+	}
+
+	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::DescribeGameSession_Response);
+	
+	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::DescribeGameSession);
+	FString RefinedURL = APIUrl;
+	
+	RefinedURL += TEXT("?gameSessionId=") + FGenericPlatformHttp::UrlEncode(SessionId);
+	
+	Request->SetURL(RefinedURL);
+	Request->SetVerb(TEXT("GET"));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	Request->ProcessRequest();
+}
+
+void UPTWGameLiftSubsystem::DescribeGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
+	{
+		UE_LOG(LogTemp, Error, TEXT("DescribeGameSession 통신 실패."));
+		return;
+	}
+	
+	FPTWGameLiftGameSession GameSession;
+	if (ParseDataFromJson<FPTWGameLiftGameSession>(Response->GetContentAsString(), GameSession))
+	{
+		const FString GameSessionId = GameSession.GameSessionId;
+		const FString GameSessionStatus = GameSession.Status;
+		// TryJoinGameSession(GameSessionStatus, GameSessionId);
+	}
+}
+
 void UPTWGameLiftSubsystem::CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId)
 {
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CreatePlayerSession_Response);
 	
-	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreatePlayerSession);
+	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreatePlayerSession);
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -179,6 +280,37 @@ void UPTWGameLiftSubsystem::CreatePlayerSession(const FString& PlayerId, const F
 	Request->ProcessRequest();
 }
 
+void UPTWGameLiftSubsystem::CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Create PlayerSession Response Received"));
+	
+	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "CreatePlayerSession 통신 실패.");
+		return;
+	}
+	
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "CreatePlayerSession_Response");
+	
+	FPTWGameLiftPlayerSession PlayerSession;
+	if (ParseDataFromJson<FPTWGameLiftPlayerSession>(Response->GetContentAsString(), PlayerSession))
+	{
+		FString ConnectURL = FString::Printf(TEXT("steam.%s:%d?PlayerSessionId=%s"),
+			  *PlayerSession.IpAddress,			  // 서버스팀 ID
+			  PlayerSession.Port,
+			  *PlayerSession.PlayerSessionId      // GameLift 세션 인증용 ID
+		  );
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *ConnectURL);
+		// const FString IpAndPort = PlayerSession.IpAddress; + TEXT(":") + FString::FromInt(PlayerSession.Port);
+		// const FName Address = FName(*IpAndPort);
+		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, "ClientTravel");
+			PC->ClientTravel(ConnectURL, TRAVEL_Absolute, false);
+		}
+	}
+}
+
 void UPTWGameLiftSubsystem::SearchGameSessions()
 {
 	FHttpModule* Http = &FHttpModule::Get();
@@ -186,12 +318,30 @@ void UPTWGameLiftSubsystem::SearchGameSessions()
 	
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::SearchGameSessions_Response);
 	
-	const FString APIUrl = APIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::SearchGameSessions);
+	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::SearchGameSessions);
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("GET"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	Request->ProcessRequest();
 	UE_LOG(LogTemp, Log, TEXT("Searching for game sessions..."));
+}
+
+void UPTWGameLiftSubsystem::SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (!bWasSuccessful || !Response.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("HTTP Request failed!"));
+		return;
+	}
+	
+	TArray<FPTWGameLiftGameSession> GameSessions;
+	ParseDataArrayFromJson(Response->GetContentAsString(), GameSessions);
+	if (GameSessions.IsEmpty()) return;
+	
+	if (OnSessionSearchComplete.IsBound())
+	{
+		OnSessionSearchComplete.Broadcast(GameSessions);
+	}
 }
 
 bool UPTWGameLiftSubsystem::ContainErrors(TSharedPtr<FJsonObject> JsonObject)
@@ -225,103 +375,6 @@ void UPTWGameLiftSubsystem::DumpMetadata(TSharedPtr<FJsonObject> JsonObject)
 		FJsonObjectConverter::JsonObjectToUStruct(MetaDataJsonObject.ToSharedRef(), &PTWMetaData);
 			
 		PTWMetaData.Dump();
-	}
-}
-
-void UPTWGameLiftSubsystem::CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Create Game Session Response Received");
-	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
-	{
-		UE_LOG(LogTemp, Error, TEXT("CreateGameSession Failed."));
-		return;
-	}
-	
-	FPTWGameLiftGameSession GameSession;
-	if (ParseDataFromJson<FPTWGameLiftGameSession>(Response->GetContentAsString(), GameSession))
-	{
-		const FString GameSessionId = GameSession.GameSessionId;
-		const FString GameSessionStatus = GameSession.Status;
-		TryJoinGameSession(GameSessionStatus, GameSessionId);
-	}
-}
-
-
-void UPTWGameLiftSubsystem::DescribeGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response,
-                                                         bool bWasSuccessful)
-{
-	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
-	{
-		UE_LOG(LogTemp, Error, TEXT("DescribeGameSession 통신 실패."));
-		return;
-	}
-	
-	FPTWGameLiftGameSession GameSession;
-	if (ParseDataFromJson<FPTWGameLiftGameSession>(Response->GetContentAsString(), GameSession))
-	{
-		const FString GameSessionId = GameSession.GameSessionId;
-		const FString GameSessionStatus = GameSession.Status;
-		TryJoinGameSession(GameSessionStatus, GameSessionId);
-	}
-}
-
-void UPTWGameLiftSubsystem::TryJoinGameSession(const FString& Status, const FString& SessionId)
-{
-	if (Status.Equals(TEXT("ACTIVE")))
-	{
-		UE_LOG(LogTemp, Error, TEXT("Found active Game Session. Creating a Player Session..."));
-		CreatePlayerSession(GetUniquePlayerId(), SessionId);
-	}
-	else if (Status.Equals(TEXT("ACTIVATING")))
-	{
-		if (APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld()))
-		{
-			LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer,
-           [this, SessionId]()
-           {
-               DescribeGameSession(SessionId);
-           }, 2.0f, false);
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Unknown Status %s"), *Status);
-	}
-}
-
-void UPTWGameLiftSubsystem::CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	UE_LOG(LogTemp, Warning, TEXT("Create PlayerSession Response Received"));
-	
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "CreatePlayerSession_Response");
-	
-	FPTWGameLiftPlayerSession PlayerSession;
-	if (ParseDataFromJson<FPTWGameLiftPlayerSession>(Response->GetContentAsString(), PlayerSession))
-	{
-		const FString IpAndPort = PlayerSession.IpAddress + TEXT(":") + FString::FromInt(PlayerSession.Port);
-		// const FName Address = FName(*IpAndPort);
-		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
-		{
-			PC->ClientTravel(IpAndPort, TRAVEL_Absolute, false);
-		}
-	}
-}
-
-void UPTWGameLiftSubsystem::SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	if (!bWasSuccessful || !Response.IsValid())
-	{
-		UE_LOG(LogTemp, Error, TEXT("HTTP Request failed!"));
-		return;
-	}
-	
-	TArray<FPTWGameLiftGameSession> GameSessions;
-	ParseDataArrayFromJson(Response->GetContentAsString(), GameSessions);
-	if (GameSessions.IsEmpty()) return;
-	
-	if (OnSessionSearchComplete.IsBound())
-	{
-		OnSessionSearchComplete.Broadcast(GameSessions);
 	}
 }
 
@@ -365,41 +418,73 @@ void UPTWGameLiftSubsystem::ListFleets_Response(FHttpRequestPtr Request, FHttpRe
 	}
 }
 
-void UPTWGameLiftSubsystem::FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Find or Create GAme Session Response Received");
-	
-	TSharedPtr<FJsonObject> JsonObject;
-	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
-	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
-	{
-		if (ContainErrors(JsonObject))
-		{
-			;
-		}
-		
-		FPTWGameLiftGameSession GameSession;
-		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession);
-		
-		const FString GameSessionId = GameSession.GameSessionId;
-		const FString GameSessionStatus = GameSession.Status;
-		TryJoinGameSession(GameSessionStatus, GameSessionId);
-	}
-}
-
 #if WITH_GAMELIFT
 void UPTWGameLiftSubsystem::OnMapLoaded(UWorld* LoadedWorld)
 {
 	if (!LoadedWorld) return;
 	if (!IsRunningDedicatedServer()) return;
+	
 	if (GameLiftSdkModule)
 	{
 		GameLiftSdkModule->ActivateGameSession();
+		ReportServerInfoToBackend();
+		// GameLiftSdkModule = nullptr;
 	}
+	
 	if (MapLoadDelegateHandle.IsValid())
 	{
 		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(MapLoadDelegateHandle);
 		MapLoadDelegateHandle.Reset();
+	}
+}
+
+void UPTWGameLiftSubsystem::ReportServerInfoToBackend()
+{
+	// FString GameSessionId = FString(InGameSession.GetGameSessionId());
+	FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
+	FString SteamID = UPTWSessionSubsystem::GetSteamServerID();
+	
+	UE_LOG(LogTemp, Warning, TEXT("GameSessionId: %s"), *GameSessionId);
+	UE_LOG(LogTemp, Warning, TEXT("SteamID: %s"), *SteamID);
+	
+	if (!SteamID.IsEmpty())
+	{
+		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend SteamId Is Valid"));
+		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::ReportServerInfoToBackend_Response);
+		
+		const FString APIUrl = ServerAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::ReportServerInfoToBackend);
+		
+		Request->SetURL(APIUrl);
+		Request->SetVerb(TEXT("POST"));
+		Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+		
+		TMap<FString, FString> Params = {
+			{ TEXT("gameSessionId"),	GameSessionId },
+			{ TEXT("steamId"),			SteamID }
+		};
+		
+		const FString Content = SerializeJsonContent(Params);
+		Request->SetContentAsString(Content);
+		Request->ProcessRequest();
+	}
+	else
+	{
+		// NotSteamId
+	}
+}
+
+void UPTWGameLiftSubsystem::ReportServerInfoToBackend_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
+	{
+		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend_Response Successful"));
+		UE_LOG(LogTemp, Log, TEXT("Successfully reported Steam ID to Backend."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend_Response Failed"));
+		UE_LOG(LogTemp, Error, TEXT("Failed to report Steam ID to Backend."));
 	}
 }
 
@@ -413,4 +498,5 @@ void UPTWGameLiftSubsystem::SetupMapLoadDelegateHandle()
 	}
 	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
 }
+
 #endif

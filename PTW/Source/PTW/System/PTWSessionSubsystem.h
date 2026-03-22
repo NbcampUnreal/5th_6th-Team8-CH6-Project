@@ -27,15 +27,18 @@ class PTW_API UPTWSessionSubsystem : public UGameInstanceSubsystem
 public:
 	FORCEINLINE IOnlineSessionPtr GetSessionInterface() const { return SessionInterface; };
 	
+	static void SetNetDriverToSteam();
+	
 	// 온라인 서브시스템이 스팀인지 체크
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	bool IsUsingSteamSubsystem();
 	
-	static void SetNetDriverToSteam();
+	// 현재 세션의 SteamID (CSteamID) 반환
+	static FString GetSteamServerID();
 	
 	// 세셩 생성
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void CreateGameSession(FPTWSessionConfig SessionConfig);
+	void CreateGameSession(FPTWSessionConfig SessionConfig, bool bTravelOnSuccess);
 	
 	// 세션 참여
 	UFUNCTION(BlueprintCallable, Category = "Session")
@@ -67,7 +70,7 @@ protected:
 	virtual void Deinitialize() override;
 	
 	// 세션 생성 성공 시 호출
-	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig);
+	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig, bool bTravelOnSuccess);
 	
 	// 네트워크 오류가 발생했을 시 호출
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);

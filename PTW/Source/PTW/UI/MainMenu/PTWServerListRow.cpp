@@ -98,7 +98,8 @@ void UPTWServerListRow::OnClickedJoinButton()
 			{
 				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
 				{
-					GameLiftSubsystem->CheckSessionStatus(GameLiftSessionId);
+					const FString UniquePlayerId = GameLiftSubsystem->GetUniquePlayerId();
+					GameLiftSubsystem->CreatePlayerSession(UniquePlayerId, GameLiftSessionId);
 				}
 			}
 			else

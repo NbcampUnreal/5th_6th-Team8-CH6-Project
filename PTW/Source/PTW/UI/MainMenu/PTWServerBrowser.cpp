@@ -158,11 +158,20 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	}
 	SessionConfig.bIsDedicatedServer = DedicatedCheckBox->IsChecked();
 	
-	if (SessionConfig.bIsDedicatedServer)
+	if (!SessionConfig.bIsDedicatedServer)
 	{
+		// 리슨서버로 세션 생성
 		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
 		{
 			SessionSubsystem->CreateGameSession(SessionConfig, true);
+		}
+	}
+	else
+	{
+		// 데디서버로 원격 세션 생성
+		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+		{
+			GameLiftSubsystem->CreateGameSession(SessionConfig);
 		}
 	}
 }

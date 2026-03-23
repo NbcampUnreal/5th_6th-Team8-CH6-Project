@@ -10,20 +10,20 @@
 
 struct FPTWDamageStatics
 {
-	// 공통 무기 데미지
 	FGameplayEffectAttributeCaptureDefinition WeaponDamageDef;
-    
-	// 미니게임 A용 배율
-	FGameplayEffectAttributeCaptureDefinition GameADamageMulDef; //
-	// 미니게임 B용 배율
-	FGameplayEffectAttributeCaptureDefinition GameBDamageMulDef;
+	FGameplayEffectAttributeCaptureDefinition DefenseDef;
 	
-	// 방어력 캡쳐
-
 	FPTWDamageStatics()
 	{
-		// 1. 공통 무기 데미지 캐싱
-		WeaponDamageDef = FGameplayEffectAttributeCaptureDefinition(UPTWWeaponAttributeSet::GetDamageAttribute(), EGameplayEffectAttributeCaptureSource::Source, false);
+		WeaponDamageDef = FGameplayEffectAttributeCaptureDefinition(
+			UPTWWeaponAttributeSet::GetDamageAttribute(), 
+			EGameplayEffectAttributeCaptureSource::Source, 
+			false);
+		
+		DefenseDef = FGameplayEffectAttributeCaptureDefinition(
+			UPTWAttributeSet::GetDefenseAttribute(),
+			EGameplayEffectAttributeCaptureSource::Target, 
+			false);
 	}
 	
 	static const FPTWDamageStatics& DamageStatics() { static FPTWDamageStatics DStatics; return DStatics; }

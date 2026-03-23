@@ -6,32 +6,29 @@
 UPTWModMagnitudeCalculation::UPTWModMagnitudeCalculation()
 {
 	RelevantAttributesToCapture.Add(FPTWDamageStatics::DamageStatics().WeaponDamageDef);
-	RelevantAttributesToCapture.Add(FPTWDamageStatics::DamageStatics().GameADamageMulDef);
-	RelevantAttributesToCapture.Add(FPTWDamageStatics::DamageStatics().GameBDamageMulDef);
+	RelevantAttributesToCapture.Add(FPTWDamageStatics::DamageStatics().DefenseDef);
 	
 }
 
 float UPTWModMagnitudeCalculation::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
 {
 	const FGameplayTagContainer* SourceTags = Spec.CapturedSourceTags.GetAggregatedTags();
+	const FGameplayTagContainer* TargetTags = Spec.CapturedTargetTags.GetAggregatedTags();
+	
 	FAggregatorEvaluateParameters EvaluationParams;
 	EvaluationParams.SourceTags = SourceTags;
+	EvaluationParams.TargetTags = TargetTags;
 	
-	float BaseDamage = 0.f;
-	GetCapturedAttributeMagnitude(FPTWDamageStatics::DamageStatics().WeaponDamageDef, Spec, EvaluationParams, BaseDamage);
+	float RawDamage = 0.0f;
+	GetCapturedAttributeMagnitude(FPTWDamageStatics::DamageStatics().WeaponDamageDef, Spec, EvaluationParams, RawDamage);
+
+	float DefensePoint = 0.0f;
+	GetCapturedAttributeMagnitude(FPTWDamageStatics::DamageStatics().DefenseDef, Spec, EvaluationParams, DefensePoint);
 	
-	float FinalMultiplier = 1.0f;
+	DefensePoint = FMath::Max<float>(DefensePoint, 0.0f);
+	const float DamageReduction = DefensePoint / (DefensePoint + 100.0f);
 	
-	float GameAMul = 0.f;
-	if (GetCapturedAttributeMagnitude(FPTWDamageStatics::DamageStatics().GameADamageMulDef, Spec, EvaluationParams, GameAMul))
-	{
-		FinalMultiplier = GameAMul;
-	}
+	float FinalDamage = RawDamage * (1.0f - DamageReduction);
 	
-	else if (float GameBMul = 0.f; GetCapturedAttributeMagnitude(FPTWDamageStatics::DamageStatics().GameBDamageMulDef, Spec, EvaluationParams, GameBMul))
-	{
-		FinalMultiplier = GameBMul;
-	}
-	
-	return FMath::Max(BaseDamage * FinalMultiplier, 0.0f);
+	return FMath::Max<float>(FinalDamage, 1.0f);
 }

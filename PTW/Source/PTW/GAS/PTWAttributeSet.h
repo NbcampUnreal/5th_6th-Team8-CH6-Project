@@ -45,6 +45,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Shield, Category = "Attributes")
 	FGameplayAttributeData Shield;
 	ATTRIBUTE_ACCESSORS(UPTWAttributeSet, Shield);
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData IncomingDamage;
+	ATTRIBUTE_ACCESSORS(UPTWAttributeSet, IncomingDamage);
 
 protected:
 	UFUNCTION()

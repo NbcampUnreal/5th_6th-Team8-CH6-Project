@@ -54,41 +54,97 @@ void UPTWAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 {
 	Super::PostGameplayEffectExecute(Data);
 
+	// 해당 코드 주석 처리 (26.03.23)
+	// UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
+	// if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+	// {
+	// 	if (Data.EvaluatedData.Magnitude < 0.f)
+	// 	{
+	// 		HandleDamage(Data);
+	// 	}
+	//
+	// 	SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
+	//
+	// 	if (GetHealth() <= 0.0f)
+	// 	{
+	// 		AActor* TargetActor = Data.Target.GetAvatarActor();
+	// 		APTWBaseCharacter* TargetCharacter = Cast<APTWBaseCharacter>(TargetActor);
+	//
+	// 		if (TargetCharacter && !TargetCharacter->IsDead())
+	// 		{
+	// 			TargetCharacter->HandleDeath(SourceActor);
+	// 		}
+	// 	}
+	// 	if (GetHealth() > 0.0f)
+	// 	{
+	// 		APTWBaseCharacter* TargetChar = Cast<APTWBaseCharacter>(Data.Target.GetAvatarActor());
+	// 		if (TargetChar && !TargetChar->IsDead())
+	// 		{
+	// 			const FHitResult* Hit = Data.EffectSpec.GetContext().GetHitResult();
+	// 			FVector ImpactPoint = Hit ? (FVector)Hit->ImpactPoint : TargetChar->GetActorLocation();
+	//
+	// 			TargetChar->GetReactorComponent()->Multicast_PlayHitReact(ImpactPoint);
+	// 		}
+	// 	}
+	//
+	// }
+	
 	FGameplayEffectContextHandle Context = Data.EffectSpec.GetContext();
-	UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
 	AActor* SourceActor = Context.GetInstigator();
-	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+	AActor* Target = Data.Target.GetAvatarActor();
+	APTWBaseCharacter* TargetChar = Cast<APTWBaseCharacter>(Target);
+	
+	if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
 	{
 		if (Data.EvaluatedData.Magnitude < 0.f)
 		{
 			HandleDamage(Data);
 		}
+		
+		const float DamageToApply = GetIncomingDamage();
+		SetIncomingDamage(0.0f);
 
-		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
-
-		if (GetHealth() <= 0.0f)
+		if (DamageToApply > 0.0f && TargetChar)
 		{
-			AActor* TargetActor = Data.Target.GetAvatarActor();
-			APTWBaseCharacter* TargetCharacter = Cast<APTWBaseCharacter>(TargetActor);
+			const float CurrentShield = GetShield();
+			const float CurrentHealth = GetHealth();
 
-			if (TargetCharacter && !TargetCharacter->IsDead())
+			const float ShieldAbsorbed = FMath::Min(CurrentShield, DamageToApply);
+			if (ShieldAbsorbed > 0.0f)
 			{
-				TargetCharacter->HandleDeath(SourceActor);
+				SetShield(CurrentShield - ShieldAbsorbed);
 			}
-		}
-		if (GetHealth() > 0.0f)
-		{
-			APTWBaseCharacter* TargetChar = Cast<APTWBaseCharacter>(Data.Target.GetAvatarActor());
-			if (TargetChar && !TargetChar->IsDead())
+
+			const float RemainingDamage = DamageToApply - ShieldAbsorbed;
+			if (RemainingDamage > 0.0f)
 			{
-				const FHitResult* Hit = Data.EffectSpec.GetContext().GetHitResult();
+				const float NewHealth = FMath::Clamp(CurrentHealth - RemainingDamage, 0.0f, GetMaxHealth());
+				SetHealth(NewHealth);
+			}
+			
+			
+			if (GetHealth() <= 0.0f)
+			{
+				if (!TargetChar->IsDead())
+				{
+					TargetChar->HandleDeath(SourceActor);
+				}
+			}
+			else
+			{
+				const FHitResult* Hit = Context.GetHitResult();
 				FVector ImpactPoint = Hit ? (FVector)Hit->ImpactPoint : TargetChar->GetActorLocation();
 
-				TargetChar->GetReactorComponent()->Multicast_PlayHitReact(ImpactPoint);
+				if (TargetChar->GetReactorComponent())
+				{
+					TargetChar->GetReactorComponent()->Multicast_PlayHitReact(ImpactPoint);
+				}
 			}
 		}
-
 	}
+	
+	
+	
 
 	AActor* TargetActor = nullptr;
 	ACharacter* TargetCharacter = nullptr;

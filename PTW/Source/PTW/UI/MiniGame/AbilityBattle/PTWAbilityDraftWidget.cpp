@@ -4,6 +4,7 @@
 #include "UI/MiniGame/AbilityBattle/PTWAbilityDraftWidget.h"
 
 #include "PTWAbilityBoxWidget.h"
+#include "PTWDraftCharge.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "CoreFramework/PTWPlayerController.h"
@@ -32,7 +33,6 @@ void UPTWAbilityDraftWidget::GenerateAbilityBoxes(TArray<FName> RowId)
 	{
 		return;
 	}
-
 	
 	if (RowId.IsEmpty())
 	{
@@ -49,7 +49,6 @@ void UPTWAbilityDraftWidget::GenerateAbilityBoxes(TArray<FName> RowId)
 		BoxWidget->OnDraftSelected.AddUObject(this, &UPTWAbilityDraftWidget::OnDraftSelected);
 		BoxWidget->InitAbilityBoxWidget(RowId[i], AbilityDraftDataTable);
 		UHorizontalBoxSlot* BoxSlot = HorizontalBox->AddChildToHorizontalBox(BoxWidget);
-
 		
 		FSlateChildSize FillSize;
 		FillSize.SizeRule = ESlateSizeRule::Fill;
@@ -82,9 +81,24 @@ void UPTWAbilityDraftWidget::OnDraftSelected(FName RowId)
 	
 	UPTWAbilityControllerComponent* ControllerComponent = Cast<UPTWAbilityControllerComponent>(ActorComponent);
 	if (!ControllerComponent) return;
-
-	//PlayerStateComponent->bFirstDraftCompleted = true;
-	//PlayerStateComponent->DecreaseDraftCharges();
+	
 	ControllerComponent->Server_SelectedAbility(RowId);
 	ControllerComponent->Client_HideDraftUI();
+}
+
+void UPTWAbilityDraftWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	APlayerController* PlayerController = GetOwningPlayer();
+	if (!PlayerController) return;
+
+	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
+	if (!PlayerState) return;
+
+	UPTWAbilityBattlePSComponent* PSComponent = Cast<UPTWAbilityBattlePSComponent>(PlayerState->GetMiniGameComponent());
+	if (!PSComponent) return;
+
+	PSComponent->OnChangedChargeCount.AddUObject(WBP_DraftCharge, &UPTWDraftCharge::UpdateChargeCount);
+	PSComponent->OnDraftChargedTimeChanged.AddUObject(WBP_DraftCharge, &UPTWDraftCharge::UpdateChargeTime);
 }

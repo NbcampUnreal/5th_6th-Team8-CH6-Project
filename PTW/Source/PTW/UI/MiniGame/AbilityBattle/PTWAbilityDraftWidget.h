@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "PTWAbilityDraftWidget.generated.h"
 
+class UPTWDraftCharge;
 class UPTWAbilityBoxWidget;
 class UHorizontalBox;
 /**
@@ -24,6 +25,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UHorizontalBox> HorizontalBox;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWDraftCharge> WBP_DraftCharge;
+	
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UPTWAbilityBoxWidget> AbilityBoxClass;
 	
@@ -31,6 +35,10 @@ public:
 	TObjectPtr<UDataTable> AbilityDraftDataTable;
 
 	bool bIsSelected = false;
+
+protected:
+	virtual void NativeConstruct() override;
 private:
+
 	
 };

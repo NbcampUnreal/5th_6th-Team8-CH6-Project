@@ -90,7 +90,7 @@ void APTWAbilityBattleGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerC
 	UPTWAbilityControllerComponent* ControllerComponent = Cast<UPTWAbilityControllerComponent>(SpawnPlayerController->GetControllerComponent());
 	if (!ControllerComponent) return;
 
-	if (PSComponent->DraftCharges > 0)
+	if (PSComponent->DraftChargeCount > 0)
 	{
 		ControllerComponent->Client_ShowDraftUI(GenerateDraftOptions(1));
 		return;
@@ -115,7 +115,7 @@ void APTWAbilityBattleGameMode::HandleRespawn(APTWPlayerController* PlayerContro
 	if (!PSComponent) return;
 
 	
-	if (PSComponent->DraftCharges == 0)
+	if (PSComponent->DraftChargeCount == 0)
 	{
 		Super::HandleRespawn(PlayerController);
 	}
@@ -233,7 +233,7 @@ void APTWAbilityBattleGameMode::StartDraftAllPlayer(int32 Tier)
 
 void APTWAbilityBattleGameMode::StartDraftChargeTimer()
 {
-	GetWorldTimerManager().SetTimer(DraftChargeTimerHandle, this, &APTWAbilityBattleGameMode::AddDraftChargeAllPlayers, DraftChargeTime, true);
+	GetWorldTimerManager().SetTimer(DraftChargeTimerHandle, this, &APTWAbilityBattleGameMode::UpdateChargeTime, 0.1f, true);
 }
 
 void APTWAbilityBattleGameMode::EndDraft()
@@ -330,6 +330,20 @@ void APTWAbilityBattleGameMode::AddDraftChargeAllPlayers()
 	}
 
 	UE_LOG(Log_AbilityBattle, Log, TEXT("AddDraftChargeAllPlayers"));
+}
+
+void APTWAbilityBattleGameMode::UpdateChargeTime()
+{
+	for (APlayerState* PlayerState : GameState->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (!PTWPlayerState) continue;
+
+		UPTWAbilityBattlePSComponent* PSComponent = Cast<UPTWAbilityBattlePSComponent>(PTWPlayerState->GetMiniGameComponent());
+		if (!PSComponent) continue;
+		
+		PSComponent->UpdateChargeRemainTime(0.1f);
+	}
 }
 
 

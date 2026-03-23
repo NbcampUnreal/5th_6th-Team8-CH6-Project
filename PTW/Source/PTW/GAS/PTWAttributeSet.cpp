@@ -27,6 +27,8 @@ void UPTWAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAttributeSet, MoveSpeed, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAttributeSet, JumpZVelocity, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAttributeSet, Defense, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UPTWAttributeSet, Shield, COND_None, REPNOTIFY_Always);
 }
 
 
@@ -178,6 +180,17 @@ void UPTWAttributeSet::OnRep_MoveSpeed(const FGameplayAttributeData& OldMoveSpee
 }
 
 void UPTWAttributeSet::OnRep_JumpZVelocity(const FGameplayAttributeData& OldJumpZVelocity) { GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, JumpZVelocity, OldJumpZVelocity); }
+
+void UPTWAttributeSet::OnRep_Defense(const FGameplayAttributeData& OldDefense)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, Defense, OldDefense);
+}
+
+
+void UPTWAttributeSet::OnRep_Shield(const FGameplayAttributeData& OldShield)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UPTWAttributeSet, Shield, OldShield);
+}
 
 void UPTWAttributeSet::HandleDamage(const FGameplayEffectModCallbackData& Data)
 {

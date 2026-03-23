@@ -39,6 +39,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement", ReplicatedUsing = OnRep_JumpZVelocity)
 	FGameplayAttributeData JumpZVelocity;
 	ATTRIBUTE_ACCESSORS(UPTWAttributeSet, JumpZVelocity);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Defense, Category = "Attributes")
+	FGameplayAttributeData Defense;
+	ATTRIBUTE_ACCESSORS(UPTWAttributeSet, Defense);
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Shield, Category = "Attributes")
+	FGameplayAttributeData Shield;
+	ATTRIBUTE_ACCESSORS(UPTWAttributeSet, Shield);
 
 protected:
 	UFUNCTION()
@@ -49,6 +55,10 @@ protected:
 	virtual void OnRep_MoveSpeed(const FGameplayAttributeData& OldMoveSpeed);
 	UFUNCTION()
 	virtual void OnRep_JumpZVelocity(const FGameplayAttributeData& OldJumpZVelocity);
+	UFUNCTION()
+	virtual void OnRep_Defense(const FGameplayAttributeData& OldDefense);
+	UFUNCTION()
+	virtual void OnRep_Shield(const FGameplayAttributeData& OldShield);
 
 	void HandleDamage(const FGameplayEffectModCallbackData& Data);
 	bool IsDamageToValidTarget(const FGameplayEffectModCallbackData& Data) const;

@@ -18,12 +18,9 @@ class PTW_API UPTWServerListRow : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetupSteamInfo(const FOnlineSessionSearchResultBP& SearchResult);
+	void SetupSessionMinimalInfo(const FOnlineSessionSearchResultBP& SearchResult);
 	
-	UFUNCTION(BlueprintCallable)
-	void SetupGameLiftInfo(const FPTWGameLiftGameSession& SearchResult);
-	
-	FORCEINLINE UTextBlock* GetServerID() const { return ServerID; };
+	// FORCEINLINE UTextBlock* GetServerID() const { return ServerID; };
 	FORCEINLINE UTextBlock* GetServerName() const { return ServerName; };
 	
 protected:
@@ -35,16 +32,24 @@ protected:
 	
 protected:
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UTextBlock> ServerID;
+	TObjectPtr<UTextBlock> ServerName;
 	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UTextBlock> ServerName;
+	TObjectPtr<UTextBlock> RoundLimitType;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UTextBlock> ServerPlayers;
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UTextBlock> ServerPing;
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> JoinButton;
 	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UButton> ServerInfoButton;
+	
 protected:
-	FPTWSessionConfig SessionConfig;
+	// FPTWSessionConfig SessionConfig;
 	FOnlineSessionSearchResult SteamSessionInfo;
-	FPTWGameLiftGameSession GameLiftSessionInfo;
 };

@@ -8,57 +8,49 @@
 #include "System/PTWGameLiftSubsystem.h"
 #include "System/Session/PTWSessionConfig.h"
 
-void UPTWServerListRow::SetupSteamInfo(const FOnlineSessionSearchResultBP& SearchResult)
+void UPTWServerListRow::SetupSessionMinimalInfo(const FOnlineSessionSearchResultBP& SearchResult)
 {
 	SteamSessionInfo = SearchResult.OnlineSessionSearchResult;
-	const FSessionSettings& SessionSettings = SteamSessionInfo.Session.SessionSettings.Settings;
+	const FOnlineSession& OnlineSession = SteamSessionInfo.Session;
 	
-	FString SessionId = SteamSessionInfo.Session.SessionInfo->GetSessionId().ToString();
-	FString HexRoomCode = FString::Printf(TEXT("%llX"), *SessionId);
+	// 위젯 설정
+	// 서버 ID 설정
+	// FString SessionId = SteamSessionInfo.Session.SessionInfo->GetSessionId().ToString();
+	// FString HexRoomCode = FString::Printf(TEXT("%llX"), *SessionId);
+	// ServerID->SetText(FText::FromString(HexRoomCode));
 	
-	SessionConfig.ServerID = TEXT("STEAM-") + HexRoomCode;
-	ServerID->SetText(FText::FromString(SessionConfig.ServerID));
-	
-	FString PureSessionName;
-	if (SteamSessionInfo.Session.SessionSettings.Get(FName(PTWSessionKey::ServerName), PureSessionName))
+	// 서버 이름 설정
+	FString ServerNameStr;
+	if (OnlineSession.SessionSettings.Get(FName(PTWSessionKey::ServerName), ServerNameStr))
 	{
-		SessionConfig.ServerName = PureSessionName;
-		ServerName->SetText(FText::FromString(SessionConfig.ServerName));
+		ServerName->SetText(FText::FromString(ServerNameStr));
 	}
-	SessionConfig.bUseGameLift = false;
-}
-
-void UPTWServerListRow::SetupGameLiftInfo(const FPTWGameLiftGameSession& SearchResult)
-{
-	GameLiftSessionInfo = SearchResult;
 	
-	FString SessionId = GameLiftSessionInfo.GameSessionId;
-	FString RoomCode; // FString::Printf(TEXT("%llX"), SessionId);
-	int32 LastSlashIndex;
-	if (SessionId.FindLastChar('/', LastSlashIndex))
+	// 라운드 유형 설정
+	int32 RoundLimitTypeInt32;
+	if (OnlineSession.SessionSettings.Get(FName(PTWSessionKey::MaxRounds), RoundLimitTypeInt32))
 	{
-		FString UUIDString = SessionId.RightChop(LastSlashIndex + 1);
-		FString LeftPart, RightPart;
-		if (UUIDString.Split(TEXT("-"), &LeftPart, &RightPart))
+		if (RoundLimitTypeInt32 == GetMaxRoundsByLimit(EPTWRoundLimit::Short))
 		{
-			RoomCode = LeftPart;
+			RoundLimitType->SetText(FText::FromString(TEXT("Short")));
 		}
 		else
 		{
-			RoomCode = UUIDString.Left(8);
+			RoundLimitType->SetText(FText::FromString(TEXT("Long")));
 		}
 	}
-	else
-	{
-		RoomCode = SessionId.Left(8);
-	}
-	SessionConfig.ServerID = TEXT("AWS-") + RoomCode;
-	ServerID->SetText(FText::FromString(SessionConfig.ServerID));
 	
-	SessionConfig.ServerName = GameLiftSessionInfo.Name;
-	ServerName->SetText(FText::FromString(SessionConfig.ServerName));
+	// 플레이어 수 설정
+	int32 OpenSlots = OnlineSession.NumOpenPublicConnections;
+	int32 MaxPlayers = OnlineSession.SessionSettings.NumPublicConnections;
 	
-	SessionConfig.bUseGameLift = true;
+	FString ServerPlayersStr = FString::Printf(TEXT("%d / %d"), 
+		MaxPlayers - OpenSlots, MaxPlayers);
+	ServerPlayers->SetText(FText::FromString(ServerPlayersStr));
+	
+	// 핑 설정
+	FString ServerPingStr = FString::Printf((TEXT("%dms")), SteamSessionInfo.PingInMs);
+	ServerPing->SetText(FText::FromString(ServerPingStr));
 }
 
 void UPTWServerListRow::NativeConstruct()
@@ -86,8 +78,11 @@ void UPTWServerListRow::OnClickedJoinButton()
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!IsValid(GameInstance)) return;
 	
-	if (!SessionConfig.bUseGameLift)
+	const FOnlineSession& OnlineSession = SteamSessionInfo.Session;
+	
+	if (!OnlineSession.SessionSettings.bIsDedicated)
 	{
+		// 리슨 서버 접속
 		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
 		{
 			SessionSubsystem->JoinGameSession(FOnlineSessionSearchResultBP(SteamSessionInfo));
@@ -95,9 +90,21 @@ void UPTWServerListRow::OnClickedJoinButton()
 	}
 	else
 	{
-		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+		// 데디케이티드 서버 접속
+		FString GameLiftSessionId;
+		if (OnlineSession.SessionSettings.Get(FName(FName("GameLiftSessionId")), GameLiftSessionId))
 		{
-			GameLiftSubsystem->DescribeGameSession(GameLiftSessionInfo.GameSessionId);
+			if (!GameLiftSessionId.IsEmpty())
+			{
+				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+				{
+					GameLiftSubsystem->CheckSessionStatus(GameLiftSessionId);
+				}
+			}
+			else
+			{
+				// error
+			}
 		}
 	}
 }

@@ -31,11 +31,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	bool IsUsingSteamSubsystem();
 	
-	static void SetNetDriverToSteam();
+	// 현재 세션의 SteamID (CSteamID) 반환
+	FString GetSteamServerID();
+	
+	// 현재 세션의 ShouldAdvertise를 변경
+	void OnGameSessionActivated(FString InGameLiftSessionId);
 	
 	// 세셩 생성
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void CreateGameSession(FPTWSessionConfig SessionConfig);
+	void CreateGameSession(FPTWSessionConfig SessionConfig, bool bTravelOnSuccess);
 	
 	// 세션 참여
 	UFUNCTION(BlueprintCallable, Category = "Session")
@@ -67,7 +71,7 @@ protected:
 	virtual void Deinitialize() override;
 	
 	// 세션 생성 성공 시 호출
-	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig);
+	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig, bool bTravelOnSuccess);
 	
 	// 네트워크 오류가 발생했을 시 호출
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);

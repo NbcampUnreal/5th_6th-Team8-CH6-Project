@@ -12,6 +12,7 @@ namespace GameplayServerTags
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(CreatePlayerSession);
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(DescribeGameSession);
 		UE_DECLARE_GAMEPLAY_TAG_EXTERN(SearchGameSessions);
-		UE_DECLARE_GAMEPLAY_TAG_EXTERN(JoinGameSession);
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(CheckSessionStatus);
+		UE_DECLARE_GAMEPLAY_TAG_EXTERN(ReportServerInfoToBackend);
 	}
 }

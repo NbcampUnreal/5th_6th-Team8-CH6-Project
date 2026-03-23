@@ -18,30 +18,44 @@ bool UPTWSessionSubsystem::IsUsingSteamSubsystem()
 	return false;
 }
 
-void UPTWSessionSubsystem::SetNetDriverToSteam()
+FString UPTWSessionSubsystem::GetSteamServerID()
 {
-	if (!IsValid(GEngine))
+	if (SessionInterface.IsValid())
 	{
-		UE_LOG(LogTemp, Error, TEXT("NetDriver change failed: GEngine is null."));
-		return;
-	}
-	
-	FName CurrentNetDriver = NAME_GameNetDriver;
-	FString SteamNetDriver = TEXT("/Script/SteamSockets.SteamSocketsNetDriver");
-	for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
-	{
-		if (Def.DefName == NAME_GameNetDriver)
+		FNamedOnlineSession* NamedSession = SessionInterface->GetNamedSession(NAME_GameSession);
+		if (NamedSession && NamedSession->SessionInfo.IsValid())
 		{
-			Def.DriverClassName = FName(SteamNetDriver);
-			UE_LOG(LogTemp, Display, TEXT("Successfully updated %s class to: (%s)"), *CurrentNetDriver.ToString(), *SteamNetDriver);
-			break;
+			const FUniqueNetId& SessionId = NamedSession->SessionInfo->GetSessionId();
+			FString ServerSteamIDStr = SessionId.ToString();
+            
+			return ServerSteamIDStr;
 		}
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("Failed to change NetDriver: Definition for '%s' not found."), *CurrentNetDriver.ToString());
+	return FString();
 }
 
-void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig)
+void UPTWSessionSubsystem::OnGameSessionActivated(FString InGameLiftSessionId)
+{
+	if (!SessionInterface.IsValid()) return;
+	
+	if (FOnlineSessionSettings* NewSettings = SessionInterface->GetSessionSettings(NAME_GameSession))
+	{
+		NewSettings->Set(FName("GameLiftSessionId"), InGameLiftSessionId, EOnlineDataAdvertisementType::ViaOnlineService);
+		NewSettings->bShouldAdvertise = true;
+		
+		if (SessionInterface->UpdateSession(NAME_GameSession, *NewSettings, true))
+		{
+			UE_LOG(LogTemp, Log, TEXT("Session update requested."));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to start session update."));
+		}
+	}
+}
+
+void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig, bool bTravelOnSuccess)
 {
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
@@ -52,11 +66,11 @@ void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig)
         SessionInterface->DestroySession(NAME_GameSession);
     }
     CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(
-        FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete, SessionConfig));
+        FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete, SessionConfig, bTravelOnSuccess));
 	
     TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
     SessionSettings->bIsLANMatch = false;											// Lan 연결 사용 여부
-    SessionSettings->bShouldAdvertise = true;										// 공개 여부: 검색 노출 및 친구 초대 가능
+    SessionSettings->bShouldAdvertise = !SessionConfig.bIsDedicatedServer;			// 공개 여부: 검색 노출 및 친구 초대 가능
     SessionSettings->bAllowJoinInProgress = true;									// 중간 난입 허용 여부
     SessionSettings->NumPublicConnections = SessionConfig.MaxPlayers;   
     
@@ -65,8 +79,9 @@ void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig)
     SessionSettings->bAllowJoinViaPresence = !SessionConfig.bIsDedicatedServer;		// 스팀 친구 참여
 	SessionSettings->bUseLobbiesIfAvailable = !SessionConfig.bIsDedicatedServer;
 	
+	SessionSettings->Set(PTWSessionKey::MaxRounds, SessionConfig.MaxRounds, EOnlineDataAdvertisementType::ViaOnlineService);
     SessionSettings->Set(PTWSessionKey::ServerName, SessionConfig.ServerName, EOnlineDataAdvertisementType::ViaOnlineService);
-    SessionSettings->Set(PTWSessionKey::MaxPlayers, SessionConfig.MaxPlayers, EOnlineDataAdvertisementType::ViaOnlineService);
+    // SessionSettings->Set(PTWSessionKey::MaxPlayers, SessionConfig.MaxPlayers, EOnlineDataAdvertisementType::ViaOnlineService);
     
     if (!SessionInterface->CreateSession(0, NAME_GameSession, *SessionSettings))
     {
@@ -84,15 +99,6 @@ void UPTWSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResultBP& B
 	
 	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(
 		FOnJoinSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnJoinSessionComplete));
-	
-	for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
-	{
-		if (Def.DefName == NAME_GameNetDriver)
-		{
-			Def.DriverClassName = TEXT("/Script/SteamSockets.SteamSocketsNetDriver");
-			break;
-		}
-	}
 	
 	if (!SessionInterface->JoinSession(0, NAME_GameSession, SearchResult))
 	{
@@ -114,8 +120,6 @@ void UPTWSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessi
 	FString ConnectString;
 	if (SessionInterface->GetResolvedConnectString(SessionName, ConnectString))
 	{
-		SetNetDriverToSteam();
-		
 		if (APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Executing ClientTravel to: %s"), *ConnectString);
@@ -163,7 +167,6 @@ void UPTWSessionSubsystem::SearchForGameSessions()
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 	
 	if (SessionSearchQueue.IsEmpty()) return;
-
 	
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 	SessionSearchQueue.Peek(SessionSearch);
@@ -204,6 +207,7 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 			FString HostName = SearchResult.Session.OwningUserName;
 			int32 Ping = SearchResult.PingInMs;
 			FString ServerName;
+			
 			if (SearchResult.Session.SessionSettings.Get(PTWSessionKey::ServerName, ServerName))
 			{
 				UE_LOG(LogTemp, Log, TEXT("Found Server: %s (Ping: %d)"), *ServerName, Ping);
@@ -268,7 +272,7 @@ void UPTWSessionSubsystem::OnQuickMatchFindSessionsComplete()
 		}
 	}
 	
-	CreateGameSession(FPTWSessionConfig());
+	CreateGameSession(FPTWSessionConfig(), true);
 }
 
 void UPTWSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig)
@@ -319,10 +323,8 @@ void UPTWSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig Sess
 		Options += FString::Printf(TEXT("?listen"));
 	}
 	
-	Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
+	// Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
 	Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
-	
-	SetNetDriverToSteam();
 	
 	if (IsRunningDedicatedServer())
 	{
@@ -364,7 +366,7 @@ void UPTWSessionSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig)
+void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig, bool bTravelOnSuccess)
 {
 	if(!SessionInterface.IsValid()) return;
 	
@@ -372,7 +374,10 @@ void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasS
 	if (bWasSuccessful)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Steam Session Created Successfully!"));
-		OpenServerLevel("lobby", SessionConfig);
+		if (bTravelOnSuccess)
+		{
+			OpenServerLevel("lobby", SessionConfig);
+		}
 	}
 	else
 	{
@@ -390,6 +395,7 @@ void UPTWSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* NetDr
 void UPTWSessionSubsystem::LeaveGameSession()
 {
 	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] LeaveGameSession() called"));
+	
 	if (SessionInterface.IsValid())
 	{
 		DestroySessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(

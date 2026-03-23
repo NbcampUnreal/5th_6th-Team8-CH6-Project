@@ -60,7 +60,7 @@ public:
 	
 	/* 캐릭터 외곽선 */
 	UFUNCTION(Client, Reliable)
-	void Client_RefreshTeamOutline(bool bEnable, bool bUseTeam);
+	void Client_RefreshTeamOutline(bool bEnable, bool bUseTeam, bool bFriendlyOnly);
 	
 	/* 클라이언트가 서버에 메시지 전송을 요청하는 RPC */
 	UFUNCTION(Server, Reliable, WithValidation)

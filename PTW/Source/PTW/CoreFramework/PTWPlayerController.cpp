@@ -603,7 +603,7 @@ namespace PTWOutlineStencil
 	static constexpr int32 Enemy = 2;
 }
 
-void APTWPlayerController::Client_RefreshTeamOutline_Implementation(bool bEnable, bool bUseTeam)
+void APTWPlayerController::Client_RefreshTeamOutline_Implementation(bool bEnable, bool bUseTeam, bool bFriendlyOnly)
 {
 	UWorld* World = GetWorld();
 	if (!World) return;
@@ -631,14 +631,39 @@ void APTWPlayerController::Client_RefreshTeamOutline_Implementation(bool bEnable
 
 		if (bUseTeam)
 		{
+			const bool bIsSelf = (TargetCharacter == LocalPawn);
 			const bool bIsFriendly = (LocalPS && LocalPS->GetTeamId() == TargetPS->GetTeamId());
-			TargetCharacter->SetOutlineStencil(
-				bIsFriendly ? PTWOutlineStencil::Friendly : PTWOutlineStencil::Enemy
-			);
+
+			if (bFriendlyOnly)
+			{
+				//  아군만 표시
+				if (!bIsSelf && bIsFriendly)
+				{
+					TargetCharacter->SetOutlineStencil(PTWOutlineStencil::Friendly);
+				}
+				else
+				{
+					TargetCharacter->ClearOutlineStencil();
+				}
+			}
+			else
+			{
+				//  일반 팀전 (아군/적 둘 다)
+				if (!bIsSelf)
+				{
+					TargetCharacter->SetOutlineStencil(
+						bIsFriendly ? PTWOutlineStencil::Friendly : PTWOutlineStencil::Enemy
+					);
+				}
+				else
+				{
+					TargetCharacter->ClearOutlineStencil();
+				}
+			}
 		}
 		else
 		{
-			// 개인전
+			//  개인전
 			if (TargetCharacter == LocalPawn)
 			{
 				TargetCharacter->ClearOutlineStencil();

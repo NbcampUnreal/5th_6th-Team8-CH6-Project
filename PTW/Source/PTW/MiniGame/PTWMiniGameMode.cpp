@@ -274,7 +274,7 @@ void APTWMiniGameMode::RefreshTeamOutlineForAllPlayers(bool bEnable)
 		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
 		if (!PC) continue;
 
-		PC->Client_RefreshTeamOutline(bEnable, ShouldUseTeamOutline());
+		PC->Client_RefreshTeamOutline(bEnable, MiniGameRule.TeamRule.bUseTeam, bFriendlyOnlyOutline);
 	}
 }
 
@@ -649,7 +649,7 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	
 	if (APTWPlayerController* PC = Cast<APTWPlayerController>(NewPlayer))
 	{
-		PC->Client_RefreshTeamOutline(false, ShouldUseTeamOutline());
+		PC->Client_RefreshTeamOutline(false, MiniGameRule.TeamRule.bUseTeam, bFriendlyOnlyOutline);
 	}
 	
 	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn());

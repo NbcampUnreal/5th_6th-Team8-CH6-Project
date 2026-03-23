@@ -55,9 +55,6 @@ struct FPTWSessionConfig
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
 	int32 MaxRounds = 5;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
-	bool bUseGameLift = false;
 };
 
 USTRUCT()
@@ -121,3 +118,29 @@ struct FPTWGameLiftPlayerSession
 	void Dump() const;
 };
 
+USTRUCT(BlueprintType)
+struct FGameSessionListsTable
+{
+	GENERATED_BODY()
+
+	UPROPERTY() FString GameSessionId;
+	UPROPERTY() FString SteamId;
+	UPROPERTY() FString Status;
+	UPROPERTY() FString CreatedAt;
+};
+
+USTRUCT(BlueprintType)
+struct FPTWGameLiftSessionJoinData
+{
+	GENERATED_BODY()
+
+	UPROPERTY() FString IpAddress;
+
+	UPROPERTY() int32 Port;
+
+	UPROPERTY() FString PlayerSessionId;
+
+	UPROPERTY() FString SteamId;
+	
+	void Dump() const;
+};

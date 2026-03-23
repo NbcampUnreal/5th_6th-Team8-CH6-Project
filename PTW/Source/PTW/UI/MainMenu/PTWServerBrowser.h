@@ -49,10 +49,7 @@ protected:
 	void OnClickedLongRoundButton();
 	
 	UFUNCTION()
-	void OnFindSteamSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults);
-	
-	UFUNCTION()
-	void OnFindGameLiftSessionsComplete(const TArray<FPTWGameLiftGameSession>& SearchResults);
+	void OnFindSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults);
 	
 	UFUNCTION()
 	void OnClickedTestButton();

@@ -29,6 +29,7 @@ public:
 	UFUNCTION()
 	virtual void EndTimer();
 protected:
+	virtual void PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage) override;
 	/** 게임 월드 시작 시 초기 설정 및 GameState 참조 캐싱 */
 	virtual void InitGameState() override;
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
@@ -49,6 +50,7 @@ protected:
 	/* 트래블 직전에 모든 클라에 로딩 정보 전달 */
 	void PrepareAllPlayersLoadingScreen(ELoadingScreenType Type, FName MapRowName);
 
+	virtual FString InitNewPlayer(APlayerController* NewPlayer, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal) override;
 public:
 	/** 모든 플레이어가 로딩되었는지 확인 */
 	void CheckAllPlayersLoaded();

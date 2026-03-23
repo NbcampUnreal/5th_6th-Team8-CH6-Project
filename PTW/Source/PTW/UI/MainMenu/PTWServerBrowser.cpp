@@ -64,7 +64,10 @@ void UPTWServerBrowser::NativeConstruct()
 	
 	if (IsValid(TestButton))
 	{
+		#if WITH_EDITOR
+		TestButton->SetVisibility(ESlateVisibility::Visible);
 		TestButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedTestButton);
+		#endif
 	}
 	
 	if (IsValid(DevJoinButton))
@@ -80,12 +83,7 @@ void UPTWServerBrowser::NativeConstruct()
 	{
 		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
 		{
-			SessionSubsystem->OnSessionSearchComplete.AddDynamic(this, &ThisClass::OnFindSteamSessionsComplete);
-		}
-		
-		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
-		{
-			GameLiftSubsystem->OnSessionSearchComplete.AddDynamic(this, &ThisClass::OnFindGameLiftSessionsComplete);
+			SessionSubsystem->OnSessionSearchComplete.AddUniqueDynamic(this, &ThisClass::OnFindSessionsComplete);
 		}
 	}
 	
@@ -162,20 +160,9 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	
 	if (SessionConfig.bIsDedicatedServer)
 	{
-		SessionConfig.bUseGameLift = true;
-		// Dedicated Server는 AWS GameLift에서 원격으로 Fleet Instance에 빈 프로세스를 선택하고 GameSession을 생성.
-		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
-		{
-			GameLiftSubsystem->CreateGameSession(SessionConfig);
-		}
-	}
-	else
-	{
-		SessionConfig.bUseGameLift = false;
-		// Listen Server는 현재 Desktop 에서 실행.
 		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
 		{
-			SessionSubsystem->CreateGameSession(SessionConfig);
+			SessionSubsystem->CreateGameSession(SessionConfig, true);
 		}
 	}
 }
@@ -226,44 +213,25 @@ void UPTWServerBrowser::OnClickedLongRoundButton()
 	ShortRoundButton->SetBackgroundColor(FLinearColor::White);
 }
 
-void UPTWServerBrowser::OnFindSteamSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults)
+void UPTWServerBrowser::OnFindSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults)
 {
 	if (SearchResults.IsEmpty()) return;
 	
 	for (const FOnlineSessionSearchResultBP& SearchResult : SearchResults)
 	{
 		UPTWServerListRow* ServerListRow = CreateWidget<UPTWServerListRow>(this, ServerListRowClass);
-		ServerListRow->SetupSteamInfo(SearchResult);
-		ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
-	}
-}
-
-void UPTWServerBrowser::OnFindGameLiftSessionsComplete(const TArray<FPTWGameLiftGameSession>& SearchResults)
-{
-	if (SearchResults.IsEmpty()) return;
-	
-	for (const FPTWGameLiftGameSession& SearchResult : SearchResults)
-	{
-		UPTWServerListRow* ServerListRow = CreateWidget<UPTWServerListRow>(this, ServerListRowClass);
-		ServerListRow->SetupGameLiftInfo(SearchResult);
+		ServerListRow->SetupSessionMinimalInfo(SearchResult);
 		ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
 	}
 }
 
 void UPTWServerBrowser::OnClickedTestButton()
 {
-	/*
-	HTTPRequestManager->OnListFleetsResponseReceived.AddUniqueDynamic(this, &ThisClass::OnListFleetsResponseReceived);
-	HTTPRequestManager->RequestListFleets();
-	TestButton->SetIsEnabled(false);
-	*/
-	
-	// HTTPRequestManager->JoinGameSession();
 	TestButton->SetIsEnabled(false);
 }
 
 void UPTWServerBrowser::DevJoinAction()
 {
-	UGameplayStatics::OpenLevel(GetWorld(), TEXT("127.0.0.1"));
+	UGameplayStatics::OpenLevel(GetWorld(), TEXT("127.0.0.1:7777"));
 }
 #undef LOCTEXT_NAMESPACE

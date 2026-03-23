@@ -43,7 +43,6 @@ public class PTW : ModuleRules
         PublicDependencyModuleNames.AddRange(new string[] {
             "OnlineSubsystem",
             "OnlineSubsystemUtils",
-			"OnlineSubsystemSteam",
 			"HTTP",
         });
         
@@ -59,14 +58,12 @@ public class PTW : ModuleRules
 			"Json",
             "JsonUtilities",
 			"NetCore"
-
 		});
         
         // AWS GameLift
 		if (Target.Type == TargetType.Server)
 		{
 			PublicDependencyModuleNames.Add("GameLiftServerSDK");
-			PublicDefinitions.Add("WITH_GAMELIFT=1");
 		}
 		else
 		{

@@ -70,7 +70,7 @@ public:
 	void DescribeGameSession(const FString& SessionId);
 	void CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
 	void SearchGameSessions();
-	
+	FString GetUniquePlayerId() const;
 protected:
 	bool ContainErrors(TSharedPtr<FJsonObject> JsonObject);
 	void DumpMetadata(TSharedPtr<FJsonObject> JsonObject);
@@ -83,7 +83,6 @@ protected:
 	void SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 private:
-	FString GetUniquePlayerId() const;
 	void ListFleets_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 protected:

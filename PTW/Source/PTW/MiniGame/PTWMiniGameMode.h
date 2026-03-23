@@ -143,6 +143,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Prop", meta=(EditCondition="bApplyPropOnStartGame || bApplyPropOnStartRound"))
 	TObjectPtr<UPTWPropData> RoundPropData;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Outline")
+	bool bFriendlyOnlyOutline = false;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Game|Weapon")
 	TObjectPtr<UPTWItemDefinition> ItemDefinition;
 

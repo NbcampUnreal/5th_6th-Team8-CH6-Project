@@ -126,20 +126,17 @@ struct FGameSessionListsTable
 	UPROPERTY() FString GameSessionId;
 	UPROPERTY() FString SteamId;
 	UPROPERTY() FString Status;
-	UPROPERTY() FString CreatedAt;
+	UPROPERTY() int64 CreatedAt;
+	UPROPERTY() int64 DeleteAt;
 };
 
 USTRUCT(BlueprintType)
 struct FPTWGameLiftSessionJoinData
 {
 	GENERATED_BODY()
-
 	UPROPERTY() FString IpAddress;
-
 	UPROPERTY() int32 Port;
-
 	UPROPERTY() FString PlayerSessionId;
-
 	UPROPERTY() FString SteamId;
 	
 	void Dump() const;

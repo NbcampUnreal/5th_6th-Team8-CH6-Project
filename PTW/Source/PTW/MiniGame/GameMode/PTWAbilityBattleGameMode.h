@@ -42,6 +42,7 @@ private:
 	void GrandAbilityBattleAttributeSet();
 	void AttachPlayerStateComponent(APlayerController* Controller);
 	void AddDraftChargeAllPlayers();
+	void UpdateChargeTime();
 	
 	TMap<int32, TArray<FName>> TierAbilityPool;
 	

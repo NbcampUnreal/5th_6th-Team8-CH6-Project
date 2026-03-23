@@ -3,7 +3,10 @@
 
 #include "MiniGame/PlayerStateComponent/PTWAbilityBattlePSComponent.h"
 
+#include "AbilitySystemComponent.h"
+#include "CoreFramework/PTWPlayerState.h"
 #include "Net/UnrealNetwork.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 // Sets default values for this component's properties
 
@@ -17,15 +20,17 @@ void UPTWAbilityBattlePSComponent::GetLifetimeReplicatedProps(TArray<class FLife
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ThisClass, DraftCharges);
+	DOREPLIFETIME(ThisClass, DraftChargeCount);
 	DOREPLIFETIME(ThisClass, bFirstDraftCompleted);
+	DOREPLIFETIME(ThisClass, ChargeRemainTime);
+	
 }
 
 void UPTWAbilityBattlePSComponent::AddDraftCharges()
 {
 	if (GetOwner() || GetOwner()->HasAuthority())
 	{
-		DraftCharges++;
+		DraftChargeCount++;
 	}
 }
 
@@ -33,7 +38,7 @@ void UPTWAbilityBattlePSComponent::DecreaseDraftCharges()
 {
 	if (GetOwner() || GetOwner()->HasAuthority())
 	{
-		DraftCharges--;
+		DraftChargeCount--;
 	}
 }
 
@@ -44,4 +49,39 @@ void UPTWAbilityBattlePSComponent::SetCurrentDraft(const TArray<FName>& NewDraft
 
 void UPTWAbilityBattlePSComponent::ResetCurrentDraft()
 {
+	CurrentDraft.Reset();
 }
+
+void UPTWAbilityBattlePSComponent::UpdateChargeRemainTime(float DecreaseTimer)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+
+	APTWPlayerState* PlayerState = Cast<APTWPlayerState>(GetOwner());
+	if (!PlayerState) return;
+	
+	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
+	if (ASC && ASC->HasMatchingGameplayTag(GameplayTags::State::Status_Dead)) return;
+	
+	ChargeRemainTime -= DecreaseTimer;
+
+	if (ChargeRemainTime <= 0.f)
+	{
+		ChargeRemainTime = MaxChargeTime;
+		AddDraftCharges();
+	}
+
+	//UE_LOG(LogTemp, Log, TEXT("ChargeRemainTime: %f"), ChargeRemainTime);
+}
+
+void UPTWAbilityBattlePSComponent::OnRep_ChargeRemainTime()
+{
+	OnDraftChargedTimeChanged.Broadcast(ChargeRemainTime, MaxChargeTime);
+	
+}
+
+void UPTWAbilityBattlePSComponent::OnRep_ChangeChargeCount()
+{
+	OnChangedChargeCount.Broadcast(DraftChargeCount);
+}
+
+

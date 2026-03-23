@@ -33,10 +33,13 @@ void ASavePointDetectActor::OnDetectOverlap(UPrimitiveComponent* OverlappedCompo
 
 void ASavePointDetectActor::SpeedUpPlaySound(APTWPlayerCharacter* TargetCharacter)
 {
-	UGameplayStatics::PlaySoundAtLocation(
-		this,
-		SpeedUpSound,
-		TargetCharacter->GetActorLocation());
+	if (TargetCharacter->IsLocallyControlled())
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+	this,
+	SpeedUpSound,
+	TargetCharacter->GetActorLocation());
+	}
 }
 
 

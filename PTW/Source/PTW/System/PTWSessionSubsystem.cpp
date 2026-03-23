@@ -72,6 +72,7 @@ void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig, bo
     SessionSettings->bIsLANMatch = false;											// Lan 연결 사용 여부
     SessionSettings->bShouldAdvertise = !SessionConfig.bIsDedicatedServer;			// 공개 여부: 검색 노출 및 친구 초대 가능
     SessionSettings->bAllowJoinInProgress = true;									// 중간 난입 허용 여부
+	UE_LOG(LogTemp, Log, TEXT("bShouldAdvertise: %hs"), SessionSettings->bShouldAdvertise ? "true" : "false");
     SessionSettings->NumPublicConnections = SessionConfig.MaxPlayers;   
     
     SessionSettings->bIsDedicated = SessionConfig.bIsDedicatedServer;				// Dedicated Serer 여부

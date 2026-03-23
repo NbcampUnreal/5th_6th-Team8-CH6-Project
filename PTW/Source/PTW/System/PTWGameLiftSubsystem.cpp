@@ -466,7 +466,7 @@ void UPTWGameLiftSubsystem::ReportServerInfoToBackend_Response(FHttpRequestPtr R
 	{
 		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend_Response Successful"));
 		UE_LOG(LogTemp, Log, TEXT("Successfully reported Steam ID to Backend."));
-		FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult()
+		FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
 		if (!GameSessionId.IsEmpty())
 		{
 			if (UWorld* World = GetWorld())

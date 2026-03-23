@@ -60,6 +60,8 @@ protected:
 	
 	void UpdateCharacterSpeed();
 	
+	bool CheckIgnoreState(AActor* Target);
+	
 protected:
 	float BaseSpeed;
 };

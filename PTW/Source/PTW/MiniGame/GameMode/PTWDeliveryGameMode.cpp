@@ -346,6 +346,7 @@ void APTWDeliveryGameMode::Test_GiveItems()
 	{
 		SpawnManager->SpawnSingleItem(Cast<APTWPlayerState>(AS), TestItemDef);
 		SpawnManager->SpawnSingleItem(Cast<APTWPlayerState>(AS), TestPassive);
+		SpawnManager->SpawnSingleItem(Cast<APTWPlayerState>(AS), TestActive);
 	}
 	
 }

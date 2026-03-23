@@ -8,6 +8,7 @@
 #include "CoreFramework/PTWPlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 UPTWDeliveryAttributeSet::UPTWDeliveryAttributeSet()
 {
@@ -36,6 +37,9 @@ void UPTWDeliveryAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMo
 {
 	Super::PostGameplayEffectExecute(Data);
 	
+	FGameplayEffectContextHandle Context = Data.EffectSpec.GetContext();
+	AActor* Target = Data.Target.GetAvatarActor();
+	
 	if (Data.EvaluatedData.Attribute == GetBatteryLevelAttribute())
 	{
 		SetBatteryLevel(FMath::Clamp(GetBatteryLevel(), 0.0f, 1.0f));
@@ -45,7 +49,7 @@ void UPTWDeliveryAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMo
         
 		SetMoveSpeedModifier(NewSpeedModifier);
 		
-		float FinalSpeed = 600.0f * NewSpeedModifier;
+		float FinalSpeed = CheckIgnoreState(Target) ? 600.0f : 600.0f * NewSpeedModifier;
 		
 		if (UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent())
 		{
@@ -93,4 +97,10 @@ void UPTWDeliveryAttributeSet::UpdateCharacterSpeed()
 			Comp->MaxWalkSpeed = 600.0f * GetMoveSpeedModifier();
 		}
 	}
+}
+
+bool UPTWDeliveryAttributeSet::CheckIgnoreState(AActor* Target)
+{
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Target);
+	return ASC->HasMatchingGameplayTag(GameplayTags::MiniGame::State::IgnoreBatteryLevel);
 }

@@ -121,6 +121,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Game|Test")
 	TObjectPtr<UPTWItemDefinition> TestPassive;
+	
+	UPROPERTY(EditAnywhere, Category = "Game|Test")
+	TObjectPtr<UPTWItemDefinition> TestActive;
 
 private:
 	FTimerHandle CountDownTimerHandle;

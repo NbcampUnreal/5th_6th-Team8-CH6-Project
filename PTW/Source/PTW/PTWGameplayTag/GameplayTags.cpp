@@ -51,6 +51,11 @@ namespace GameplayTags
 	{
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Bomb, "MiniGame.Bomb");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Delivery, "MiniGame.Delivery");
+
+		namespace State
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(IgnoreBatteryLevel, "MiniGame.State.IgnoreBatteryLevel");
+		}
 	}
 	
 	namespace Role

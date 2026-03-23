@@ -522,9 +522,9 @@ void UPTWUIControllerComponent::UnbindGameStateDelegates()
 {
 	if (IsValid(CachedGameState))
 	{
-		CachedGameState->OnMiniGameCountdownChanged.RemoveAll(this);
-		CachedGameState->OnRoulettePhaseChanged.RemoveAll(this);
-		CachedGameState->OnGamePhaseChanged.RemoveAll(this);
+		CachedGameState->OnMiniGameCountdownChanged.Clear();
+		CachedGameState->OnRoulettePhaseChanged.Clear();
+		CachedGameState->OnGamePhaseChanged.Clear();
 	}
 
 	CachedGameState = nullptr;

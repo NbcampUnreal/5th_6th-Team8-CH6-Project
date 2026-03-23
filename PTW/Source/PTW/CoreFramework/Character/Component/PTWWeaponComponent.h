@@ -21,6 +21,14 @@ public:
 	TObjectPtr<APTWWeaponActor> Weapon3P;
 };
 
+USTRUCT(BlueprintType)
+struct FSavedWeaponData
+{
+	GENERATED_BODY()
+	
+	TArray<FWeaponPair> WeaponArray;
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PTW_API UPTWWeaponComponent : public UActorComponent
 {

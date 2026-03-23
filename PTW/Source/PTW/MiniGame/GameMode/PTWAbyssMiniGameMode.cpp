@@ -238,45 +238,45 @@ void APTWAbyssMiniGameMode::RestartPlayer(AController* NewPlayer)
 
 void APTWAbyssMiniGameMode::GiveAndEquipDefaultWeapon(AController* NewPlayer)
 {
-	if (!NewPlayer) return;
-
-	APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn());
-	if (!PlayerCharacter) return;
-
-	UPTWWeaponComponent* WeaponComp = PlayerCharacter->GetWeaponComponent();
-	UPTWInventoryComponent* InvenComp = PlayerCharacter->GetInventoryComponent();
-	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
-
-	if (!WeaponComp || !InvenComp || !SpawnManager) return;
-	if (MiniGameRule.LoadoutRule.DefaultWeapon.IsEmpty()) return;
-
-	for (UPTWItemDefinition* DefaultWeapon : MiniGameRule.LoadoutRule.DefaultWeapon)
-	{
-		if (!DefaultWeapon) continue;
-
-		SpawnManager->SpawnWeaponActor(
-			PlayerCharacter,
-			DefaultWeapon,
-			DefaultWeapon->WeaponTag
-		);
-	}
-
-	FWeaponPair WeaponPairs = InvenComp->GetWeaponActors(NewPlayer);
-	if (!WeaponPairs.Weapon1P || !WeaponPairs.Weapon3P) return;
-
-	UPTWWeaponInstance* WeaponInst = WeaponPairs.Weapon3P->GetWeaponItemInstance();
-	if (!WeaponInst) return;
-
-	UPTWItemDefinition* Def = WeaponInst->ItemDef;
-	if (!Def) return;
-
-	WeaponComp->AttachWeaponToSocket(
-		WeaponPairs.Weapon1P,
-		WeaponPairs.Weapon3P,
-		Def->WeaponTag
-	);
-
-	WeaponComp->EquipWeaponByTag(Def->WeaponTag);
+	// if (!NewPlayer) return;
+	//
+	// APTWPlayerCharacter* PlayerCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn());
+	// if (!PlayerCharacter) return;
+	//
+	// UPTWWeaponComponent* WeaponComp = PlayerCharacter->GetWeaponComponent();
+	// UPTWInventoryComponent* InvenComp = PlayerCharacter->GetInventoryComponent();
+	// UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
+	//
+	// if (!WeaponComp || !InvenComp || !SpawnManager) return;
+	// if (MiniGameRule.LoadoutRule.DefaultWeapon.IsEmpty()) return;
+	//
+	// for (UPTWItemDefinition* DefaultWeapon : MiniGameRule.LoadoutRule.DefaultWeapon)
+	// {
+	// 	if (!DefaultWeapon) continue;
+	//
+	// 	SpawnManager->SpawnWeaponActor(
+	// 		PlayerCharacter,
+	// 		DefaultWeapon,
+	// 		DefaultWeapon->WeaponTag
+	// 	);
+	// }
+	//
+	// FWeaponPair WeaponPairs = InvenComp->GetWeaponActorsArr(NewPlayer);
+	// if (!WeaponPairs.Weapon1P || !WeaponPairs.Weapon3P) return;
+	//
+	// UPTWWeaponInstance* WeaponInst = WeaponPairs.Weapon3P->GetWeaponItemInstance();
+	// if (!WeaponInst) return;
+	//
+	// UPTWItemDefinition* Def = WeaponInst->ItemDef;
+	// if (!Def) return;
+	//
+	// WeaponComp->AttachWeaponToSocket(
+	// 	WeaponPairs.Weapon1P,
+	// 	WeaponPairs.Weapon3P,
+	// 	Def->WeaponTag
+	// );
+	//
+	// WeaponComp->EquipWeaponByTag(Def->WeaponTag);
 }
 
 void APTWAbyssMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)

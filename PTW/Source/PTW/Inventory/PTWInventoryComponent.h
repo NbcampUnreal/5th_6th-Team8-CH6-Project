@@ -18,6 +18,7 @@ class UPTWItemDefinition;
 class UAbilitySystemComponent;
 class UPTWWeaponInstance;
 
+
 DECLARE_MULTICAST_DELEGATE(FOnInventoryChanged);
 
 
@@ -42,6 +43,8 @@ public:
 	template<typename T>
 	FORCEINLINE T* GetCurrentWeaponInst() const { return Cast<T>(CurrentWeapon); }
 	
+	FORCEINLINE TArray<TObjectPtr<UPTWWeaponInstance>> GetWeaponArray() const { return WeaponArr;}
+	
 	void SetCurrentWeaponInst(const UPTWItemInstance* WeaponInst);
 	
 	void WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool bSetHidden);
@@ -54,9 +57,9 @@ public:
 	
 	FORCEINLINE int32 GetCurrentSlotIndex() const { return CurSelectingWeaponSlot;}
 	
-	void SetSavedWeaponActor(AController* TargetController, FWeaponPair SavedWeaponActors);
+	void SetSavedWeaponActor(AController* TargetController, FSavedWeaponData SavedWeaponActors);
 	
-	FWeaponPair GetWeaponActors(AController* TargetController) const;
+	const TArray<FWeaponPair>* GetWeaponActorsArr(AController* TargetController) const;
 	
 	/*사용 아이템 사용 함수*/
 	UFUNCTION(BlueprintCallable)
@@ -82,7 +85,7 @@ public:
 	
 	void DropItem();
 	
-	FORCEINLINE TArray<TObjectPtr<UPTWItemInstance>> GetAllItems() const { return ItemArr; }
+	FORCEINLINE const TArray<TObjectPtr<UPTWItemInstance>>& GetAllItems() const { return ItemArr; }
 	
 	void RemoveActiveItemGameplayAbilityHandle();
 protected:
@@ -112,7 +115,7 @@ private:
 	
 	FGameplayAbilitySpecHandle CurrentWeaponAbilitySpec;
 	
-	TMap<AController*, FWeaponPair> SavedWeaponMaps;
+	TMap<AController*, FSavedWeaponData> SavedWeaponMaps;
 
 public:
 	/* 델리게이트 */

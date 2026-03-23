@@ -19,6 +19,7 @@
 #include "Net/UnrealNetwork.h"
 #include "PTWGameplayTag/GameplayTags.h"
 #include "System/PTWItemSpawnManager.h"
+#include "Tools/UEdMode.h"
 
 
 UPTWInventoryComponent::UPTWInventoryComponent()
@@ -336,14 +337,19 @@ void UPTWInventoryComponent::SetWeaponActorHidden(UPTWItemInstance* Weapon, bool
 }
 
 void UPTWInventoryComponent::SetSavedWeaponActor(AController* TargetController,
-	FWeaponPair SavedWeaponActors)
+	FSavedWeaponData SavedWeaponActors)
 {
 	SavedWeaponMaps.Add(TargetController, SavedWeaponActors);
 }
 
-FWeaponPair UPTWInventoryComponent::GetWeaponActors(AController* TargetController) const
+const TArray<FWeaponPair>* UPTWInventoryComponent::GetWeaponActorsArr(AController* TargetController) const
 {
-	return SavedWeaponMaps.Find(TargetController) ? SavedWeaponMaps[TargetController] : FWeaponPair();
+	if (const FSavedWeaponData* FoundData = SavedWeaponMaps.Find(TargetController))
+	{
+		return &FoundData->WeaponArray;
+	}
+	
+	return nullptr;
 }
 
 void UPTWInventoryComponent::UseActiveItem()

@@ -659,17 +659,33 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	UPTWInventoryComponent* InvenComp = TargetCharacter->GetInventoryComponent();
 	if (!WeaponComp || !InvenComp) return;
 	
-	const FWeaponPair WeaponPairs = InvenComp->GetWeaponActors(NewPlayer);
-	if (!WeaponPairs.Weapon1P || !WeaponPairs.Weapon3P) return;
+	// const FWeaponPair WeaponPairs = InvenComp->GetWeaponActors(NewPlayer);
+	// if (!WeaponPairs.Weapon1P || !WeaponPairs.Weapon3P) return;
+	//
+	// UPTWWeaponInstance* WeaponInst = WeaponPairs.Weapon3P->GetWeaponItemInstance();
+	// if (WeaponInst && WeaponInst->ItemDef)
+	// {
+	// 	WeaponComp->AttachWeaponToSocket(
+	// 		WeaponPairs.Weapon1P,
+	// 		WeaponPairs.Weapon3P,
+	// 		WeaponInst->ItemDef->WeaponTag
+	// 	);
+	// }
 	
-	UPTWWeaponInstance* WeaponInst = WeaponPairs.Weapon3P->GetWeaponItemInstance();
-	if (WeaponInst && WeaponInst->ItemDef)
+	if (const TArray<FWeaponPair>* WeaponPairsPtr = InvenComp->GetWeaponActorsArr(NewPlayer))
 	{
-		WeaponComp->AttachWeaponToSocket(
-			WeaponPairs.Weapon1P,
-			WeaponPairs.Weapon3P,
-			WeaponInst->ItemDef->WeaponTag
-		);
+		for (const FWeaponPair& WeaponPair : *WeaponPairsPtr)
+		{
+			UPTWWeaponInstance* WeaponInst = WeaponPair.Weapon3P->GetWeaponItemInstance();
+			if (WeaponInst && WeaponInst->ItemDef)
+			{
+				WeaponComp->AttachWeaponToSocket(
+					WeaponPair.Weapon1P,
+					WeaponPair.Weapon3P,
+					WeaponInst->ItemDef->WeaponTag
+				);
+			}
+		}
 	}
 }
 
@@ -722,16 +738,30 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 		UPTWInventoryComponent* InvenComp = PS->GetInventoryComponent();
 		if (!InvenComp) return;
 		
-		UPTWWeaponInstance* CurrentInst = InvenComp->GetCurrentWeaponInst<UPTWWeaponInstance>(); // 캐스팅 포함된 Getter 권장
-		if (CurrentInst)
+		// UPTWWeaponInstance* CurrentInst = InvenComp->GetCurrentWeaponInst<UPTWWeaponInstance>(); // 캐스팅 포함된 Getter 권장
+		// if (CurrentInst)
+		// {
+		// 	FWeaponPair WeaponPair;
+		// 	WeaponPair.Weapon1P = CurrentInst->SpawnedWeapon1P;
+		// 	WeaponPair.Weapon3P = CurrentInst->SpawnedWeapon3P;
+		//
+		// 	InvenComp->SetSavedWeaponActor(DeadPawn->GetController(), WeaponPair);
+		// 	InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
+		// }
+		
+		const TArray<TObjectPtr<UPTWWeaponInstance>>& WeaponArr = InvenComp->GetWeaponArray();
+		
+		FSavedWeaponData SavedData;
+		for (const auto& WeaponInst : WeaponArr)
 		{
 			FWeaponPair WeaponPair;
-			WeaponPair.Weapon1P = CurrentInst->SpawnedWeapon1P;
-			WeaponPair.Weapon3P = CurrentInst->SpawnedWeapon3P;
-		
-			InvenComp->SetSavedWeaponActor(DeadPawn->GetController(), WeaponPair);
-			InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
+			WeaponPair.Weapon1P = WeaponInst->SpawnedWeapon1P;
+			WeaponPair.Weapon3P = WeaponInst->SpawnedWeapon3P;
+			SavedData.WeaponArray.Add(WeaponPair);
 		}
+		
+		InvenComp->SetSavedWeaponActor(DeadPawn->GetController(), SavedData);
+		InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
 	}
 
 	APlayerState* KillPlayerState = nullptr;

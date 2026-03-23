@@ -47,13 +47,12 @@ void APTWServerEntryGameMode::InitGameLift()
 			FParse::Value(CommandLine, *ServerName_cmd, SessionConfig.ServerName);
 			FParse::Value(CommandLine, *MaxPlayers_cmd, SessionConfig.MaxPlayers);
 			
-			if(UWorld* World = GetWorld())
-			{		
-				// UGameplayStatics::OpenLevel(World, "Lobby");
-				// UPTWGameLiftSubsystem::SetNetDriverToIP();
-				// World->ServerTravel(TEXT("Lobby"));
-				SessionSubsystem->CreateGameSession(SessionConfig, true);
-			}
+			SessionSubsystem->CreateGameSession(SessionConfig, true);
+			FTimerHandle TempTimerHandle;
+			GetWorld()->GetTimerManager().SetTimer(TempTimerHandle, [=, this]()
+			{
+				SessionSubsystem->OnGameSessionActivated("1234");
+			})
 			return;
 		}
 	}
@@ -204,10 +203,6 @@ void APTWServerEntryGameMode::InitGameLift()
 			FPTWSessionConfig SessionConfig;
 			SessionConfig.bIsDedicatedServer = true;
 			SessionSubsystem->CreateGameSession(SessionConfig, true);
-			// UWorld* World = GetWorld();
-			// if (!IsValid(World)) return;
-			// UGameplayStatics::OpenLevel(World, "Lobby");
-			// World->ServerTravel(TEXT("Lobby"));
 		});
 	});
     //OnProcessTerminate callback. Amazon GameLift Servers will invoke this callback before shutting down an instance hosting this game server.

@@ -27,14 +27,15 @@ class PTW_API UPTWSessionSubsystem : public UGameInstanceSubsystem
 public:
 	FORCEINLINE IOnlineSessionPtr GetSessionInterface() const { return SessionInterface; };
 	
-	static void SetNetDriverToSteam();
-	
 	// 온라인 서브시스템이 스팀인지 체크
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	bool IsUsingSteamSubsystem();
 	
 	// 현재 세션의 SteamID (CSteamID) 반환
-	static FString GetSteamServerID();
+	FString GetSteamServerID();
+	
+	// 현재 세션의 ShouldAdvertise를 변경
+	void OnGameSessionActivated(FString InGameLiftSessionId);
 	
 	// 세셩 생성
 	UFUNCTION(BlueprintCallable, Category = "Session")

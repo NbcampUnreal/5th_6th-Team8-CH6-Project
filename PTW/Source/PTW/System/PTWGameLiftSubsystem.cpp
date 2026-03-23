@@ -55,31 +55,6 @@ void UPTWGameLiftSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UPTWGameLiftSubsystem::SetNetDriverToIP()
-{
-	/*
-	if (!IsValid(GEngine))
-	{
-		UE_LOG(LogTemp, Error, TEXT("NetDriver change failed: GEngine is null."));
-		return;
-	}
-	
-	FName CurrentNetDriver = NAME_GameNetDriver;
-	FString IpNetDriver = TEXT("OnlineSubsystemUtils.IpNetDriver");
-	for (FNetDriverDefinition& Def : GEngine->NetDriverDefinitions)
-	{
-		if (Def.DefName == NAME_GameNetDriver)
-		{
-			Def.DriverClassName = FName(IpNetDriver);
-			UE_LOG(LogTemp, Display, TEXT("Successfully updated %s class to: (%s)"), *CurrentNetDriver.ToString(), *IpNetDriver);
-			break;
-		}
-	}
-	
-	UE_LOG(LogTemp, Warning, TEXT("Failed to change NetDriver: Definition for '%s' not found."), *CurrentNetDriver.ToString());
-*/
-}
-
 FString UPTWGameLiftSubsystem::SerializeJsonContent(const TMap<FString, FString>& Parameters)
 {
 	TSharedPtr<FJsonObject> ContentJsonObject = MakeShareable(new FJsonObject());
@@ -442,12 +417,23 @@ void UPTWGameLiftSubsystem::ReportServerInfoToBackend()
 {
 	// FString GameSessionId = FString(InGameSession.GetGameSessionId());
 	FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
-	FString SteamID = UPTWSessionSubsystem::GetSteamServerID();
+	FString SteamId;
+	
+	if (UWorld* World = GetWorld())
+	{
+		if(UGameInstance* GI = World->GetGameInstance())
+		{
+			if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
+			{
+				SteamId = SessionSubsystem->GetSteamServerID();
+			}
+		}
+	}
 	
 	UE_LOG(LogTemp, Warning, TEXT("GameSessionId: %s"), *GameSessionId);
-	UE_LOG(LogTemp, Warning, TEXT("SteamID: %s"), *SteamID);
+	UE_LOG(LogTemp, Warning, TEXT("SteamId: %s"), *SteamId);
 	
-	if (!SteamID.IsEmpty())
+	if (!SteamId.IsEmpty())
 	{
 		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend SteamId Is Valid"));
 		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
@@ -461,7 +447,7 @@ void UPTWGameLiftSubsystem::ReportServerInfoToBackend()
 		
 		TMap<FString, FString> Params = {
 			{ TEXT("gameSessionId"),	GameSessionId },
-			{ TEXT("steamId"),			SteamID }
+			{ TEXT("steamId"),			SteamId }
 		};
 		
 		const FString Content = SerializeJsonContent(Params);
@@ -480,6 +466,21 @@ void UPTWGameLiftSubsystem::ReportServerInfoToBackend_Response(FHttpRequestPtr R
 	{
 		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend_Response Successful"));
 		UE_LOG(LogTemp, Log, TEXT("Successfully reported Steam ID to Backend."));
+		FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult()
+		if (!GameSessionId.IsEmpty())
+		{
+			if (UWorld* World = GetWorld())
+			{
+				if(UGameInstance* GI = World->GetGameInstance())
+				{
+					if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
+					{
+					
+						SessionSubsystem->OnGameSessionActivated(GameSessionId);
+					}
+				}
+			}
+		}
 	}
 	else
 	{

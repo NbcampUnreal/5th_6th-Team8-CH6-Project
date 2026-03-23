@@ -28,7 +28,6 @@ protected:
 	virtual void Deinitialize() override;
 	
 public:
-	static void SetNetDriverToIP();
 	FString SerializeJsonContent(const TMap<FString, FString>& Params);
 	template <typename T>
 	bool ParseDataFromJson(const FString& JsonString, T& OutStruct)

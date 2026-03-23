@@ -55,9 +55,6 @@ struct FPTWSessionConfig
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
 	int32 MaxRounds = 5;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
-	bool bUseGameLift = false;
 };
 
 USTRUCT()

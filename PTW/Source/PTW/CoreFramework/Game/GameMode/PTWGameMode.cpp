@@ -3,6 +3,7 @@
 
 #include "PTWGameMode.h"
 
+#include "OnlineSubsystem.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "CoreFramework/PTWPlayerState.h"
@@ -12,6 +13,7 @@
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWGameLiftSubsystem.h"
 #include "System/PTWScoreSubsystem.h"
+#include "System/PTWSessionSubsystem.h"
 
 #if WITH_GAMELIFT
 #include "GameLiftServerSDK.h"
@@ -126,14 +128,24 @@ void APTWGameMode::Logout(AController* Exiting)
 	}
 	
 	Super::Logout(Exiting);
-
-	// 주의: 보통 Controller나 PlayerState에 이 플레이어의 PlayerSessionId를 미리 저장해 두어야 합니다.
-	// (PostLogin 등에서 PlayerSessionId를 PlayerState에 캐싱해두는 것을 추천합니다.)
-	
-#if WITH_GAMELIFT
 	
 	if (APTWPlayerState* PTWPS = Exiting->GetPlayerState<APTWPlayerState>())
 	{
+		FUniqueNetIdRepl UniqueNetId = PTWPS->GetUniqueId();
+		if (UniqueNetId.IsValid())
+		{
+			if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
+			{
+				IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+				if (SessionInterface.IsValid())
+				{
+					SessionInterface->UnregisterPlayer(NAME_GameSession, *UniqueNetId.GetUniqueNetId());
+                    
+					UE_LOG(LogTemp, Log, TEXT("Player unregistered from session to clear ghost slot."));
+				}
+			}
+		}
+#if WITH_GAMELIFT
 		FString SessionIdToRemove = PTWPS->GetPlayerSessionId();
 
 		if (!SessionIdToRemove.IsEmpty())
@@ -150,8 +162,9 @@ void APTWGameMode::Logout(AController* Exiting)
 				}
 			}
 		}
-	}
 #endif
+	}
+
 
 	if (!IsValid(PTWGameState)) return;
 

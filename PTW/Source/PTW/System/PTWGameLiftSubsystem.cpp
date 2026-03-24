@@ -14,6 +14,7 @@
 #include "Session/PTWSessionConfig.h"
 #include "UObject/Object.h"
 
+#define LOCTEXT_NAMESPACE "GAMELIFTSUBSYSTEM"
 UPTWGameLiftSubsystem::UPTWGameLiftSubsystem()
 {
 	// TODO: 임시 하드코딩
@@ -38,11 +39,12 @@ UPTWGameLiftSubsystem::UPTWGameLiftSubsystem()
 
 void UPTWGameLiftSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
+	Super::Initialize(Collection);
+	
 #if WITH_GAMELIFT
 	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
 #endif
 	
-	Super::Initialize(Collection);
 }
 
 void UPTWGameLiftSubsystem::Deinitialize()
@@ -119,6 +121,11 @@ void UPTWGameLiftSubsystem::CreateGameSession_Response(FHttpRequestPtr Request, 
 	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
 	{
 		UE_LOG(LogTemp, Error, TEXT("CreateGameSession Failed."));
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("SessionCreateFailed", "알 수 없는 오류가 발생해 세션 생성에 실패했습니다.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
 		return;
 	}
 	
@@ -501,3 +508,4 @@ void UPTWGameLiftSubsystem::SetupMapLoadDelegateHandle()
 }
 
 #endif
+#undef LOCTEXT_NAMESPACE

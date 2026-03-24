@@ -14,6 +14,7 @@ class UPTWAPIData;
 class FJsonObject;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionSearchComplete, const TArray<FPTWGameLiftGameSession>&, SearchResults);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionMessageReceived, const FText&, Message);
 
 UCLASS()
 class PTW_API UPTWGameLiftSubsystem : public UGameInstanceSubsystem
@@ -71,6 +72,7 @@ public:
 	void CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
 	void SearchGameSessions();
 	FString GetUniquePlayerId() const;
+	
 protected:
 	bool ContainErrors(TSharedPtr<FJsonObject> JsonObject);
 	void DumpMetadata(TSharedPtr<FJsonObject> JsonObject);
@@ -93,7 +95,7 @@ protected:
 	TObjectPtr<UPTWAPIData> ServerAPIData;
 public:
 	FOnGameLiftSessionSearchComplete OnSessionSearchComplete;
-	
+	FOnGameLiftSessionMessageReceived OnGameLiftSessionMessageReceived;
 private:
 	FTimerHandle CreateSessionTimer;
 	FDelegateHandle MapLoadDelegateHandle;

@@ -6,6 +6,7 @@
 #include "MiniGame/PTWMiniGameMode.h"
 #include "PTWDeliveryGameMode.generated.h"
 
+class AStartBlockActor;
 class ARaceTrack;
 class UAbilitySystemComponent;
 class APTWPlayerCharacter;
@@ -113,6 +114,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
 	TSubclassOf<UGameplayEffect> BeginApplyEffect;
+	
+	UPROPERTY(EditAnywhere, Category = "Actors")
+	TObjectPtr<AStartBlockActor> StartBlocker;
 	
 	
 	

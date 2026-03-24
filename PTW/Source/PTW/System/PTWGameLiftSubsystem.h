@@ -81,6 +81,7 @@ protected:
 	void CheckSessionStatus_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void DescribeGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void TryJoinGameSession(const FString& SessionId, const FString& SteamId, const FString& Status);
+	void WaitForSessionActivation(const FString& SessionId);
 	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	
@@ -97,7 +98,7 @@ public:
 	FOnGameLiftSessionSearchComplete OnSessionSearchComplete;
 	FOnGameLiftSessionMessageReceived OnGameLiftSessionMessageReceived;
 private:
-	FTimerHandle CreateSessionTimer;
+	FTimerHandle CheckSessionLitmitTimer;
 	FDelegateHandle MapLoadDelegateHandle;
 
 #if WITH_GAMELIFT // 서버 전용 로직

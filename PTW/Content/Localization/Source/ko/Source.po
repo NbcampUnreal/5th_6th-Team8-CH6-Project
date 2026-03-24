@@ -1,0 +1,78 @@
+﻿# Source Korean translation.
+# Fill out your copyright notice in the Description page of Project Settings.
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Source\n"
+"POT-Creation-Date: 2026-03-23 10:14\n"
+"PO-Revision-Date: 2026-03-23 10:14\n"
+"Language-Team: \n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. Key:	DeliveryBeginMsg
+#. SourceLocation:	Source/PTW/MiniGame/GameMode/PTWDeliveryGameMode.cpp(371)
+#: Source/PTW/MiniGame/GameMode/PTWDeliveryGameMode.cpp(371)
+msgctxt "DeliveryGameMode,DeliveryBeginMsg"
+msgid "DeliveryBeginMsg"
+msgstr "DeliveryBeginMsg"
+
+#. Key:	GetBomb
+#. SourceLocation:	Source/PTW/MiniGame/Item/BombItem/PTWBombActor.cpp(198)
+#: Source/PTW/MiniGame/Item/BombItem/PTWBombActor.cpp(198)
+msgctxt "BombActor,GetBomb"
+msgid "GetBomb!"
+msgstr "GetBomb!"
+
+#. Key:	sServer
+#. SourceLocation:	Source/PTW/UI/MainMenu/PTWServerBrowser.cpp(97)
+#: Source/PTW/UI/MainMenu/PTWServerBrowser.cpp(97)
+msgctxt "ServerBrowser,sServer"
+msgid "{0}'s Server"
+msgstr "{0}'s Server"
+
+#. Key:	Custom
+#. SourceLocation:	Source/PTW/UI/PTWOptionsWidget.cpp(180)
+#: Source/PTW/UI/PTWOptionsWidget.cpp(180)
+msgctxt "Options,Custom"
+msgid "Custom"
+msgstr "Custom"
+
+#. Key:	Low
+#. SourceLocation:	Source/PTW/UI/PTWOptionsWidget.cpp(86)
+#: Source/PTW/UI/PTWOptionsWidget.cpp(86)
+msgctxt "Options,Low"
+msgid "Low"
+msgstr "Low"
+
+#. Key:	Medium
+#. SourceLocation:	Source/PTW/UI/PTWOptionsWidget.cpp(87)
+#: Source/PTW/UI/PTWOptionsWidget.cpp(87)
+msgctxt "Options,Medium"
+msgid "Medium"
+msgstr "Medium"
+
+#. Key:	High
+#. SourceLocation:	Source/PTW/UI/PTWOptionsWidget.cpp(88)
+#: Source/PTW/UI/PTWOptionsWidget.cpp(88)
+msgctxt "Options,High"
+msgid "High"
+msgstr "High"
+
+#. Key:	Epic
+#. SourceLocation:	Source/PTW/UI/PTWOptionsWidget.cpp(89)
+#: Source/PTW/UI/PTWOptionsWidget.cpp(89)
+msgctxt "Options,Epic"
+msgid "Epic"
+msgstr "Epic"
+
+#. Key:	Price
+#. SourceLocation:	Source/PTW/UI/Shop/PTWItemInfoWidget.cpp(35)
+#: Source/PTW/UI/Shop/PTWItemInfoWidget.cpp(35)
+msgctxt "Shop,Price"
+msgid "{0} G"
+msgstr "{0} G"
+

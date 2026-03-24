@@ -4,14 +4,322 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: UI\n"
-"POT-Creation-Date: 2026-03-04 02:05\n"
-"PO-Revision-Date: 2026-03-04 02:05\n"
+"POT-Creation-Date: 2026-03-23 05:19\n"
+"PO-Revision-Date: 2026-03-23 05:19\n"
 "Language-Team: \n"
 "Language: ko\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. Key:	BBE959534D07F6E72CF391AE3D5A0C82
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_AddBot.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_AddBot.ButtonText
+msgctxt ",BBE959534D07F6E72CF391AE3D5A0C82"
+msgid "봇 추가"
+msgstr "봇 추가"
+
+#. Key:	3C42170C447A139B2A180AB179381805
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_AddGold.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_AddGold.ButtonText
+msgctxt ",3C42170C447A139B2A180AB179381805"
+msgid "골드 부여"
+msgstr "골드 부여"
+
+#. Key:	4A5A346049DF2D0A4F7BCFA4ED7B7F56
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_FlyMode.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_FlyMode.ButtonText
+msgctxt ",4A5A346049DF2D0A4F7BCFA4ED7B7F56"
+msgid "날기 설정"
+msgstr "날기 설정"
+
+#. Key:	7D240E3B4FB44A255EEF9694622E676A
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ForceEnd.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ForceEnd.ButtonText
+msgctxt ",7D240E3B4FB44A255EEF9694622E676A"
+msgid "강제 종료"
+msgstr "강제 종료"
+
+#. Key:	94A92BA8475B4D2EE9DA3BA375A402BC
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ForceLose.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ForceLose.ButtonText
+msgctxt ",94A92BA8475B4D2EE9DA3BA375A402BC"
+msgid "강제 패배"
+msgstr "강제 패배"
+
+#. Key:	7D89C6694FB7E23413836E8898C64ACE
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ForceStart.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ForceStart.ButtonText
+msgctxt ",7D89C6694FB7E23413836E8898C64ACE"
+msgid "강제 시작"
+msgstr "강제 시작"
+
+#. Key:	624B96024CFFD29D1B2EA9BE760A127C
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ForceWin.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ForceWin.ButtonText
+msgctxt ",624B96024CFFD29D1B2EA9BE760A127C"
+msgid "강제 승리"
+msgstr "강제 승리"
+
+#. Key:	0BFB20C24E4E96C0D90A87928F2E406D
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_GodMode.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_GodMode.ButtonText
+msgctxt ",0BFB20C24E4E96C0D90A87928F2E406D"
+msgid "무적 모드"
+msgstr "무적 모드"
+
+#. Key:	0CD7B3ED494792977900859D70D35CEC
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_GrantItem.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_GrantItem.ButtonText
+msgctxt ",0CD7B3ED494792977900859D70D35CEC"
+msgid "아이템 부여"
+msgstr "아이템 부여"
+
+#. Key:	13A985774D6FCE86C2A6D193985B9498
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_KillSelf.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_KillSelf.ButtonText
+msgctxt ",13A985774D6FCE86C2A6D193985B9498"
+msgid "자살"
+msgstr "자살"
+
+#. Key:	74F497F34E60C8A7EC3A6991E48C5CD5
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_RemoveBot.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_RemoveBot.ButtonText
+msgctxt ",74F497F34E60C8A7EC3A6991E48C5CD5"
+msgid "봇 제거"
+msgstr "봇 제거"
+
+#. Key:	E6BA85F642A44BC02934CC9ABE6EFDD0
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_RespawnSelf.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_RespawnSelf.ButtonText
+msgctxt ",E6BA85F642A44BC02934CC9ABE6EFDD0"
+msgid "리스폰"
+msgstr "리스폰"
+
+#. Key:	4E6F4BEB41771C9E75FAF5BE37AA9B91
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_SetNextMap.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_SetNextMap.ButtonText
+msgctxt ",4E6F4BEB41771C9E75FAF5BE37AA9B91"
+msgid "미니게임 선택"
+msgstr "미니게임 선택"
+
+#. Key:	4CCAFD9144B7E6338600F69278B0DB07
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_SetTime.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_SetTime.ButtonText
+msgctxt ",4CCAFD9144B7E6338600F69278B0DB07"
+msgid "게임속도 설정"
+msgstr "게임속도 설정"
+
+#. Key:	8B4AC1C54EC4137803A4E49F49EE7496
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ShowCollision.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ShowCollision.ButtonText
+msgctxt ",8B4AC1C54EC4137803A4E49F49EE7496"
+msgid "콜리전 표시"
+msgstr "콜리전 표시"
+
+#. Key:	B50D30F844FFC8175CDA3BAEB659A1AA
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ShowFPS.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ShowFPS.ButtonText
+msgctxt ",B50D30F844FFC8175CDA3BAEB659A1AA"
+msgid "성능 표시"
+msgstr "성능 표시"
+
+#. Key:	F002A133453672ABB6FD45B2250CC8DD
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_SuperJump.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_SuperJump.ButtonText
+msgctxt ",F002A133453672ABB6FD45B2250CC8DD"
+msgid "점프높이 설정"
+msgstr "점프높이 설정"
+
+#. Key:	73E7ACDF4D4CB237F7C20FBED17D53F4
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_SuperSpeed.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_SuperSpeed.ButtonText
+msgctxt ",73E7ACDF4D4CB237F7C20FBED17D53F4"
+msgid "이동속도 설정"
+msgstr "이동속도 설정"
+
+#. Key:	91FBCD174B90B77CD9CF9EA67BF46982
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_TeleportBots.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_TeleportBots.ButtonText
+msgctxt ",91FBCD174B90B77CD9CF9EA67BF46982"
+msgid "봇 소환"
+msgstr "봇 소환"
+
+#. Key:	424E1ECB444069B3B22F08AFC3E2CE74
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ToggleHUD.ButtonText
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Btn_ToggleHUD.ButtonText
+msgctxt ",424E1ECB444069B3B22F08AFC3E2CE74"
+msgid "HUD 토글"
+msgstr "HUD 토글"
+
+#. Key:	6B6B9B224A00252A7BFEAAA12BBCBB4C
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Input_Gold.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Input_Gold.Text
+msgctxt ",6B6B9B224A00252A7BFEAAA12BBCBB4C"
+msgid "100"
+msgstr "100"
+
+#. Key:	BE9E877F4A6F0B586C04EB84462AE711
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Input_Jump.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Input_Jump.Text
+msgctxt ",BE9E877F4A6F0B586C04EB84462AE711"
+msgid "3"
+msgstr "3"
+
+#. Key:	775D5D664C2E45AD20CFAC8A6B667296
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Input_Speed.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Input_Speed.Text
+msgctxt ",775D5D664C2E45AD20CFAC8A6B667296"
+msgid "3"
+msgstr "3"
+
+#. Key:	34A3505E41BB3300BFA5D7A72874B458
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Input_Time.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.Input_Time.Text
+msgctxt ",34A3505E41BB3300BFA5D7A72874B458"
+msgid "10"
+msgstr "10"
+
+#. Key:	8976C5984E47AC171D1166BBC8DFE2FD
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock.Text
+msgctxt ",8976C5984E47AC171D1166BBC8DFE2FD"
+msgid "리스타트 플레이어 실행"
+msgstr "리스타트 플레이어 실행"
+
+#. Key:	D2C81A08458DF989C155958B8235198C
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_1.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_1.Text
+msgctxt ",D2C81A08458DF989C155958B8235198C"
+msgid "더미 봇 내앞으로 소환"
+msgstr "더미 봇 내앞으로 소환"
+
+#. Key:	A5B0AB464FB77B53B71FADA9BA5D8093
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_10.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_10.Text
+msgctxt ",A5B0AB464FB77B53B71FADA9BA5D8093"
+msgid "점프높이 전환"
+msgstr "점프높이 전환"
+
+#. Key:	836156BD47030B9B42E4569BF86DF9A5
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_11.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_11.Text
+msgctxt ",836156BD47030B9B42E4569BF86DF9A5"
+msgid "날기 모드 전환"
+msgstr "날기 모드 전환"
+
+#. Key:	8DE955D04031151F7AF7BC98AE6B87B7
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_12.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_12.Text
+msgctxt ",8DE955D04031151F7AF7BC98AE6B87B7"
+msgid "사망 상태로 전환"
+msgstr "사망 상태로 전환"
+
+#. Key:	8F5D3FB64AF7EE0C428FA0AC650A2F4F
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_13.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_13.Text
+msgctxt ",8F5D3FB64AF7EE0C428FA0AC650A2F4F"
+msgid "무기/아이템 부여"
+msgstr "무기/아이템 부여"
+
+#. Key:	25DF679B46D91460C8CF9B88AECC0D36
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_14.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_14.Text
+msgctxt ",25DF679B46D91460C8CF9B88AECC0D36"
+msgid "FPS 및 지연시간 띄우기"
+msgstr "FPS 및 지연시간 띄우기"
+
+#. Key:	7BC8A9D54CBD2E9DD0EA6A8E0D81AF09
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_15.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_15.Text
+msgctxt ",7BC8A9D54CBD2E9DD0EA6A8E0D81AF09"
+msgid "HUD 가시상태 토글"
+msgstr "HUD 가시상태 토글"
+
+#. Key:	E799FA454F1A500527DB9F96A7337471
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_16.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_16.Text
+msgctxt ",E799FA454F1A500527DB9F96A7337471"
+msgid "콜리전 가시성 전환"
+msgstr "콜리전 가시성 전환"
+
+#. Key:	232EF44946B92D5354355093D7EA56FD
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_17.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_17.Text
+msgctxt ",232EF44946B92D5354355093D7EA56FD"
+msgid "다음 미니게임 선택"
+msgstr "다음 미니게임 선택"
+
+#. Key:	09401BE548FFFEDE01E512BC32593027
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_2.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_2.Text
+msgctxt ",09401BE548FFFEDE01E512BC32593027"
+msgid "골드 부여"
+msgstr "골드 부여"
+
+#. Key:	2C6C23874B18C2AADBA15EB422C27D30
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_3.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_3.Text
+msgctxt ",2C6C23874B18C2AADBA15EB422C27D30"
+msgid "게임속도 조절"
+msgstr "게임속도 조절"
+
+#. Key:	90D0C7B14C283B6EA953DE98C42629FD
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_4.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_4.Text
+msgctxt ",90D0C7B14C283B6EA953DE98C42629FD"
+msgid "강제 미니게임 시작"
+msgstr "강제 미니게임 시작"
+
+#. Key:	5389EFD444B690D32CB4E3BCD3FB287B
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_5.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_5.Text
+msgctxt ",5389EFD444B690D32CB4E3BCD3FB287B"
+msgid "강제 미니게임 종료"
+msgstr "강제 미니게임 종료"
+
+#. Key:	049E46884B3F4E2EAC2577B77B66517F
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_6.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_6.Text
+msgctxt ",049E46884B3F4E2EAC2577B77B66517F"
+msgid "강제 미니게임 승리"
+msgstr "강제 미니게임 승리"
+
+#. Key:	AC40356B447072CE8D69828C473D7F5B
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_7.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_7.Text
+msgctxt ",AC40356B447072CE8D69828C473D7F5B"
+msgid "강제 미니게임 패배"
+msgstr "강제 미니게임 패배"
+
+#. Key:	5B77E7314034780186853DA1CB0FD9C1
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_8.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_8.Text
+msgctxt ",5B77E7314034780186853DA1CB0FD9C1"
+msgid "무적 상태 전환"
+msgstr "무적 상태 전환"
+
+#. Key:	C6799DB343D88EEAC60589983477475B
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_9.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_9.Text
+msgctxt ",C6799DB343D88EEAC60589983477475B"
+msgid "이동속도 전환"
+msgstr "이동속도 전환"
+
+#. Key:	0147404146403C30D294BDB8B7996EE3
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_96.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.TextBlock_96.Text
+msgctxt ",0147404146403C30D294BDB8B7996EE3"
+msgid "더미 봇 추가"
+msgstr "더미 봇 추가"
+
+#. Key:	AC3A364843A2FAE71C695BB10FE04883
+#. SourceLocation:	/Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.더미봇제거.Text
+#: /Game/_PTW/UI/Dev/BP_PTWDevWidget.BP_PTWDevWidget_C:WidgetTree.더미봇제거.Text
+msgctxt ",AC3A364843A2FAE71C695BB10FE04883"
+msgid "더미 봇 제거"
+msgstr "더미 봇 제거"
 
 #. Key:	553AB1FC43FE3A30F93657AEDA3952FB
 #. SourceLocation:	/Game/_PTW/UI/HUD/ChatWidget/WBP_PTWChatEntry.WBP_PTWChatEntry_C:WidgetTree.Text_Message.Text
@@ -47,6 +355,13 @@ msgstr "/"
 msgctxt ",E06531784ABE0ACCF184F69822A701D8"
 msgid "InterAction"
 msgstr "상호작용"
+
+#. Key:	F966B9EF4CBF56D6B6660AACD330A4EB
+#. SourceLocation:	/Game/_PTW/UI/HUD/InGameUI/WBP_PTWInventoryWidget.WBP_PTWInventoryWidget_C:WidgetTree.TextBlock_95.Text
+#: /Game/_PTW/UI/HUD/InGameUI/WBP_PTWInventoryWidget.WBP_PTWInventoryWidget_C:WidgetTree.TextBlock_95.Text
+msgctxt ",F966B9EF4CBF56D6B6660AACD330A4EB"
+msgid "구입 목록"
+msgstr "구입 목록"
 
 #. Key:	33B483DC4FC91374D0635E93A9C1A907
 #. SourceLocation:	/Game/_PTW/UI/HUD/InGameUI/WBP_PTWKeyGuide.WBP_PTWKeyGuide_C:WidgetTree.CrouchText.Text
@@ -88,7 +403,7 @@ msgstr "K"
 #: /Game/_PTW/UI/HUD/InGameUI/WBP_PTWKeyGuide.WBP_PTWKeyGuide_C:WidgetTree.KeyGuideText.Text
 msgctxt ",F3CC5CB44DD4D107ED24FA82028AEF29"
 msgid "KeyGuide On/off"
-msgstr "KeyGuide On/off"
+msgstr "키 가이드 On/off"
 
 #. Key:	F23017014C91C79229A71099118BABDD
 #. SourceLocation:	/Game/_PTW/UI/HUD/InGameUI/WBP_PTWKeyGuide.WBP_PTWKeyGuide_C:WidgetTree.Q.Text
@@ -138,6 +453,27 @@ msgstr "Killed"
 msgctxt ",76B375354C5A3929EDA052ABB6C4BE6C"
 msgid "Victim"
 msgstr "Victim"
+
+#. Key:	C080A77847BB898FE93473BB01CDC92C
+#. SourceLocation:	/Game/_PTW/UI/HUD/InGameUI/WBP_PTWMiniGameItemSlot.WBP_PTWMiniGameItemSlot_C:WidgetTree.CooldownText.Text
+#: /Game/_PTW/UI/HUD/InGameUI/WBP_PTWMiniGameItemSlot.WBP_PTWMiniGameItemSlot_C:WidgetTree.CooldownText.Text
+msgctxt ",C080A77847BB898FE93473BB01CDC92C"
+msgid "0"
+msgstr "0"
+
+#. Key:	E083E8094A388F211B5F8EA4CCB077C3
+#. SourceLocation:	/Game/_PTW/UI/HUD/InGameUI/WBP_PTWMiniGameItemSlot.WBP_PTWMiniGameItemSlot_C:WidgetTree.CountText.Text
+#: /Game/_PTW/UI/HUD/InGameUI/WBP_PTWMiniGameItemSlot.WBP_PTWMiniGameItemSlot_C:WidgetTree.CountText.Text
+msgctxt ",E083E8094A388F211B5F8EA4CCB077C3"
+msgid "0"
+msgstr "0"
+
+#. Key:	9EE5F7F5460B647D5F74E18AC24D0499
+#. SourceLocation:	/Game/_PTW/UI/HUD/InGameUI/WBP_PTWMiniGameTitle.WBP_PTWMiniGameTitle_C:WidgetTree.TitleText.Text
+#: /Game/_PTW/UI/HUD/InGameUI/WBP_PTWMiniGameTitle.WBP_PTWMiniGameTitle_C:WidgetTree.TitleText.Text
+msgctxt ",9EE5F7F5460B647D5F74E18AC24D0499"
+msgid "미니게임"
+msgstr "미니게임"
 
 #. Key:	D86376474E0CF7AC0519788EC356D45E
 #. SourceLocation:	/Game/_PTW/UI/HUD/RankBoard/WBP_Header_Mini.WBP_Header_Mini_C:WidgetTree.Text_KDA.Text
@@ -215,13 +551,6 @@ msgstr "랭킹"
 msgctxt ",4E301A0C4D6196FE61A5D0A04C583075"
 msgid "ROUND"
 msgstr "라운드"
-
-#. Key:	TextBlockDefaultValue
-#. SourceLocation:	/Game/_PTW/UI/HUD/RankBoard/WBP_PTWRankingEntry.WBP_PTWRankingEntry_C:WidgetTree.Text_Rank.Text
-#: /Game/_PTW/UI/HUD/RankBoard/WBP_PTWRankingEntry.WBP_PTWRankingEntry_C:WidgetTree.Text_Rank.Text
-msgctxt "UMG,TextBlockDefaultValue"
-msgid "Text Block"
-msgstr "Text Block"
 
 #. Key:	62DE645049813D7E735327BF574F9EDB
 #. SourceLocation:	/Game/_PTW/UI/LoadingScreen/WBP_PTWLoadingLobby.WBP_PTWLoadingLobby_C:WidgetTree.PlayerCountText.Text
@@ -314,6 +643,13 @@ msgctxt ",4D9C960A4DF4D50C3552E4A3630EC0EF"
 msgid "Create Server"
 msgstr "서버 생성"
 
+#. Key:	E38D87E346024B3E8302FEB372182EEB
+#. SourceLocation:	/Game/_PTW/UI/MainMenu/WBP_PTWServerBrowser.WBP_PTWServerBrowser_C:WidgetTree.TextBlock_0.Text
+#: /Game/_PTW/UI/MainMenu/WBP_PTWServerBrowser.WBP_PTWServerBrowser_C:WidgetTree.TextBlock_0.Text
+msgctxt ",E38D87E346024B3E8302FEB372182EEB"
+msgid "AWS Test"
+msgstr "AWS Test"
+
 #. Key:	74CCDB09453656D2C09D009A9C34F6D5
 #. SourceLocation:	/Game/_PTW/UI/MainMenu/WBP_PTWServerBrowser.WBP_PTWServerBrowser_C:WidgetTree.TextBlock_1.Text
 #: /Game/_PTW/UI/MainMenu/WBP_PTWServerBrowser.WBP_PTWServerBrowser_C:WidgetTree.TextBlock_1.Text
@@ -377,6 +713,20 @@ msgctxt ",0A9252994C99431C6EE52184495E6126"
 msgid "Long"
 msgstr "Long"
 
+#. Key:	C751F856462223338AD5ADA7300A9EE1
+#. SourceLocation:	/Game/_PTW/UI/MainMenu/WBP_PTWServerBrowser.WBP_PTWServerBrowser_C:WidgetTree.TextBlock_5.Text
+#: /Game/_PTW/UI/MainMenu/WBP_PTWServerBrowser.WBP_PTWServerBrowser_C:WidgetTree.TextBlock_5.Text
+msgctxt ",C751F856462223338AD5ADA7300A9EE1"
+msgid "Quick Match"
+msgstr "빠른 매칭"
+
+#. Key:	513606BA4D124D2AEF1F1CBE05A7C8B8
+#. SourceLocation:	/Game/_PTW/UI/MainMenu/WBP_PTWServerBrowser.WBP_PTWServerBrowser_C:WidgetTree.TextBlock_6.Text
+#: /Game/_PTW/UI/MainMenu/WBP_PTWServerBrowser.WBP_PTWServerBrowser_C:WidgetTree.TextBlock_6.Text
+msgctxt ",513606BA4D124D2AEF1F1CBE05A7C8B8"
+msgid "Dedicated:"
+msgstr "Dedicated:"
+
 #. Key:	8D8AF60B4B73027B375F5D9994EF4CC6
 #. SourceLocation:	/Game/_PTW/UI/MainMenu/WBP_PTWServerListRow.WBP_PTWServerListRow_C:WidgetTree.ServerID.Text
 #: /Game/_PTW/UI/MainMenu/WBP_PTWServerListRow.WBP_PTWServerListRow_C:WidgetTree.ServerID.Text
@@ -397,6 +747,27 @@ msgstr "로비"
 msgctxt ",A7A3822E464B7EBCD8BD5BA8F1F3A674"
 msgid "Join"
 msgstr "참여"
+
+#. Key:	TextBlockDefaultValue
+#. SourceLocation:	/Game/_PTW/UI/MiniGame/AbilityBattle/WBP_AbilityBox.WBP_AbilityBox_C:WidgetTree.Text_AbilityName.Text
+#: /Game/_PTW/UI/MiniGame/AbilityBattle/WBP_AbilityBox.WBP_AbilityBox_C:WidgetTree.Text_AbilityName.Text
+msgctxt "UMG,TextBlockDefaultValue"
+msgid "Text Block"
+msgstr "Text Block"
+
+#. Key:	C3C69CA4472AA0E7B1FA37A97869AFC6
+#. SourceLocation:	/Game/_PTW/UI/MiniGame/Delivery/WBP_CountDownWidget.WBP_CountDownWidget_C:WidgetTree.CountDownTextBlock.Text
+#: /Game/_PTW/UI/MiniGame/Delivery/WBP_CountDownWidget.WBP_CountDownWidget_C:WidgetTree.CountDownTextBlock.Text
+msgctxt ",C3C69CA4472AA0E7B1FA37A97869AFC6"
+msgid "10"
+msgstr "10"
+
+#. Key:	231AA1364C92D45720C9938E978FD627
+#. SourceLocation:	/Game/_PTW/UI/MiniGame/Delivery/WBP_RankingWidget.WBP_RankingWidget_C:WidgetTree.RankingTextBlock.Text
+#: /Game/_PTW/UI/MiniGame/Delivery/WBP_RankingWidget.WBP_RankingWidget_C:WidgetTree.RankingTextBlock.Text
+msgctxt ",231AA1364C92D45720C9938E978FD627"
+msgid "0 / 0"
+msgstr "0 / 0"
 
 #. Key:	5B3B32624770DBEFEA57FF88D7249794
 #. SourceLocation:	/Game/_PTW/UI/MiniGame/WBP_PTWGameStartTimer.WBP_PTWGameStartTimer_C:WidgetTree.CountdownText.Text
@@ -607,4 +978,18 @@ msgstr "그래픽"
 msgctxt ",1569A23C4FD8442A329D26AB729B8231"
 msgid "Sound"
 msgstr "소리"
+
+#. Key:	52EF8D2B42FC9A3A940C8D828D5A0E35
+#. SourceLocation:	/Game/_PTW/UI/WBP_PTWPopupWidget.WBP_PTWPopupWidget_C:WidgetTree.MessageText.Text
+#: /Game/_PTW/UI/WBP_PTWPopupWidget.WBP_PTWPopupWidget_C:WidgetTree.MessageText.Text
+msgctxt ",52EF8D2B42FC9A3A940C8D828D5A0E35"
+msgid "!"
+msgstr "!"
+
+#. Key:	4713D94847DA9257093448B17FE6F276
+#. SourceLocation:	/Game/_PTW/UI/WBP_PTWPopupWidget.WBP_PTWPopupWidget_C:WidgetTree.TextBlock_175.Text
+#: /Game/_PTW/UI/WBP_PTWPopupWidget.WBP_PTWPopupWidget_C:WidgetTree.TextBlock_175.Text
+msgctxt ",4713D94847DA9257093448B17FE6F276"
+msgid "확인"
+msgstr "확인"
 

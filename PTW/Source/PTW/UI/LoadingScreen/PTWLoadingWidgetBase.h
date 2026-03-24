@@ -25,12 +25,12 @@ protected:
 	virtual void NativeDestruct() override;
 
 	/** 인원수 변경 시 GameState에서 호출될 함수 */
-	UFUNCTION()
-	virtual void OnPlayerCountChanged(int32 Current, int32 Total);
+	/*UFUNCTION()
+	virtual void OnPlayerCountChanged(int32 Current, int32 Total);*/
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> LoadingBackgroundImage;
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> PlayerCountText;
+	/*UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> PlayerCountText;*/
 };

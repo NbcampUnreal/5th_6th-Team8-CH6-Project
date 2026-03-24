@@ -41,7 +41,10 @@ void UPTWSessionSubsystem::OnGameSessionActivated(FString InGameLiftSessionId)
 	
 	if (FOnlineSessionSettings* NewSettings = SessionInterface->GetSessionSettings(NAME_GameSession))
 	{
-		NewSettings->Set(FName("GameLiftSessionId"), InGameLiftSessionId, EOnlineDataAdvertisementType::ViaOnlineService);
+		FString Part1 = InGameLiftSessionId.Left(100);
+		FString Part2 = InGameLiftSessionId.Mid(100);
+		NewSettings->Set(FName("GameLiftSessionId_1"), Part1, EOnlineDataAdvertisementType::ViaOnlineService);
+		NewSettings->Set(FName("GameLiftSessionId_2"), Part2, EOnlineDataAdvertisementType::ViaOnlineService);
 		NewSettings->bShouldAdvertise = true;
 		
 		if (SessionInterface->UpdateSession(NAME_GameSession, *NewSettings, true))
@@ -208,7 +211,7 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 			FString HostName = SearchResult.Session.OwningUserName;
 			int32 Ping = SearchResult.PingInMs;
 			FString ServerName;
-			
+
 			if (SearchResult.Session.SessionSettings.Get(PTWSessionKey::ServerName, ServerName))
 			{
 				UE_LOG(LogTemp, Log, TEXT("Found Server: %s (Ping: %d)"), *ServerName, Ping);

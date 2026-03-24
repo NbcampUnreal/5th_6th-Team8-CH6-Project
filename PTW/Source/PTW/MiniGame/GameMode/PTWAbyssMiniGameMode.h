@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -18,11 +16,10 @@ public:
 	APTWAbyssMiniGameMode();
 
 protected:
-	virtual void RestartPlayer(AController* NewPlayer) override;
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	virtual void StartRound() override;
 	virtual void EndRound() override;
-	
+	virtual void HandleRespawn(APTWPlayerController* PlayerController) override;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Lightning")
 	bool bUseLightningFlash = true;
@@ -42,8 +39,6 @@ protected:
 	void ScheduleLightningFlash();
 	void TriggerLightningFlash();
 	void RestoreAbyssDark();
-	void GiveAndEquipDefaultWeapon(AController* NewPlayer);
-	void AbyssRespawnPlayer(APTWPlayerController* SpawnPlayerController);
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")
@@ -57,7 +52,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")
 	TSubclassOf<AActor> RevealMarkerClass;
-
+	
 	FTimerHandle IdleRevealTimerHandle;
 
 	TMap<TObjectPtr<APlayerState>, float> IdleTimeMap;

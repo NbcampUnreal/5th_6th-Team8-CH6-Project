@@ -9,6 +9,7 @@
 #include "Online/OnlineSessionNames.h"
 #include "System/Session/PTWSessionConfig.h"
 
+#define LOCTEXT_NAMESPACE "SESSIONSUBSYSTEM"
 bool UPTWSessionSubsystem::IsUsingSteamSubsystem()
 {
 	if (IOnlineSubsystem* SI = IOnlineSubsystem::Get())
@@ -41,7 +42,10 @@ void UPTWSessionSubsystem::OnGameSessionActivated(FString InGameLiftSessionId)
 	
 	if (FOnlineSessionSettings* NewSettings = SessionInterface->GetSessionSettings(NAME_GameSession))
 	{
-		NewSettings->Set(FName("GameLiftSessionId"), InGameLiftSessionId, EOnlineDataAdvertisementType::ViaOnlineService);
+		FString Part1 = InGameLiftSessionId.Left(100);
+		FString Part2 = InGameLiftSessionId.Mid(100);
+		NewSettings->Set(FName("GameLiftSessionId_1"), Part1, EOnlineDataAdvertisementType::ViaOnlineService);
+		NewSettings->Set(FName("GameLiftSessionId_2"), Part2, EOnlineDataAdvertisementType::ViaOnlineService);
 		NewSettings->bShouldAdvertise = true;
 		
 		if (SessionInterface->UpdateSession(NAME_GameSession, *NewSettings, true))
@@ -89,6 +93,11 @@ void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig, bo
         // 생성 요청 실패, 델리게이트 해제
         SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
         UE_LOG(LogTemp, Warning, TEXT("CreateSession Call Failed"));
+    	if (OnSteamSessionMessageReceived.IsBound())
+    	{
+    		FText ErrorMessage = LOCTEXT("SessionCreateFailed", "알 수 없는 오류가 발생해 세션 생성에 실패했습니다.");
+    		OnSteamSessionMessageReceived.Broadcast(ErrorMessage);
+    	}
     }
 }
 
@@ -204,20 +213,7 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 		TArray<FOnlineSessionSearchResultBP> BPSearchResultInstances;
 		for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
 		{
-			FString SessionId = SearchResult.Session.GetSessionIdStr();
-			FString HostName = SearchResult.Session.OwningUserName;
-			int32 Ping = SearchResult.PingInMs;
-			FString ServerName;
-			
-			if (SearchResult.Session.SessionSettings.Get(PTWSessionKey::ServerName, ServerName))
-			{
-				UE_LOG(LogTemp, Log, TEXT("Found Server: %s (Ping: %d)"), *ServerName, Ping);
-				BPSearchResultInstances.Add(FOnlineSessionSearchResultBP(SearchResult));
-			}
-			else
-			{
-				UE_LOG(LogTemp, Log, TEXT("Found Session: %s (Ping: %d)"), *SessionId, Ping);
-			}
+			BPSearchResultInstances.Add(FOnlineSessionSearchResultBP(SearchResult));
 		}
 		
 		if (OnSessionSearchComplete.IsBound())
@@ -427,3 +423,4 @@ void UPTWSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool bWas
 	
 	UGameplayStatics::OpenLevel(this, FName("MainMenu"), true);
 }
+#undef LOCTEXT_NAMESPACE

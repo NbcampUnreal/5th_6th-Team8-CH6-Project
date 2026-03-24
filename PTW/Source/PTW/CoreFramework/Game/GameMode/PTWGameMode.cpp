@@ -146,18 +146,21 @@ void APTWGameMode::Logout(AController* Exiting)
 			}
 		}
 #if WITH_GAMELIFT
-		FString SessionIdToRemove = PTWPS->GetPlayerSessionId();
-
-		if (!SessionIdToRemove.IsEmpty())
+		if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
 		{
-			if (UGameInstance* GI = GetGameInstance())
+			FString SessionIdToRemove = PTWPS->GetPlayerSessionId();
+
+			if (!SessionIdToRemove.IsEmpty())
 			{
-				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
+				if (UGameInstance* GI = GetGameInstance())
 				{
-					if (FGameLiftServerSDKModule* GameLiftSdkModule = GameLiftSubsystem->GetGameLiftSdkModule())
+					if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
 					{
-						GameLiftSdkModule->RemovePlayerSession(SessionIdToRemove);
-						UE_LOG(LogTemp, Log, TEXT("GameLift 플레이어 세션 제거 완료: %s"), *SessionIdToRemove);
+						if (FGameLiftServerSDKModule* GameLiftSdkModule = GameLiftSubsystem->GetGameLiftSdkModule())
+						{
+							GameLiftSdkModule->RemovePlayerSession(SessionIdToRemove);
+							UE_LOG(LogTemp, Log, TEXT("GameLift 플레이어 세션 제거 완료: %s"), *SessionIdToRemove);
+						}
 					}
 				}
 			}
@@ -480,28 +483,31 @@ void APTWGameMode::PreLogin(const FString& Options, const FString& Address, cons
 	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
 	
 #if WITH_GAMELIFT
-	FString PlayerSessionId = UGameplayStatics::ParseOption(Options, TEXT("PlayerSessionId"));
-	
-	if (!PlayerSessionId.IsEmpty())
+	if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
 	{
-		// Aws::GameLift::GenericOutcome Outcome = Aws::GameLift::Server::AcceptPlayerSession(TCHAR_TO_UTF8(*PlayerSessionId));
-		if (UGameInstance* GI = GetGameInstance())
+		FString PlayerSessionId = UGameplayStatics::ParseOption(Options, TEXT("PlayerSessionId"));
+	
+		if (!PlayerSessionId.IsEmpty())
 		{
-			if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
+			// Aws::GameLift::GenericOutcome Outcome = Aws::GameLift::Server::AcceptPlayerSession(TCHAR_TO_UTF8(*PlayerSessionId));
+			if (UGameInstance* GI = GetGameInstance())
 			{
-				if (FGameLiftServerSDKModule* GameLiftSdkModule = GameLiftSubsystem->GetGameLiftSdkModule())
+				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
 				{
-					FGameLiftGenericOutcome Outcome = GameLiftSdkModule->AcceptPlayerSession(PlayerSessionId);
+					if (FGameLiftServerSDKModule* GameLiftSdkModule = GameLiftSubsystem->GetGameLiftSdkModule())
+					{
+						FGameLiftGenericOutcome Outcome = GameLiftSdkModule->AcceptPlayerSession(PlayerSessionId);
         
-					if (Outcome.IsSuccess())
-					{
-						UE_LOG(LogTemp, Log, TEXT("GameLift PlayerSession Accepted: %s"), *PlayerSessionId);
-					}
-					else
-					{
-						UE_LOG(LogTemp, Error, TEXT("Failed to accept GameLift PlayerSession: %s"), *Outcome.GetError().m_errorMessage);
-						// 필요하다면 ErrorMessage에 값을 넣어 접속을 거부할 수도 있습니다.
-						// ErrorMessage = TEXT("Invalid Player Session"); 
+						if (Outcome.IsSuccess())
+						{
+							UE_LOG(LogTemp, Log, TEXT("GameLift PlayerSession Accepted: %s"), *PlayerSessionId);
+						}
+						else
+						{
+							UE_LOG(LogTemp, Error, TEXT("Failed to accept GameLift PlayerSession: %s"), *Outcome.GetError().m_errorMessage);
+							// 필요하다면 ErrorMessage에 값을 넣어 접속을 거부할 수도 있습니다.
+							// ErrorMessage = TEXT("Invalid Player Session"); 
+						}
 					}
 				}
 			}

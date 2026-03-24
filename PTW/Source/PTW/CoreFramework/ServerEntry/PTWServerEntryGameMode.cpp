@@ -30,7 +30,7 @@ void APTWServerEntryGameMode::InitGameLift()
 {
 	UE_LOG(GameServerLog, Log, TEXT("Calling InitGameLift..."));
 	
-	if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::UseGameLift.ToString()))
+	if (FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
 	{
 		if (UPTWSessionSubsystem* SessionSubsystem = GetGameInstance()->GetSubsystem<UPTWSessionSubsystem>())
 		{

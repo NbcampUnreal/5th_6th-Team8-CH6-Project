@@ -30,7 +30,7 @@ namespace PTWSessionKey
 	inline const FName MapName =	FName(TEXT("MAP_NAME"));
 	inline const FName MaxPlayers =	FName(TEXT("MAX_PLAYERS"));
 	inline const FName MaxRounds =	FName(TEXT("MAX_ROUNDS"));
-	inline const FName UseGameLift =	FName(TEXT("USE_GAMELIFT"));
+	inline const FName NoGameLift =	FName(TEXT("NoGameLift"));
 }
 
 USTRUCT(BlueprintType)

@@ -3,10 +3,13 @@
 
 #include "MiniGame/ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
 
+#include "AbilitySystemComponent.h"
+#include "GameplayEffectTypes.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/HorizontalBox.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "Debug/PTWLogCategorys.h"
 #include "Kismet/GameplayStatics.h"
 #include "MiniGame/Data/AbilityBattle/PTWAbilityDefinition.h"
 #include "MiniGame/Data/AbilityBattle/PTWAbilityRow.h"
@@ -46,19 +49,51 @@ void UPTWAbilityControllerComponent::Client_GameInputMode_Implementation()
 }
 
 
+void UPTWAbilityControllerComponent::Client_UIInputMode_Implementation()
+{
+	SetUIInputMode();
+}
+
 void UPTWAbilityControllerComponent::SetUIInputMode(APlayerController* InPlayerController)
 {
+	UE_LOG(Log_AbilityControllerComponent, Log, TEXT("SetUIInputMode 진입"));
+
 	if (!InPlayerController)
 	{
+		UE_LOG(Log_AbilityControllerComponent, Warning, TEXT("InPlayerController nullptr, Owner에서 캐스팅 시도"));
+
 		InPlayerController = Cast<APTWPlayerController>(GetOwner());
+
+		if (InPlayerController)
+		{
+			UE_LOG(Log_AbilityControllerComponent, Log, TEXT("Owner -> PlayerController 캐스팅 성공: %s"), *InPlayerController->GetName());
+		}
+		else
+		{
+			UE_LOG(Log_AbilityControllerComponent, Error, TEXT("Owner 캐스팅 실패"));
+		}
 	}
-	if (!InPlayerController) return;
-	
+	else
+	{
+		UE_LOG(Log_AbilityControllerComponent, Log, TEXT("InPlayerController 유효: %s"), *InPlayerController->GetName());
+	}
+
+	if (!InPlayerController)
+	{
+		UE_LOG(Log_AbilityControllerComponent, Error, TEXT("PlayerController 없음, 함수 종료"));
+		return;
+	}
+
+	UE_LOG(Log_AbilityControllerComponent, Log, TEXT("UI InputMode 설정 시작"));
+
 	FInputModeUIOnly InputModeUIOnly;
 	InputModeUIOnly.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
 	InPlayerController->SetInputMode(InputModeUIOnly);
 	InPlayerController->bShowMouseCursor = true;
 	InPlayerController->FlushPressedKeys();
+
+	UE_LOG(Log_AbilityControllerComponent, Log, TEXT("UI InputMode 설정 완료"));
 }
 
 void UPTWAbilityControllerComponent::Server_SelectedAbility_Implementation(FName RowId)
@@ -78,11 +113,18 @@ void UPTWAbilityControllerComponent::Server_SelectedAbility_Implementation(FName
 
 	UPTWAbilityDefinition* Definition = Row->AbilityDefinition.LoadSynchronous();
 	if (!Definition) return;
-	
-	PlayerState->InjectEffect(Definition->EffectClass);
+
+	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
+
+	FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+	Context.AddSourceObject(ASC->GetOwnerActor());
+
+	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(Definition->EffectClass, 1, Context);
+	if (!SpecHandle.IsValid()) return;
+
+	ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	
 	PlayerStateComponent->DecreaseDraftCharges();
-	// 여기서 게임모드 스폰 함수 호출 하면 될듯
 
 	APTWAbilityBattleGameMode* AbilityBattleGameMode = Cast<APTWAbilityBattleGameMode>(GetWorld()->GetAuthGameMode());
 	if (!AbilityBattleGameMode) return;
@@ -102,6 +144,7 @@ void UPTWAbilityControllerComponent::Client_ShowDraftUI_Implementation(const TAr
 {
 	if (!DraftWidgetClass) return;
 	
+	
 	APlayerController* PlayerController = Cast<APlayerController>(GetOwner()); 
 	if (!PlayerController || !PlayerController->IsLocalController()) return;
 
@@ -111,13 +154,35 @@ void UPTWAbilityControllerComponent::Client_ShowDraftUI_Implementation(const TAr
 		DraftWidget->AddToViewport(50);
 	}
 
+	DraftWidget->bIsSelected = false;
+	
 	DraftWidget->GenerateAbilityBoxes(RowId);
 	DraftWidget->HorizontalBox->SetVisibility(ESlateVisibility::Visible);
 
-	GetWorld()->GetTimerManager().SetTimerForNextTick([this,PlayerController]()
+	GetWorld()->GetTimerManager().SetTimerForNextTick([this, PlayerController]()
 	{
+		UE_LOG(Log_AbilityControllerComponent, Log, TEXT("NextTick 진입"));
+
+		if (!this)
+		{
+			UE_LOG(Log_AbilityControllerComponent, Error, TEXT("this is nullptr"));
+			return;
+		}
+
+		if (!PlayerController)
+		{
+			UE_LOG(Log_AbilityControllerComponent, Warning, TEXT("PlayerController is nullptr"));
+		}
+
+		if (!DraftWidget)
+		{
+			UE_LOG(Log_AbilityControllerComponent, Warning, TEXT("DraftWidget is nullptr"));
+		}
+
 		if (DraftWidget && PlayerController)
 		{
+			UE_LOG(Log_AbilityControllerComponent, Log, TEXT("SetUIInputMode 호출"));
+
 			SetUIInputMode(PlayerController);
 		}
 	});

@@ -17,6 +17,7 @@ class PTW_API UPTWAbilityControllerComponent : public UPTWBaseControllerComponen
 
 public:	
 	UPTWAbilityControllerComponent();
+	
 
 	UFUNCTION(Client, Reliable)
 	void Client_ShowDraftUI(const TArray<FName>& RowId);
@@ -27,12 +28,14 @@ public:
 	
 	UFUNCTION(Server, Reliable)
 	void Server_SelectedAbility(FName RowId);
-	
-	void SetGameInputMode();
+
+	UFUNCTION(Client, Reliable)
+	void Client_UIInputMode();
 
 	UFUNCTION(Client, Reliable)
 	void Client_GameInputMode();
 	
+	void SetGameInputMode();
 	void SetUIInputMode(APlayerController* InPlayerController = nullptr);
 
 	UPROPERTY()
@@ -40,9 +43,7 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> DraftWidgetClass;
-
 	
-
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UDataTable> AbilityDataTable;
 };

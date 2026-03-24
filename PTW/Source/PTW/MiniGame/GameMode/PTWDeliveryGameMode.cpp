@@ -18,6 +18,7 @@
 #include "PTWGameplayTag/GameplayTags.h"
 #include "Debug/PTWLogCategorys.h"
 #include "Kismet/GameplayStatics.h"
+#include "MiniGame/Actor/Delivery/StartBlockActor.h"
 
 
 APTWDeliveryGameMode::APTWDeliveryGameMode()
@@ -30,6 +31,7 @@ void APTWDeliveryGameMode::StartRound()
 	GrantDeliveryAttributeSet();
 	RemoveBeginGameplayEffect();
 	GetWorld()->GetTimerManager().SetTimer(RankingTimerHandle, this, &APTWDeliveryGameMode::UpdateAllPlayerRanks, 0.1f, true);
+	StartBlocker->HideActor();
 	
 #if WITH_EDITOR
 	Test_GiveItems();
@@ -117,6 +119,11 @@ void APTWDeliveryGameMode::BeginPlay()
 	if (!RaceTrackSpline)
 	{
 		RaceTrackSpline = Cast<ARaceTrack>(UGameplayStatics::GetActorOfClass(GetWorld(), ARaceTrack::StaticClass()));
+	}
+	
+	if (!StartBlocker)
+	{
+		StartBlocker = Cast<AStartBlockActor>(UGameplayStatics::GetActorOfClass(GetWorld(), AStartBlockActor::StaticClass()));
 	}
 }
 

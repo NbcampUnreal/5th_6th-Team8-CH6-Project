@@ -92,19 +92,27 @@ void UPTWServerListRow::OnClickedJoinButton()
 	{
 		// 데디케이티드 서버 접속
 		FString GameLiftSessionId;
-		if (OnlineSession.SessionSettings.Get(FName(FName("GameLiftSessionId")), GameLiftSessionId))
+		FString Part1, Part2;
+		if (OnlineSession.SessionSettings.Get(FName("GameLiftSessionId_1"), Part1))
 		{
-			if (!GameLiftSessionId.IsEmpty())
+			if (!Part1.IsEmpty())
 			{
-				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
-				{
-					GameLiftSubsystem->CheckSessionStatus(GameLiftSessionId);
-				}
+				GameLiftSessionId = Part1;
 			}
-			else
+		}
+		if (OnlineSession.SessionSettings.Get(FName("GameLiftSessionId_2"), Part2))
+		{
+			if (!Part1.IsEmpty())
 			{
-				// error
+				GameLiftSessionId += Part1;
 			}
+		}
+		
+		UE_LOG(LogTemp, Log, TEXT("GameLiftSessionId: %s"), *GameLiftSessionId);
+		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+		{
+			const FString UniquePlayerId = GameLiftSubsystem->GetUniquePlayerId();
+			GameLiftSubsystem->CreatePlayerSession(UniquePlayerId, GameLiftSessionId);
 		}
 	}
 }

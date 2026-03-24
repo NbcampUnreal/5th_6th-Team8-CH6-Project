@@ -20,7 +20,7 @@ bool AGC_Delivery::WhileActive_Implementation(AActor* MyTarget, const FGameplayC
 	APTWPlayerCharacter* MyCharacter = Cast<APTWPlayerCharacter>(MyTarget);
 	if (!MyCharacter) return false;
 	
-	this->AttachToActor(MyCharacter, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("DeliverySocket"));
+	this->AttachToComponent(MyCharacter->GetMesh3P(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("DeliverySocket"));
 	
 	return Super::WhileActive_Implementation(MyTarget, Parameters);
 }

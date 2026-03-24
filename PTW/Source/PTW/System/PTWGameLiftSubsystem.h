@@ -14,6 +14,7 @@ class UPTWAPIData;
 class FJsonObject;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionSearchComplete, const TArray<FPTWGameLiftGameSession>&, SearchResults);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionMessageReceived, const FText&, Message);
 
 UCLASS()
 class PTW_API UPTWGameLiftSubsystem : public UGameInstanceSubsystem
@@ -70,6 +71,7 @@ public:
 	void DescribeGameSession(const FString& SessionId);
 	void CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
 	void SearchGameSessions();
+	FString GetUniquePlayerId() const;
 	
 protected:
 	bool ContainErrors(TSharedPtr<FJsonObject> JsonObject);
@@ -79,11 +81,11 @@ protected:
 	void CheckSessionStatus_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void DescribeGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void TryJoinGameSession(const FString& SessionId, const FString& SteamId, const FString& Status);
+	void WaitForSessionActivation(const FString& SessionId);
 	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 private:
-	FString GetUniquePlayerId() const;
 	void ListFleets_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 protected:
@@ -94,9 +96,9 @@ protected:
 	TObjectPtr<UPTWAPIData> ServerAPIData;
 public:
 	FOnGameLiftSessionSearchComplete OnSessionSearchComplete;
-	
+	FOnGameLiftSessionMessageReceived OnGameLiftSessionMessageReceived;
 private:
-	FTimerHandle CreateSessionTimer;
+	FTimerHandle CheckSessionLitmitTimer;
 	FDelegateHandle MapLoadDelegateHandle;
 
 #if WITH_GAMELIFT // 서버 전용 로직

@@ -7,6 +7,7 @@
 #include "Components/CheckBox.h"
 #include "Components/VerticalBox.h"
 #include "Components/EditableText.h"
+#include "CoreFramework/MainMenu/PTWMainMenuPlayerController.h"
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "PTW/UI/MainMenu/PTWServerListRow.h"
@@ -84,9 +85,13 @@ void UPTWServerBrowser::NativeConstruct()
 		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
 		{
 			SessionSubsystem->OnSessionSearchComplete.AddUniqueDynamic(this, &ThisClass::OnFindSessionsComplete);
+			SessionSubsystem->OnSteamSessionMessageReceived.AddUniqueDynamic(this, &ThisClass::OnSessionMessageReceived);
+		}
+		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+		{
+			GameLiftSubsystem->OnGameLiftSessionMessageReceived.AddUniqueDynamic(this, &ThisClass::OnSessionMessageReceived);
 		}
 	}
-	
 	
 	if (IsValid(ServerNameEditableText))
 	{
@@ -142,6 +147,8 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!IsValid(GameInstance)) return;
 	
+	SetIsEnabled(false);
+	
 	FPTWSessionConfig SessionConfig;
 	if (IsValid(ServerNameEditableText))
 	{
@@ -158,17 +165,27 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	}
 	SessionConfig.bIsDedicatedServer = DedicatedCheckBox->IsChecked();
 	
-	if (SessionConfig.bIsDedicatedServer)
+	if (!SessionConfig.bIsDedicatedServer)
 	{
+		// 리슨서버로 세션 생성
 		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
 		{
 			SessionSubsystem->CreateGameSession(SessionConfig, true);
+		}
+	}
+	else
+	{
+		// 데디서버로 원격 세션 생성
+		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+		{
+			GameLiftSubsystem->CreateGameSession(SessionConfig);
 		}
 	}
 }
 
 void UPTWServerBrowser::OnClickedFindServerButton()
 {
+	SetIsEnabled(false);
 	ServerListVerticalBox->ClearChildren();
 	
 	if (!IsValid(ServerNameEditableText)) return;
@@ -179,10 +196,6 @@ void UPTWServerBrowser::OnClickedFindServerButton()
 	if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
 	{
 		SessionSubsystem->FindGameSession();
-	}	
-	if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
-	{
-		GameLiftSubsystem->SearchGameSessions();
 	}
 }
 
@@ -215,14 +228,13 @@ void UPTWServerBrowser::OnClickedLongRoundButton()
 
 void UPTWServerBrowser::OnFindSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults)
 {
-	if (SearchResults.IsEmpty()) return;
-	
 	for (const FOnlineSessionSearchResultBP& SearchResult : SearchResults)
 	{
 		UPTWServerListRow* ServerListRow = CreateWidget<UPTWServerListRow>(this, ServerListRowClass);
 		ServerListRow->SetupSessionMinimalInfo(SearchResult);
 		ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
 	}
+	SetIsEnabled(true);
 }
 
 void UPTWServerBrowser::OnClickedTestButton()
@@ -234,4 +246,20 @@ void UPTWServerBrowser::DevJoinAction()
 {
 	UGameplayStatics::OpenLevel(GetWorld(), TEXT("127.0.0.1:7777"));
 }
+
+void UPTWServerBrowser::OnSessionMessageReceived(const FText& Message)
+{
+	if (GetIsEnabled() == false)
+	{
+		SetIsEnabled(true);
+	}
+	if (IsValid(GetOwningPlayer()))
+	{
+		if (APTWMainMenuPlayerController* PC = Cast<APTWMainMenuPlayerController>(GetOwningPlayer()))
+		{
+			PC->Popup(Message);
+		}
+	}
+}
+
 #undef LOCTEXT_NAMESPACE

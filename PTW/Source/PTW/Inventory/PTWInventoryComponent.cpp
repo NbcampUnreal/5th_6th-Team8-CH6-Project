@@ -19,7 +19,6 @@
 #include "Net/UnrealNetwork.h"
 #include "PTWGameplayTag/GameplayTags.h"
 #include "System/PTWItemSpawnManager.h"
-#include "Tools/UEdMode.h"
 
 
 UPTWInventoryComponent::UPTWInventoryComponent()

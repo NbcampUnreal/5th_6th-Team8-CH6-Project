@@ -16,6 +16,7 @@ class UPTWServerListRow;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnServerBackAction);
 
+
 enum class EPTWRoundLimit : uint8;
 
 UCLASS()
@@ -56,6 +57,9 @@ protected:
 	
 	UFUNCTION()
 	void DevJoinAction();
+	
+	UFUNCTION()
+	void OnSessionMessageReceived(const FText& Message);
 	
 protected:
 	// 서버 탐색결과를 저장하는 리스트 위젯

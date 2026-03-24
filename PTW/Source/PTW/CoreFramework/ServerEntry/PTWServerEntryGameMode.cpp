@@ -52,7 +52,7 @@ void APTWServerEntryGameMode::InitGameLift()
 			GetWorld()->GetTimerManager().SetTimer(TempTimerHandle, [=, this]()
 			{
 				SessionSubsystem->OnGameSessionActivated("1234");
-			})
+			}, 10.0f, false);
 			return;
 		}
 	}

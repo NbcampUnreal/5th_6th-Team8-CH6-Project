@@ -4,6 +4,7 @@
 #include "MiniGame/ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
 
 #include "Blueprint/UserWidget.h"
+#include "Components/HorizontalBox.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "Kismet/GameplayStatics.h"
@@ -25,7 +26,7 @@ void UPTWAbilityControllerComponent::Client_HideDraftUI_Implementation()
 {
 	if (DraftWidget)
 	{
-		DraftWidget->SetVisibility(ESlateVisibility::Collapsed);
+		DraftWidget->HorizontalBox->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 
@@ -89,6 +90,7 @@ void UPTWAbilityControllerComponent::Server_SelectedAbility_Implementation(FName
 	if (PlayerStateComponent->bFirstDraftCompleted)
 	{
 		AbilityBattleGameMode->HandleRespawn(PlayerController);
+		//SetGameInputMode();
 	}
 	
 	PlayerStateComponent->bFirstDraftCompleted = true;
@@ -110,7 +112,7 @@ void UPTWAbilityControllerComponent::Client_ShowDraftUI_Implementation(const TAr
 	}
 
 	DraftWidget->GenerateAbilityBoxes(RowId);
-	DraftWidget->SetVisibility(ESlateVisibility::Visible);
+	DraftWidget->HorizontalBox->SetVisibility(ESlateVisibility::Visible);
 
 	GetWorld()->GetTimerManager().SetTimerForNextTick([this,PlayerController]()
 	{

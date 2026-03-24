@@ -14,6 +14,7 @@
 #include "Session/PTWSessionConfig.h"
 #include "UObject/Object.h"
 
+#define LOCTEXT_NAMESPACE "GAMELIFTSUBSYSTEM"
 UPTWGameLiftSubsystem::UPTWGameLiftSubsystem()
 {
 	// TODO: 임시 하드코딩
@@ -38,11 +39,12 @@ UPTWGameLiftSubsystem::UPTWGameLiftSubsystem()
 
 void UPTWGameLiftSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
+	Super::Initialize(Collection);
+	
 #if WITH_GAMELIFT
 	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
 #endif
 	
-	Super::Initialize(Collection);
 }
 
 void UPTWGameLiftSubsystem::Deinitialize()
@@ -111,6 +113,9 @@ void UPTWGameLiftSubsystem::CreateGameSession(FPTWSessionConfig& SessionConfig)
 	const FString Content = SerializeJsonContent(Params);
 	Request->SetContentAsString(Content);
 	Request->ProcessRequest();
+	
+	FTimerHandle CheckSessionStatusTimer;
+	GetWorld()->GetTimerManager().SetTimer(CheckSessionStatusTimer, 20.0f, false);
 }
 
 void UPTWGameLiftSubsystem::CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -119,6 +124,11 @@ void UPTWGameLiftSubsystem::CreateGameSession_Response(FHttpRequestPtr Request, 
 	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
 	{
 		UE_LOG(LogTemp, Error, TEXT("CreateGameSession Failed."));
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("SessionCreateFailed", "알 수 없는 오류가 발생해 세션 생성에 실패했습니다.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
 		return;
 	}
 	
@@ -161,6 +171,12 @@ void UPTWGameLiftSubsystem::CheckSessionStatus_Response(FHttpRequestPtr Request,
 	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
 	{
 		UE_LOG(LogTemp, Error, TEXT("CheckSessionStatus 통신 실패."));
+		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("SessionCheckFailed", "알 수 없는 오류가 발생해 세션 체크에 실패하였습니다.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
 		return;
 	}
 	
@@ -176,22 +192,40 @@ void UPTWGameLiftSubsystem::TryJoinGameSession(const FString& SessionId, const F
 	if (Status.Equals(TEXT("ACTIVE")))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Found active Game Session. Creating a Player Session..."));
+		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
 		CreatePlayerSession(GetUniquePlayerId(), SessionId);
 	}
 	else if (Status.Equals(TEXT("ACTIVATING")))
 	{
-		if (APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld()))
+		WaitForSessionActivation(SessionId);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Unknown Status %s"), *Status);
+	}
+}
+
+void UPTWGameLiftSubsystem::WaitForSessionActivation(const FString& SessionId)
+{
+	if (APlayerController* PC = GEngine->GetFirstLocalPlayerController(GetWorld()))
+	{
+		if (GetWorld()->GetTimerManager().IsTimerActive(CheckSessionLitmitTimer))
 		{
-			LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer,
+			FTimerHandle CreateSessionTimer;
+			PC->GetWorldTimerManager().SetTimer(CreateSessionTimer,
 		   [this, SessionId]()
 		   {
 			   CheckSessionStatus(SessionId);
 		   }, 2.0f, false);
 		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Unknown Status %s"), *Status);
+		else
+		{
+			if (OnGameLiftSessionMessageReceived.IsBound())
+			{
+				FText ErrorMessage = LOCTEXT("SessionCheckTimeOut", "세션 타임아웃이 발생했습니다.");
+				OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+			}
+		}
 	}
 }
 
@@ -466,7 +500,7 @@ void UPTWGameLiftSubsystem::ReportServerInfoToBackend_Response(FHttpRequestPtr R
 	{
 		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend_Response Successful"));
 		UE_LOG(LogTemp, Log, TEXT("Successfully reported Steam ID to Backend."));
-		FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult()
+		FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
 		if (!GameSessionId.IsEmpty())
 		{
 			if (UWorld* World = GetWorld())
@@ -501,3 +535,4 @@ void UPTWGameLiftSubsystem::SetupMapLoadDelegateHandle()
 }
 
 #endif
+#undef LOCTEXT_NAMESPACE

@@ -679,6 +679,7 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 			UPTWWeaponInstance* WeaponInst = WeaponPair.Weapon3P->GetWeaponItemInstance();
 			if (WeaponInst && WeaponInst->ItemDef)
 			{
+				WeaponComp->SpawnedWeapons.Remove(WeaponInst->ItemDef->WeaponTag);
 				WeaponComp->AttachWeaponToSocket(
 					WeaponPair.Weapon1P,
 					WeaponPair.Weapon3P,

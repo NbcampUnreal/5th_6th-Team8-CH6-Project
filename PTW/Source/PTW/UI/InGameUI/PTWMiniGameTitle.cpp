@@ -38,7 +38,7 @@ void UPTWMiniGameTitle::InitializeTitleState()
 	// 현재 GamePhase 확인
 	EPTWGamePhase CurrentPhase = GS->GetCurrentGamePhase();
 
-	HandleGamePhaseChanged(GS->GetCurrentGamePhase());
+	HandleGamePhaseChanged(CurrentPhase);
 }
 
 void UPTWMiniGameTitle::TryBindGameState()

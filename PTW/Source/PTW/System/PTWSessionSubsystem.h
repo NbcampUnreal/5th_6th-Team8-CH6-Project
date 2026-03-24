@@ -18,6 +18,7 @@ struct FOnlineSessionSearchResultBP
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSessionSearchComplete, const TArray<FOnlineSessionSearchResultBP>&, SearchResult);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllSessionSearchFinished);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSteamSessionMessageReceived, const FText&, Message);
 
 UCLASS()
 class PTW_API UPTWSessionSubsystem : public UGameInstanceSubsystem
@@ -98,6 +99,7 @@ private:
 public:
 	FOnSessionSearchComplete OnSessionSearchComplete;
 	FOnAllSessionSearchFinished OnAllSessionSearchFinished;
+	FOnSteamSessionMessageReceived OnSteamSessionMessageReceived;
 protected:
 	FDelegateHandle CreateSessionCompleteDelegateHandle;
 	FDelegateHandle DestroySessionDelegateHandle;

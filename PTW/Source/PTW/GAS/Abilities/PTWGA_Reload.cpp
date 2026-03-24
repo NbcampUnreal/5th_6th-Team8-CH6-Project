@@ -26,11 +26,15 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	UE_LOG(LogTemp, Warning, TEXT("Super::ActivateAbility 호출 완료"));
+	
 	APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
 	UAnimMontage* MontageToPlay = GetReloadMontage(PC);
 
 	if (!PC || !MontageToPlay || !CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("PC, MontagePlay, CommitAbility 중 오류 발생으로 Return"));
+		
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
@@ -45,18 +49,20 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		MontageTask->OnInterrupted.AddDynamic(this, &ThisClass::OnMontageCancelled);
 		MontageTask->OnCancelled.AddDynamic(this, &ThisClass::OnMontageCancelled);
 		MontageTask->ReadyForActivation();
+		
+		UE_LOG(LogTemp, Warning, TEXT("몽타주 이벤트 등록 완료"));
 	}
-	
-	PC->GetWeaponComponent()->PlayMontage1P(MontageToPlay);
 	
 	if (!MontageToPlay)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("MontageToPlay Null!"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
 
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("CommitAbility Failed"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
@@ -72,6 +78,7 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	if (UPTWWeaponComponent* WeaponComp = PC->GetWeaponComponent())
 	{
+		WeaponComp->PlayMontage1P(MontageToPlay);
 		WeaponComp->PlayWeaponMontageByTag(ReloadAnimTag);
 	}
 }
@@ -85,6 +92,8 @@ UAnimMontage* UPTWGA_Reload::GetReloadMontage(APTWPlayerCharacter* PC) const
 
 	UPTWWeaponInstance* CurrentItem = Inven->GetCurrentWeaponInst<UPTWWeaponInstance>();
 	if (!CurrentItem) return nullptr;
+	
+	UE_LOG(LogTemp, Warning, TEXT("Inven, PC, CurrentItem 모두 통과"));
 
 	UPTWWeaponData* WData = CurrentItem->GetWeaponData();
 	if (WData && WData->AnimMap.Contains(ReloadAnimTag))

@@ -10,21 +10,21 @@ void UPTWLoadingWidgetBase::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// GameState의 인원수 변경 델리게이트 바인딩
-	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
-	{
-		GS->OnPortalCountChanged.AddDynamic(this, &UPTWLoadingWidgetBase::OnPlayerCountChanged);
-		// 초기값 세팅
-		OnPlayerCountChanged(GS->LoadedPlayerCount, GS->TotalPlayerCount);
-	}
+	//// GameState의 인원수 변경 델리게이트 바인딩
+	//if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	//{
+	//	GS->OnPortalCountChanged.AddDynamic(this, &UPTWLoadingWidgetBase::OnPlayerCountChanged);
+	//	// 초기값 세팅
+	//	OnPlayerCountChanged(GS->LoadedPlayerCount, GS->TotalPlayerCount);
+	//}
 }
 
 void UPTWLoadingWidgetBase::NativeDestruct()
 {
-	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	/*if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
 	{
 		GS->OnPortalCountChanged.RemoveDynamic(this, &UPTWLoadingWidgetBase::OnPlayerCountChanged);
-	}
+	}*/
 
 	Super::NativeDestruct();
 }
@@ -37,12 +37,12 @@ void UPTWLoadingWidgetBase::InitBaseUI(TSoftObjectPtr<UTexture2D> Background)
 	}
 }
 
-void UPTWLoadingWidgetBase::OnPlayerCountChanged(int32 Current, int32 Total)
-{
-	if (PlayerCountText)
-	{
-		// 형식: ( 1 / 8 )
-		FString CountStr = FString::Printf(TEXT("( % d / % d )"), Current, Total);
-		PlayerCountText->SetText(FText::FromString(CountStr));
-	}
-}
+//void UPTWLoadingWidgetBase::OnPlayerCountChanged(int32 Current, int32 Total)
+//{
+//	if (PlayerCountText)
+//	{
+//		// 형식: ( 1 / 8 )
+//		FString CountStr = FString::Printf(TEXT("( % d / % d )"), Current, Total);
+//		PlayerCountText->SetText(FText::FromString(CountStr));
+//	}
+//}

@@ -30,16 +30,8 @@ void APTWAbilityBattleGameMode::HandleStartingNewPlayer_Implementation(APlayerCo
 
 void APTWAbilityBattleGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
-	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(C);
-	if (!PlayerController) return;
-	
-	FInputModeUIOnly InputModeUIOnly;
-	PlayerController->SetInputMode(InputModeUIOnly);
-	PlayerController->bShowMouseCursor = true;
-	PlayerController->FlushPressedKeys();
-
 	Super::HandleSeamlessTravelPlayer(C);
-
+	
 	//UE_LOG(Log_AbilityBattle, Warning, TEXT("HandleSeamlessTravelPlayer"));
 }
 
@@ -92,10 +84,27 @@ void APTWAbilityBattleGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerC
 
 	if (PSComponent->DraftChargeCount > 0)
 	{
-		ControllerComponent->Client_ShowDraftUI(GenerateDraftOptions(1));
+		FTimerHandle DelayTimerHandle;
+
+		GetWorld()->GetTimerManager().SetTimer(
+			DelayTimerHandle,
+			[ControllerComponent, this]()
+			{
+				if (!ControllerComponent) return;
+
+				UE_LOG(Log_AbilityControllerComponent, Log, TEXT("3초 후 DraftUI 실행"));
+
+				ControllerComponent->Client_ShowDraftUI(GenerateDraftOptions(1));
+			},
+			3.0f,
+			false
+		);
+
+		UE_LOG(Log_AbilityControllerComponent, Log, TEXT("DraftUI 3초 딜레이 시작"));
+
 		return;
 	}
-
+	
 	Super::RespawnPlayer(SpawnPlayerController);
 
 	UE_LOG(Log_AbilityBattle, Warning, TEXT("RespawnPlayer"));
@@ -118,6 +127,8 @@ void APTWAbilityBattleGameMode::HandleRespawn(APTWPlayerController* PlayerContro
 	if (PSComponent->DraftChargeCount == 0)
 	{
 		Super::HandleRespawn(PlayerController);
+
+		ControllerComponent->Client_GameInputMode();
 	}
 	else
 	{
@@ -137,7 +148,9 @@ void APTWAbilityBattleGameMode::HandleRespawn(APTWPlayerController* PlayerContro
 
 	InventoryComponent->SendEquipEventToASC(0);
 	// 여기서 플레이어의 상태를 스폰 가능 상태로 만들고 드레프트 선택이 끝났을 때 스폰 가능 상태 + DraftCharges가 0일 경우 스폰 
-	
+
+	UE_LOG(LogTemp, Error, TEXT("AttributeSet Count: %d"),
+	ASC->GetSpawnedAttributes().Num());
 }
 
 void APTWAbilityBattleGameMode::InitAttributeSet()
@@ -283,10 +296,12 @@ void APTWAbilityBattleGameMode::GrandAbilityBattleAttributeSet()
 		UAbilitySystemComponent* ASC = PTWPlayerState->GetAbilitySystemComponent();
 		if (!ASC) continue;
 		
-		UPTWAbilityBattleAttributeSet* NewASC = NewObject<UPTWAbilityBattleAttributeSet>(PlayerState);
-		if (!NewASC) continue;
+		UPTWAbilityBattleAttributeSet* NewSet = NewObject<UPTWAbilityBattleAttributeSet>(PlayerState);
+		if (!NewSet) continue;
 		
-		ASC->AddSpawnedAttribute(NewASC);
+		ASC->AddSpawnedAttribute(NewSet);
+
+		ASC->GetGameplayAttributeValueChangeDelegate(UPTWAttributeSet::GetMaxHealthAttribute()).AddUObject(NewSet, &UPTWAbilityBattleAttributeSet::OnMaxHealthChanged);
 	}
 }
 

@@ -45,7 +45,7 @@ void UPTWAbilityDraftWidget::GenerateAbilityBoxes(TArray<FName> RowId)
 	{
 		UPTWAbilityBoxWidget* BoxWidget = CreateWidget<UPTWAbilityBoxWidget>(this, AbilityBoxClass);
 		if (!BoxWidget) return;
-
+		
 		BoxWidget->OnDraftSelected.AddUObject(this, &UPTWAbilityDraftWidget::OnDraftSelected);
 		BoxWidget->InitAbilityBoxWidget(RowId[i], AbilityDraftDataTable);
 		UHorizontalBoxSlot* BoxSlot = HorizontalBox->AddChildToHorizontalBox(BoxWidget);

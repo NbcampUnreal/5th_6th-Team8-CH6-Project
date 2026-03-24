@@ -17,3 +17,5 @@ PTW_API DECLARE_LOG_CATEGORY_EXTERN(Log_GameState, Log, All);
 
 PTW_API DECLARE_LOG_CATEGORY_EXTERN(Log_AbilityBattle, Log, All);
 PTW_API DECLARE_LOG_CATEGORY_EXTERN(Log_Delivery, Log, All);
+
+PTW_API DECLARE_LOG_CATEGORY_EXTERN(Log_AbilityControllerComponent, Log, All);

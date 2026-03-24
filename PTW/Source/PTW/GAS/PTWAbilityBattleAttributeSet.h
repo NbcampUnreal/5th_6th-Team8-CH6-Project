@@ -25,6 +25,8 @@ public:
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
+	void OnMaxHealthChanged(const FOnAttributeChangeData& Data);
+	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Armor, Category = "AttributeBattle|Attributes")
 	FGameplayAttributeData Armor;
 	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, Armor);

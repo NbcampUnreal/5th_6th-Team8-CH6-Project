@@ -55,6 +55,27 @@ void UPTWAbilityBattleAttributeSet::PostAttributeChange(const FGameplayAttribute
 	float NewValue)
 {
 	Super::PostAttributeChange(Attribute, OldValue, NewValue);
+	
+}
+
+void UPTWAbilityBattleAttributeSet::OnMaxHealthChanged(const FOnAttributeChangeData& Data)
+{
+	float OldValue = Data.OldValue;
+	float NewValue = Data.NewValue;
+
+	if (Data.OldValue <= 0.f) return;
+	
+	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+	if (!ASC) return;
+
+	float Delta = NewValue - OldValue;
+
+	ASC->ApplyModToAttribute(
+		UPTWAttributeSet::GetHealthAttribute(),
+		EGameplayModOp::Additive,
+		Delta
+		);
+	
 }
 
 void UPTWAbilityBattleAttributeSet::OnRep_Armor(const FGameplayAttributeData& OldArmor)

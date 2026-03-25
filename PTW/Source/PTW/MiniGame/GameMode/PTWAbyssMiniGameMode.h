@@ -19,7 +19,7 @@ protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	virtual void StartRound() override;
 	virtual void EndRound() override;
-	virtual void HandleRespawn(APTWPlayerController* PlayerController) override;
+	//virtual void HandleRespawn(APTWPlayerController* PlayerController) override;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Lightning")
 	bool bUseLightningFlash = true;

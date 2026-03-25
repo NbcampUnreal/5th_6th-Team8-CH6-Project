@@ -14,6 +14,7 @@
 #include "InGameUI/PTWInventoryWidget.h"
 #include "InGameUI/PTWMiniGameInventory.h"
 #include "InGameUI/PTWNotificationWidget.h"
+#include "InGameUI/PTWMiniGameTitle.h"
 
 #include "Inventory/PTWInventoryComponent.h"
 
@@ -50,6 +51,8 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 			}
 		}
 	}
+	/* 인벤토리 위젯 초기화 */
+	if (MiniGameTitle) MiniGameTitle->InitPS();
 }
 
 void UPTWInGameHUD::ShowNotification(const FNotificationData& Data)

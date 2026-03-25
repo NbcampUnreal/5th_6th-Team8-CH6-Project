@@ -17,6 +17,7 @@ class UPTWCrosshair;
 class UPTWInventoryWidget;
 class UPTWMiniGameInventory;
 class UPTWNotificationWidget;
+class UPTWMiniGameTitle;
 
 /**
  * 
@@ -58,6 +59,9 @@ public:
 	/* 알림 위젯 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWNotificationWidget> NotificationWidget;
+	/* 알림 위젯 */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWMiniGameTitle> MiniGameTitle;
 
 protected:
 	virtual bool Initialize() override;

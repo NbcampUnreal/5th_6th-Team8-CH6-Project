@@ -8,11 +8,14 @@
 #include "MiniGame/PTWMiniGameMapRow.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 
+void UPTWMiniGameTitle::InitPS()
+{
+	TryBindGameState();
+}
+
 void UPTWMiniGameTitle::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	TryBindGameState();
 }
 
 void UPTWMiniGameTitle::NativeDestruct()
@@ -47,6 +50,8 @@ void UPTWMiniGameTitle::TryBindGameState()
 
 	if (!GS)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[PTWMiniGameTitle] BindGameState 재시도."));
+
 		GetWorld()->GetTimerManager().SetTimer(
 			GameStateBindTimerHandle,
 			this,
@@ -57,6 +62,8 @@ void UPTWMiniGameTitle::TryBindGameState()
 		return;
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("[PTWMiniGameTitle] BindGameState 성공."));
+
 	// 성공했다면 타이머 클리어 후 초기화 진행
 	GetWorld()->GetTimerManager().ClearTimer(GameStateBindTimerHandle);
 
@@ -65,6 +72,9 @@ void UPTWMiniGameTitle::TryBindGameState()
 
 void UPTWMiniGameTitle::HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase)
 {
+
+	UE_LOG(LogTemp, Warning, TEXT("[PTWMiniGameTitle] HandleGamePhaseChanged 함수 호출됨."));
+
 	switch (CurrentGamePhase)
 	{
 	case EPTWGamePhase::PreGameLobby:
@@ -102,6 +112,8 @@ void UPTWMiniGameTitle::HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase)
 
 void UPTWMiniGameTitle::HandleRoulettePhaseChanged(FPTWRouletteData RouletteData)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[PTWMiniGameTitle] HandleRoulettePhaseChanged 함수 호출됨."));
+
 	if (RouletteData.CurrentPhase == EPTWRoulettePhase::RoundEventRoulette ||
 		RouletteData.CurrentPhase == EPTWRoulettePhase::Finished)
 	{

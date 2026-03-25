@@ -8,6 +8,7 @@
 #include "PTWAbilityControllerComponent.generated.h"
 
 
+class UGameplayEffect;
 class UPTWAbilityDraftWidget;
 
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -17,7 +18,12 @@ class PTW_API UPTWAbilityControllerComponent : public UPTWBaseControllerComponen
 
 public:	
 	UPTWAbilityControllerComponent();
-	
+
+	UFUNCTION(Client, Reliable)
+	void Client_RespawnPlayer(bool bCanRespawn, int32 RespawnDelay);
+
+	UFUNCTION(Server, Reliable)
+	void Server_CallHandleRespawn();
 
 	UFUNCTION(Client, Reliable)
 	void Client_ShowDraftUI(const TArray<FName>& RowId);

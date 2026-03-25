@@ -35,15 +35,12 @@ void APTWPickupRandomItemBox::OnPickedUp(class APTWPlayerCharacter* Player)
 		
 		if (SelectedItem.RandomItemGA)
 		{
-			FGameplayAbilitySpec Spec(SelectedItem.RandomItemGA, 1);
-			Spec.RemoveAfterActivation = true;
-			Spec.ReplicationID = 0;
-			ASC->GiveAbilityAndActivateOnce(Spec);
+			ASC->TryActivateAbilityByClass(SelectedItem.RandomItemGA);
 		}
 		
 		if (!SelectedItem.ActivateText.IsEmpty())
 		{
-			UE_LOG(LogTemp, Log, TEXT("Item Activated: %s"), *SelectedItem.ActivateText.ToString());
+			Controller->SendMessage(SelectedItem.ActivateText, ENotificationPriority::Normal, 3);
 		}
 	}
 	

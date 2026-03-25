@@ -74,6 +74,9 @@ protected:
 	
 	void ApplyBeginPlayEffect(APTWPlayerController* PC);
 	
+	/* 랜덤 아이템 어빌리티 미리 부여 */
+	void GrantItemAbilities(UAbilitySystemComponent* ASC);
+	
 private:
 	
 	/* 미니 게임 시작 무기 지급*/

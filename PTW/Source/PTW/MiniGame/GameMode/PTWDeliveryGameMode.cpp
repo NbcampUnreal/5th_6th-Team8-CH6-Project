@@ -16,7 +16,6 @@
 #include "MiniGame/Actor/Delivery/RaceTrack.h"
 #include "MiniGame/ControllerComponent/Delivery/PTWDeliveryControllerComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
-#include "Debug/PTWLogCategorys.h"
 #include "Kismet/GameplayStatics.h"
 #include "MiniGame/Actor/Delivery/StartBlockActor.h"
 #include "MiniGame/Data/Delivery/PTWRandomItemBoxData.h"
@@ -347,6 +346,7 @@ void APTWDeliveryGameMode::GrantDeliveryAttributeSet()
 		UPTWDeliveryAttributeSet* NewSet = NewObject<UPTWDeliveryAttributeSet>(AS->GetPawn());
 		ASC->AddSpawnedAttribute(NewSet);
 		InitializeAttributeSet(ASC);
+		GrantItemAbilities(ASC);
 	}
 }
 
@@ -404,7 +404,7 @@ void APTWDeliveryGameMode::SendMessgeBeginPlay()
  		if (APTWPlayerController* PC = Cast<APTWPlayerController>(AS->GetPlayerController()))
  		{
  #define LOCTEXT_NAMESPACE "DeliveryGameMode"
- 			FText BeginSendMessage = LOCTEXT("DeliveryBeginMsg", "DeliveryBeginMsg");
+ 			FText BeginSendMessage = LOCTEXT("DeliveryBeginMsg", "Race to the finish line! Out of energy? Find a charging station to speed up!");
  #undef LOCTEXT_NAMESPACE
  			PC->SendMessage(BeginSendMessage, ENotificationPriority::Normal, 10);
  		}
@@ -417,4 +417,23 @@ void APTWDeliveryGameMode::ApplyBeginPlayEffect(APTWPlayerController* PC)
 	if (!PTWInter) return;
 				
 	PTWInter->ApplyGameplayEffectToSelf(BeginApplyEffect, 1.0f, FGameplayEffectContextHandle());
+}
+
+void APTWDeliveryGameMode::GrantItemAbilities(UAbilitySystemComponent* ASC) 
+{
+	static const FString ContextString(TEXT("Granting Default Items"));
+	TArray<FRandomItemBoxData*> AllRows;
+	ItemDataTable->GetAllRows<FRandomItemBoxData>(ContextString, AllRows);
+	
+	for (const FRandomItemBoxData* Row : AllRows)
+	{
+		if (Row && Row->RandomItemGA)
+		{
+			if (!ASC->FindAbilitySpecFromClass(Row->RandomItemGA))
+			{
+				FGameplayAbilitySpec ItemSpec(Row->RandomItemGA, 1);
+				ASC->GiveAbility(ItemSpec);
+			}
+		}
+	}
 }

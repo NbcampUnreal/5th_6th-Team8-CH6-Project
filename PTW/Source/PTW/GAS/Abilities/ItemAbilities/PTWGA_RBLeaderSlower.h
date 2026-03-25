@@ -16,6 +16,8 @@ class PTW_API UPTWGA_RBLeaderSlower : public UPTWGameplayAbility
 	
 protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	void ApplyEffectToTarget(APTWPlayerController* TargetController);
+	void SendActivateMsg(APTWPlayerController* TargetController);
 	
 protected:
 	UPROPERTY(EditAnywhere)

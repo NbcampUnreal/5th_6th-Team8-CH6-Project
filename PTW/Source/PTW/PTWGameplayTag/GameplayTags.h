@@ -119,6 +119,11 @@ namespace GameplayTags
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Crouching);
 		}
+
+		namespace Abyss
+		{
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(NoFire);
+		}
 	}
 	namespace Item
 	{

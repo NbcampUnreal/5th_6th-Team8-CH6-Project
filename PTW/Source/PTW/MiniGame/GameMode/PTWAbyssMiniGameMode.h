@@ -6,6 +6,7 @@
 
 class APlayerState;
 class AActor;
+class AController;
 
 UCLASS()
 class PTW_API APTWAbyssMiniGameMode : public APTWMiniGameMode
@@ -19,26 +20,28 @@ protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	virtual void StartRound() override;
 	virtual void EndRound() override;
-	//virtual void HandleRespawn(APTWPlayerController* PlayerController) override;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Abyss|Lightning")
-	bool bUseLightningFlash = true;
+	// virtual void HandleRespawn(APTWPlayerController* PlayerController) override;
 
-	UPROPERTY(EditDefaultsOnly, Category="Abyss|Lightning")
-	float LightningFlashDuration = 0.2f;
+protected:
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Blackout")
+	bool bUseBlackoutCycle = true;
 
-	UPROPERTY(EditDefaultsOnly, Category="Abyss|Lightning")
-	float LightningMinInterval = 5.0f;
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Blackout")
+	float BlackoutDuration = 4.0f;
 
-	UPROPERTY(EditDefaultsOnly, Category="Abyss|Lightning")
-	float LightningMaxInterval = 10.0f;
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Blackout")
+	float BlackoutMinInterval = 8.0f;
 
-	FTimerHandle LightningTimerHandle;
-	FTimerHandle LightningRestoreTimerHandle;
+	UPROPERTY(EditDefaultsOnly, Category="Abyss|Blackout")
+	float BlackoutMaxInterval = 15.0f;
 
-	void ScheduleLightningFlash();
-	void TriggerLightningFlash();
-	void RestoreAbyssDark();
+	FTimerHandle BlackoutTimerHandle;
+	FTimerHandle BlackoutEndTimerHandle;
+
+	void ScheduleBlackout();
+	void StartBlackout();
+	void EndBlackout();
+	void ApplyBlackoutState(bool bEnable);
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")
@@ -52,7 +55,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")
 	TSubclassOf<AActor> RevealMarkerClass;
-	
+
 	FTimerHandle IdleRevealTimerHandle;
 
 	TMap<TObjectPtr<APlayerState>, float> IdleTimeMap;
@@ -60,7 +63,10 @@ private:
 	UPROPERTY()
 	TMap<TObjectPtr<APlayerState>, TObjectPtr<AActor>> RevealMarkerMap;
 
+	bool bIsBlackoutActive = false;
+
 	void TickIdleReveal();
 	void ShowReveal(AController* Controller);
 	void HideReveal(AController* Controller);
+	void ClearAllRevealMarkers();
 };

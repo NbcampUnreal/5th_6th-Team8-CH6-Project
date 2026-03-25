@@ -17,6 +17,9 @@ UCLASS()
 class PTW_API UPTWMiniGameTitle : public UUserWidget
 {
 	GENERATED_BODY()
+
+public:
+	void InitPS();
 	
 protected:
 	virtual void NativeConstruct() override;

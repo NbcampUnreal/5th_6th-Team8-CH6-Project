@@ -105,8 +105,10 @@ void APTWAbilityBattleGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerC
 		return;
 	}
 	
-	Super::RespawnPlayer(SpawnPlayerController);
+	//Super::RespawnPlayer(SpawnPlayerController);
 
+	ControllerComponent->Client_RespawnPlayer(MiniGameRule.SpawnRule.bUseRespawn, MiniGameRule.SpawnRule.RespawnDelay);
+	
 	UE_LOG(Log_AbilityBattle, Warning, TEXT("RespawnPlayer"));
 }
 
@@ -117,6 +119,8 @@ void APTWAbilityBattleGameMode::HandleRespawn(APTWPlayerController* PlayerContro
 	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
 	if (!PlayerState) return;
 
+	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
+
 	UPTWAbilityControllerComponent* ControllerComponent = Cast<UPTWAbilityControllerComponent>(PlayerController->GetControllerComponent());
 	if (!ControllerComponent) return;
 	
@@ -126,8 +130,8 @@ void APTWAbilityBattleGameMode::HandleRespawn(APTWPlayerController* PlayerContro
 	
 	if (PSComponent->DraftChargeCount == 0)
 	{
-		Super::HandleRespawn(PlayerController);
-
+		Super::HandleRespawn(PlayerController); 
+		
 		ControllerComponent->Client_GameInputMode();
 	}
 	else
@@ -139,18 +143,12 @@ void APTWAbilityBattleGameMode::HandleRespawn(APTWPlayerController* PlayerContro
 	UPTWInventoryComponent* InventoryComponent = PlayerState->GetInventoryComponent();
 	if (!InventoryComponent) return;
 	
-	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
-	if (!ASC) return;
+	InventoryComponent->SendEquipEventToASC(0);
+	// 여기서 플레이어의 상태를 스폰 가능 상태로 만들고 드레프트 선택이 끝났을 때 스폰 가능 상태 + DraftCharges가 0일 경우 스폰 
 
 	UE_LOG(Log_AbilityBattle, Warning, TEXT("=== After Respawn ==="));
 	UE_LOG(Log_AbilityBattle, Warning, TEXT("Owner: %s"), *GetNameSafe(ASC->GetOwnerActor()));
 	UE_LOG(Log_AbilityBattle, Warning, TEXT("Avatar: %s"), *GetNameSafe(ASC->GetAvatarActor()));
-
-	InventoryComponent->SendEquipEventToASC(0);
-	// 여기서 플레이어의 상태를 스폰 가능 상태로 만들고 드레프트 선택이 끝났을 때 스폰 가능 상태 + DraftCharges가 0일 경우 스폰 
-
-	UE_LOG(LogTemp, Error, TEXT("AttributeSet Count: %d"),
-	ASC->GetSpawnedAttributes().Num());
 }
 
 void APTWAbilityBattleGameMode::InitAttributeSet()
@@ -167,13 +165,7 @@ void APTWAbilityBattleGameMode::InitAttributeSet()
 		UAbilitySystemComponent* ASC = PTWPlayerState->GetAbilitySystemComponent();
 		if (!ASC) continue;
 		
-		FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
-		FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(InitAttributeEffectClass, 1.f, Context);
-
-		if (!Spec.IsValid()) continue;
-
-		UE_LOG(Log_AbilityBattle, Warning, TEXT("ApplyInitAttributeSet"));
-		ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+		ApplyEffect(ASC, InitAttributeEffectClass);
 	}
 }
 
@@ -300,7 +292,7 @@ void APTWAbilityBattleGameMode::GrandAbilityBattleAttributeSet()
 		if (!NewSet) continue;
 		
 		ASC->AddSpawnedAttribute(NewSet);
-
+		
 		ASC->GetGameplayAttributeValueChangeDelegate(UPTWAttributeSet::GetMaxHealthAttribute()).AddUObject(NewSet, &UPTWAbilityBattleAttributeSet::OnMaxHealthChanged);
 	}
 }
@@ -359,6 +351,19 @@ void APTWAbilityBattleGameMode::UpdateChargeTime()
 		
 		PSComponent->UpdateChargeRemainTime(0.1f);
 	}
+}
+
+void APTWAbilityBattleGameMode::ApplyEffect(UAbilitySystemComponent* ASC, TSubclassOf<UGameplayEffect> Effect)
+{
+	if (!Effect || !ASC) return;
+	
+	FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+	FGameplayEffectSpecHandle Spec = ASC->MakeOutgoingSpec(Effect, 1.f, Context);
+
+	if (!Spec.IsValid()) return;
+
+	//UE_LOG(Log_AbilityBattle, Warning, TEXT("ApplyInitAttributeSet"));
+	ASC->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
 }
 
 

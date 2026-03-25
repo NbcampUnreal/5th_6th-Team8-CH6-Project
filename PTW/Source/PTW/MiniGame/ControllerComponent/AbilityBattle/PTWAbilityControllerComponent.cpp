@@ -25,6 +25,25 @@ UPTWAbilityControllerComponent::UPTWAbilityControllerComponent()
 	SetIsReplicatedByDefault(true);
 }
 
+void UPTWAbilityControllerComponent::Server_CallHandleRespawn_Implementation()
+{
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(GetOwner());
+	if (!PlayerController) return;
+	
+	APTWAbilityBattleGameMode* AbilityBattleGameMode = Cast<APTWAbilityBattleGameMode>(GetWorld()->GetAuthGameMode());
+	if (!AbilityBattleGameMode) return;
+
+	AbilityBattleGameMode->HandleRespawn(PlayerController);
+}
+
+void UPTWAbilityControllerComponent::Client_RespawnPlayer_Implementation(bool bCanRespawn, int32 RespawnDelay)
+{
+	if (!bCanRespawn) return;
+	
+	FTimerHandle RespawnHandle;
+	GetWorld()->GetTimerManager().SetTimer(RespawnHandle, this, &UPTWAbilityControllerComponent::Server_CallHandleRespawn, RespawnDelay);
+}
+
 void UPTWAbilityControllerComponent::Client_HideDraftUI_Implementation()
 {
 	if (DraftWidget)
@@ -32,6 +51,7 @@ void UPTWAbilityControllerComponent::Client_HideDraftUI_Implementation()
 		DraftWidget->HorizontalBox->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
+
 
 void UPTWAbilityControllerComponent::SetGameInputMode()
 {

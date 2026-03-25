@@ -7,6 +7,7 @@
 #include "MiniGame/Data/AbilityBattle/PTWAbilityDefinition.h"
 #include "PTWAbilityBattleGameMode.generated.h"
 
+class UAbilitySystemComponent;
 class UPTWRandomDraftSystem;
 /**
  * 
@@ -43,6 +44,8 @@ private:
 	void AttachPlayerStateComponent(APlayerController* Controller);
 	void AddDraftChargeAllPlayers();
 	void UpdateChargeTime();
+
+	void ApplyEffect(UAbilitySystemComponent* ASC, TSubclassOf<UGameplayEffect> Effect);
 	
 	TMap<int32, TArray<FName>> TierAbilityPool;
 	
@@ -52,8 +55,8 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> InitAttributeEffectClass;
 
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<ASpectatorPawn> SpectatorPawnClass;
+	//UPROPERTY(EditDefaultsOnly)
+	//TSubclassOf<UGameplayEffect> InitRespawnEffectClass;
 	
 	int32 DraftOptionCount = 3;
 

@@ -6,11 +6,13 @@
 #include "Blueprint/UserWidget.h"
 #include "PTWVoiceChatListWidget.generated.h"
 
+class USizeBox;
 class UVerticalBox;
 class UPTWVoiceChatWidget;
 /**
  * 
  */
+
 UCLASS()
 class PTW_API UPTWVoiceChatListWidget : public UUserWidget
 {
@@ -26,12 +28,12 @@ public:
 	
 	FString GetPlayerNameFromNetId(const FString& TargetNetId);
 protected:
+	UPROPERTY()
+	TMap<FString, USizeBox*> PlayerVoiceChats;
+	
 	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UVerticalBox> VoiceChatListVerticalBox;
+	TObjectPtr<UVerticalBox> VoiceChatList;
 	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UPTWVoiceChatWidget> VoiceChatWidgetClass;
-	
-	UPROPERTY()
-	TArray<UPTWVoiceChatWidget*> VoiceChatWidgets;
 };

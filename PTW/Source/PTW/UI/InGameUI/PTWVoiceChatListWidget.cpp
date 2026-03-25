@@ -3,6 +3,7 @@
 
 #include "PTWVoiceChatListWidget.h"
 #include "PTWVoiceChatWidget.h"
+#include "Components/SizeBox.h"
 #include "Components/VerticalBox.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
@@ -19,6 +20,8 @@ void UPTWVoiceChatListWidget::NativeConstruct()
 			VoiceChatSubsystem->OnVoiceStateUpdated.AddUniqueDynamic(this, &ThisClass::OnVoiceStateChanged);
 		}
 	}
+	
+	
 }
 
 void UPTWVoiceChatListWidget::NativeDestruct()
@@ -44,42 +47,38 @@ void UPTWVoiceChatListWidget::Init()
 
 void UPTWVoiceChatListWidget::OnVoiceStateChanged(const FString& PlayerNetId, bool bIsTalking)
 {
-	if (PlayerNetId.IsEmpty() || !IsValid(VoiceChatListVerticalBox)) return;
+	if (PlayerNetId.IsEmpty() || !IsValid(VoiceChatList)) return;
 	
 	FString PlayerName = GetPlayerNameFromNetId(PlayerNetId);
-	UPTWVoiceChatWidget* TargetWidget = nullptr;
+	USizeBox* TargetWidget = nullptr;
     
-	for (UPTWVoiceChatWidget* Widget : VoiceChatWidgets)
+	// VoiceChatList에 플레이어가 없으면 추가
+	if (!PlayerVoiceChats.Contains(PlayerNetId))
 	{
-		if (IsValid(Widget) && PlayerName == Widget->GetTalkerName())
-		{
-			TargetWidget = Widget;
-			break;
-		}
-	}
-	
-	if (!IsValid(TargetWidget) && IsValid(VoiceChatWidgetClass))
-	{
-		TargetWidget = CreateWidget<UPTWVoiceChatWidget>(this, VoiceChatWidgetClass);
-		TargetWidget->SetupWidget(PlayerName);
-		VoiceChatWidgets.Add(TargetWidget);
-	}
-	
-	if (!IsValid(TargetWidget)) return;
-	
-	if (bIsTalking)
-	{
-		if (!VoiceChatListVerticalBox->HasChild(TargetWidget))
-		{
-			VoiceChatListVerticalBox->AddChildToVerticalBox(TargetWidget);
-		}
+		TargetWidget = NewObject<USizeBox>(this, USizeBox::StaticClass());
+		TargetWidget->SetHeightOverride(32.0f);
+		
+		UPTWVoiceChatWidget* VoiceChatWidget = CreateWidget<UPTWVoiceChatWidget>(this, VoiceChatWidgetClass);
+		VoiceChatWidget->SetupWidget(PlayerName);
+		TargetWidget->AddChild(VoiceChatWidget);
+		
+		PlayerVoiceChats.Add(PlayerNetId, TargetWidget);
+		
+		// 리스트 위젯에 추가
+		VoiceChatList->AddChildToVerticalBox(TargetWidget);
 	}
 	else
 	{
-		if (VoiceChatListVerticalBox->HasChild(TargetWidget))
-		{
-			VoiceChatListVerticalBox->RemoveChild(TargetWidget);
-		}
+		TargetWidget = PlayerVoiceChats[PlayerNetId];
+	}
+	
+	if (bIsTalking)
+	{
+		TargetWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+	else
+	{
+		TargetWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 

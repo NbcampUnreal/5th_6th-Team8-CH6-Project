@@ -15,18 +15,21 @@
 #include "PTW/CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "System/Shop/PTWItemSpawnData.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "GameFramework/GameModeBase.h"
 #include "Gameplay/PTWSpawnItemVolume.h"
-#include "Gameplay/Pickup/PTWPickupCoin.h" 
+#include "Gameplay/Pickup/PTWPickupCoin.h"
+#include "Gameplay/Pickup/PTWPickupRandomItemBox.h"
 #include "Gameplay/Pickup/PTWPickupWeapon.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "MiniGame/GameMode/PTWDeliveryGameMode.h"
 
 
 void UPTWItemSpawnManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-const TCHAR* DTPath = TEXT("/Game/_PTW/Data/DT_ItemSpawnData.DT_ItemSpawnData");
-	
+	const TCHAR* DTPath = TEXT("/Game/_PTW/Data/DT_ItemSpawnData.DT_ItemSpawnData");
+
 	ItemSpawnTable = LoadObject<UDataTable>(nullptr, DTPath);
 
 	if (!ItemSpawnTable)
@@ -36,17 +39,20 @@ const TCHAR* DTPath = TEXT("/Game/_PTW/Data/DT_ItemSpawnData.DT_ItemSpawnData");
 
 	FString Path = TEXT("/Game/_PTW/Blueprints/Gameplay/Pickup/BP_PTWPickupCoin.BP_PTWPickupCoin_C");
 	FString WeaponPath = TEXT("/Game/_PTW/BluePrints/Gameplay/Pickup/BP_PTWPickupWeapon.BP_PTWPickupWeapon_C");
+	FString RandomBoxPath = TEXT("/Game/_PTW/BluePrints/Gameplay/Pickup/BP_PTWPickupRandomItemBox.BP_PTWPickupRandomItemBox_C");
 
 	CoinClass = LoadClass<APTWPickupCoin>(nullptr, *Path);
 	PickupWeaponClass = LoadClass<APTWPickupWeapon>(nullptr, *WeaponPath);
+	PickupRandomItemBox = LoadClass<APTWPickupRandomItemBox>(nullptr, *RandomBoxPath);
 
-	if (!CoinClass || !PickupWeaponClass)
+	if (!CoinClass || !PickupWeaponClass || !PickupRandomItemBox)
 	{
 		UE_LOG(LogTemp, Error, TEXT("[PTWItemSpawnSubsystem] Failed to load DataTable at: %s"), DTPath);
 	}
 }
 
-void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, UPTWItemDefinition* ItemDefinition, FGameplayTag WeaponTag)
+void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, UPTWItemDefinition* ItemDefinition,
+                                            FGameplayTag WeaponTag)
 {
 	UWorld* World = GetWorld();
 
@@ -54,10 +60,10 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	{
 		return;
 	}
-	
+
 	UPTWInventoryComponent* Inventory = TargetPlayer->GetInventoryComponent();
 	if (!Inventory) return;
-	
+
 	UPTWWeaponInstance* WeaponItemInst = NewObject<UPTWWeaponInstance>(Inventory);
 	if (!WeaponItemInst) return;
 
@@ -66,8 +72,10 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	SpawnParams.Instigator = TargetPlayer;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	APTWWeaponActor* SpawnedWeapon1P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
-	APTWWeaponActor* SpawnedWeapon3P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+	APTWWeaponActor* SpawnedWeapon1P = GetWorld()->SpawnActor<
+		APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+	APTWWeaponActor* SpawnedWeapon3P = GetWorld()->SpawnActor<
+		APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
 	//Fix 박태웅(01.29) - (크래시방지)
 	if (!SpawnedWeapon1P || !SpawnedWeapon3P)
 	{
@@ -75,7 +83,7 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 		if (SpawnedWeapon3P) SpawnedWeapon3P->Destroy();
 		return;
 	}
-	
+
 	SpawnedWeapon1P->SetFirstPersonMode(true);
 	SpawnedWeapon3P->SetFirstPersonMode(false);
 
@@ -86,7 +94,7 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	WeaponItemInst->ItemDef = ItemDefinition;
 	WeaponItemInst->SpawnedWeapon1P = SpawnedWeapon1P;
 	WeaponItemInst->SpawnedWeapon3P = SpawnedWeapon3P;
-	
+
 	SpawnedWeapon1P->SetWeaponItemInstance(WeaponItemInst);
 	SpawnedWeapon3P->SetWeaponItemInstance(WeaponItemInst);
 
@@ -115,13 +123,15 @@ void UPTWItemSpawnManager::SpawnAndGiveItems(APTWPlayerState* PS)
 
 	if (!PlayerChar)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[SpawnSystem] PlayerPawn is NULL for PlayerState: %s (Too early?)"), *PS->GetPlayerName());
+		UE_LOG(LogTemp, Warning, TEXT("[SpawnSystem] PlayerPawn is NULL for PlayerState: %s (Too early?)"),
+		       *PS->GetPlayerName());
 		return;
 	}
 	UPTWInventoryComponent* InventoryComp = PlayerPawn->FindComponentByClass<UPTWInventoryComponent>();
 	if (!InventoryComp)
 	{
-		UE_LOG(LogTemp, Error, TEXT("[SpawnSystem] Inventory Component Not Found on Character: %s"), *PlayerChar->GetName());
+		UE_LOG(LogTemp, Error, TEXT("[SpawnSystem] Inventory Component Not Found on Character: %s"),
+		       *PlayerChar->GetName());
 		return;
 	}
 
@@ -147,7 +157,7 @@ void UPTWItemSpawnManager::SpawnAndGiveItems(APTWPlayerState* PS)
 					SpawnWeaponActor(PlayerChar, LoadedDef, LoadedDef->WeaponTag);
 
 					UE_LOG(LogTemp, Log, TEXT("   -> Spawned Weapon Actor & Instance: %s (Tag: %s)"),
-						*IDStr, *LoadedDef->WeaponTag.ToString());
+					       *IDStr, *LoadedDef->WeaponTag.ToString());
 				}
 				else
 				{
@@ -178,12 +188,12 @@ void UPTWItemSpawnManager::SpawnAndGiveItems(APTWPlayerState* PS)
 							InventoryComp->AddItem(NewItem);
 
 							UE_LOG(LogTemp, Log, TEXT("   -> Spawned: %s (Type: %s, Class: %s)"),
-								*IDStr,
-								*UEnum::GetValueAsString(LoadedDef->ItemType),
-								*InstanceClassToSpawn->GetName());
+							       *IDStr,
+							       *UEnum::GetValueAsString(LoadedDef->ItemType),
+							       *InstanceClassToSpawn->GetName());
 						}
 					}
-				} 
+				}
 			}
 			else
 			{
@@ -249,7 +259,7 @@ void UPTWItemSpawnManager::SpawnSingleItem(APTWPlayerState* PS, UPTWItemDefiniti
 				InventoryComp->AddItem(NewItem);
 
 				UE_LOG(LogTemp, Log, TEXT("[SpawnSingleItem] Spawned Instance: %s (Type: %s)"),
-					*ItemDef->GetName(), *UEnum::GetValueAsString(ItemDef->ItemType));
+				       *ItemDef->GetName(), *UEnum::GetValueAsString(ItemDef->ItemType));
 			}
 		}
 	}
@@ -343,7 +353,14 @@ void UPTWItemSpawnManager::SpawnCoinInRandomVolume()
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-		World->SpawnActor<APTWPickupCoin>(CoinClass, SpawnLocation, FRotator::ZeroRotator, Params);
+		if (GetWorld()->GetAuthGameMode()->IsA(APTWDeliveryGameMode::StaticClass()))
+		{
+			World->SpawnActor<APTWPickupRandomItemBox>(PickupRandomItemBox, SpawnLocation, FRotator::ZeroRotator, Params);
+		}
+		else
+		{
+			World->SpawnActor<APTWPickupCoin>(CoinClass, SpawnLocation, FRotator::ZeroRotator, Params);
+		}
 	}
 }
 
@@ -352,20 +369,20 @@ void UPTWItemSpawnManager::DropWeaponSpawn(UPTWWeaponInstance* WeaponInstance)
 {
 	AActor* Owner = WeaponInstance->GetTypedOuter<AActor>();
 	if (!Owner) return;
-	
+
 	FVector ForwardOffset = Owner->GetActorLocation() + (Owner->GetActorForwardVector() * 250.0f);
 	FVector SpawnLocation = GetGroundLocation(ForwardOffset);
 	SpawnLocation.Z += 10.0f;
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	
-	APTWPickupWeapon* SpawnWeaponActor = GetWorld()->SpawnActor<APTWPickupWeapon>(PickupWeaponClass, 
-			SpawnLocation, 
-			Owner->GetActorRotation(), 
-			SpawnParams
-		);
-	
+
+	APTWPickupWeapon* SpawnWeaponActor = GetWorld()->SpawnActor<APTWPickupWeapon>(PickupWeaponClass,
+		SpawnLocation,
+		Owner->GetActorRotation(),
+		SpawnParams
+	);
+
 	if (SpawnWeaponActor && WeaponInstance)
 	{
 		SpawnWeaponActor->SetWeaponInstance(WeaponInstance);
@@ -381,34 +398,37 @@ void UPTWItemSpawnManager::AddPickupWeapon(UPTWWeaponInstance* ItemInstance, APT
 	SpawnParams.Owner = TargetPlayer;
 	SpawnParams.Instigator = TargetPlayer;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	
+
 	UPTWItemDefinition* ItemDefinition = ItemInstance->ItemDef;
-	
-	APTWWeaponActor* SpawnedWeapon1P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
-	APTWWeaponActor* SpawnedWeapon3P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
-	
+
+	APTWWeaponActor* SpawnedWeapon1P = GetWorld()->SpawnActor<
+		APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+	APTWWeaponActor* SpawnedWeapon3P = GetWorld()->SpawnActor<
+		APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+
 	SpawnedWeapon1P->SetFirstPersonMode(true);
 	SpawnedWeapon3P->SetFirstPersonMode(false);
-	
+
 	ItemInstance->SpawnedWeapon1P = SpawnedWeapon1P;
 	ItemInstance->SpawnedWeapon3P = SpawnedWeapon3P;
-	
+
 	SpawnedWeapon1P->SetWeaponItemInstance(ItemInstance);
 	SpawnedWeapon3P->SetWeaponItemInstance(ItemInstance);
-	
+
 	UPTWInventoryComponent* Inventory = TargetPlayer->GetInventoryComponent();
-	
+
 	Inventory->AddItem(ItemInstance);
-	TargetPlayer->GetWeaponComponent()->AttachWeaponToSocket(SpawnedWeapon1P, SpawnedWeapon3P, ItemInstance->ItemDef->WeaponTag);
+	TargetPlayer->GetWeaponComponent()->AttachWeaponToSocket(SpawnedWeapon1P, SpawnedWeapon3P,
+	                                                         ItemInstance->ItemDef->WeaponTag);
 }
 
 FVector UPTWItemSpawnManager::GetGroundLocation(FVector StartLocation)
 {
 	FHitResult HitResult;
 	FVector EndLocation = StartLocation + (FVector::UpVector * -500.0f);
-    
+
 	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(GetTypedOuter<AActor>()); 
+	Params.AddIgnoredActor(GetTypedOuter<AActor>());
 
 	// LineTrace 실행
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, Params))
@@ -416,15 +436,16 @@ FVector UPTWItemSpawnManager::GetGroundLocation(FVector StartLocation)
 		return HitResult.Location;
 	}
 
-	return StartLocation; 
+	return StartLocation;
 }
 
-void UPTWItemSpawnManager::AddRestartPlayerItems(TArray<TObjectPtr<UPTWItemInstance>>& Items, APTWPlayerCharacter* TargetPlayer)
+void UPTWItemSpawnManager::AddRestartPlayerItems(TArray<TObjectPtr<UPTWItemInstance>>& Items,
+                                                 APTWPlayerCharacter* TargetPlayer)
 {
 	if (!TargetPlayer) return;
 	UPTWInventoryComponent* Inventory = TargetPlayer->GetInventoryComponent();
 	if (!Inventory) return;
-	
+
 	for (auto& Item : Items)
 	{
 		if (Item)

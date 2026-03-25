@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "PTWItemSpawnManager.generated.h"
 
+class APTWPickupRandomItemBox;
 class UPTWInventoryComponent;
 class UPTWItemInstance;
 class APTWPickupWeapon;
@@ -75,4 +76,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "DropWeapon")
 	TSubclassOf<APTWPickupWeapon> PickupWeaponClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "RandomItem")
+	TSubclassOf<APTWPickupRandomItemBox> PickupRandomItemBox;
 };

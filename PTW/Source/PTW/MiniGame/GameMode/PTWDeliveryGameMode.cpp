@@ -19,6 +19,7 @@
 #include "Debug/PTWLogCategorys.h"
 #include "Kismet/GameplayStatics.h"
 #include "MiniGame/Actor/Delivery/StartBlockActor.h"
+#include "MiniGame/Data/Delivery/PTWRandomItemBoxData.h"
 
 
 APTWDeliveryGameMode::APTWDeliveryGameMode()
@@ -75,6 +76,33 @@ FTransform APTWDeliveryGameMode::GetPlayerSpawnTransform(APTWPlayerController* P
 	}
 	
 	return FTransform();
+}
+FRandomItemBoxData APTWDeliveryGameMode::GetRandomItemRowFromTable()
+
+{
+	FRandomItemBoxData OutRow;
+    
+	if (!ItemDataTable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ItemDataTable is null!"));
+		return OutRow;
+	}
+
+	static const FString ContextString(TEXT("Random Item Context"));
+	TArray<FRandomItemBoxData*> AllRows;
+	ItemDataTable->GetAllRows<FRandomItemBoxData>(ContextString, AllRows);
+
+	if (AllRows.Num() > 0)
+	{
+		int32 RandomIndex = FMath::RandRange(0, AllRows.Num() - 1);
+		if (AllRows[RandomIndex])
+		{
+			// 찾은 데이터를 OutRow에 복사해서 반환
+			OutRow = *AllRows[RandomIndex];
+		}
+	}
+
+	return OutRow;
 }
 
 void APTWDeliveryGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)

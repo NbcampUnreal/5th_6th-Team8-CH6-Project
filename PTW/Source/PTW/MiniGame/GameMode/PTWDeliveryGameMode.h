@@ -13,6 +13,7 @@ class APTWPlayerCharacter;
 class IPTWCombatInterface;
 class UPTWDeliveryControllerComponent;
 class APlayerStart;
+
 /**
  * 
  */
@@ -42,6 +43,12 @@ public:
 	FTransform GetPlayerSpawnTransform(APTWPlayerController* PC);
 
 	void ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect);
+	
+	FORCEINLINE APTWPlayerController* GetLeaderController() const { return RankPCList[0];}
+	
+	UFUNCTION(BlueprintCallable, Category = "Delivery | Logic")
+	FRandomItemBoxData GetRandomItemRowFromTable();
+	
 protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	virtual void RestartPlayer(AController* NewPlayer) override;
@@ -86,7 +93,7 @@ private:
 	
 	void Test_GiveItems();
 	
-	
+
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
@@ -117,6 +124,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Actors")
 	TObjectPtr<AStartBlockActor> StartBlocker;
+	
+	UPROPERTY(EditAnywhere, Category = "Delivery | Data")
+	TObjectPtr<UDataTable> ItemDataTable;
 	
 	
 	

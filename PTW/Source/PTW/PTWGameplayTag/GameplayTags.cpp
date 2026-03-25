@@ -116,6 +116,11 @@ namespace GameplayTags
 		{
 			UE_DEFINE_GAMEPLAY_TAG(Crouching, "State.Posture.Crouching");
 		}
+
+		namespace Abyss
+		{
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(NoFire, "State.Abyss.NoFire");
+		}
 	}
 	
 	namespace Item

@@ -7,6 +7,8 @@
 #include "CoreFramework/PTWPlayerState.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
+#include "AbilitySystemComponent.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 APTWAbyssMiniGameMode::APTWAbyssMiniGameMode()
 {
@@ -78,6 +80,21 @@ void APTWAbyssMiniGameMode::ApplyBlackoutState(bool bEnable)
 			if (APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(PC->GetPawn()))
 			{
 				Character->SetStealthMode(bEnable);
+
+				if (APTWPlayerState* PS = Character->GetPlayerState<APTWPlayerState>())
+				{
+					if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+					{
+						if (bEnable)
+						{
+							ASC->RemoveLooseGameplayTag(GameplayTags::State::Abyss::NoFire);
+						}
+						else
+						{
+							ASC->AddLooseGameplayTag(GameplayTags::State::Abyss::NoFire);
+						}
+					}
+				}
 			}
 		}
 	}

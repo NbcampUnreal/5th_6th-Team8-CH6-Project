@@ -41,8 +41,6 @@ void UPTWGA_RBAoEStop::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		SphereShape,
 		CollisionParams
 		);
-				
-	DrawDebugSphere(GetWorld(), ExplosionLocation, DetectRad, 32, FColor::Red, false, 2.0f);
 	
 	ApplyAoEEffect(OverlapResults);
 	EndAbility(Handle, CurrentActorInfo, CurrentActivationInfo, false, false);

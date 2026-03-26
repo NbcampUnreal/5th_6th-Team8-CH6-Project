@@ -9,6 +9,7 @@
 #include "System/Prop/PTWPropData.h"
 #include "PTWMiniGameMode.generated.h"
 
+class UPTWInventoryComponent;
 class APTWPlayerCharacter;
 class APTWPlayerController;
 class UPTWBaseControllerComponent;
@@ -135,6 +136,8 @@ protected:
 	
 	/* 플레이어 몽타주 정지(사망 로직에서 호출) */
 	void PlayerMontageStop(APTWPlayerCharacter* TargetCharacter);
+	
+	void DeathPlayerWeaponHandler(UPTWInventoryComponent* InvenComp);
 
 protected:
 	

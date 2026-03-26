@@ -298,6 +298,22 @@ void APTWMiniGameMode::PlayerMontageStop(APTWPlayerCharacter* TargetCharacter)
 	}
 }
 
+void APTWMiniGameMode::DeathPlayerWeaponHandler(UPTWInventoryComponent* InvenComp)
+{
+	const TArray<TObjectPtr<UPTWWeaponInstance>>& WeaponArr = InvenComp->GetWeaponArray();
+		
+	for (const auto& WeaponInst : WeaponArr)
+	{
+		if (WeaponInst)
+		{
+			WeaponInst->SpawnedWeapon1P->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			WeaponInst->SpawnedWeapon3P->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			WeaponInst->DestroySpawnedActors();
+		}
+	}
+	InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
+}
+
 void APTWMiniGameMode::StartGame()
 {
 	if (!PTWGameState) return;
@@ -679,24 +695,6 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	UPTWInventoryComponent* InvenComp = TargetCharacter->GetInventoryComponent();
 	if (!WeaponComp || !InvenComp) return;
 	
-	
-	// if (const TArray<FWeaponPair>* WeaponPairsPtr = InvenComp->GetWeaponActorsArr(NewPlayer))
-	// {
-	// 	for (const FWeaponPair& WeaponPair : *WeaponPairsPtr)
-	// 	{
-	// 		UPTWWeaponInstance* WeaponInst = WeaponPair.Weapon3P->GetWeaponItemInstance();
-	// 		if (WeaponInst && WeaponInst->ItemDef)
-	// 		{
-	// 			WeaponComp->SpawnedWeapons.Remove(WeaponInst->ItemDef->WeaponTag);
-	// 			WeaponComp->AttachWeaponToSocket(
-	// 				WeaponPair.Weapon1P,
-	// 				WeaponPair.Weapon3P,
-	// 				WeaponInst->ItemDef->WeaponTag
-	// 			);
-	// 		}
-	// 	}
-	// }
-	
 	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
 	if (!SpawnManager) return;
 	
@@ -752,18 +750,7 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 		UPTWInventoryComponent* InvenComp = PS->GetInventoryComponent();
 		if (!InvenComp) return;
 		
-		const TArray<TObjectPtr<UPTWWeaponInstance>>& WeaponArr = InvenComp->GetWeaponArray();
-		
-		for (const auto& WeaponInst : WeaponArr)
-		{
-			if (WeaponInst)
-			{
-				WeaponInst->SpawnedWeapon1P->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-				WeaponInst->SpawnedWeapon3P->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-				WeaponInst->DestroySpawnedActors();
-			}
-		}
-		InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
+		DeathPlayerWeaponHandler(InvenComp);
 		
 		APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(DeadActor);
 		if (!PC) return;

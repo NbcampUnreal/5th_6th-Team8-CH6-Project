@@ -102,9 +102,9 @@ void UPTWServerListRow::OnClickedJoinButton()
 		}
 		if (OnlineSession.SessionSettings.Get(FName("GameLiftSessionId_2"), Part2))
 		{
-			if (!Part1.IsEmpty())
+			if (!Part2.IsEmpty())
 			{
-				GameLiftSessionId += Part1;
+				GameLiftSessionId += Part2;
 			}
 		}
 		

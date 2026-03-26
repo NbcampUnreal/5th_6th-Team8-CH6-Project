@@ -114,8 +114,7 @@ void UPTWGameLiftSubsystem::CreateGameSession(FPTWSessionConfig& SessionConfig)
 	Request->SetContentAsString(Content);
 	Request->ProcessRequest();
 	
-	FTimerHandle CheckSessionStatusTimer;
-	GetWorld()->GetTimerManager().SetTimer(CheckSessionStatusTimer, 20.0f, false);
+	GetWorld()->GetTimerManager().SetTimer(CheckSessionLitmitTimer, 20.0f, false);
 }
 
 void UPTWGameLiftSubsystem::CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -296,6 +295,11 @@ void UPTWGameLiftSubsystem::CreatePlayerSession_Response(FHttpRequestPtr Request
 	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "CreatePlayerSession 통신 실패.");
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("SessionCheckTimeOut", "세션 참여에 실패하였습니다.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
 		return;
 	}
 	
@@ -532,6 +536,23 @@ void UPTWGameLiftSubsystem::SetupMapLoadDelegateHandle()
 		MapLoadDelegateHandle.Reset();
 	}
 	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
+}
+
+void UPTWGameLiftSubsystem::RemovePlayerSession(FString PlayerSessionId)
+{
+	if (GameLiftSdkModule)
+	{
+		GameLiftSdkModule->RemovePlayerSession(PlayerSessionId);
+		UE_LOG(LogTemp, Log, TEXT("GameLift 플레이어 세션 제거 완료: %s"), *PlayerSessionId);
+	}
+}
+
+void UPTWGameLiftSubsystem::ExitGameSession()
+{
+	if (GameLiftSdkModule)
+	{
+		GameLiftSdkModule->ProcessEnding();
+	}
 }
 
 #endif

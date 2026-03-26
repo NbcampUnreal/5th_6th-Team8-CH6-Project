@@ -2,6 +2,8 @@
 
 
 #include "PTWServerBrowser.h"
+
+#include "PTWMainMenu.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CheckBox.h"
@@ -14,6 +16,7 @@
 #include "PTW/System/PTWSessionSubsystem.h"
 #include "System/PTWGameLiftSubsystem.h"
 #include "System/Session/PTWSessionConfig.h"
+#include "UI/PTWUISubsystem.h"
 
 #define LOCTEXT_NAMESPACE "ServerBrowser"
 void UPTWServerBrowser::NativeConstruct()
@@ -29,45 +32,45 @@ void UPTWServerBrowser::NativeConstruct()
 	
 	if (IsValid(BackButton))
 	{
-		BackButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedBackButton);	
+		BackButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedBackButton);	
 	}
 	
 	if (IsValid(ServerMenuButton))
 	{
-		ServerMenuButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedServerMenuButton);
+		ServerMenuButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedServerMenuButton);
 	}
 	
 	if (IsValid(CreateServerButton))
 	{
-		CreateServerButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedCreateServerButton);
+		CreateServerButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedCreateServerButton);
 	}
 	
 	if (IsValid(FindServerButton))
 	{
-		FindServerButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedFindServerButton);
+		FindServerButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedFindServerButton);
 	}
 	
 	if (IsValid(QuickMatchButton))
 	{
-		QuickMatchButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedQuickMatchButton);
+		QuickMatchButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedQuickMatchButton);
 	}
 	
 	if (IsValid(ShortRoundButton))
 	{
-		ShortRoundButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedShortRoundButton);
+		ShortRoundButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedShortRoundButton);
 		OnClickedShortRoundButton();
 	}
 	
 	if (IsValid(LongRoundButton))
 	{
-		LongRoundButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedLongRoundButton);
+		LongRoundButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedLongRoundButton);
 	}
 	
 	if (IsValid(TestButton))
 	{
 		#if WITH_EDITOR
 		TestButton->SetVisibility(ESlateVisibility::Visible);
-		TestButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedTestButton);
+		TestButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedTestButton);
 		#endif
 	}
 	
@@ -75,7 +78,7 @@ void UPTWServerBrowser::NativeConstruct()
 	{
 		#if WITH_EDITOR
 		DevJoinButton->SetVisibility(ESlateVisibility::Visible);
-		DevJoinButton->OnClicked.AddDynamic(this, &ThisClass::DevJoinAction);
+		DevJoinButton->OnClicked.AddUniqueDynamic(this, &ThisClass::DevJoinAction);
 		#endif
 	}
 	
@@ -106,23 +109,32 @@ void UPTWServerBrowser::NativeConstruct()
 	{
 		ServerMaxPlayerEditableText->SetText(FText::FromString(TEXT("16")));
 	}
+	
+	SetIsEnabled(true);
+	
+	if (IsValid(ServerMenuBorder))
+	{
+		ServerMenuBorder->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }
 
 void UPTWServerBrowser::NativeDestruct()
 {
 	Super::NativeDestruct();
-	
-	if (IsValid(BackButton))
-	{
-		BackButton->OnClicked.RemoveDynamic(this, &ThisClass::OnClickedBackButton);	
-	}
 }
 
 void UPTWServerBrowser::OnClickedBackButton()
 {
-	if (OnServerBackAction.IsBound())
+	if (IsValid(MainMenuClass))
 	{
-		OnServerBackAction.Broadcast();
+		if (ULocalPlayer* LP = GetOwningLocalPlayer())
+		{
+			if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
+			{
+				UISubsystem->HideSystemWidget(GetClass());
+				UISubsystem->ShowSystemWidget(MainMenuClass);
+			}
+		}
 	}
 }
 

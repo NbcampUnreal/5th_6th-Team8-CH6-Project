@@ -3,18 +3,9 @@
 
 #include "PTWMainMenu.h"
 #include "Components/Button.h"
-#include "Components/WidgetSwitcher.h"
 #include "PTWServerBrowser.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "UI/PTWUISubsystem.h"
-
-void UPTWMainMenu::OpenServerBrowser()
-{
-	if (IsValid(MenuSwitcher) && IsValid(ServerBrowser))
-	{
-		MenuSwitcher->SetActiveWidget(ServerBrowser);
-	}
-}
 
 void UPTWMainMenu::NativeConstruct()
 {
@@ -22,22 +13,17 @@ void UPTWMainMenu::NativeConstruct()
 	
 	if (IsValid(PlayButton))
 	{
-		PlayButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedPlayButton);
-	}
-	
-	if (ServerBrowser)
-	{
-		ServerBrowser->OnServerBackAction.AddDynamic(this, &ThisClass::ReturnToMainMenu);
+		PlayButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedPlayButton);
 	}
 
 	if (OptionsButton)
 	{
-		OptionsButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedOptionsButton);
+		OptionsButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedOptionsButton);
 	}
 	
-	if (ExitButton)
+	if (IsValid(ExitButton))
 	{
-		ExitButton->OnClicked.AddDynamic(this, &ThisClass::OnClickedExitButton);
+		ExitButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedExitButton);
 	}
 
 	if (ULocalPlayer* LP = GetOwningLocalPlayer())
@@ -56,11 +42,6 @@ void UPTWMainMenu::NativeDestruct()
 		PlayButton->OnClicked.RemoveDynamic(this, &ThisClass::OnClickedPlayButton);
 	}
 	
-	if (ServerBrowser)
-	{
-		ServerBrowser->OnServerBackAction.RemoveDynamic(this, &ThisClass::ReturnToMainMenu);
-	}
-
 	if (OptionsButton)
 	{
 		OptionsButton->OnClicked.RemoveDynamic(this, &ThisClass::OnClickedOptionsButton);
@@ -71,15 +52,16 @@ void UPTWMainMenu::NativeDestruct()
 
 void UPTWMainMenu::OnClickedPlayButton()
 {
-	OpenServerBrowser();
-}
-
-void UPTWMainMenu::ReturnToMainMenu()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Main Menu BACK"));
-	if (IsValid(MenuSwitcher) && IsValid(MainMenuCanvas))
+	if (IsValid(ServerBrowserClass))
 	{
-		MenuSwitcher->SetActiveWidget(MainMenuCanvas);
+		if (ULocalPlayer* LP = GetOwningLocalPlayer())
+		{
+			if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
+			{
+				UISubsystem->HideSystemWidget(GetClass());
+				UISubsystem->ShowSystemWidget(ServerBrowserClass);
+			}
+		}
 	}
 }
 

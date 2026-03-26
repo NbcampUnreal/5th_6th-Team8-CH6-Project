@@ -6,6 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffectExtension.h"
 #include "Net/UnrealNetwork.h"
+#include "PTWGameplayTag/GameplayTags.h"
 
 UPTWAbilityBattleAttributeSet::UPTWAbilityBattleAttributeSet()
 {
@@ -35,6 +36,17 @@ void UPTWAbilityBattleAttributeSet::PreAttributeChange(const FGameplayAttribute&
 	if (Attribute == GetShieldAttribute())
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, GetMaxShield());
+	}
+
+	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+	if (!ASC) return;
+
+	const UPTWAttributeSet* Set = ASC->GetSet<UPTWAttributeSet>();
+	if (!Set) return;
+
+	if (Set->GetHealth() <= 0.f || Attribute == GetShieldAttribute())
+	{
+		NewValue = GetShield();
 	}
 }
 
@@ -177,7 +189,8 @@ void UPTWAbilityBattleAttributeSet::StartHealthRegen()
 	bCanHealthRegen = true;
 
 	if (World->GetTimerManager().IsTimerActive(HealthRegenLoopTimer)) return;
-
+	
+	
 	World->GetTimerManager().SetTimer(HealthRegenLoopTimer, this, &UPTWAbilityBattleAttributeSet::ApplyHealthRegen, 0.1f, true);
 }
 
@@ -210,6 +223,19 @@ void UPTWAbilityBattleAttributeSet::StopShieldRegen()
 
 	World->GetTimerManager().ClearTimer(ShieldRegenLoopTimer);
 	bCanShieldRegen = false;
+}
+
+void UPTWAbilityBattleAttributeSet::ResetShield()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	bCanShieldRegen = true;
+
+	World->GetTimerManager().ClearTimer(ShieldRegenTimer);
+	World->GetTimerManager().ClearTimer(ShieldRegenLoopTimer);
+
+	StartShieldRegen();
 }
 
 void UPTWAbilityBattleAttributeSet::OnRep_Armor(const FGameplayAttributeData& OldArmor)

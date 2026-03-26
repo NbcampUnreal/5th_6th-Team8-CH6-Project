@@ -3,12 +3,15 @@
 
 #include "UI/MiniGame/AbilityBattle/PTWAbilityDraftWidget.h"
 
+#include "AbilitySystemComponent.h"
 #include "PTWAbilityBoxWidget.h"
 #include "PTWDraftCharge.h"
+#include "PTWShieldBar.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "GAS/PTWAttributeSet.h"
 #include "MiniGame/ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
 #include "MiniGame/PlayerStateComponent/PTWAbilityBattlePSComponent.h"
 
@@ -86,6 +89,25 @@ void UPTWAbilityDraftWidget::OnDraftSelected(FName RowId)
 	ControllerComponent->Client_HideDraftUI();
 }
 
+void UPTWAbilityDraftWidget::OnShieldChanged(const FOnAttributeChangeData& Data)
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetOwningPlayer());
+	if (!PlayerController) return;
+
+	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
+	if (!PlayerState) return;
+	
+	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
+	
+	const UPTWAbilityBattleAttributeSet* Set = ASC->GetSet<UPTWAbilityBattleAttributeSet>();
+	if (!Set) return;
+	
+	const float Current = Data.NewValue;
+	const float Max = Set->GetMaxShield();
+	
+	WBP_ShieldBar->SetProgressBarPer(Current, Max);
+}
+
 void UPTWAbilityDraftWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -96,9 +118,14 @@ void UPTWAbilityDraftWidget::NativeConstruct()
 	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
 	if (!PlayerState) return;
 
+	UAbilitySystemComponent* ASC= PlayerState->GetAbilitySystemComponent();
+	if (!ASC) return;
+	
 	UPTWAbilityBattlePSComponent* PSComponent = Cast<UPTWAbilityBattlePSComponent>(PlayerState->GetMiniGameComponent());
 	if (!PSComponent) return;
-
+	
 	PSComponent->OnChangedChargeCount.AddUObject(WBP_DraftCharge, &UPTWDraftCharge::UpdateChargeCount);
 	PSComponent->OnDraftChargedTimeChanged.AddUObject(WBP_DraftCharge, &UPTWDraftCharge::UpdateChargeTime);
+
+	ASC->GetGameplayAttributeValueChangeDelegate(UPTWAttributeSet::GetShieldAttribute()).AddUObject(this, &UPTWAbilityDraftWidget::OnShieldChanged);
 }

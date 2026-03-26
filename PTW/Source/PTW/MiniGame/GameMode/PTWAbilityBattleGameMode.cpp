@@ -49,6 +49,8 @@ void APTWAbilityBattleGameMode::StartGame()
 	{
 		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
 		if (!PTWPlayerState) continue;
+		
+		// 리스폰 및 처음 시작 시 쉴드 재생 부분 델리게이트 연결 해서 ui 와 attribute에 연결
 
 		 UPTWInventoryComponent* InventoryComponent = PTWPlayerState->GetInventoryComponent();
 		if (!InventoryComponent) continue;
@@ -64,6 +66,27 @@ void APTWAbilityBattleGameMode::StartRound()
 	Super::StartRound();
 
 	StartDraftChargeTimer();
+
+	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (!PTWPlayerState) continue;
+		
+		// 리스폰 및 처음 시작 시 쉴드 재생 부분 델리게이트 연결 해서 ui 와 attribute에 연결
+
+		UAbilitySystemComponent* ASC = PTWPlayerState->GetAbilitySystemComponent();
+		if (!ASC) return;
+		
+		const UPTWAbilityBattleAttributeSet* ConstSet = ASC->GetSet<UPTWAbilityBattleAttributeSet>();
+		if (!ConstSet) return;
+
+		UPTWAbilityBattleAttributeSet* Set = const_cast<UPTWAbilityBattleAttributeSet*>(ConstSet);
+		if (!Set) return;
+		
+		Set->ResetShield();
+	}
+
+
 }
 
 void APTWAbilityBattleGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController)
@@ -110,6 +133,14 @@ void APTWAbilityBattleGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerC
 	ControllerComponent->Client_RespawnPlayer(MiniGameRule.SpawnRule.bUseRespawn, MiniGameRule.SpawnRule.RespawnDelay);
 	
 	UE_LOG(Log_AbilityBattle, Warning, TEXT("RespawnPlayer"));
+}
+
+void APTWAbilityBattleGameMode::RestartPlayer(AController* NewPlayer)
+{
+	Super::RestartPlayer(NewPlayer);
+
+	
+	
 }
 
 void APTWAbilityBattleGameMode::HandleRespawn(APTWPlayerController* PlayerController)

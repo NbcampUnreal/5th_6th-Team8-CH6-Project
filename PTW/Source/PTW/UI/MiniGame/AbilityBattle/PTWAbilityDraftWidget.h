@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "GAS/PTWAbilityBattleAttributeSet.h"
 #include "PTWAbilityDraftWidget.generated.h"
 
+class UPTWShieldBar;
 class UPTWDraftCharge;
 class UPTWAbilityBoxWidget;
 class UHorizontalBox;
@@ -21,12 +23,17 @@ public:
 
 	UFUNCTION()
 	void OnDraftSelected(FName RowId);
+
+	void OnShieldChanged(const FOnAttributeChangeData& Data);
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UHorizontalBox> HorizontalBox;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWDraftCharge> WBP_DraftCharge;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWShieldBar> WBP_ShieldBar;
 	
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UPTWAbilityBoxWidget> AbilityBoxClass;

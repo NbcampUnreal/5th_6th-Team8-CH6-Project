@@ -115,6 +115,8 @@ public:
 
 	void StartShieldRegen();
 	void StopShieldRegen();
+
+	void ResetShield();
 	
 	float HealthRegenDelay = 10.f;
 	float ShieldRegenDelay = 5.f;

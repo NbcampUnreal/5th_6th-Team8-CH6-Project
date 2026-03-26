@@ -9,6 +9,7 @@
 #include "System/Prop/PTWPropData.h"
 #include "PTWMiniGameMode.generated.h"
 
+class APTWPlayerCharacter;
 class APTWPlayerController;
 class UPTWBaseControllerComponent;
 class UPTWItemInstance;
@@ -131,6 +132,9 @@ protected:
 	
 	virtual bool ShouldUseTeamOutline() const;
 	void RefreshTeamOutlineForAllPlayers(bool bEnable);
+	
+	/* 플레이어 몽타주 정지(사망 로직에서 호출) */
+	void PlayerMontageStop(APTWPlayerCharacter* TargetCharacter);
 
 protected:
 	

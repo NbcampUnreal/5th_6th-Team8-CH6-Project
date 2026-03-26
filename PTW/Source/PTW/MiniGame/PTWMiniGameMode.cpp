@@ -278,6 +278,26 @@ void APTWMiniGameMode::RefreshTeamOutlineForAllPlayers(bool bEnable)
 	}
 }
 
+void APTWMiniGameMode::PlayerMontageStop(APTWPlayerCharacter* TargetCharacter)
+{
+	if (TargetCharacter->GetMesh1P())
+	{
+		UAnimInstance* AnimInst = TargetCharacter->GetMesh1P()->GetAnimInstance();
+		if (AnimInst)
+		{
+			AnimInst->Montage_Stop(0.2f); 
+		}
+	}
+	if (TargetCharacter->GetMesh3P())
+	{
+		UAnimInstance* AnimInst = TargetCharacter->GetMesh3P()->GetAnimInstance();
+		if (AnimInst)
+		{
+			AnimInst->Montage_Stop(0.2f); 
+		}
+	}
+}
+
 void APTWMiniGameMode::StartGame()
 {
 	if (!PTWGameState) return;
@@ -743,21 +763,12 @@ void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 				WeaponInst->DestroySpawnedActors();
 			}
 		}
-		
-		
-		
-		//
-		// FSavedWeaponData SavedData;
-		// for (const auto& WeaponInst : WeaponArr)
-		// {
-		// 	FWeaponPair WeaponPair;
-		// 	WeaponPair.Weapon1P = WeaponInst->SpawnedWeapon1P;
-		// 	WeaponPair.Weapon3P = WeaponInst->SpawnedWeapon3P;
-		// 	SavedData.WeaponArray.Add(WeaponPair);
-		// }
-		//
-		// InvenComp->SetSavedWeaponActor(DeadPawn->GetController(), SavedData);
 		InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
+		
+		APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(DeadActor);
+		if (!PC) return;
+		PlayerMontageStop(PC);
+		
 	}
 
 	APlayerState* KillPlayerState = nullptr;

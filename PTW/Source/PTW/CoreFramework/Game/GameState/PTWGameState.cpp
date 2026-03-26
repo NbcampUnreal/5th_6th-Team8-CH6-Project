@@ -278,6 +278,11 @@ void APTWGameState::SetCurrentPhase(EPTWGamePhase NewGamePhase)
 	CurrentGamePhase = NewGamePhase;
 
 	OnRep_CurrentGamePhase();
+
+	UE_LOG(LogTemp, Warning, TEXT(
+		"[Broadcast][PTWMiniGameTitle] GS: %p"),
+		this
+	);
 }
 
 void APTWGameState::SetRouletteData(const FPTWRouletteData& NewData)
@@ -400,6 +405,11 @@ void APTWGameState::OnRep_CurrentRound()
 void APTWGameState::OnRep_CurrentGamePhase()
 {
 	OnGamePhaseChanged.Broadcast(CurrentGamePhase);
+
+	UE_LOG(LogTemp, Warning, TEXT(
+		"[Broadcast][PTWMiniGameTitle] GS: %p"),
+		this
+	);
 }
 
 void APTWGameState::OnRep_RankedPlayers()

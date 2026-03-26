@@ -20,26 +20,9 @@ class PTW_API APTWHUD : public AHUD
 public:
 	virtual void BeginPlay() override;
 
-	/* 컨트롤러에서 ASC를 받아와 UI를 초기화하는 함수 */
-	void InitializeHUD(UAbilitySystemComponent* ASC);
-
-	//// 컨트롤러에서 호출할 가시성 제어 함수
-	//UFUNCTION()
-	//void SetCrosshairVisibility(bool bVisible);
-
 protected:
-	/* HUD에 표시할 메인 위젯 클래스 (에디터에서 설정) */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<UPTWInGameHUD> InGameHUDClass;
-	/* 데미지 인디케이터 (UI 서브시스템에서 가져감) */
-	UPROPERTY(EditDefaultsOnly, Category = "UI|DamageIndicator")
-	TSubclassOf<class UPTWDamageIndicator> DamageIndicatorClass;
+	void FindPlayerController();
 
 private:
-	/* 실제 뷰포트에 표시될 위젯 인스턴스*/
-	UPROPERTY()
-	TObjectPtr<UPTWInGameHUD> InGameHUDInstance;
-
-	/* 중복초기화 방지 */
-	bool bASCInitialized = false;
+	FTimerHandle FindPlayerControllerTimerHandle;
 };

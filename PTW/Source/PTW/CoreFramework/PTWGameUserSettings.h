@@ -43,4 +43,7 @@ public:
 	/* 언어 저장값 (디폴트: 영어) */
 	UPROPERTY(Config)
 	FString SelectedLanguage = TEXT("en");
+
+	/* KeyGuide On/Off */
+	bool bKeyGuideOn = true;
 };

@@ -34,6 +34,10 @@ protected:
 	TObjectPtr<UDataTable> MiniGameMapTable;
 
 private:
+	/* 델리게이트 */
+	void BindGSDelegates();
+	void UnBindGSDelegates();
+
 	/* 게임 페이즈 변경 */
 	UFUNCTION()
 	void HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase);
@@ -42,7 +46,7 @@ private:
 	UFUNCTION()
 	void HandleRoulettePhaseChanged(FPTWRouletteData RouletteData);
 
-	void StartRouletteSubscription();
+	void InitializeRouletteData();
 
 	/* RowName을 통해 실제 출력용 이름을 가져오는 헬퍼 함수 */
 	FText GetMapDisplayName(FName RowName);

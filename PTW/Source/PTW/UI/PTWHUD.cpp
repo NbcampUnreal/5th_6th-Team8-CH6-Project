@@ -14,48 +14,28 @@ void APTWHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
-	/* 위젯 클래스가 에디터에서 설정되었는지 확인 */
-	if (!InGameHUDClass)
-	{
-		return;
-	}
-
-	/* 위젯 인스턴스 생성 */
-	if (!InGameHUDInstance)
-	{
-		InGameHUDInstance = CreateWidget<UPTWInGameHUD>(GetWorld(), InGameHUDClass);
-		if (InGameHUDInstance)
-		{
-			InGameHUDInstance->AddToViewport();
-		}
-	}
-	
-	///* 위젯 생성 후 초기화 요청 */
-	//if (APTWPlayerController* PC =
-	//	Cast<APTWPlayerController>(GetOwningPlayerController()))
-	//{
-	//	PC->RestoreASC();
-	//}
+	FindPlayerController();
 }
 
-void APTWHUD::InitializeHUD(UAbilitySystemComponent* ASC)
+void APTWHUD::FindPlayerController()
 {
-	if (bASCInitialized) return;
-
-	if (InGameHUDInstance && ASC)
+	APlayerController* PC = GetOwningPlayerController();
+	if (!PC)
 	{
-		bASCInitialized = true;
-		InGameHUDInstance->InitializeUI(ASC);
+		GetWorld()->GetTimerManager().SetTimer(
+			FindPlayerControllerTimerHandle,
+			this,
+			&APTWHUD::FindPlayerController,
+			0.1f, // 0.1초 간격으로 체크
+			false
+		);
 	}
 
-	if (DamageIndicatorClass)
+	GetWorld()->GetTimerManager().ClearTimer(FindPlayerControllerTimerHandle);
+
+	if (APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC))
 	{
-		if (ULocalPlayer* LP = GetOwningPlayerController()->GetLocalPlayer())
-		{
-			if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
-			{
-				UISubsystem->SetDamageIndicatorClass(DamageIndicatorClass);
-			}
-		}
+		PTWPC->CreateUI();
 	}
 }
+

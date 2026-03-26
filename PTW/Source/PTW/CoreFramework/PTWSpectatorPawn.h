@@ -26,6 +26,8 @@ public:
 	void SpectateNextPlayer();
 	
 	void BeginSpectate();
+	void EndSpectate();
+	
 	UFUNCTION()
 	void OnTargetDeath(AActor* DeadActor, AActor* KillerActor);
 	UFUNCTION()
@@ -43,8 +45,8 @@ protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void PossessedBy(AController* NewController) override;
-	virtual void OnRep_PlayerState() override;
-	
+	virtual void OnRep_Controller() override;
+
 public:
 	FTimerHandle SpectateTimer;
 	

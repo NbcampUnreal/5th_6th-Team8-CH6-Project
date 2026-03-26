@@ -29,6 +29,8 @@ public:
 	void EndSpectate();
 	
 	UFUNCTION()
+	void StartSpectate();
+	UFUNCTION()
 	void OnTargetDeath(AActor* DeadActor, AActor* KillerActor);
 	UFUNCTION()
 	void BlockSpectating();

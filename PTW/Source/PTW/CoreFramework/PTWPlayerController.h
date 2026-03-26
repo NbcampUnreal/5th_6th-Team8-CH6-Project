@@ -11,6 +11,7 @@
 
 /* KillLog 델리게이트 */
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnKillLog, const FString&, const FString&);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpectateTargetChanged, const FString&, TargetName);
 
 class APTWPlayerState;
 class UAbilitySystemComponent;
@@ -171,7 +172,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	TObjectPtr<UPTWUIControllerComponent> UIControllerComponent;
 
-
+	FOnSpectateTargetChanged OnSpectateTargetChanged;
 	
 protected:
 	/* 캐싱된 Ability System Component */
@@ -227,4 +228,5 @@ protected:
 	// 폭탄 경고 위젯
 	UPROPERTY(EditDefaultsOnly, Category = "UI|Bomb")
 	TSubclassOf<UPTWBombWarning> BombWarningWidgetClass;
+	
 };

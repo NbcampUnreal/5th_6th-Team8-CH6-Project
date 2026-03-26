@@ -35,6 +35,12 @@ public:
 	// 현재 세션의 SteamID (CSteamID) 반환
 	FString GetSteamServerID();
 	
+	// 현재 세션에 접속가능한 최대 플레이어 수 반환
+	int32 GetMaxPlayers();
+	
+	// 현재 세션에 설정된 최대 라운드 수 반환
+	int32 GetMaxRounds();
+	
 	// 현재 세션의 ShouldAdvertise를 변경
 	void OnGameSessionActivated(FString InGameLiftSessionId);
 	
@@ -64,6 +70,12 @@ public:
 	// 세션 이탈 & 종료
 	void LeaveGameSession();
 	
+	// 스팀 세션 이탈 함수
+	bool UnregisterPlayer( FName SessionName, const FUniqueNetId& PlayerId);
+	
+	// 호스트 전용 세션 종료 함수
+	void ExitGameSession();
+	
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void QuickMatchGameSession();
 	
@@ -88,12 +100,13 @@ protected:
 	
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void OnQuickMatchFindSessionsComplete();
-public:
 	
+public:
 protected:
 	IOnlineSessionPtr SessionInterface;
 	TArray<FOnlineSessionSearchResultBP> BPSearchResults;
 	TQueue<TSharedPtr<FOnlineSessionSearch>> SessionSearchQueue;
+	
 private:
 	
 public:

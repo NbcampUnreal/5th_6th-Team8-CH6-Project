@@ -22,12 +22,12 @@ void UPTWSpectatorHUD::HandleNativeVisibilityChanged(ESlateVisibility InVisibili
 	case ESlateVisibility::Visible:
 	case ESlateVisibility::HitTestInvisible:
 	case ESlateVisibility::SelfHitTestInvisible:
-		SpectateTargetBorder->SetVisibility(ESlateVisibility::HitTestInvisible);
+		// SpectateTargetBorder->SetVisibility(ESlateVisibility::HitTestInvisible);
 		break;
 	
 	case ESlateVisibility::Hidden:
 	case ESlateVisibility::Collapsed:
-		SpectateTargetBorder->SetVisibility(ESlateVisibility::Collapsed);
+		// SpectateTargetBorder->SetVisibility(ESlateVisibility::Collapsed);
 	default:
 		break;
 	}
@@ -37,7 +37,7 @@ void UPTWSpectatorHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
-	OnNativeVisibilityChanged.AddUObject(this, &ThisClass::HandleNativeVisibilityChanged);
+	// OnNativeVisibilityChanged.AddUObject(this, &ThisClass::HandleNativeVisibilityChanged);
 	if (APTWPlayerController* PC = GetOwningPlayer<APTWPlayerController>())
 	{
 		PC->OnSpectateTargetChanged.AddUniqueDynamic(this, &ThisClass::SetSpectateTargetName);
@@ -46,7 +46,7 @@ void UPTWSpectatorHUD::NativeConstruct()
 
 void UPTWSpectatorHUD::NativeDestruct()
 {
-	OnNativeVisibilityChanged.RemoveAll(this);
+	// OnNativeVisibilityChanged.RemoveAll(this);
 	if (APTWPlayerController* PC = GetOwningPlayer<APTWPlayerController>())
 	{
 		PC->OnSpectateTargetChanged.RemoveAll(this);

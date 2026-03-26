@@ -16,20 +16,16 @@ class PTW_API UPTWMainMenu : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-	void OpenServerBrowser();
-	
-protected:
-	virtual void NativeConstruct() override;
-	virtual void NativeDestruct() override;
-	
 	UFUNCTION()
 	void OnClickedPlayButton();
-	UFUNCTION()
-	void ReturnToMainMenu();
 	UFUNCTION()
 	void OnClickedOptionsButton();
 	UFUNCTION()
 	void OnClickedExitButton();
+	
+protected:
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 	
 protected:
 	UPROPERTY(meta=(BindWidget))
@@ -41,14 +37,8 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> ExitButton;
 	
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UWidgetSwitcher> MenuSwitcher;
-	
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UWidget> MainMenuCanvas;
-	
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWServerBrowser> ServerBrowser;
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UPTWServerBrowser> ServerBrowserClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> OptionsMenuClass;

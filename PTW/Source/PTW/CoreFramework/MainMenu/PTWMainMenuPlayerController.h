@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "PTWMainMenuPlayerController.generated.h"
 
+class UPTWUIControllerComponent;
 class UPTWMainMenu;
 class UPTWLobbyBrowser;
 
@@ -27,11 +28,7 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UPTWMainMenu> MainMenuClass;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "UI")
-	TObjectPtr<UPTWMainMenu> MainMenuInstance;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> PopupWidgetClass;
-
 };

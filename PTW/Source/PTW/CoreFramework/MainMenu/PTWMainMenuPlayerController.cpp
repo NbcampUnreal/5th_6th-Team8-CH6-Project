@@ -11,7 +11,7 @@ APTWMainMenuPlayerController::APTWMainMenuPlayerController()
 {
 	if (!IsValid(MainMenuClass))
 	{
-		MainMenuClass = MainMenuInstance->StaticClass();
+		MainMenuClass = MainMenuClass.Get();
 	}
 }
 
@@ -19,27 +19,35 @@ void APTWMainMenuPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (IsLocalPlayerController())
+	if (!IsRunningDedicatedServer())
 	{
-		MainMenuInstance = CreateWidget<UPTWMainMenu>(this, MainMenuClass);
-		
-		if (IsValid(MainMenuInstance))
+		if (ULocalPlayer* LP = GetLocalPlayer())
 		{
-			MainMenuInstance->AddToViewport();
+			if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
+			{
+				UISubsystem->ShowSystemWidget(MainMenuClass);
+				UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::UIOnly);
+			}
 		}
-		
 		bShowMouseCursor = true;
-		FInputModeUIOnly InputMode;
-		SetInputMode(InputMode);
+		// FInputModeUIOnly InputMode;
+		// SetInputMode(InputMode);
 	}
 }
 
 void APTWMainMenuPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (IsLocalPlayerController())
+	if (!IsRunningDedicatedServer())
 	{
+		if (ULocalPlayer* LP = GetLocalPlayer())
+		{
+			if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
+			{
+				UISubsystem->HideSystemWidget(MainMenuClass);
+				UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::GameOnly);
+			}
+		}
 		bShowMouseCursor = false;
-		SetInputMode(FInputModeGameOnly());
 	}
 	
 	Super::EndPlay(EndPlayReason);

@@ -538,5 +538,22 @@ void UPTWGameLiftSubsystem::SetupMapLoadDelegateHandle()
 	MapLoadDelegateHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnMapLoaded);
 }
 
+void UPTWGameLiftSubsystem::RemovePlayerSession(FString PlayerSessionId)
+{
+	if (GameLiftSdkModule)
+	{
+		GameLiftSdkModule->RemovePlayerSession(PlayerSessionId);
+		UE_LOG(LogTemp, Log, TEXT("GameLift 플레이어 세션 제거 완료: %s"), *PlayerSessionId);
+	}
+}
+
+void UPTWGameLiftSubsystem::ExitGameSession()
+{
+	if (GameLiftSdkModule)
+	{
+		GameLiftSdkModule->ProcessEnding();
+	}
+}
+
 #endif
 #undef LOCTEXT_NAMESPACE

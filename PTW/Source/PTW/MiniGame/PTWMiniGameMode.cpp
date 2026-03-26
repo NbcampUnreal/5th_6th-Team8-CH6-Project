@@ -699,6 +699,11 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	if (!SpawnManager) return;
 	
 	SpawnManager->CopyRestartPlayerItems(TargetCharacter);
+	
+	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::MiniGame)
+	{
+		RefreshTeamOutlineForAllPlayers(true);
+	}
 }
 
 

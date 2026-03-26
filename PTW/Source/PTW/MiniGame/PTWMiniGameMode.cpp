@@ -680,22 +680,22 @@ void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
 	if (!WeaponComp || !InvenComp) return;
 	
 	
-	if (const TArray<FWeaponPair>* WeaponPairsPtr = InvenComp->GetWeaponActorsArr(NewPlayer))
-	{
-		for (const FWeaponPair& WeaponPair : *WeaponPairsPtr)
-		{
-			UPTWWeaponInstance* WeaponInst = WeaponPair.Weapon3P->GetWeaponItemInstance();
-			if (WeaponInst && WeaponInst->ItemDef)
-			{
-				WeaponComp->SpawnedWeapons.Remove(WeaponInst->ItemDef->WeaponTag);
-				WeaponComp->AttachWeaponToSocket(
-					WeaponPair.Weapon1P,
-					WeaponPair.Weapon3P,
-					WeaponInst->ItemDef->WeaponTag
-				);
-			}
-		}
-	}
+	// if (const TArray<FWeaponPair>* WeaponPairsPtr = InvenComp->GetWeaponActorsArr(NewPlayer))
+	// {
+	// 	for (const FWeaponPair& WeaponPair : *WeaponPairsPtr)
+	// 	{
+	// 		UPTWWeaponInstance* WeaponInst = WeaponPair.Weapon3P->GetWeaponItemInstance();
+	// 		if (WeaponInst && WeaponInst->ItemDef)
+	// 		{
+	// 			WeaponComp->SpawnedWeapons.Remove(WeaponInst->ItemDef->WeaponTag);
+	// 			WeaponComp->AttachWeaponToSocket(
+	// 				WeaponPair.Weapon1P,
+	// 				WeaponPair.Weapon3P,
+	// 				WeaponInst->ItemDef->WeaponTag
+	// 			);
+	// 		}
+	// 	}
+	// }
 	
 	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
 	if (!SpawnManager) return;

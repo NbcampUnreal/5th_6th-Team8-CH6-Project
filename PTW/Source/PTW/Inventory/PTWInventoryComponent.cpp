@@ -211,7 +211,10 @@ void UPTWInventoryComponent::RemoveWeaponData()
 		FGameplayTag Tags = ASC->HasMatchingGameplayTag(GameplayTags::Weapon::EquipType::Basic) ?GameplayTags::Weapon::EquipType::Basic
 		: GameplayTags::Weapon::EquipType::Special;
 		
-		if (IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(GetOwner()))
+		APTWPlayerState* PS = Cast<APTWPlayerState>(GetOwner());
+		if (!PS) return;
+		
+		if (IPTWCombatInterface* CombatInt = Cast<IPTWCombatInterface>(PS->GetPawn()))
 		{
 			CombatInt->RemoveEffectWithTag(Tags);
 		}

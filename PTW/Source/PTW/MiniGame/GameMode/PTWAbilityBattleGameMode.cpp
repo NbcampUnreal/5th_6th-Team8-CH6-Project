@@ -288,12 +288,23 @@ void APTWAbilityBattleGameMode::GrandAbilityBattleAttributeSet()
 		UAbilitySystemComponent* ASC = PTWPlayerState->GetAbilitySystemComponent();
 		if (!ASC) continue;
 		
-		UPTWAbilityBattleAttributeSet* NewSet = NewObject<UPTWAbilityBattleAttributeSet>(PlayerState);
-		if (!NewSet) continue;
+		UPTWAbilityBattleAttributeSet* AttributeSet = const_cast<UPTWAbilityBattleAttributeSet*>(ASC->GetSet<UPTWAbilityBattleAttributeSet>());
+
+		if (!AttributeSet)
+		{
+			AttributeSet = NewObject<UPTWAbilityBattleAttributeSet>(PTWPlayerState);
+			ASC->AddAttributeSetSubobject(AttributeSet);
+		}
 		
-		ASC->AddSpawnedAttribute(NewSet);
+		ASC->GetGameplayAttributeValueChangeDelegate(UPTWAttributeSet::GetMaxHealthAttribute()).AddUObject(AttributeSet, &UPTWAbilityBattleAttributeSet::OnMaxHealthChanged);
 		
-		ASC->GetGameplayAttributeValueChangeDelegate(UPTWAttributeSet::GetMaxHealthAttribute()).AddUObject(NewSet, &UPTWAbilityBattleAttributeSet::OnMaxHealthChanged);
+		const UPTWAttributeSet* PTWSet = ASC->GetSet<UPTWAttributeSet>();
+		if (!PTWSet) continue;
+		
+		UPTWAttributeSet* MutableSet = const_cast<UPTWAttributeSet*>(PTWSet);
+		if (!MutableSet) continue;
+		
+		MutableSet->OnDamageApplied.AddUObject(AttributeSet, &UPTWAbilityBattleAttributeSet::HandleDamaged);
 	}
 }
 

@@ -9,6 +9,7 @@
 #include "PTW/CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/Character/Component/PTWReactorComponent.h"
+#include "Debug/PTWLogCategorys.h"
 #include "MiniGame/GameMode/PTWGhostChaseMiniGameMode.h"
 
 UPTWAttributeSet::UPTWAttributeSet()
@@ -120,6 +121,14 @@ void UPTWAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 			{
 				const float NewHealth = FMath::Clamp(CurrentHealth - RemainingDamage, 0.0f, GetMaxHealth());
 				SetHealth(NewHealth);
+
+				UAbilitySystemComponent* SourceASC = Data.EffectSpec.GetContext().GetOriginalInstigatorAbilitySystemComponent();
+				UAbilitySystemComponent* TargetASC = GetOwningAbilitySystemComponent();
+
+				UE_LOG(Log_AbilityBattle, Warning, TEXT("SourceASC: %p"), SourceASC);
+				UE_LOG(Log_AbilityBattle, Warning, TEXT("TargetASC: %p"), TargetASC);
+				
+				OnDamageApplied.Broadcast(TargetASC, SourceASC, RemainingDamage);
 			}
 			
 			
@@ -142,10 +151,10 @@ void UPTWAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 			}
 		}
 	}
-	
-	
-	
 
+
+
+	
 	AActor* TargetActor = nullptr;
 	ACharacter* TargetCharacter = nullptr;
 	if (Data.Target.AbilityActorInfo.IsValid() && Data.Target.AbilityActorInfo->AvatarActor.IsValid())

@@ -7,15 +7,13 @@
 #include "System/Session/PTWSessionConfig.h"
 #include "PTWServerBrowser.generated.h"
 
+class UPTWMainMenu;
 class UBorder;
 class UButton;
 class UVerticalBox;
 class UEditableText;
 class UCheckBox;
 class UPTWServerListRow;
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnServerBackAction);
-
 
 enum class EPTWRoundLimit : uint8;
 
@@ -62,6 +60,9 @@ protected:
 	void OnSessionMessageReceived(const FText& Message);
 	
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UPTWMainMenu> MainMenuClass;
+	
 	// 서버 탐색결과를 저장하는 리스트 위젯
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UVerticalBox> ServerListVerticalBox;
@@ -105,6 +106,7 @@ protected:
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> BackButton;
+	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> QuickMatchButton;
 	
@@ -119,9 +121,5 @@ protected:
 	
 private:
 	EPTWRoundLimit RoundLimit;
-	
-public:
-	UPROPERTY(BlueprintAssignable, Category= "Events")
-	FOnServerBackAction OnServerBackAction;
-	
+
 };

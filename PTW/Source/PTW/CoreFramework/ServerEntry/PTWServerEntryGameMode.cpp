@@ -48,11 +48,11 @@ void APTWServerEntryGameMode::InitGameLift()
 			FParse::Value(CommandLine, *MaxPlayers_cmd, SessionConfig.MaxPlayers);
 			
 			SessionSubsystem->CreateGameSession(SessionConfig, true);
-			FTimerHandle TempTimerHandle;
-			GetWorld()->GetTimerManager().SetTimer(TempTimerHandle, [=, this]()
-			{
-				SessionSubsystem->OnGameSessionActivated("1234");
-			}, 10.0f, false);
+			// FTimerHandle TempTimerHandle;
+			// GetWorld()->GetTimerManager().SetTimer(TempTimerHandle, [=, this]()
+			// {
+			// 	SessionSubsystem->OnGameSessionActivated("1234");
+			// }, 10.0f, false);
 			return;
 		}
 	}
@@ -240,7 +240,7 @@ void APTWServerEntryGameMode::InitGameLift()
                     error.m_errorMessage.IsEmpty() ? TEXT("Unknown error") : *error.m_errorMessage);
                 }
             }
-    	// FGenericPlatformMisc::RequestExit(false);
+    		FGenericPlatformMisc::RequestExit(false);
         });
          
     //This is the HealthCheck callback.

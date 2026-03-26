@@ -23,10 +23,10 @@ FString UPTWSessionSubsystem::GetSteamServerID()
 {
 	if (SessionInterface.IsValid())
 	{
-		FNamedOnlineSession* NamedSession = SessionInterface->GetNamedSession(NAME_GameSession);
-		if (NamedSession && NamedSession->SessionInfo.IsValid())
+		FNamedOnlineSession* CurrentGameSession = SessionInterface->GetNamedSession(NAME_GameSession);
+		if (CurrentGameSession && CurrentGameSession->SessionInfo.IsValid())
 		{
-			const FUniqueNetId& SessionId = NamedSession->SessionInfo->GetSessionId();
+			const FUniqueNetId& SessionId = CurrentGameSession->SessionInfo->GetSessionId();
 			FString ServerSteamIDStr = SessionId.ToString();
             
 			return ServerSteamIDStr;
@@ -34,6 +34,41 @@ FString UPTWSessionSubsystem::GetSteamServerID()
 	}
 	
 	return FString();
+}
+
+int32 UPTWSessionSubsystem::GetMaxPlayers()
+{
+	if (SessionInterface.IsValid())
+	{
+		FNamedOnlineSession* CurrentGameSession = SessionInterface->GetNamedSession(NAME_GameSession);
+		if (CurrentGameSession && CurrentGameSession->SessionInfo.IsValid())
+		{
+			return CurrentGameSession->NumOpenPublicConnections;
+		}
+	}
+	
+	return 16;
+}
+
+int32 UPTWSessionSubsystem::GetMaxRounds()
+{
+	if (SessionInterface.IsValid())
+	{
+		FNamedOnlineSession* CurrentGameSession = SessionInterface->GetNamedSession(NAME_GameSession);
+		if (CurrentGameSession && CurrentGameSession->SessionInfo.IsValid())
+		{
+			int32 RoundLimitTypeInt32;
+			if (CurrentGameSession->SessionSettings.Get(FName(PTWSessionKey::MaxRounds), RoundLimitTypeInt32))
+			{
+				if (RoundLimitTypeInt32 == GetMaxRoundsByLimit(EPTWRoundLimit::Long))
+				{
+					return GetMaxRoundsByLimit(EPTWRoundLimit::Long);
+				}
+			}
+		}
+	}
+	
+	return GetMaxRoundsByLimit(EPTWRoundLimit::Short);
 }
 
 void UPTWSessionSubsystem::OnGameSessionActivated(FString InGameLiftSessionId)
@@ -74,9 +109,8 @@ void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig, bo
 	
     TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
     SessionSettings->bIsLANMatch = false;											// Lan 연결 사용 여부
-    SessionSettings->bShouldAdvertise = !SessionConfig.bIsDedicatedServer;			// 공개 여부: 검색 노출 및 친구 초대 가능
+    SessionSettings->bShouldAdvertise = true;										// 공개 여부: 검색 노출 및 친구 초대 가능
     SessionSettings->bAllowJoinInProgress = true;									// 중간 난입 허용 여부
-	UE_LOG(LogTemp, Log, TEXT("bShouldAdvertise: %hs"), SessionSettings->bShouldAdvertise ? "true" : "false");
     SessionSettings->NumPublicConnections = SessionConfig.MaxPlayers;   
     
     SessionSettings->bIsDedicated = SessionConfig.bIsDedicatedServer;				// Dedicated Serer 여부
@@ -321,7 +355,7 @@ void UPTWSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig Sess
 	}
 	
 	// Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
-	Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
+	// Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
 	
 	if (IsRunningDedicatedServer())
 	{
@@ -367,7 +401,7 @@ void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasS
 {
 	if(!SessionInterface.IsValid()) return;
 	
-	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
+	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(DestroySessionDelegateHandle);
 	if (bWasSuccessful)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Steam Session Created Successfully!"));
@@ -393,6 +427,12 @@ void UPTWSessionSubsystem::LeaveGameSession()
 {
 	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] LeaveGameSession() called"));
 	
+	// 메인메뉴로 이동하여 이탈
+	if (APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController())
+	{
+		PC->ClientTravel(TEXT("MainMenu?closed"), TRAVEL_Absolute);
+	}
+	
 	if (SessionInterface.IsValid())
 	{
 		DestroySessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(
@@ -403,6 +443,31 @@ void UPTWSessionSubsystem::LeaveGameSession()
 	}
 	
 	OnDestroySessionComplete(NAME_GameSession, true);
+}
+
+bool UPTWSessionSubsystem::UnregisterPlayer(FName SessionName, const FUniqueNetId& PlayerId)
+{
+	if (SessionInterface.IsValid())
+	{
+		return SessionInterface->UnregisterPlayer(NAME_GameSession, PlayerId);
+		// UE_LOG(LogTemp, Log, TEXT("Player unregistered from session to clear ghost slot."));
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void UPTWSessionSubsystem::ExitGameSession()
+{
+	if (SessionInterface.IsValid())
+	{
+		if (SessionInterface.IsValid())
+		{
+			SessionInterface->DestroySession(NAME_GameSession); 
+			UE_LOG(LogTemp, Log, TEXT("Server's Steam Session Destroyed."));
+		}
+	}
 }
 
 void UPTWSessionSubsystem::QuickMatchGameSession()

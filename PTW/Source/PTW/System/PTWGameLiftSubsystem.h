@@ -72,7 +72,7 @@ public:
 	void CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
 	void SearchGameSessions();
 	FString GetUniquePlayerId() const;
-	
+
 protected:
 	bool ContainErrors(TSharedPtr<FJsonObject> JsonObject);
 	void DumpMetadata(TSharedPtr<FJsonObject> JsonObject);
@@ -110,6 +110,8 @@ public:
 	void SetGameLiftSdkModule(FGameLiftServerSDKModule* InGameLiftSdkModule) { GameLiftSdkModule = InGameLiftSdkModule; };
 	void SetInGameSession(const Aws::GameLift::Server::Model::GameSession& NewGameSession) { InGameSession = NewGameSession; };
 	
+	void RemovePlayerSession(FString PlayerSessionId);
+	void ExitGameSession();
 protected:
 	void ReportServerInfoToBackend_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	

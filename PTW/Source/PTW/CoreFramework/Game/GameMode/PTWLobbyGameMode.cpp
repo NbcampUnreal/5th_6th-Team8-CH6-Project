@@ -41,8 +41,15 @@ void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options,
 			PTWGameInstance->bIsFirstLobby = false;
 		}
 	}
-	GameFlowRule.MaxPlayers = UGameplayStatics::GetIntOption(Options, PTWSessionKey::MaxPlayers.ToString(), 16);
-	GameFlowRule.MaxRound  = UGameplayStatics::GetIntOption(Options, PTWSessionKey::MaxRounds.ToString(), 5);
+	
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
+		{
+			GameFlowRule.MaxPlayers = SessionSubsystem->GetMaxPlayers();
+			GameFlowRule.MaxRound = SessionSubsystem->GetMaxRounds();
+		}
+	}
 }
 
 void APTWLobbyGameMode::InitGameState()

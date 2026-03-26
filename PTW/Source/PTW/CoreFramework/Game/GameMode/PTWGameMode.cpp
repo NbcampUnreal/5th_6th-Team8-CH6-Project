@@ -121,54 +121,63 @@ void APTWGameMode::HandleStartingNewPlayer_Implementation(APlayerController* New
 
 void APTWGameMode::Logout(AController* Exiting)
 {
+	UPTWSessionSubsystem* SessionSubsystem = nullptr;
+	UPTWGameLiftSubsystem* GameLiftSubsystem = nullptr;
+	
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>();
+		GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>();
+	}
+	
 	FString PlayerName = TEXT("Unknown");
+	FUniqueNetIdRepl CachedUniqueNetId;
+	FString CachedPlayerSessionId;
+	
 	if (APlayerState* PS = Exiting->GetPlayerState<APlayerState>())
 	{
 		PlayerName = PS->GetPlayerName();
+		CachedUniqueNetId = PS->GetUniqueId();
+		if (APTWPlayerState* PTWPS = Cast<APTWPlayerState>(PS))
+		{
+			CachedPlayerSessionId = PTWPS->GetPlayerSessionId();
+		}
 	}
 	
 	Super::Logout(Exiting);
 	
-	if (APTWPlayerState* PTWPS = Exiting->GetPlayerState<APTWPlayerState>())
+	if (IsValid(SessionSubsystem))
 	{
-		FUniqueNetIdRepl UniqueNetId = PTWPS->GetUniqueId();
-		if (UniqueNetId.IsValid())
-		{
-			if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
-			{
-				IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
-				if (SessionInterface.IsValid())
-				{
-					SessionInterface->UnregisterPlayer(NAME_GameSession, *UniqueNetId.GetUniqueNetId());
-                    
-					UE_LOG(LogTemp, Log, TEXT("Player unregistered from session to clear ghost slot."));
-				}
-			}
-		}
-#if WITH_GAMELIFT
-		if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
-		{
-			FString SessionIdToRemove = PTWPS->GetPlayerSessionId();
-
-			if (!SessionIdToRemove.IsEmpty())
-			{
-				if (UGameInstance* GI = GetGameInstance())
-				{
-					if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
-					{
-						if (FGameLiftServerSDKModule* GameLiftSdkModule = GameLiftSubsystem->GetGameLiftSdkModule())
-						{
-							GameLiftSdkModule->RemovePlayerSession(SessionIdToRemove);
-							UE_LOG(LogTemp, Log, TEXT("GameLift 플레이어 세션 제거 완료: %s"), *SessionIdToRemove);
-						}
-					}
-				}
-			}
-		}
-#endif
+		SessionSubsystem->UnregisterPlayer(NAME_GameSession, *CachedUniqueNetId.GetUniqueNetId());
 	}
-
-
+	
+#if WITH_GAMELIFT
+	if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
+	{
+		if (IsValid(GameLiftSubsystem))
+		{
+			GameLiftSubsystem->RemovePlayerSession(CachedPlayerSessionId);
+		}
+		
+		if (GetNumPlayers() <= 0)
+		{
+			if (IsValid(SessionSubsystem))
+			{
+				SessionSubsystem->ExitGameSession();
+				FTimerHandle TempTimerHandle;
+				GetWorldTimerManager().SetTimer(TempTimerHandle, [=, this]()
+				{
+					GameLiftSubsystem->ExitGameSession();
+				}, 2.0f, false);
+			}
+		}
+	}
+#endif
+	if (GetNumPlayers() <= 0)
+	{
+		FGenericPlatformMisc::RequestExit(false);
+	}
+	
 	if (!IsValid(PTWGameState)) return;
 
 	// 플레이어가 로그 아웃 했을 때 ready 상태였을 경우 ReadyPlayer 감소 
@@ -486,10 +495,8 @@ void APTWGameMode::PreLogin(const FString& Options, const FString& Address, cons
 	if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
 	{
 		FString PlayerSessionId = UGameplayStatics::ParseOption(Options, TEXT("PlayerSessionId"));
-	
 		if (!PlayerSessionId.IsEmpty())
 		{
-			// Aws::GameLift::GenericOutcome Outcome = Aws::GameLift::Server::AcceptPlayerSession(TCHAR_TO_UTF8(*PlayerSessionId));
 			if (UGameInstance* GI = GetGameInstance())
 			{
 				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
@@ -505,17 +512,18 @@ void APTWGameMode::PreLogin(const FString& Options, const FString& Address, cons
 						else
 						{
 							UE_LOG(LogTemp, Error, TEXT("Failed to accept GameLift PlayerSession: %s"), *Outcome.GetError().m_errorMessage);
-							// 필요하다면 ErrorMessage에 값을 넣어 접속을 거부할 수도 있습니다.
-							// ErrorMessage = TEXT("Invalid Player Session"); 
+							ErrorMessage = TEXT("Invalid GameLift Player Session"); 
 						}
 					}
 				}
 			}
 		}
+		else
+		{
+			ErrorMessage = TEXT("Missing PlayerSessionId");
+		}
 	}
 #endif
-	// ErrorMessage = GameSession->ApproveLogin(Options);
-	// FGameModeEvents::GameModePreLoginEvent.Broadcast(this, UniqueId, ErrorMessage);
 }
 
 void APTWGameMode::TravelLevel()

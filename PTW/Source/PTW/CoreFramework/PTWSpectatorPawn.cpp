@@ -131,24 +131,8 @@ void APTWSpectatorPawn::Zoom(const FInputActionValue& Value)
 	CurrentZoomDistance = FMath::Clamp(CurrentZoomDistance, MinZoom, MaxZoom);
 }
 
-void APTWSpectatorPawn::SpectateNextPlayer()
+void APTWSpectatorPawn::StartSpectate()
 {
-	APawn* NewTargetView = nullptr;
-	if (FindNextSpectatorTarget(NewTargetView))
-	{
-		SetSpectatorTarget(NewTargetView);
-	}
-}
-
-void APTWSpectatorPawn::BeginSpectate()
-{
-	GetWorldTimerManager().SetTimer(SpectateTimer, this, &ThisClass::SpectateNextPlayer, 3.0f, false);
-	
-	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
-	{
-		GS->OnMiniGameEnded.AddUniqueDynamic(this, &ThisClass::BlockSpectating);
-	}
-	
 	if (APlayerController* PC = GetController<APlayerController>())
 	{
 		UPTWUIControllerComponent* UIControllerComponent = nullptr;
@@ -166,6 +150,26 @@ void APTWSpectatorPawn::BeginSpectate()
 				}
 			}
 		}
+	}
+	SpectateNextPlayer();
+}
+
+void APTWSpectatorPawn::SpectateNextPlayer()
+{
+	APawn* NewTargetView = nullptr;
+	if (FindNextSpectatorTarget(NewTargetView))
+	{
+		SetSpectatorTarget(NewTargetView);
+	}
+}
+
+void APTWSpectatorPawn::BeginSpectate()
+{
+	GetWorldTimerManager().SetTimer(SpectateTimer, this, &ThisClass::StartSpectate, 3.0f, false);
+	
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		GS->OnMiniGameEnded.AddUniqueDynamic(this, &ThisClass::BlockSpectating);
 	}
 }
 

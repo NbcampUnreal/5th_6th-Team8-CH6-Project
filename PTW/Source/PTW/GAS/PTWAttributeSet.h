@@ -7,6 +7,8 @@
 #include "AbilitySystemComponent.h"
 #include "PTWAttributeSet.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnDamageApplied, UAbilitySystemComponent* TargetActor, UAbilitySystemComponent* SourceActor, float FinalDamage);
+
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
 	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
 	GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
@@ -50,6 +52,7 @@ public:
 	FGameplayAttributeData IncomingDamage;
 	ATTRIBUTE_ACCESSORS(UPTWAttributeSet, IncomingDamage);
 
+	FOnDamageApplied OnDamageApplied;
 protected:
 	UFUNCTION()
 	void OnRep_Health(const FGameplayAttributeData& OldHealth);

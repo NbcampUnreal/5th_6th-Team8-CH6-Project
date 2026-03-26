@@ -30,7 +30,6 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void Client_HideDraftUI();
-
 	
 	UFUNCTION(Server, Reliable)
 	void Server_SelectedAbility(FName RowId);

@@ -26,6 +26,7 @@ public:
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
 	void OnMaxHealthChanged(const FOnAttributeChangeData& Data);
+	void HandleDamaged(UAbilitySystemComponent* Target, UAbilitySystemComponent* Source, float Damage);
 	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Armor, Category = "AttributeBattle|Attributes")
 	FGameplayAttributeData Armor;
@@ -35,6 +36,10 @@ public:
 	FGameplayAttributeData HealthRegen;
 	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, HealthRegen );
 
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ShieldRegen, Category = "AttributeBattle|Attributes")
+	FGameplayAttributeData ShieldRegen;
+	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, ShieldRegen);
+	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_LifeSteal, Category = "AttributeBattle|Attributes")
 	FGameplayAttributeData LifeSteal;
 	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, LifeSteal );
@@ -75,6 +80,9 @@ protected:
 	void OnRep_HealthRegen(const FGameplayAttributeData& OldHealthRegen);
 
 	UFUNCTION()
+	void OnRep_ShieldRegen(const FGameplayAttributeData& OldShieldRegen);
+	
+	UFUNCTION()
 	void OnRep_LifeSteal (const FGameplayAttributeData& OldLifeSteal);
 
 	UFUNCTION()
@@ -97,4 +105,26 @@ protected:
 
 	UFUNCTION()
 	void OnRep_DamageMultiplier (const FGameplayAttributeData& OldDamageMultiplier);
+	
+public:
+	void ApplyHealthRegen();
+	void ApplyShieldRegen();
+	
+	void StartHealthRegen();
+	void StopHealthRegen();
+
+	void StartShieldRegen();
+	void StopShieldRegen();
+	
+	float HealthRegenDelay = 10.f;
+	float ShieldRegenDelay = 5.f;
+	
+	bool bCanHealthRegen = false;
+	bool bCanShieldRegen = false;
+
+	FTimerHandle HealthRegenTimer;
+	FTimerHandle ShieldRegenTimer;
+
+	FTimerHandle HealthRegenLoopTimer;
+	FTimerHandle ShieldRegenLoopTimer;
 };

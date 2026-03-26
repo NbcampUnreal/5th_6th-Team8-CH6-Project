@@ -450,7 +450,7 @@ bool UPTWSessionSubsystem::UnregisterPlayer(FName SessionName, const FUniqueNetI
 	if (SessionInterface.IsValid())
 	{
 		return SessionInterface->UnregisterPlayer(NAME_GameSession, PlayerId);
-		UE_LOG(LogTemp, Log, TEXT("Player unregistered from session to clear ghost slot."));
+		// UE_LOG(LogTemp, Log, TEXT("Player unregistered from session to clear ghost slot."));
 	}
 	else
 	{

@@ -120,7 +120,11 @@ void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig, bo
 	
 	SessionSettings->Set(PTWSessionKey::MaxRounds, SessionConfig.MaxRounds, EOnlineDataAdvertisementType::ViaOnlineService);
     SessionSettings->Set(PTWSessionKey::ServerName, SessionConfig.ServerName, EOnlineDataAdvertisementType::ViaOnlineService);
-    // SessionSettings->Set(PTWSessionKey::MaxPlayers, SessionConfig.MaxPlayers, EOnlineDataAdvertisementType::ViaOnlineService);
+	
+	if (SessionConfig.bIsNoGameLift)
+	{
+		SessionSettings->Set(PTWSessionKey::NoGameLift, SessionConfig.bIsNoGameLift, EOnlineDataAdvertisementType::ViaOnlineService);
+	}
     
     if (!SessionInterface->CreateSession(0, NAME_GameSession, *SessionSettings))
     {

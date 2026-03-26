@@ -8,9 +8,11 @@
 #include "PTWPlayerController.h"
 #include "Components/SphereComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Character/Component/PTWUIControllerComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "UI/PTWUISubsystem.h"
 
 APTWSpectatorPawn::APTWSpectatorPawn()
 {
@@ -141,6 +143,57 @@ void APTWSpectatorPawn::SpectateNextPlayer()
 void APTWSpectatorPawn::BeginSpectate()
 {
 	GetWorldTimerManager().SetTimer(SpectateTimer, this, &ThisClass::SpectateNextPlayer, 3.0f, false);
+	
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		GS->OnMiniGameEnded.AddUniqueDynamic(this, &ThisClass::BlockSpectating);
+	}
+	
+	if (APlayerController* PC = GetController<APlayerController>())
+	{
+		UPTWUIControllerComponent* UIControllerComponent = nullptr;
+		if (UActorComponent* TempComponent = PC->GetComponentByClass(UPTWUIControllerComponent::StaticClass()))
+		{
+			UIControllerComponent = Cast<UPTWUIControllerComponent>(TempComponent);
+		}
+		if (IsValid(UIControllerComponent))
+		{
+			if (ULocalPlayer* LP = PC->GetLocalPlayer())
+			{
+				if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
+				{
+					UISubsystem->ShowSystemWidget(UIControllerComponent->SpectatorHUDClass);
+				}
+			}
+		}
+	}
+}
+
+void APTWSpectatorPawn::EndSpectate()
+{
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		GS->OnMiniGameEnded.RemoveAll(this);
+	}
+	
+	if (APlayerController* PC = GetController<APlayerController>())
+	{
+		UPTWUIControllerComponent* UIControllerComponent = nullptr;
+		if (UActorComponent* TempComponent = PC->GetComponentByClass(UPTWUIControllerComponent::StaticClass()))
+		{
+			UIControllerComponent = Cast<UPTWUIControllerComponent>(TempComponent);
+		}
+		if (IsValid(UIControllerComponent))
+		{
+			if (ULocalPlayer* LP = PC->GetLocalPlayer())
+			{
+				if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
+				{
+					UISubsystem->HideSystemWidget(UIControllerComponent->SpectatorHUDClass);
+				}
+			}
+		}
+	}
 }
 
 bool APTWSpectatorPawn::FindNextSpectatorTarget(APawn*& NewViewTarget)
@@ -234,6 +287,17 @@ void APTWSpectatorPawn::SetSpectatorTarget(APawn* NewViewTarget)
 	}
 	
 	SetViewTarget(false);
+	
+	if (APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC))
+	{
+		if (PTWPC->OnSpectateTargetChanged.IsBound())
+		{
+			if (APlayerState* PS = CurrentViewCharacter->GetPlayerState())
+			{
+				PTWPC->OnSpectateTargetChanged.Broadcast(PS->GetPlayerName());
+			}
+		}
+	}
 }
 
 void APTWSpectatorPawn::OnInputSpectateNext()
@@ -291,6 +355,7 @@ void APTWSpectatorPawn::BeginPlay()
 		UE_LOG(LogTemp, Log, TEXT("[PTWSpectatorPawn] BeginPlay() called"));
 	}
 	Super::BeginPlay();
+	
 }
 
 void APTWSpectatorPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -307,10 +372,7 @@ void APTWSpectatorPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	if (IsLocallyControlled())
 	{
 		BlockSpectating();
-		if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
-		{
-			GS->OnMiniGameEnded.RemoveAll(this);
-		}
+		EndSpectate();
 	}
 	
 	Super::EndPlay(EndPlayReason);
@@ -381,23 +443,15 @@ void APTWSpectatorPawn::PossessedBy(AController* NewController)
 	if (IsLocallyControlled())
 	{
 		BeginSpectate();
-		if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
-		{
-			GS->OnMiniGameEnded.AddUniqueDynamic(this, &ThisClass::BlockSpectating);
-		}
 	}
 }
 
-void APTWSpectatorPawn::OnRep_PlayerState()
+void APTWSpectatorPawn::OnRep_Controller()
 {
-	Super::OnRep_PlayerState();
+	Super::OnRep_Controller();
 	
 	if (IsLocallyControlled())
 	{
 		BeginSpectate();
-		if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
-		{
-			GS->OnMiniGameEnded.AddUniqueDynamic(this, &ThisClass::BlockSpectating);
-		}
 	}
 }

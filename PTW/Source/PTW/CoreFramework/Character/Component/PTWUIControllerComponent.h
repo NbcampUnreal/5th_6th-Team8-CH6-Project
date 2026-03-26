@@ -128,5 +128,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> PopupWidgetClass;
 	UPROPERTY(EditAnywhere, Category = "UI") 
+	TSubclassOf<UUserWidget> SpectatorHUDClass;
+	UPROPERTY(EditAnywhere, Category = "UI") 
 	TSubclassOf<class UPTWDevWidget> DevWidgetClass;
 };

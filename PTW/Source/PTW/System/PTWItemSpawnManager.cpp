@@ -439,19 +439,48 @@ FVector UPTWItemSpawnManager::GetGroundLocation(FVector StartLocation)
 	return StartLocation;
 }
 
-void UPTWItemSpawnManager::AddRestartPlayerItems(TArray<TObjectPtr<UPTWItemInstance>>& Items,
-                                                 APTWPlayerCharacter* TargetPlayer)
+void UPTWItemSpawnManager::CopyRestartPlayerItems(APTWPlayerCharacter* TargetPlayer)
 {
-	if (!TargetPlayer) return;
-	UPTWInventoryComponent* Inventory = TargetPlayer->GetInventoryComponent();
-	if (!Inventory) return;
+	UPTWInventoryComponent* Inven = TargetPlayer->GetInventoryComponent();
+	if (!Inven || !GetWorld()) return;
+	
+	TArray<TObjectPtr<UPTWWeaponInstance>> OldWeaponArr = Inven->GetWeaponArray();
+	
+	Inven->ClearWeaponArr();
 
-	for (auto& Item : Items)
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = TargetPlayer;
+	SpawnParams.Instigator = TargetPlayer;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	for (const auto& WeaponInst : OldWeaponArr)
 	{
-		if (Item)
+		if (!WeaponInst || !WeaponInst->ItemDef) continue;
+
+		UPTWItemDefinition* ItemDefinition = WeaponInst->ItemDef;
+		UPTWWeaponInstance* NewWeaponInst = NewObject<UPTWWeaponInstance>(Inven);
+		if (!NewWeaponInst) continue;
+		
+		APTWWeaponActor* Spawned1P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+		APTWWeaponActor* Spawned3P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+        
+		if (Spawned1P && Spawned3P)
 		{
-			Item->Rename(nullptr, Inventory);
-			Inventory->AddItem(Item);
+			Spawned1P->SetFirstPersonMode(true);
+			Spawned3P->SetFirstPersonMode(false);
+
+			NewWeaponInst->ItemDef = ItemDefinition;
+			NewWeaponInst->SpawnedWeapon1P = Spawned1P;
+			NewWeaponInst->SpawnedWeapon3P = Spawned3P;
+            
+			Spawned1P->SetWeaponItemInstance(NewWeaponInst);
+			Spawned3P->SetWeaponItemInstance(NewWeaponInst);
+			
+			NewWeaponInst->CopyProperties(*WeaponInst);
+			
+			Inven->AddItem(NewWeaponInst);
+			
+			TargetPlayer->GetWeaponComponent()->AttachWeaponToSocket(Spawned1P, Spawned3P, ItemDefinition->WeaponTag);
 		}
 	}
 }

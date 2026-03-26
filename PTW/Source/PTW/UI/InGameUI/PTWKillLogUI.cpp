@@ -37,9 +37,9 @@ void UPTWKillLogUI::UnbindGameStates()
 {
 	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
 	{
-		GS->OnKilllogBroadcast.RemoveAll(this);
+		GS->OnKilllogBroadcast.Clear();
 		
-		GS->OnKilllogBroadcastEx.RemoveAll(this);
+		GS->OnKilllogBroadcastEx.Clear();
 	}
 }
 

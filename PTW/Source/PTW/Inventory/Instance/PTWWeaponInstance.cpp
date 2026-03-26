@@ -87,3 +87,9 @@ APTWPlayerCharacter* UPTWWeaponInstance::GetItemInstanceOwner()
 	
 	return nullptr;
 }
+
+void UPTWWeaponInstance::CopyProperties(UPTWWeaponInstance& CopyInst)
+{
+	CurrentAmmo = CopyInst.CurrentAmmo;
+	bAlreadyUsing = CopyInst.bAlreadyUsing;
+}

@@ -252,6 +252,16 @@ void UPTWInventoryComponent::RemoveActiveItemGameplayAbilityHandle()
 	}
 }
 
+void UPTWInventoryComponent::ClearWeaponArr()
+{
+	WeaponArr.Empty();
+	RemoveWeaponData();
+	if (CurrentWeapon)
+	{
+		CurrentWeapon = nullptr;
+	}
+}
+
 // Called when the game starts
 void UPTWInventoryComponent::BeginPlay()
 {

@@ -133,7 +133,7 @@ void APTWBaseCharacter::BeginPlay()
 
 void APTWBaseCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	OnCharacterDied.RemoveAll(this);
+	OnCharacterDied.Clear();
 	
 	Super::EndPlay(EndPlayReason);
 }
@@ -153,6 +153,7 @@ void APTWBaseCharacter::GiveDefaultAbilities()
 		{
 			if (AbilitySystemComponent->FindAbilitySpecFromClass(AbilityClass))
 			{
+				UE_LOG(LogTemp, Warning, TEXT("이미 있음"));
 				continue;
 			}
 			FGameplayAbilitySpec Spec(AbilityClass, 1, INDEX_NONE, this);

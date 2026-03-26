@@ -88,6 +88,8 @@ public:
 	FORCEINLINE const TArray<TObjectPtr<UPTWItemInstance>>& GetAllItems() const { return ItemArr; }
 	
 	void RemoveActiveItemGameplayAbilityHandle();
+	
+	void ClearWeaponArr();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

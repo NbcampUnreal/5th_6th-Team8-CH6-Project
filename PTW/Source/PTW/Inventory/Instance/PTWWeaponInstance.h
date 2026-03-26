@@ -42,6 +42,8 @@ public:
 	
 	APTWPlayerCharacter* GetItemInstanceOwner();
 	
+	void CopyProperties(UPTWWeaponInstance& CopyInst);
+	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentAmmo)
 	int32 CurrentAmmo;

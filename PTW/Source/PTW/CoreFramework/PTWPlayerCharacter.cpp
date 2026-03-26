@@ -165,6 +165,7 @@ void APTWPlayerCharacter::InitAbilityActorInfo()
 	{
 		PS->GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
 		AbilitySystemComponent = PS->GetAbilitySystemComponent();
+		AbilitySystemComponent->RefreshAbilityActorInfo();
 		AttributeSet = PS->GetAttributeSet();
 
 		UE_LOG(LogTemp, Log, TEXT("[%s] InitAbilityActorInfo Success - Owner: %s"),
@@ -661,8 +662,8 @@ void APTWPlayerCharacter::OnPlayerDataLoaded(const FPTWPlayerData& NewData)
 			}
 			else
 			{
-				FItemArrayWrapper ItemArrayWrapper = MiniGameMode->GetOldPlayerItems(GetController());
-				SpawnSys->AddRestartPlayerItems(ItemArrayWrapper.Items, this);
+				// FItemArrayWrapper ItemArrayWrapper = MiniGameMode->GetOldPlayerItems(GetController());
+				// SpawnSys->AddRestartPlayerItems(ItemArrayWrapper.Items, this);
 			}
 		}
 		

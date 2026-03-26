@@ -61,7 +61,7 @@ public:
 
 	FVector GetGroundLocation(FVector StartLocation);
 	
-	void AddRestartPlayerItems(TArray<TObjectPtr<UPTWItemInstance>>& Items, APTWPlayerCharacter* TargetPlayer);
+	void CopyRestartPlayerItems(APTWPlayerCharacter* TargetPlayer);
 	
 protected:
 	/** 스폰 데이터 테이블 (RowName: ItemID, Value: ItemDefinition) */

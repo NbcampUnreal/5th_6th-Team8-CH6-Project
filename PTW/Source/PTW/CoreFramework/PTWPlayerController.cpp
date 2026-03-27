@@ -34,7 +34,7 @@
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-#include "System/PTWSessionSubsystem.h"
+#include "System/PTWSteamSessionSubsystem.h"
 #include "Weapon/PTWWeaponActor.h"
 #include "MiniGame/Item/BombItem/PTWBombActor.h"
 #include "OnlineSubsystemUtils.h"
@@ -118,9 +118,9 @@ void APTWPlayerController::Client_OpenMainMenu_Implementation()
 	UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>();
 	if (!GI) return;
 	
-	if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
+	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
 	{
-		SessionSubsystem->LeaveGameSession();
+		SteamSessionSubsystem->LeaveGameSession();
 	}
 }
 

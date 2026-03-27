@@ -7,7 +7,7 @@
 #include "OnlineSessionSettings.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Session/PTWSessionConfig.h"
-#include "PTWSessionSubsystem.generated.h"
+#include "PTWSteamSessionSubsystem.generated.h"
 
 USTRUCT(BlueprintType)
 struct FOnlineSessionSearchResultBP
@@ -21,9 +21,16 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllSessionSearchFinished);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSteamSessionMessageReceived, const FText&, Message);
 
 UCLASS()
-class PTW_API UPTWSessionSubsystem : public UGameInstanceSubsystem
+class PTW_API UPTWSteamSessionSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
+
+public:
+	static UPTWSteamSessionSubsystem* Get(const UObject* WorldContextObject);
+
+protected:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
 
 public:
 	FORCEINLINE IOnlineSessionPtr GetSessionInterface() const { return SessionInterface; };
@@ -41,7 +48,7 @@ public:
 	// 현재 세션에 설정된 최대 라운드 수 반환
 	int32 GetMaxRounds();
 	
-	// 현재 세션의 ShouldAdvertise를 변경
+	// 현재 세션을 활성화
 	void OnGameSessionActivated(FString InGameLiftSessionId);
 	
 	// 세셩 생성
@@ -79,10 +86,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void QuickMatchGameSession();
 	
+
 protected:
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual void Deinitialize() override;
-	
 	// 세션 생성 성공 시 호출
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig, bool bTravelOnSuccess);
 	

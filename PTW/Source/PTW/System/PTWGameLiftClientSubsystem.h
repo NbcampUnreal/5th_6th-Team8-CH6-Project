@@ -5,10 +5,7 @@
 #include "Session/PTWSessionConfig.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#if WITH_GAMELIFT
-#include "GameLiftServerSDK.h"
-#endif
-#include "PTWGameLiftSubsystem.generated.h"
+#include "PTWGameLiftClientSubsystem.generated.h"
 
 class UPTWAPIData;
 class FJsonObject;
@@ -17,21 +14,22 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionSearchComplete, co
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionMessageReceived, const FText&, Message);
 
 UCLASS()
-class PTW_API UPTWGameLiftSubsystem : public UGameInstanceSubsystem
+class PTW_API UPTWGameLiftClientSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 	
 public:
-	UPTWGameLiftSubsystem();
+	UPTWGameLiftClientSubsystem();
+	static UPTWGameLiftClientSubsystem* Get(const UObject* WorldContextObject);
 	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	
 public:
-	FString SerializeJsonContent(const TMap<FString, FString>& Params);
+	static FString SerializeJsonContent(const TMap<FString, FString>& Params);
 	template <typename T>
-	bool ParseDataFromJson(const FString& JsonString, T& OutStruct)
+	static bool ParseDataFromJson(const FString& JsonString, T& OutStruct)
 	{
 		TSharedPtr<FJsonObject> JsonObject;
 		TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(JsonString);
@@ -50,7 +48,7 @@ public:
 		return false;
 	}
 	template <typename T>
-	bool ParseDataArrayFromJson(const FString& JsonString, TArray<T>& OutArray)
+	static bool ParseDataArrayFromJson(const FString& JsonString, TArray<T>& OutArray)
 	{
 	    TSharedPtr<FJsonObject> JsonObject;
 	    TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(JsonString);
@@ -65,7 +63,6 @@ public:
 	    }
 	    return false;
 	}
-	void RequestListFleets();
 	void CreateGameSession(FPTWSessionConfig& SessionConfig);
 	void CheckSessionStatus(const FString& SessionId);
 	void DescribeGameSession(const FString& SessionId);
@@ -74,9 +71,6 @@ public:
 	FString GetUniquePlayerId() const;
 
 protected:
-	bool ContainErrors(TSharedPtr<FJsonObject> JsonObject);
-	void DumpMetadata(TSharedPtr<FJsonObject> JsonObject);
-	
 	void CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void CheckSessionStatus_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void DescribeGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
@@ -84,40 +78,14 @@ protected:
 	void WaitForSessionActivation(const FString& SessionId);
 	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	
-private:
-	void ListFleets_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UPTWAPIData> ClientAPIData;
-	
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UPTWAPIData> ServerAPIData;
+
 public:
 	FOnGameLiftSessionSearchComplete OnSessionSearchComplete;
 	FOnGameLiftSessionMessageReceived OnGameLiftSessionMessageReceived;
 private:
 	FTimerHandle CheckSessionLitmitTimer;
-	FDelegateHandle MapLoadDelegateHandle;
-
-#if WITH_GAMELIFT // 서버 전용 로직
-public:
-	void ReportServerInfoToBackend();
-	virtual void OnMapLoaded(UWorld* LoadedWorld);
-	FORCEINLINE FGameLiftServerSDKModule* GetGameLiftSdkModule() const { return GameLiftSdkModule; };
-	void SetupMapLoadDelegateHandle();
-	void SetGameLiftSdkModule(FGameLiftServerSDKModule* InGameLiftSdkModule) { GameLiftSdkModule = InGameLiftSdkModule; };
-	void SetInGameSession(const Aws::GameLift::Server::Model::GameSession& NewGameSession) { InGameSession = NewGameSession; };
-	
-	void RemovePlayerSession(FString PlayerSessionId);
-	void ExitGameSession();
-protected:
-	void ReportServerInfoToBackend_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	
-protected:
-	FGameLiftServerSDKModule* GameLiftSdkModule;
-	Aws::GameLift::Server::Model::GameSession InGameSession;
-	
-#endif
 };

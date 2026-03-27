@@ -4,8 +4,8 @@
 #include "PTWServerListRow.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "PTW/System/PTWSessionSubsystem.h"
-#include "System/PTWGameLiftSubsystem.h"
+#include "PTW/System/PTWSteamSessionSubsystem.h"
+#include "System/PTWGameLiftClientSubsystem.h"
 #include "System/Session/PTWSessionConfig.h"
 
 void UPTWServerListRow::SetupSessionMinimalInfo(const FOnlineSessionSearchResultBP& SearchResult)
@@ -14,11 +14,6 @@ void UPTWServerListRow::SetupSessionMinimalInfo(const FOnlineSessionSearchResult
 	const FOnlineSession& OnlineSession = SteamSessionInfo.Session;
 	
 	// 위젯 설정
-	// 서버 ID 설정
-	// FString SessionId = SteamSessionInfo.Session.SessionInfo->GetSessionId().ToString();
-	// FString HexRoomCode = FString::Printf(TEXT("%llX"), *SessionId);
-	// ServerID->SetText(FText::FromString(HexRoomCode));
-	
 	// 서버 이름 설정
 	FString ServerNameStr;
 	if (OnlineSession.SessionSettings.Get(FName(PTWSessionKey::ServerName), ServerNameStr))
@@ -86,9 +81,9 @@ void UPTWServerListRow::OnClickedJoinButton()
 	if (!OnlineSession.SessionSettings.bIsDedicated || bIsNoGameLift)
 	{
 		// 리슨 서버 접속
-		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
+		if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
 		{
-			SessionSubsystem->JoinGameSession(FOnlineSessionSearchResultBP(SteamSessionInfo));
+			SteamSessionSubsystem->JoinGameSession(FOnlineSessionSearchResultBP(SteamSessionInfo));
 		}
 	}
 	else
@@ -112,10 +107,10 @@ void UPTWServerListRow::OnClickedJoinButton()
 		}
 		
 		UE_LOG(LogTemp, Log, TEXT("GameLiftSessionId: %s"), *GameLiftSessionId);
-		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+		if (UPTWGameLiftClientSubsystem* GameLiftClientSubsystem = UPTWGameLiftClientSubsystem::Get(this))
 		{
-			const FString UniquePlayerId = GameLiftSubsystem->GetUniquePlayerId();
-			GameLiftSubsystem->CreatePlayerSession(UniquePlayerId, GameLiftSessionId);
+			const FString UniquePlayerId = GameLiftClientSubsystem->GetUniquePlayerId();
+			GameLiftClientSubsystem->CreatePlayerSession(UniquePlayerId, GameLiftSessionId);
 		}
 	}
 }

@@ -8,13 +8,10 @@
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "Debug/PTWLogCategorys.h"
-#include "Kismet/GameplayStatics.h"
 #include "MiniGame/Manager/PTWRoundEventManager.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "System/PTWScoreSubsystem.h"
-#include "System/PTWSessionSubsystem.h"
-#include "System/Session/PTWSessionConfig.h"
-#include "GameFramework/SpectatorPawn.h"
+#include "System/PTWSteamSessionSubsystem.h"
 
 APTWLobbyGameMode::APTWLobbyGameMode()
 {
@@ -44,10 +41,10 @@ void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options,
 	
 	if (UGameInstance* GI = GetGameInstance())
 	{
-		if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
+		if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
 		{
-			GameFlowRule.MaxPlayers = SessionSubsystem->GetMaxPlayers();
-			GameFlowRule.MaxRound = SessionSubsystem->GetMaxRounds();
+			GameFlowRule.MaxPlayers = SteamSessionSubsystem->GetMaxPlayers();
+			GameFlowRule.MaxRound = SteamSessionSubsystem->GetMaxRounds();
 		}
 	}
 }
@@ -308,9 +305,9 @@ void APTWLobbyGameMode::ReturnToMainMenu()
 	UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>();
 	if (!GI) return;
 	
-	if (UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>())
+	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
 	{
-		SessionSubsystem->LeaveGameSession();
+		SteamSessionSubsystem->LeaveGameSession();
 	}
 }
 

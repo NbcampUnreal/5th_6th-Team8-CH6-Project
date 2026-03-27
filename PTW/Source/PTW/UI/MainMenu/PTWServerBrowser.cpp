@@ -13,8 +13,8 @@
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "PTW/UI/MainMenu/PTWServerListRow.h"
-#include "PTW/System/PTWSessionSubsystem.h"
-#include "System/PTWGameLiftSubsystem.h"
+#include "PTW/System/PTWSteamSessionSubsystem.h"
+#include "System/PTWGameLiftClientSubsystem.h"
 #include "System/Session/PTWSessionConfig.h"
 #include "UI/PTWUISubsystem.h"
 
@@ -85,14 +85,14 @@ void UPTWServerBrowser::NativeConstruct()
 	UGameInstance* GameInstance = GetGameInstance();
 	if (IsValid(GameInstance))
 	{
-		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
+		if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
 		{
-			SessionSubsystem->OnSessionSearchComplete.AddUniqueDynamic(this, &ThisClass::OnFindSessionsComplete);
-			SessionSubsystem->OnSteamSessionMessageReceived.AddUniqueDynamic(this, &ThisClass::OnSessionMessageReceived);
+			SteamSessionSubsystem->OnSessionSearchComplete.AddUniqueDynamic(this, &ThisClass::OnFindSessionsComplete);
+			SteamSessionSubsystem->OnSteamSessionMessageReceived.AddUniqueDynamic(this, &ThisClass::OnSessionMessageReceived);
 		}
-		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+		if (UPTWGameLiftClientSubsystem* GameLiftClientSubsystem = UPTWGameLiftClientSubsystem::Get(this))
 		{
-			GameLiftSubsystem->OnGameLiftSessionMessageReceived.AddUniqueDynamic(this, &ThisClass::OnSessionMessageReceived);
+			GameLiftClientSubsystem->OnGameLiftSessionMessageReceived.AddUniqueDynamic(this, &ThisClass::OnSessionMessageReceived);
 		}
 	}
 	
@@ -180,17 +180,17 @@ void UPTWServerBrowser::OnClickedCreateServerButton()
 	if (!SessionConfig.bIsDedicatedServer)
 	{
 		// 리슨서버로 세션 생성
-		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
+		if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
 		{
-			SessionSubsystem->CreateGameSession(SessionConfig, true);
+			SteamSessionSubsystem->CreateGameSession(SessionConfig, true);
 		}
 	}
 	else
 	{
 		// 데디서버로 원격 세션 생성
-		if (UPTWGameLiftSubsystem* GameLiftSubsystem = GameInstance->GetSubsystem<UPTWGameLiftSubsystem>())
+		if (UPTWGameLiftClientSubsystem* GameLiftClientSubsystem = UPTWGameLiftClientSubsystem::Get(this))
 		{
-			GameLiftSubsystem->CreateGameSession(SessionConfig);
+			GameLiftClientSubsystem->CreateGameSession(SessionConfig);
 		}
 	}
 }
@@ -205,9 +205,9 @@ void UPTWServerBrowser::OnClickedFindServerButton()
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!IsValid(GameInstance)) return;
 	
-	if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())
+	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
 	{
-		SessionSubsystem->FindGameSession();
+		SteamSessionSubsystem->FindGameSession();
 	}
 }
 
@@ -216,10 +216,10 @@ void UPTWServerBrowser::OnClickedQuickMatchButton()
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!IsValid(GameInstance)) return;
 	
-	UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>();
-	if (!IsValid(SessionSubsystem)) return;
-	
-	SessionSubsystem->QuickMatchGameSession();
+	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
+	{
+		SteamSessionSubsystem->QuickMatchGameSession();
+	}
 }
 
 void UPTWServerBrowser::OnClickedShortRoundButton()

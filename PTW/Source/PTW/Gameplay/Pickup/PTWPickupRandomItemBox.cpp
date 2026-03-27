@@ -40,8 +40,7 @@ void APTWPickupRandomItemBox::OnPickedUp(class APTWPlayerCharacter* Player)
 		
 		if (!SelectedItem.ActivateText.IsEmpty())
 		{
-			// 26.03.27
-			//Controller->SendMessage(SelectedItem.ActivateText, ENotificationPriority::Normal, 3);
+			Controller->SendMessage(SelectedItem.ActivateText, ENotificationPriority::Normal, 3);
 		}
 	}
 	

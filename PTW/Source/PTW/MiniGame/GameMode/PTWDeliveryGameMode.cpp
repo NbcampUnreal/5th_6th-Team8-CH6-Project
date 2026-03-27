@@ -502,8 +502,7 @@ void APTWDeliveryGameMode::SendMessgeBeginPlay()
  #define LOCTEXT_NAMESPACE "DeliveryGameMode"
  			FText BeginSendMessage = LOCTEXT("DeliveryBeginMsg", "Race to the finish line! Out of energy? Find a charging station to speed up!");
  #undef LOCTEXT_NAMESPACE
- 			// 26.03.27
- 			//PC->SendMessage(BeginSendMessage, ENotificationPriority::Normal, 10);
+ 			PC->SendMessage(BeginSendMessage, ENotificationPriority::Normal, 10);
  		}
  	}
 }

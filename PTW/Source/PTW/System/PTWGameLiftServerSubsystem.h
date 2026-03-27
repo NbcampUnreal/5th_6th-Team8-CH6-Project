@@ -42,7 +42,10 @@ public:
 	void SetupMapLoadDelegateHandle();
 	virtual void OnMapLoaded(UWorld* LoadedWorld);
 	
-	void ReportServerInfoToBackend();
+	// 현재 세션을 Ready(준비됨) 상태로
+    void UpdateSessionToReady();
+	
+	void UpdateGameSession();
 	
 	// 플레이어 세션이 유효한지 검증
 	bool AcceptPlayerSession(FString PlayerSessionId);
@@ -50,8 +53,10 @@ public:
 	// 종료한 플레이어 세션을 제거
 	void RemovePlayerSession(FString PlayerSessionId);
 	void ExitGameSession();
+	
 protected:
-	void ReportServerInfoToBackend_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void OnUpdateSessionToReadyComplete(FName SessionName, bool bWasSuccessful);
+	void UpdateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 protected:
 	FGameLiftServerSDKModule* GameLiftSdkModule;
@@ -59,5 +64,6 @@ protected:
 
 private:
 	FDelegateHandle MapLoadDelegateHandle;
+	FDelegateHandle UpdateSessionCompleteDelegateHandle;
 #endif
 };

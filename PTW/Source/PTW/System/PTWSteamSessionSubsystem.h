@@ -48,9 +48,6 @@ public:
 	// 현재 세션에 설정된 최대 라운드 수 반환
 	int32 GetMaxRounds();
 	
-	// 현재 세션을 활성화
-	void OnGameSessionActivated(FString InGameLiftSessionId);
-	
 	// 세셩 생성
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void CreateGameSession(FPTWSessionConfig SessionConfig, bool bTravelOnSuccess);
@@ -118,11 +115,13 @@ public:
 	FOnSessionSearchComplete OnSessionSearchComplete;
 	FOnAllSessionSearchFinished OnAllSessionSearchFinished;
 	FOnSteamSessionMessageReceived OnSteamSessionMessageReceived;
+	
 protected:
+	FDelegateHandle SteamLoginCompletedHandle;
 	FDelegateHandle CreateSessionCompleteDelegateHandle;
 	FDelegateHandle DestroySessionDelegateHandle;
 	FDelegateHandle JoinSessionCompleteDelegateHandle;
 	FDelegateHandle FindSessionsCompleteDelegateHandle;
-	FDelegateHandle SteamLoginCompletedHandle;
+	
 private:
 };

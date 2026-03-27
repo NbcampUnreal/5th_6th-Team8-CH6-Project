@@ -191,6 +191,7 @@ void APTWServerEntryGameMode::InitGameLift()
 		
 		GameLiftSubsystem->SetupMapLoadDelegateHandle();
 		GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
+		GameLiftSdkModule->ActivateGameSession();
 		
 		AsyncTask(ENamedThreads::GameThread, [=, this]()
 		{	

@@ -114,28 +114,6 @@ int32 UPTWSteamSessionSubsystem::GetMaxRounds()
 	return GetMaxRoundsByLimit(EPTWRoundLimit::Short);
 }
 
-void UPTWSteamSessionSubsystem::OnGameSessionActivated(FString InGameLiftSessionId)
-{
-	if (!SessionInterface.IsValid()) return;
-	
-	if (FOnlineSessionSettings* NewSettings = SessionInterface->GetSessionSettings(NAME_GameSession))
-	{
-		FString Part1 = InGameLiftSessionId.Left(100);
-		FString Part2 = InGameLiftSessionId.Mid(100);
-		NewSettings->Set(FName("GameLiftSessionId_1"), Part1, EOnlineDataAdvertisementType::ViaOnlineService);
-		NewSettings->Set(FName("GameLiftSessionId_2"), Part2, EOnlineDataAdvertisementType::ViaOnlineService);
-		
-		if (SessionInterface->UpdateSession(NAME_GameSession, *NewSettings, true))
-		{
-			UE_LOG(LogTemp, Log, TEXT("Session update requested."));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Failed to start session update."));
-		}
-	}
-}
-
 void UPTWSteamSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig, bool bTravelOnSuccess)
 {
 	if(!SessionInterface.IsValid()) return;

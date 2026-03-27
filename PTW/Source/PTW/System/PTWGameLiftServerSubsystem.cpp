@@ -64,8 +64,7 @@ void UPTWGameLiftServerSubsystem::OnMapLoaded(UWorld* LoadedWorld)
 	
 	if (GameLiftSdkModule)
 	{
-		GameLiftSdkModule->ActivateGameSession();
-		ReportServerInfoToBackend();
+		RequestGameSessionUpdate();
 	}
 	
 	if (MapLoadDelegateHandle.IsValid())
@@ -75,21 +74,61 @@ void UPTWGameLiftServerSubsystem::OnMapLoaded(UWorld* LoadedWorld)
 	}
 }
 
-void UPTWGameLiftServerSubsystem::ReportServerInfoToBackend()
+void UPTWGameLiftServerSubsystem::UpdateSessionToReady()
 {
-	// FString GameSessionId = FString(InGameSession.GetGameSessionId());
+	IOnlineSessionPtr SessionInterface = nullptr;
+	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
+	{
+		SessionInterface = SteamSessionSubsystem->GetSessionInterface();
+	}
+	if (!SessionInterface.IsValid()) return;
+	
+	SessionInterface->ClearOnUpdateSessionCompleteDelegate_Handle(UpdateSessionCompleteDelegateHandle);
+	
+	FString GameLiftSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
+	if (FOnlineSessionSettings* NewSettings = SessionInterface->GetSessionSettings(NAME_GameSession))
+	{
+		FString Part1 = GameLiftSessionId.Left(100);
+		FString Part2 = GameLiftSessionId.Mid(100);
+		NewSettings->Set(FName("GameLiftSessionId_1"), Part1, EOnlineDataAdvertisementType::ViaOnlineService);
+		NewSettings->Set(FName("GameLiftSessionId_2"), Part2, EOnlineDataAdvertisementType::ViaOnlineService);
+		NewSettings->Set(FName("Status"), TEXT("Ready"), EOnlineDataAdvertisementType::ViaOnlineService);
+		
+		UpdateSessionCompleteDelegateHandle = SessionInterface->AddOnUpdateSessionCompleteDelegate_Handle(
+			FOnUpdateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnUpdateSessionToReadyComplete);
+			
+		if (SessionInterface->UpdateSession(NAME_GameSession, *NewSettings, true))
+		{
+			UE_LOG(LogTemp, Log, TEXT("Session update requested."));
+		}
+		else
+		{
+			SessionInterface->ClearOnUpdateSessionCompleteDelegate_Handle(UpdateSessionCompleteDelegateHandle);
+			UE_LOG(LogTemp, Warning, TEXT("Failed to start session update."));
+		}
+	}
+}
+
+void UPTWGameLiftServerSubsystem::OnUpdateSessionToReadyComplete(FName SessionName, bool bWasSuccessful)
+{
+	IOnlineSessionPtr SessionInterface = nullptr;
+	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
+	{
+		SessionInterface = SteamSessionSubsystem->GetSessionInterface();
+	}
+	if (!SessionInterface.IsValid()) return;
+	
+	SessionInterface->ClearOnUpdateSessionCompleteDelegate_Handle(UpdateSessionCompleteDelegateHandle);
+}
+
+void UPTWGameLiftServerSubsystem::UpdateGameSession()
+{
 	FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
 	FString SteamId;
-	
-	if (UWorld* World = GetWorld())
+
+	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
 	{
-		if(UGameInstance* GI = World->GetGameInstance())
-		{
-			if (UPTWSteamSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSteamSessionSubsystem>())
-			{
-				SteamId = SessionSubsystem->GetSteamServerID();
-			}
-		}
+		SteamId = SteamSessionSubsystem->GetSteamServerID();
 	}
 	
 	UE_LOG(LogTemp, Warning, TEXT("GameSessionId: %s"), *GameSessionId);
@@ -99,9 +138,9 @@ void UPTWGameLiftServerSubsystem::ReportServerInfoToBackend()
 	{
 		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend SteamId Is Valid"));
 		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
-		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::ReportServerInfoToBackend_Response);
+		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::UpdateGameSession_Response);
 		
-		const FString APIUrl = ServerAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::ReportServerInfoToBackend);
+		const FString APIUrl = ServerAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::UpdateGameSession);
 		Request->SetURL(APIUrl);
 		Request->SetVerb(TEXT("POST"));
 		Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -121,6 +160,26 @@ void UPTWGameLiftServerSubsystem::ReportServerInfoToBackend()
 	}
 }
 
+void UPTWGameLiftServerSubsystem::UpdateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
+	{
+		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend_Response Successful"));
+		UE_LOG(LogTemp, Log, TEXT("Successfully reported Steam ID to Backend."));
+		FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
+		if (!GameSessionId.IsEmpty())
+		{
+			UpdateSessionToReady();
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend_Response Failed"));
+		UE_LOG(LogTemp, Error, TEXT("Failed to report Steam ID to Backend."));
+	}
+}
+
+
 bool UPTWGameLiftServerSubsystem::AcceptPlayerSession(FString PlayerSessionId)
 {
 	FGameLiftGenericOutcome Outcome = GameLiftSdkModule->AcceptPlayerSession(PlayerSessionId);
@@ -134,28 +193,6 @@ bool UPTWGameLiftServerSubsystem::AcceptPlayerSession(FString PlayerSessionId)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to accept GameLift PlayerSession: %s"), *Outcome.GetError().m_errorMessage);
 		return false;
-	}
-}
-
-void UPTWGameLiftServerSubsystem::ReportServerInfoToBackend_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
-	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
-	{
-		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend_Response Successful"));
-		UE_LOG(LogTemp, Log, TEXT("Successfully reported Steam ID to Backend."));
-		FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
-		if (!GameSessionId.IsEmpty())
-		{
-			if (UPTWSteamSessionSubsystem* SessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
-			{
-				SessionSubsystem->OnGameSessionActivated(GameSessionId);
-			}
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend_Response Failed"));
-		UE_LOG(LogTemp, Error, TEXT("Failed to report Steam ID to Backend."));
 	}
 }
 

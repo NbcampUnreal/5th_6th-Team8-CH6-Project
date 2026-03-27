@@ -11,6 +11,6 @@ namespace GameplayServerTags
 		UE_DEFINE_GAMEPLAY_TAG_COMMENT(DescribeGameSession, "GameplayServerTags.GameSessionsAPI.DescribeGameSession", "세션 정보");
 		UE_DEFINE_GAMEPLAY_TAG_COMMENT(SearchGameSessions, "GameplayServerTags.GameSessionsAPI.SearchGameSessions", "세션 검색");
 		UE_DEFINE_GAMEPLAY_TAG_COMMENT(CheckSessionStatus, "GameplayServerTags.GameSessionsAPI.CheckSessionStatus", "세션 상태 탐색");
-		UE_DEFINE_GAMEPLAY_TAG_COMMENT(ReportServerInfoToBackend, "GameplayServerTags.GameSessionsAPI.ReportServerInfoToBackend", "서버정보 DB에 전송");
+		UE_DEFINE_GAMEPLAY_TAG_COMMENT(UpdateGameSession, "GameplayServerTags.GameSessionsAPI.UpdateGameSession", "스팀Id 업데이트");
 	}
 }

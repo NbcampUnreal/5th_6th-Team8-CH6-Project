@@ -151,12 +151,8 @@ void UPTWGameLiftClientSubsystem::CheckSessionStatus_Response(FHttpRequestPtr Re
 		}
 		return;
 	}
-	
-	FGameSessionListsTable GameSessionLists;
-	if (ParseDataFromJson<FGameSessionListsTable>(Response->GetContentAsString(), GameSessionLists))
-	{
-		TryJoinGameSession(GameSessionLists.GameSessionId, GameSessionLists.SteamId, GameSessionLists.Status);
-	}
+
+	TryJoinGameSession(GameSessionLists.GameSessionId, GameSessionLists.SteamId, GameSessionLists.Status);
 }
 
 void UPTWGameLiftClientSubsystem::TryJoinGameSession(const FString& SessionId, const FString& SteamId, const FString& Status)

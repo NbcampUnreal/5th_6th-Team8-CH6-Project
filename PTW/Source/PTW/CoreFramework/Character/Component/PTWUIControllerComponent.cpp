@@ -55,7 +55,7 @@ void UPTWUIControllerComponent::InitializeUIComponent(APTWPlayerController* InPC
 		World->GetTimerManager().SetTimer(NameTagTimerHandle, this, &UPTWUIControllerComponent::UpdateNameTagsVisibility, NameTagUpdateInterval, true);
 	}
 
-	CreateUI();
+	//CreateUI();
 }
 
 void UPTWUIControllerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -98,6 +98,7 @@ void UPTWUIControllerComponent::CreateUI()
 
 	// 2. 본격적인 UI 생성
 	UISubsystem->ClearAllUI();
+	UISubsystem->StackReset();
 	UE_LOG(LogTemp, Log, TEXT("[UIComponent] UISubsystem ClearAllUI 완료."));
 
 	// ★ HUD 생성부 검사
@@ -160,8 +161,21 @@ void UPTWUIControllerComponent::CreateUI()
 			UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, true);
 		}
 	}
+	if (DelegateUI)
+	{
+		UISubsystem->CreatePersistentWidget(DelegateUI, 1);
+		UISubsystem->SetWidgetVisibility(DelegateUI, true);
+	}
 
 	UE_LOG(LogTemp, Warning, TEXT("[UIComponent] CreateUI 로직 완료!"));
+}
+
+void UPTWUIControllerComponent::ReInitializeUI()
+{
+	if (UISubsystem)
+	{
+		UISubsystem->TryInitializeHUDASC();
+	}
 }
 
 void UPTWUIControllerComponent::ToggleRankingBoard(bool bShow)
@@ -361,7 +375,7 @@ void UPTWUIControllerComponent::ShowDamageIndicator(FVector DamageCauserLocation
 
 void UPTWUIControllerComponent::Client_ShowNotification_Implementation(const FNotificationData& Data)
 {
-	if (!OwnerPC || !UISubsystem) return;
+	if (!OwnerPC || !IsValid(UISubsystem)) return;
 
 	UISubsystem->PushNotification(Data);
 }

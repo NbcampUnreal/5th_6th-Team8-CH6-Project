@@ -97,13 +97,14 @@ public:
 	/* 초기화 */
 	void ClearAllUI();
 
+	/* HUD 초기화 */
+	void TryInitializeHUDASC();
+
 private:
 	/* Helpers */
 	APlayerController* GetPlayerController() const;
 
 	void ApplyInputPolicy(EUIInputPolicy Policy);
-
-	void TryInitializeHUDASC();
 
 	/* 입력정책 기본값 저장 */
 	UPROPERTY()

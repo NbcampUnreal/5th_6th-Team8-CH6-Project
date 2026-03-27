@@ -4,8 +4,9 @@
 #include "PTWServerEntryGameMode.h"
 #include "CoreFramework/Game/GameSession/PTWGameSession.h"
 #include "Kismet/GameplayStatics.h"
-#include "System/PTWGameLiftSubsystem.h"
-#include "System/PTWSessionSubsystem.h"
+#include "System/PTWGameLiftClientSubsystem.h"
+#include "System/PTWGameLiftServerSubsystem.h"
+#include "System/PTWSteamSessionSubsystem.h"
 #include "System/Session/PTWSessionConfig.h"
 
 DEFINE_LOG_CATEGORY(GameServerLog);
@@ -32,7 +33,7 @@ void APTWServerEntryGameMode::InitGameLift()
 	
 	if (FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
 	{
-		if (UPTWSessionSubsystem* SessionSubsystem = GetGameInstance()->GetSubsystem<UPTWSessionSubsystem>())
+		if (UPTWSteamSessionSubsystem* SessionSubsystem = GetGameInstance()->GetSubsystem<UPTWSteamSessionSubsystem>())
 		{
 			FPTWSessionConfig SessionConfig;
 			SessionConfig.ServerName = TEXT("NonGameLiftServer");
@@ -185,22 +186,18 @@ void APTWServerEntryGameMode::InitGameLift()
         FString GameSessionId = FString(InGameSession.GetGameSessionId());
         UE_LOG(GameServerLog, Log, TEXT("GameSession Initializing: %s"), *GameSessionId);
 		
-		UGameInstance* GI = GetGameInstance();
-		if (!IsValid(GI)) return;
-		
-		UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>();
+		UPTWGameLiftServerSubsystem* GameLiftSubsystem = UPTWGameLiftServerSubsystem::Get(this);
 		if (!IsValid(GameLiftSubsystem)) return;
 		
-		// GameLiftSdkModule->ActivateGameSession();
 		GameLiftSubsystem->SetupMapLoadDelegateHandle();
 		GameLiftSubsystem->SetGameLiftSdkModule(GameLiftSdkModule);
 		
 		AsyncTask(ENamedThreads::GameThread, [=, this]()
 		{	
-			UPTWSessionSubsystem* SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>();
+			UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
 			FPTWSessionConfig SessionConfig;
 			SessionConfig.bIsDedicatedServer = true;
-			SessionSubsystem->CreateGameSession(SessionConfig, true);
+			SteamSessionSubsystem->CreateGameSession(SessionConfig, true);
 		});
 	});
     //OnProcessTerminate callback. Amazon GameLift Servers will invoke this callback before shutting down an instance hosting this game server.

@@ -3,7 +3,6 @@
 
 #include "PTWGameMode.h"
 
-#include "OnlineSubsystem.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "CoreFramework/PTWPlayerState.h"
@@ -11,13 +10,10 @@
 #include "Debug/PTWLogCategorys.h"
 #include "Kismet/GameplayStatics.h"
 #include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
-#include "System/PTWGameLiftSubsystem.h"
+#include "System/PTWGameLiftServerSubsystem.h"
 #include "System/PTWScoreSubsystem.h"
-#include "System/PTWSessionSubsystem.h"
+#include "System/PTWSteamSessionSubsystem.h"
 
-#if WITH_GAMELIFT
-#include "GameLiftServerSDK.h"
-#endif
 
 APTWGameMode::APTWGameMode()
 {
@@ -121,14 +117,6 @@ void APTWGameMode::HandleStartingNewPlayer_Implementation(APlayerController* New
 
 void APTWGameMode::Logout(AController* Exiting)
 {
-	UPTWSessionSubsystem* SessionSubsystem = nullptr;
-	UPTWGameLiftSubsystem* GameLiftSubsystem = nullptr;
-	
-	if (UGameInstance* GI = GetGameInstance())
-	{
-		SessionSubsystem = GI->GetSubsystem<UPTWSessionSubsystem>();
-		GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>();
-	}
 	
 	FString PlayerName = TEXT("Unknown");
 	FUniqueNetIdRepl CachedUniqueNetId;
@@ -146,28 +134,28 @@ void APTWGameMode::Logout(AController* Exiting)
 	
 	Super::Logout(Exiting);
 	
-	if (IsValid(SessionSubsystem))
+	UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
+	if (IsValid(SteamSessionSubsystem))
 	{
-		SessionSubsystem->UnregisterPlayer(NAME_GameSession, *CachedUniqueNetId.GetUniqueNetId());
+		SteamSessionSubsystem->UnregisterPlayer(NAME_GameSession, *CachedUniqueNetId.GetUniqueNetId());
 	}
 	
 #if WITH_GAMELIFT
+	UPTWGameLiftServerSubsystem* GameLiftServerSubsystem = UPTWGameLiftServerSubsystem::Get(this);
 	if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
 	{
-		if (IsValid(GameLiftSubsystem))
+		if (IsValid(GameLiftServerSubsystem))
 		{
-			GameLiftSubsystem->RemovePlayerSession(CachedPlayerSessionId);
-		}
-		
-		if (GetNumPlayers() <= 0)
-		{
-			if (IsValid(SessionSubsystem))
+			// 로그아웃한 PlayerSession 제거
+			GameLiftServerSubsystem->RemovePlayerSession(CachedPlayerSessionId);
+			
+			if (GetNumPlayers() <= 0)
 			{
-				SessionSubsystem->ExitGameSession();
+				GameLiftServerSubsystem->ExitGameSession();
 				FTimerHandle TempTimerHandle;
 				GetWorldTimerManager().SetTimer(TempTimerHandle, [=, this]()
 				{
-					GameLiftSubsystem->ExitGameSession();
+					GameLiftServerSubsystem->ExitGameSession();
 				}, 2.0f, false);
 			}
 		}
@@ -499,24 +487,13 @@ void APTWGameMode::PreLogin(const FString& Options, const FString& Address, cons
 		FString PlayerSessionId = UGameplayStatics::ParseOption(Options, TEXT("PlayerSessionId"));
 		if (!PlayerSessionId.IsEmpty())
 		{
-			if (UGameInstance* GI = GetGameInstance())
+			UPTWGameLiftServerSubsystem* GameLiftServerSubsystem = UPTWGameLiftServerSubsystem::Get(this);
+			if (IsValid(GameLiftServerSubsystem))
 			{
-				if (UPTWGameLiftSubsystem* GameLiftSubsystem = GI->GetSubsystem<UPTWGameLiftSubsystem>())
+				bool bIsSuccess = GameLiftServerSubsystem->AcceptPlayerSession(PlayerSessionId);
+				if (!bIsSuccess)
 				{
-					if (FGameLiftServerSDKModule* GameLiftSdkModule = GameLiftSubsystem->GetGameLiftSdkModule())
-					{
-						FGameLiftGenericOutcome Outcome = GameLiftSdkModule->AcceptPlayerSession(PlayerSessionId);
-        
-						if (Outcome.IsSuccess())
-						{
-							UE_LOG(LogTemp, Log, TEXT("GameLift PlayerSession Accepted: %s"), *PlayerSessionId);
-						}
-						else
-						{
-							UE_LOG(LogTemp, Error, TEXT("Failed to accept GameLift PlayerSession: %s"), *Outcome.GetError().m_errorMessage);
-							ErrorMessage = TEXT("Invalid GameLift Player Session"); 
-						}
-					}
+					ErrorMessage = TEXT("Invalid GameLift Player Session");
 				}
 			}
 		}

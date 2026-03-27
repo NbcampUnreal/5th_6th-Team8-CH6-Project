@@ -25,6 +25,7 @@ public:
 	void OnDraftSelected(FName RowId);
 
 	void OnShieldChanged(const FOnAttributeChangeData& Data);
+	void OnMaxShieldChanged(const FOnAttributeChangeData& Data);
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UHorizontalBox> HorizontalBox;

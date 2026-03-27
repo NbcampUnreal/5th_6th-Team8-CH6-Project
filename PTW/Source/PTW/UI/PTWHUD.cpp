@@ -20,7 +20,14 @@ void APTWHUD::BeginPlay()
 void APTWHUD::FindPlayerController()
 {
 	APlayerController* PC = GetOwningPlayerController();
-	if (!PC)
+	APlayerState* PS = nullptr;
+
+	if (PC)
+	{
+		PS = PC->PlayerState;
+	}
+
+	if (!PC || !PS)
 	{
 		GetWorld()->GetTimerManager().SetTimer(
 			FindPlayerControllerTimerHandle,

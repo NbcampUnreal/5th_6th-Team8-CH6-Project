@@ -92,6 +92,7 @@ public:
 
 	/* UI 생성 */
 	virtual void CreateUI();
+	void ReInitializeUI();
 
 	void SendMessage(
 		const FText& InText,

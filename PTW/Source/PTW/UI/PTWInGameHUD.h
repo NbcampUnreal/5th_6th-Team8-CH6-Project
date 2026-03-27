@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/InGameUI/PTWNotificationWidget.h"
+#include "PTW/CoreFramework/Game/GameState/PTWGameState.h"
 #include "PTWInGameHUD.generated.h"
 
 class UAbilitySystemComponent;
@@ -51,19 +52,21 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWCrosshair> CrosshairWidget;
 	/* 인벤토리 위젯 */
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWInventoryWidget> InventoryWidget;
+	/*UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWInventoryWidget> InventoryWidget;*/
 	/* 미니게임인벤토리 위젯 */
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWMiniGameInventory> MiniGameInventoryWidget;
+	/*UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWMiniGameInventory> MiniGameInventoryWidget;*/
 	/* 알림 위젯 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWNotificationWidget> NotificationWidget;
-	/* 알림 위젯 */
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWMiniGameTitle> MiniGameTitle;
+	/* 미니게임이름 */
+	/*UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWMiniGameTitle> MiniGameTitle;*/
 
 protected:
+	virtual void NativeDestruct() override;
+
 	virtual bool Initialize() override;
 
 	/* 알림 위젯 */
@@ -72,10 +75,12 @@ protected:
 	UFUNCTION()
 	void HandleNotificationFinished();
 
-	UFUNCTION()
+	/*UFUNCTION()
 	void HandleGamePhaseChanged(EPTWGamePhase Phase);
+	UFUNCTION()
+	void HandleRoulettePhaseChanged(FPTWRouletteData RouletteData);
 
-	void BindGamePhase();
+	void BindGamePhase();*/
 
 	UPROPERTY()
 	TArray<FNotificationData> NotificationQueue;

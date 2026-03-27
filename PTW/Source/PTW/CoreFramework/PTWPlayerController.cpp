@@ -235,9 +235,9 @@ void APTWPlayerController::BeginPlay()
 		CurrentMouseSensitivity = Settings->MouseSensitivity;
 	}
 
-	//CreateUI();
-	/*UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 BeginPlay - CreateUI 함수 호출됨."), 
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));*/
+	ReInitializeUI();
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 BeginPlay - ReInitializeUI 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -271,9 +271,9 @@ void APTWPlayerController::OnRep_Pawn()
 	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnRep_Pawn 함수 호출됨."), 
 		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 
-	//CreateUI();
-	/*UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnRep_Pawn - CreateUI 함수 호출됨."),
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));*/
+	ReInitializeUI();
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnRep_Pawn - ReInitializeUI 함수 호출됨."),
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::OnPossess(APawn* InPawn)
@@ -286,9 +286,9 @@ void APTWPlayerController::OnPossess(APawn* InPawn)
 	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 컨트롤러 Possess 함수 호출됨."), 
 		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 
-	//CreateUI();
-	/*UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnPossess - CreateUI 함수 호출됨."), 
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));*/
+	ReInitializeUI();
+	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnPossess - ReInitializeUI 함수 호출됨."), 
+		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::OnUnPossess()
@@ -464,8 +464,8 @@ void APTWPlayerController::PostSeamlessTravel()
 			UISubsystem = LP->GetSubsystem<UPTWUISubsystem>();
 		}
 
-		//CreateUI();
-		//UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] PostSeamlessTravel - CreateUI 함수 호출됨."));
+		ReInitializeUI();
+		UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] PostSeamlessTravel - ReInitializeUI 함수 호출됨."));
 	}
 }
 
@@ -485,6 +485,13 @@ void APTWPlayerController::CreateUI()
 	{
 		UIControllerComponent->InitializeUIComponent(this);
 		UIControllerComponent->CreateUI();
+	}
+}
+void APTWPlayerController::ReInitializeUI()
+{
+	if (UIControllerComponent)
+	{
+		UIControllerComponent->ReInitializeUI();
 	}
 }
 void APTWPlayerController::OnRankingPressed() { UIControllerComponent->ToggleRankingBoard(true); }

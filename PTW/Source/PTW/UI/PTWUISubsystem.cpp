@@ -282,7 +282,13 @@ UUserWidget* UPTWUISubsystem::GetOrCreateWidget(TSubclassOf<UUserWidget> WidgetC
 	// 이미 캐싱되어 있다면 재사용
 	if (TObjectPtr<UUserWidget>* Found = CachedWidgets.Find(WidgetClass))
 	{
-		return Found->Get();
+		UUserWidget* ExistingWidget = Found->Get();
+		if (IsValid(ExistingWidget) && ExistingWidget->GetWorld() == GetWorld())
+		{
+			return ExistingWidget;
+		}
+		// 유효하지 않다면 맵에서 제거
+		CachedWidgets.Remove(WidgetClass);
 	}
 
 	APlayerController* PC = GetPlayerController();
@@ -299,7 +305,11 @@ UUserWidget* UPTWUISubsystem::GetOrCreateWidget(TSubclassOf<UUserWidget> WidgetC
 
 void UPTWUISubsystem::PushNotification(const FNotificationData& Data)
 {
-	if (!HUDWidget) return;
+	if (!IsValid(HUDWidget))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PushNotification: HUDWidget is Invalid."));
+		return;
+	}
 
 	if (UPTWInGameHUD* InGameHUD = Cast<UPTWInGameHUD>(HUDWidget))
 	{

@@ -491,6 +491,7 @@ void APTWPlayerController::ReInitializeUI()
 {
 	if (UIControllerComponent)
 	{
+		UIControllerComponent->InitializeUIComponent(this);
 		UIControllerComponent->ReInitializeUI();
 	}
 }

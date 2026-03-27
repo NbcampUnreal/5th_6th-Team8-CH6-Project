@@ -173,10 +173,12 @@ void APTWGameMode::Logout(AController* Exiting)
 		}
 	}
 #endif
+#if !UE_EDITOR
 	if (GetNumPlayers() <= 0)
 	{
 		FGenericPlatformMisc::RequestExit(false);
 	}
+#endif
 	
 	if (!IsValid(PTWGameState)) return;
 

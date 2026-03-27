@@ -307,6 +307,39 @@ void UPTWUISubsystem::PushNotification(const FNotificationData& Data)
 	}
 }
 
+void UPTWUISubsystem::ClearAllUI()
+{
+	// Stack 제거
+	for (FUIStackEntry& Entry : WidgetStack)
+	{
+		if (Entry.Widget)
+		{
+			Entry.Widget->RemoveFromParent();
+		}
+	}
+	WidgetStack.Empty();
+
+	// CachedWidgets 제거
+	for (auto& Pair : CachedWidgets)
+	{
+		if (Pair.Value)
+		{
+			Pair.Value->RemoveFromParent();
+		}
+	}
+	CachedWidgets.Empty();
+
+	// HUD 제거
+	if (HUDWidget)
+	{
+		HUDWidget->RemoveFromParent();
+		HUDWidget = nullptr;
+	}
+
+	// 입력 초기화
+	ApplyInputPolicy(DefaultInputPolicy);
+}
+
 APlayerController* UPTWUISubsystem::GetPlayerController() const
 {
 	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())

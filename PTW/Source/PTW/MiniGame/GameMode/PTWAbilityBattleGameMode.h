@@ -27,6 +27,7 @@ protected:
 	virtual void StartGame() override;
 	virtual void StartRound() override;
 	virtual void RespawnPlayer(APTWPlayerController* SpawnPlayerController) override;
+	virtual void RestartPlayer(AController* NewPlayer) override;
 	
 	void InitAttributeSet();
 	

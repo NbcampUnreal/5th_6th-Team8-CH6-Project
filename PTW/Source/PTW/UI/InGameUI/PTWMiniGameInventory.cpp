@@ -16,6 +16,9 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 
+/* 로그용 */
+#include "CoreFramework/PTWPlayerState.h"
+
 void UPTWMiniGameInventory::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -51,10 +54,22 @@ void UPTWMiniGameInventory::InitInventory(UPTWInventoryComponent* InInventory)
 	}
 
 	RefreshInventory();
+
+	/* 로그용 */
+	APTWPlayerState* PS = GetOwningPlayerState<APTWPlayerState>();
+
+	UE_LOG(LogTemp, Warning, TEXT("[PTWMiniGameInventory] %s 플레이어 InitInventory 완료."),
+		PS ? *PS->GetPlayerName() : TEXT("Unknown"));
 }
 
 void UPTWMiniGameInventory::RefreshInventory()
 {
+	/* 로그용 */
+	APTWPlayerState* PS = GetOwningPlayerState<APTWPlayerState>();
+
+	UE_LOG(LogTemp, Warning, TEXT("[PTWMiniGameInventory] %s 플레이어 RefreshInventory 호출됨."),
+		PS ? *PS->GetPlayerName() : TEXT("Unknown"));
+
 	if (!InventoryComp) return;
 
 	const TArray<TObjectPtr<UPTWItemInstance>>& Items =
@@ -127,11 +142,19 @@ void UPTWMiniGameInventory::SetupActive(UPTWItemInstance* ActiveItem)
 {
 	if (!ActiveItemSlot) return;
 
+	/* 로그용 */
+	APTWPlayerState* PS = GetOwningPlayerState<APTWPlayerState>();
+
+	UE_LOG(LogTemp, Warning, TEXT("[PTWMiniGameInventory] %s 플레이어 SetupActive 함수 호출됨."),
+		PS ? *PS->GetPlayerName() : TEXT("Unknown"));
+
 	if (!ActiveItem)
 	{
 		ActiveItemSlot->ClearSlot();
+		ActiveItemSlot->SetVisibility(ESlateVisibility::Hidden);
 		return;
 	}
+	ActiveItemSlot->SetVisibility(ESlateVisibility::Visible);
 
 	ActiveItemSlot->SetItemInstance(ActiveItem);
 
@@ -173,6 +196,7 @@ void UPTWMiniGameInventory::EraseActive()
 	if (!ActiveItemSlot) return;
 
 	ActiveItemSlot->ClearSlot();
+	ActiveItemSlot->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UPTWMiniGameInventory::SetupPassives(

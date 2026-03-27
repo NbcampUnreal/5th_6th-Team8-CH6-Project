@@ -14,6 +14,7 @@
 #include "Engine/World.h"
 #include "Components/WidgetComponent.h"
 #include "EngineUtils.h"
+#include "CoreFramework/PTWGameUserSettings.h"
 
 #include "MiniGame/ControllerComponent/GhostChase/PTWGhostChaseControllerComponent.h"
 #include "UI/PTWInGameHUD.h"
@@ -96,8 +97,8 @@ void UPTWUIControllerComponent::CreateUI()
 	UE_LOG(LogTemp, Log, TEXT("[UIComponent] 필수 조건 통과. UI 생성을 시작합니다."));
 
 	// 2. 본격적인 UI 생성
-	UISubsystem->StackReset();
-	UE_LOG(LogTemp, Log, TEXT("[UIComponent] UISubsystem StackReset 완료."));
+	UISubsystem->ClearAllUI();
+	UE_LOG(LogTemp, Log, TEXT("[UIComponent] UISubsystem ClearAllUI 완료."));
 
 	// ★ HUD 생성부 검사
 	if (HUDClass)
@@ -144,9 +145,20 @@ void UPTWUIControllerComponent::CreateUI()
 	if (KeyGuideWidgetClass)
 	{
 		UISubsystem->CreatePersistentWidget(KeyGuideWidgetClass, 15);
-		UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, true);
-		bKeyGuideOn = true;
-		UE_LOG(LogTemp, Log, TEXT("[UIComponent] KeyGuide 세팅 완료."));
+		
+		UGameUserSettings* BaseSettings = UGameUserSettings::GetGameUserSettings();
+		UPTWGameUserSettings* PTWSettings = Cast<UPTWGameUserSettings>(BaseSettings);
+
+		if (PTWSettings)
+		{
+			bKeyGuideOn = PTWSettings->bKeyGuideOn;
+			UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, bKeyGuideOn);
+		}
+		else
+		{
+			bKeyGuideOn = true;
+			UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, true);
+		}
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("[UIComponent] CreateUI 로직 완료!"));

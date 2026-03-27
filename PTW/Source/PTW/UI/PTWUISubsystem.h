@@ -94,6 +94,9 @@ public:
 	/* 알림 위젯 */
 	void PushNotification(const FNotificationData& Data);
 
+	/* 초기화 */
+	void ClearAllUI();
+
 private:
 	/* Helpers */
 	APlayerController* GetPlayerController() const;

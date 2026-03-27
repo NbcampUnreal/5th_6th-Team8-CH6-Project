@@ -79,8 +79,11 @@ void UPTWServerListRow::OnClickedJoinButton()
 	if (!IsValid(GameInstance)) return;
 	
 	const FOnlineSession& OnlineSession = SteamSessionInfo.Session;
+	bool bIsNoGameLift = false;
 	
-	if (!OnlineSession.SessionSettings.bIsDedicated)
+	OnlineSession.SessionSettings.Get(PTWSessionKey::NoGameLift, bIsNoGameLift);
+	
+	if (!OnlineSession.SessionSettings.bIsDedicated || bIsNoGameLift)
 	{
 		// 리슨 서버 접속
 		if (UPTWSessionSubsystem* SessionSubsystem = GameInstance->GetSubsystem<UPTWSessionSubsystem>())

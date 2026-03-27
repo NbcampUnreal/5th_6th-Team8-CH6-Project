@@ -326,11 +326,11 @@ void UPTWGA_Fire::ProjectileTypeFire(APTWPlayerCharacter* PC, UPTWWeaponInstance
 void UPTWGA_Fire::HandleHitScan(const FPTWFireConext Context)
 {
 	FHitResult HitResult;
-	PerformLineTrace(HitResult, Context.PC);
+	PerformLineTrace(HitResult, Context.PC); // 클라이언트 Hit
 	
 	if (!HasAuthority(&CurrentActivationInfo)) return;
 	
-	if (ValidateHitResult(HitResult))
+	if (ValidateHitResult(HitResult)) //서버 검증 Server-Side Validation
 	{
 		FGameplayAbilityTargetDataHandle TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(HitResult);
 		float Damage = 0.0f;

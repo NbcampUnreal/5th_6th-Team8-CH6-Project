@@ -24,4 +24,13 @@ void UPTWRedLightChargeWidget::NativeTick(const FGeometry& MyGeometry, float InD
 		float CurrentProgress = CachedRedLightChar->GetChargeProgress();
 		ChargeProgressBar->SetPercent(CurrentProgress);
 	}
+
+	if (CachedRedLightChar.IsValid() && BatteryProgressBar)
+	{
+		float CurrentBat = CachedRedLightChar->CurrentBattery;
+		float MaxBat = CachedRedLightChar->MaxBattery;
+		float BatteryPercent = (MaxBat > 0.0f) ? (CurrentBat / MaxBat) : 0.0f;
+
+		BatteryProgressBar->SetPercent(BatteryPercent);
+	}
 }

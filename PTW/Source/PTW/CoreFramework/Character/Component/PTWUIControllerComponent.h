@@ -23,6 +23,7 @@ public:
 
 	void InitializeUIComponent(APTWPlayerController* InPC);
 	void CreateUI();
+	void ReInitializeUI();
 
 	void ToggleRankingBoard(bool bShow);
 	void TogglePauseMenu();
@@ -109,6 +110,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI") 
 	TSubclassOf<class UPTWInGameHUD> HUDClass;
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> DelegateUI;
 	UPROPERTY(EditDefaultsOnly, Category = "UI") 
 	TSubclassOf<class UPTWRankingBoard> RankingBoardClass;
 	UPROPERTY(EditDefaultsOnly, Category = "UI") 

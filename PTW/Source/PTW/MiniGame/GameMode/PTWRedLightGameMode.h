@@ -39,8 +39,20 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight|Combat")
 	FGameplayTag InvincibleTag;
 
+	void PlayerFinished(ACharacter* FinishedPlayer);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "RedLight|Events")
+	void ReceiveOnPhaseChanged(bool bIsRedLight);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RedLight|Classes")
+	TSubclassOf<AActor> CachedBlueprintClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RedLight|Classes")
+	TObjectPtr<AActor> CachedBlueprintInstance;
+
 protected:
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+	virtual void BeginPlay() override;
 
 protected:
 	FTimerHandle MovementCheckTimer;
@@ -52,4 +64,6 @@ protected:
 	TSet<ACharacter*> CaughtPlayers;
 
 	void CheckPlayerMovements();
+
+
 };

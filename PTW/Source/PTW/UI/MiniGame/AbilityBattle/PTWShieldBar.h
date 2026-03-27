@@ -18,9 +18,13 @@ class PTW_API UPTWShieldBar : public UUserWidget
 
 
 public:
-	void SetProgressBarPer(float Current, float Max);
+	void SetProgressBarPer();
+	void SetCurrentShield(float NewShield);
+	void SetCurrentMaxShield(float NewMaxShield);
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> ProgressBar_Shield;
 	
+	float CurrentShield = 0.f;
+	float CurrentMaxShield = 0.f;
 };

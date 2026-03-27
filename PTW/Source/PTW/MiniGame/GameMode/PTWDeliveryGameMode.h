@@ -56,6 +56,7 @@ protected:
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	virtual void BeginPlay() override;
 	virtual void StartCountDown() override;
+	virtual void StartResultSequence();
 	void StartEndCountDown();
 	void UpdateCountDown();
 	void StopCountDown();
@@ -95,6 +96,8 @@ private:
 	
 	/* UI */
 	void DeliveryUISetting(APTWPlayerCharacter* TargetCharacter);
+	
+	bool WinnerChecking(APTWPlayerController* PC);
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
@@ -128,6 +131,8 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Delivery | Data")
 	TObjectPtr<UDataTable> ItemDataTable;
+	
+	
 
 private:
 	FTimerHandle CountDownTimerHandle;

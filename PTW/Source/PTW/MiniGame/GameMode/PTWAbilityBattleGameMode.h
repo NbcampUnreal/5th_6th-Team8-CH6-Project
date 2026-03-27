@@ -7,6 +7,7 @@
 #include "MiniGame/Data/AbilityBattle/PTWAbilityDefinition.h"
 #include "PTWAbilityBattleGameMode.generated.h"
 
+class UPTWAbilityBattlePSComponent;
 class UAbilitySystemComponent;
 class UPTWRandomDraftSystem;
 /**
@@ -24,10 +25,14 @@ public:
 protected:
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
+	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	virtual void StartGame() override;
 	virtual void StartRound() override;
 	virtual void RespawnPlayer(APTWPlayerController* SpawnPlayerController) override;
 	virtual void RestartPlayer(AController* NewPlayer) override;
+
+	void StartShieldRegen();
+	void StopShieldRegen(AController* DeadPlayer);
 	
 	void InitAttributeSet();
 	
@@ -58,7 +63,10 @@ private:
 
 	//UPROPERTY(EditDefaultsOnly)
 	//TSubclassOf<UGameplayEffect> InitRespawnEffectClass;
-	
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UPTWAbilityBattlePSComponent> PSComponentClass; 
+		
 	int32 DraftOptionCount = 3;
 
 	UPROPERTY(EditDefaultsOnly)

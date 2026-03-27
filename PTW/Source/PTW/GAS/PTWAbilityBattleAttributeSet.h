@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/PTWAttributeSet.h"
+#include "AttributeSet.h"
+#include "AbilitySystemComponent.h"    
+#include "GameplayEffectTypes.h"       
 #include "PTWAbilityBattleAttributeSet.generated.h"
 
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
@@ -34,7 +36,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_HealthRegen, Category = "AttributeBattle|Attributes")
 	FGameplayAttributeData HealthRegen;
-	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, HealthRegen );
+	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, HealthRegen);
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ShieldRegen, Category = "AttributeBattle|Attributes")
 	FGameplayAttributeData ShieldRegen;
@@ -42,7 +44,7 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_LifeSteal, Category = "AttributeBattle|Attributes")
 	FGameplayAttributeData LifeSteal;
-	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, LifeSteal );
+	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, LifeSteal);
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Shield, Category = "AttributeBattle|Attributes")
 	FGameplayAttributeData Shield;
@@ -62,15 +64,11 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ReflectDamagePercent , Category = "AttributeBattle|Attributes")
 	FGameplayAttributeData ReflectDamagePercent ;
-	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, ReflectDamagePercent );
+	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, ReflectDamagePercent);
 	
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_HealPower, Category = "AttributeBattle|Attributes")
 	FGameplayAttributeData HealPower;
 	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, HealPower);
-
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_DamageMultiplier, Category = "AttributeBattle|Attributes")
-	FGameplayAttributeData DamageMultiplier;
-	ATTRIBUTE_ACCESSORS(UPTWAbilityBattleAttributeSet, DamageMultiplier);
 
 protected:
 	UFUNCTION()
@@ -103,9 +101,7 @@ protected:
 	UFUNCTION()
 	void OnRep_HealPower(const FGameplayAttributeData& OldHealPower);
 
-	UFUNCTION()
-	void OnRep_DamageMultiplier (const FGameplayAttributeData& OldDamageMultiplier);
-	
+
 public:
 	void ApplyHealthRegen();
 	void ApplyShieldRegen();

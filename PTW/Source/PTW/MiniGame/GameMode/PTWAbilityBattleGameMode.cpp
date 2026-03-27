@@ -15,6 +15,7 @@
 #include "MiniGame/PlayerStateComponent/PTWAbilityBattlePSComponent.h"
 #include "UI/MiniGame/AbilityBattle/PTWAbilityDraftWidget.h"
 #include "GameFramework/GameState.h"
+#include "GAS/PTWAttributeSet.h"
 
 APTWAbilityBattleGameMode::APTWAbilityBattleGameMode()
 {
@@ -33,6 +34,15 @@ void APTWAbilityBattleGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	Super::HandleSeamlessTravelPlayer(C);
 	
 	//UE_LOG(Log_AbilityBattle, Warning, TEXT("HandleSeamlessTravelPlayer"));
+}
+
+void APTWAbilityBattleGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
+{
+	Super::HandlePlayerDeath(DeadActor, KillActor);
+
+	AController* Controller  =  DeadActor->GetInstigatorController();
+	if (!Controller) 
+	StopShieldRegen(Controller);
 }
 
 void APTWAbilityBattleGameMode::StartGame()
@@ -66,27 +76,18 @@ void APTWAbilityBattleGameMode::StartRound()
 	Super::StartRound();
 
 	StartDraftChargeTimer();
+	StartShieldRegen();
 
 	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 	{
 		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
 		if (!PTWPlayerState) continue;
 		
-		// 리스폰 및 처음 시작 시 쉴드 재생 부분 델리게이트 연결 해서 ui 와 attribute에 연결
+		UPTWAbilityBattlePSComponent* PSComponent = Cast<UPTWAbilityBattlePSComponent>(PTWPlayerState->GetMiniGameComponent());
+		if (!PSComponent) return;
 
-		UAbilitySystemComponent* ASC = PTWPlayerState->GetAbilitySystemComponent();
-		if (!ASC) return;
-		
-		const UPTWAbilityBattleAttributeSet* ConstSet = ASC->GetSet<UPTWAbilityBattleAttributeSet>();
-		if (!ConstSet) return;
-
-		UPTWAbilityBattleAttributeSet* Set = const_cast<UPTWAbilityBattleAttributeSet*>(ConstSet);
-		if (!Set) return;
-		
-		Set->ResetShield();
+		PSComponent->ApplyHealthRegenEffect();
 	}
-
-
 }
 
 void APTWAbilityBattleGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController)
@@ -139,8 +140,53 @@ void APTWAbilityBattleGameMode::RestartPlayer(AController* NewPlayer)
 {
 	Super::RestartPlayer(NewPlayer);
 
+	StartShieldRegen();
 	
+}
+
+void APTWAbilityBattleGameMode::StartShieldRegen()
+{
+	if (!PTWGameState) return;
 	
+	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (!PTWPlayerState) continue;
+
+		UAbilitySystemComponent* ASC = PTWPlayerState->GetAbilitySystemComponent();
+		if (!ASC) continue;
+		
+		const UPTWAbilityBattleAttributeSet* ConstSet = ASC->GetSet<UPTWAbilityBattleAttributeSet>();
+		if (!ConstSet) continue;
+
+		UPTWAbilityBattleAttributeSet* Set = const_cast<UPTWAbilityBattleAttributeSet*>(ConstSet);
+		if (!Set) continue;
+		
+		Set->ResetShield();
+	}
+}
+
+void APTWAbilityBattleGameMode::StopShieldRegen(AController* DeadPlayer)
+{
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(DeadPlayer);
+	if (!PlayerController) return;
+
+	APlayerState* PlayerState = PlayerController->GetPlayerState<APlayerState>();
+	if (!PlayerState) return;
+	
+	APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+	if (!PTWPlayerState) return;
+
+	UAbilitySystemComponent* ASC = PTWPlayerState->GetAbilitySystemComponent();
+	if (!ASC) return;
+		
+	const UPTWAbilityBattleAttributeSet* ConstSet = ASC->GetSet<UPTWAbilityBattleAttributeSet>();
+	if (!ConstSet) return;
+
+	UPTWAbilityBattleAttributeSet* Set = const_cast<UPTWAbilityBattleAttributeSet*>(ConstSet);
+	if (!Set) return;
+		
+	Set->StopShieldRegen();
 }
 
 void APTWAbilityBattleGameMode::HandleRespawn(APTWPlayerController* PlayerController)
@@ -354,7 +400,7 @@ void APTWAbilityBattleGameMode::AttachPlayerStateComponent(APlayerController* Co
 		BeforeComponent->DestroyComponent();
 	}
 	
-	UPTWAbilityBattlePSComponent* ActorComponent = NewObject<UPTWAbilityBattlePSComponent>(PlayerState, TEXT("MiniGameComponent"));
+	UPTWAbilityBattlePSComponent* ActorComponent = NewObject<UPTWAbilityBattlePSComponent>(PlayerState, PSComponentClass, NAME_None);
 	if (!ActorComponent) return;
 
 	ActorComponent->SetIsReplicated(true);
@@ -363,6 +409,8 @@ void APTWAbilityBattleGameMode::AttachPlayerStateComponent(APlayerController* Co
 	ActorComponent->RegisterComponent();
 
 	PlayerState->SetMiniGameComponent(ActorComponent);
+
+	ActorComponent->Init(PlayerState);
 }
 
 void APTWAbilityBattleGameMode::AddDraftChargeAllPlayers()

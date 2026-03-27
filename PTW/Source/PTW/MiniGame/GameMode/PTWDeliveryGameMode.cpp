@@ -12,6 +12,7 @@
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "GameFramework/PlayerStart.h"
+#include "Gameplay/Actor/PTWResultCharacter.h"
 #include "GAS/PTWDeliveryAttributeSet.h"
 #include "MiniGame/Actor/Delivery/RaceTrack.h"
 #include "MiniGame/ControllerComponent/Delivery/PTWDeliveryControllerComponent.h"
@@ -154,6 +155,109 @@ void APTWDeliveryGameMode::StartCountDown()
 {
 	SendMessgeBeginPlay();
 	Super::StartCountDown();
+}
+
+void APTWDeliveryGameMode::StartResultSequence()
+{
+		UWorld* World = GetWorld();
+	if (!World) return;
+
+	if (PTWGameState)
+	{
+		PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGameResult);
+	}
+
+	AActor* ResultCamera = nullptr;
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsWithTag(World, FName("ResultCamera"), FoundActors);
+	if (FoundActors.Num() > 0) ResultCamera = FoundActors[0];
+
+	TArray<AActor*> WinSpots;
+	UGameplayStatics::GetAllActorsWithTag(World, FName("WinSpot"), WinSpots);
+
+	TArray<AActor*> LoseSpots;
+	UGameplayStatics::GetAllActorsWithTag(World, FName("LoseSpot"), LoseSpots);
+
+	int32 CurrentWinIndex = 0;
+	int32 CurrentLoseIndex = 0;
+
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
+		if (!PC) continue;
+
+		APTWPlayerState* PS = PC->GetPlayerState<APTWPlayerState>();
+		if (!PS) continue;
+
+		PC->SetIgnoreMoveInput(true);
+		PC->SetIgnoreLookInput(true);
+
+		if (APawn* OriginalPawn = PC->GetPawn())
+		{
+			OriginalPawn->SetActorHiddenInGame(true);
+			OriginalPawn->SetActorEnableCollision(false);
+		}
+
+		if (ResultCamera)
+		{
+			FViewTargetTransitionParams Params;
+			Params.BlendTime = 1.0f;
+			Params.BlendFunction = EViewTargetBlendFunction::VTBlend_Linear;
+			Params.bLockOutgoing = true;
+
+			PC->ClientSetViewTarget(ResultCamera, Params);
+		}
+
+		if (ResultCharacterClass)
+		{
+			bool bIsWinner = WinnerChecking(PC); 
+
+			FVector SpawnLoc = FVector::ZeroVector;
+			FRotator SpawnRot = FRotator::ZeroRotator;
+			bool bValidSpotFound = false;
+
+			if (bIsWinner)
+			{
+				if (WinSpots.IsValidIndex(CurrentWinIndex))
+				{
+					SpawnLoc = WinSpots[CurrentWinIndex]->GetActorLocation();
+					SpawnRot = WinSpots[CurrentWinIndex]->GetActorRotation();
+					CurrentWinIndex++;
+					bValidSpotFound = true;
+				}
+			}
+			else
+			{
+				if (LoseSpots.IsValidIndex(CurrentLoseIndex))
+				{
+					SpawnLoc = LoseSpots[CurrentLoseIndex]->GetActorLocation();
+					SpawnRot = LoseSpots[CurrentLoseIndex]->GetActorRotation();
+					CurrentLoseIndex++;
+					bValidSpotFound = true;
+				}
+			}
+
+			if (bValidSpotFound)
+			{
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				APTWResultCharacter* ResultChar = World->SpawnActor<APTWResultCharacter>(ResultCharacterClass, SpawnLoc, SpawnRot, SpawnParams);
+
+				if (ResultChar)
+				{
+					ResultChar->InitializeResult(bIsWinner);
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[Result] 스폰 포인트가 부족합니다! 맵에 TargetPoint를 더 배치해주세요."));
+			}
+		}
+	}
+
+	GetWorldTimerManager().SetTimer(ResultTimerHandle, this, &APTWDeliveryGameMode::FinishEndGameSequence, ResultSequenceDuration, false);
+	
 }
 
 void APTWDeliveryGameMode::ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect)
@@ -366,6 +470,16 @@ void APTWDeliveryGameMode::DeliveryUISetting(APTWPlayerCharacter* TargetCharacte
 			DeliveryComp->AddBatteryUI();
 		}
 	}
+}
+
+bool APTWDeliveryGameMode::WinnerChecking(APTWPlayerController* PC)
+{
+	if (!PC) return false;
+	
+	return GoalPlayers.ContainsByPredicate([PC](const APTWPlayerCharacter* Player)
+	{
+		return Player && Player->GetController() == PC;
+	});
 }
 
 void APTWDeliveryGameMode::RemoveBeginGameplayEffect()

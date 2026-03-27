@@ -1,27 +1,44 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "MiniGame/Actor/RedLight/PTWRedLightFinishBox.h"
+#include "Components/BoxComponent.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
+#include "MiniGame/Character/RedLight/PTWRedLightCharacter.h"
+#include "MiniGame/GameMode/PTWRedLightGameMode.h"
 
-// Sets default values
 APTWRedLightFinishBox::APTWRedLightFinishBox()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
+	FinishVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("FinishVolume"));
+	RootComponent = FinishVolume;
+
+	FinishVolume->SetCollisionProfileName(TEXT("Trigger"));
 }
 
-// Called when the game starts or when spawned
 void APTWRedLightFinishBox::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (HasAuthority())
+	{
+		FinishVolume->OnComponentBeginOverlap.AddDynamic(this, &APTWRedLightFinishBox::OnOverlapBegin);
+	}
 }
 
-// Called every frame
-void APTWRedLightFinishBox::Tick(float DeltaTime)
+void APTWRedLightFinishBox::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	Super::Tick(DeltaTime);
+	if (!HasAuthority() || !OtherActor) return;
 
+	if (OtherActor->IsA<APTWRedLightCharacter>()) return;
+
+	if (APTWPlayerCharacter* Runner = Cast<APTWPlayerCharacter>(OtherActor))
+	{
+		if (APTWRedLightGameMode* GM = Cast<APTWRedLightGameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			GM->PlayerFinished(Runner);
+		}
+	}
 }
 

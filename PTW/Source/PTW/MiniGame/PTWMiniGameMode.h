@@ -119,7 +119,7 @@ protected:
 	void OnCoinSpawnTimerElapsed();
 	
 	//연출 단계 함수
-	void StartResultSequence();
+	virtual void StartResultSequence();
 	void FinishEndGameSequence();
 
 	// FIXME : 임시로 관전상태 해제테스트

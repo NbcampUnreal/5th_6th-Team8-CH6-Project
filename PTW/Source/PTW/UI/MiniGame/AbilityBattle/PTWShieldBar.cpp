@@ -5,9 +5,25 @@
 
 #include "Components/ProgressBar.h"
 
-void UPTWShieldBar::SetProgressBarPer(float Current, float Max)
+void UPTWShieldBar::SetProgressBarPer()
 {
-	float Per = (Current / Max);
+	float Per = (CurrentShield / CurrentMaxShield);
 
 	ProgressBar_Shield->SetPercent(Per);
 }
+
+void UPTWShieldBar::SetCurrentShield(float NewShield)
+{
+	CurrentShield = NewShield;
+
+	SetProgressBarPer();
+}
+
+void UPTWShieldBar::SetCurrentMaxShield(float NewMaxShield)
+{
+	CurrentMaxShield = NewMaxShield;
+
+	SetProgressBarPer();
+}
+
+

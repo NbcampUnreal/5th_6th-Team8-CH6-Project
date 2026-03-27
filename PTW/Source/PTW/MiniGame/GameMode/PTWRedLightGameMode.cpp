@@ -11,7 +11,33 @@
 #include "System/PTWItemSpawnmanager.h"
 #include "EngineUtils.h"
 #include "CoreFramework/PTWCombatInterface.h"
+#include "CoreFramework/PTWPlayerController.h"
+#include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "GameplayEffect.h"
+
+void APTWRedLightGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (CachedBlueprintClass)
+	{
+		CachedBlueprintInstance = UGameplayStatics::GetActorOfClass(GetWorld(), CachedBlueprintClass);
+
+		if (CachedBlueprintInstance)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[GameMode] 레벨에서 블루프린트 액터 캐싱 성공: %s"), *CachedBlueprintInstance->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("[GameMode] 레벨에 해당 클래스(%s)의 액터가 배치되어 있지 않습니다! 맵에 액터를 드래그해서 올려주세요."), *CachedBlueprintClass->GetName());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[GameMode] 검색할 블루프린트 클래스가 설정되지 않았습니다! BP_PTWRedLightGameMode의 디테일 패널을 확인하세요."));
+	}
+}
 
 void APTWRedLightGameMode::AssignTagger(APlayerController* TaggerPC)
 {
@@ -30,7 +56,7 @@ void APTWRedLightGameMode::AssignTagger(APlayerController* TaggerPC)
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-	if (APTWRedLightCharacter* DollPawn = GetWorld()->SpawnActor<APTWRedLightCharacter>(TaggerClass, SpawnLocation, FRotator::ZeroRotator, SpawnParams))
+	if (APTWRedLightCharacter* DollPawn = GetWorld()->SpawnActor<APTWRedLightCharacter>(TaggerClass, SpawnLocation, SpawnRotator, SpawnParams))
 	{
 		TaggerPC->Possess(DollPawn);
 		CurrentTagger = DollPawn;
@@ -40,6 +66,8 @@ void APTWRedLightGameMode::AssignTagger(APlayerController* TaggerPC)
 void APTWRedLightGameMode::OnRedLightStateChanged(bool bIsRedLight, APTWRedLightCharacter* TaggerChar)
 {
 	CurrentTagger = TaggerChar;
+
+	ReceiveOnPhaseChanged(bIsRedLight);
 
 	if (bIsRedLight)
 	{
@@ -197,4 +225,31 @@ AActor* APTWRedLightGameMode::ChoosePlayerStart_Implementation(AController* Play
 	}
 
 	return Super::ChoosePlayerStart_Implementation(Player);
+}
+
+void APTWRedLightGameMode::PlayerFinished(ACharacter* FinishedPlayer)
+{
+	if (!FinishedPlayer) return;
+
+	APTWPlayerController* PC = FinishedPlayer->GetController<APTWPlayerController>();
+	APTWPlayerState* PS = FinishedPlayer->GetPlayerState<APTWPlayerState>();
+
+	if (PC && PS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[RedLight] %s 플레이어가 결승선에 도착했습니다! (생존 성공)"), *PS->GetPlayerName());
+
+		AddRoundScore(PS, 10);
+
+		if (PTWGameState)
+		{
+			PTWGameState->AlivePlayers.Remove(PS);
+		}
+
+		FinishedPlayer->SetActorHiddenInGame(true);
+		FinishedPlayer->SetActorEnableCollision(false);
+
+		PC->StartSpectating();
+
+		CheckEndGameCondition();
+	}
 }

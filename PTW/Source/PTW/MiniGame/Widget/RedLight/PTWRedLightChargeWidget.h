@@ -21,5 +21,8 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> ChargeProgressBar;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UProgressBar> BatteryProgressBar;
+
 	TWeakObjectPtr<APTWRedLightCharacter> CachedRedLightChar;
 };

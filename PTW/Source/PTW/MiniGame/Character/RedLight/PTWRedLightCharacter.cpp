@@ -17,11 +17,26 @@
 #include "AbilitySystemComponent.h"
 #include "GameplayAbilitySpec.h"
 #include "EnhancedInputComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/AudioComponent.h"
+#include "PTWGamePlayTag/GameplayTags.h" 
+#include "AbilitySystemComponent.h"
 
 void APTWRedLightCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	InitialRotation = GetActorRotation();
+
+	CachedCameraComp = FindComponentByClass<UCameraComponent>();
+	if (CachedCameraComp)
+	{
+		DefaultFOV = CachedCameraComp->FieldOfView;
+	}
+
+	if (HasAuthority())
+	{
+		CurrentBattery = MaxBattery;
+	}
 }
 
 APTWRedLightCharacter::APTWRedLightCharacter()
@@ -56,6 +71,7 @@ void APTWRedLightCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(APTWRedLightCharacter, bIsRedLight);
 	DOREPLIFETIME(APTWRedLightCharacter, CurrentPhase);
+	DOREPLIFETIME(APTWRedLightCharacter, CurrentBattery);
 }
 
 void APTWRedLightCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -68,6 +84,11 @@ void APTWRedLightCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 		{
 			EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &APTWRedLightCharacter::OnSpacePressed);
 			EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &APTWRedLightCharacter::OnSpaceReleased);
+		}
+		if (ZoomAction)
+		{
+			EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &APTWRedLightCharacter::StartZoom);
+			EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Completed, this, &APTWRedLightCharacter::StopZoom);
 		}
 	}
 }
@@ -88,6 +109,11 @@ void APTWRedLightCharacter::Server_SetPhase_Implementation(ERedLightPhase NewPha
 	bIsRedLight = (CurrentPhase == ERedLightPhase::RedLight);
 
 	UpdateTaggerState();
+
+	if (CurrentPhase == ERedLightPhase::WaitInput)
+	{
+		Multicast_PlayLoopSound();
+	}
 
 	if (APTWRedLightGameMode* GM = Cast<APTWRedLightGameMode>(GetWorld()->GetAuthGameMode()))
 	{
@@ -195,24 +221,52 @@ void APTWRedLightCharacter::OnSpaceReleased()
 	{
 		bIsCharging = false;
 		float HeldTime = GetWorld()->GetTimeSeconds() - SpacePressedTime;
-		float CalculatedDuration = FMath::Clamp(1.0f + HeldTime, 1.5f, 5.0f);
 
-		UE_LOG(LogTemp, Log, TEXT("[술래] 입력 완료! %f초 타이머 시작"), CalculatedDuration);
-		Server_StartGreenLightWithTime(CalculatedDuration);
+		Server_StartGreenLightWithTime(HeldTime);
 	}
 }
 
-void APTWRedLightCharacter::Server_StartGreenLightWithTime_Implementation(float GreenLightDuration)
+void APTWRedLightCharacter::Server_StartGreenLightWithTime_Implementation(float HeldTime)
 {
+	float TargetTime = FMath::Clamp(HeldTime, 0.75f, 3.0f);
+	float BaseTime = 1.5f;
+	float ActualTime = TargetTime;
+
+	if (TargetTime < BaseTime)
+	{
+		float TimeDiff = BaseTime - TargetTime;
+		float Cost = (TimeDiff / 0.75f) * MaxBatteryCost;
+
+		if (CurrentBattery < Cost)
+		{
+			float AffordableDiff = (CurrentBattery / MaxBatteryCost) * 0.75f;
+			ActualTime = BaseTime - AffordableDiff;
+			CurrentBattery = 0.0f;
+		}
+		else
+		{
+			CurrentBattery -= Cost;
+		}
+	}
+	else if (TargetTime > BaseTime)
+	{
+		float TimeDiff = TargetTime - BaseTime;
+		float Gain = (TimeDiff / 1.5f) * MaxBatteryGain;
+		CurrentBattery = FMath::Clamp(CurrentBattery + Gain, 0.0f, MaxBattery);
+	}
+
+	float TotalDuration = 1.0f + ActualTime;
+	float PitchMultiplier = 1.5f / ActualTime;
+
+	UE_LOG(LogTemp, Warning, TEXT("[배터리] 남은량: %f | 클라이언트 요구: %f초 -> 최종 보정: %f초 (배속: %f)"),
+		CurrentBattery, TargetTime, ActualTime, PitchMultiplier);
+
 	Server_SetPhase_Implementation(ERedLightPhase::TimerPlaying);
 
-	GetWorldTimerManager().SetTimer(
-		RedLightTimerHandle,
-		this,
-		&APTWRedLightCharacter::TurnOnRedLight,
-		GreenLightDuration,
-		false
-	);
+	FTimerDelegate SoundDel = FTimerDelegate::CreateUObject(this, &APTWRedLightCharacter::Multicast_PlayEndSound, PitchMultiplier);
+	GetWorldTimerManager().SetTimer(EndSoundTimerHandle, SoundDel, 1.0f, false);
+
+	GetWorldTimerManager().SetTimer(RedLightTimerHandle, this, &APTWRedLightCharacter::TurnOnRedLight, TotalDuration, false);
 }
 
 void APTWRedLightCharacter::TurnOnRedLight()
@@ -229,10 +283,12 @@ float APTWRedLightCharacter::GetChargeProgress() const
 	if (!bIsCharging) return 0.0f;
 
 	float HeldTime = GetWorld()->GetTimeSeconds() - SpacePressedTime;
+	float ClampedTime = FMath::Clamp(HeldTime, 0.75f, 3.0f);
 
-	const float MaxChargeTime = 4.0f;
+	float MinTime = 0.75f;
+	float MaxTime = 3.0f;
 
-	return FMath::Clamp(HeldTime / MaxChargeTime, 0.0f, 1.0f);
+	return (ClampedTime - MinTime) / (MaxTime - MinTime);
 }
 
 void APTWRedLightCharacter::UpdateTaggerState()
@@ -261,6 +317,13 @@ void APTWRedLightCharacter::UpdateTaggerState()
 	{
 		if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		{
+			PC->ResetIgnoreLookInput();
+			
+			if (!bIsRedLight)
+			{
+				PC->SetIgnoreLookInput(true);
+			}
+
 			if (UPTWRedLightControllerComponent* UIComp = PC->FindComponentByClass<UPTWRedLightControllerComponent>())
 			{
 				if (bIsRedLight)
@@ -314,5 +377,63 @@ void APTWRedLightCharacter::Multicast_RemoveSpottedMark_Implementation(ACharacte
 		{
 			Comp->DestroyComponent();
 		}
+	}
+}
+
+void APTWRedLightCharacter::Multicast_PlayLoopSound_Implementation()
+{
+	if (LoopSound)
+	{
+		if (!ActiveLoopSound || !ActiveLoopSound->IsPlaying())
+		{
+			ActiveLoopSound = UGameplayStatics::SpawnSound2D(GetWorld(), LoopSound);
+		}
+	}
+}
+
+void APTWRedLightCharacter::Multicast_PlayEndSound_Implementation(float PitchMultiplier)
+{
+	if (ActiveLoopSound && ActiveLoopSound->IsPlaying())
+	{
+		ActiveLoopSound->Stop();
+		ActiveLoopSound = nullptr;
+	}
+	
+	if (EndSound)
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), EndSound, 1.0f, PitchMultiplier);
+	}
+}
+
+void APTWRedLightCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (IsLocallyControlled() && CachedCameraComp)
+	{
+		float TargetFOV = bIsZooming ? ZoomedFOV : DefaultFOV;
+		float CurrentFOV = CachedCameraComp->FieldOfView;
+
+		if (!FMath::IsNearlyEqual(CurrentFOV, TargetFOV))
+		{
+			float NewFOV = FMath::FInterpTo(CurrentFOV, TargetFOV, DeltaTime, ZoomInterpSpeed);
+			CachedCameraComp->SetFieldOfView(NewFOV);
+		}
+	}
+}
+
+void APTWRedLightCharacter::StartZoom()
+{
+	if (IsLocallyControlled())
+	{
+		bIsZooming = true;
+	}
+}
+
+void APTWRedLightCharacter::StopZoom()
+{
+	if (IsLocallyControlled())
+	{
+		bIsZooming = false;
 	}
 }

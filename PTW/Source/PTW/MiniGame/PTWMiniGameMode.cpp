@@ -986,27 +986,26 @@ void APTWMiniGameMode::StartResultSequence()
 {
 	UWorld* World = GetWorld();
 	if (!World) return;
-	
+
+	if (PTWGameState)
+	{
+		PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGameResult);
+	}
+
 	AActor* ResultCamera = nullptr;
 	TArray<AActor*> FoundActors;
-
 	UGameplayStatics::GetAllActorsWithTag(World, FName("ResultCamera"), FoundActors);
 	if (FoundActors.Num() > 0) ResultCamera = FoundActors[0];
 
-	AActor* WinSpot = nullptr;
-	UGameplayStatics::GetAllActorsWithTag(World, FName("WinSpot"), FoundActors);
-	if (FoundActors.Num() > 0) WinSpot = FoundActors[0];
+	TArray<AActor*> WinSpots;
+	UGameplayStatics::GetAllActorsWithTag(World, FName("WinSpot"), WinSpots);
 
-	AActor* LoseSpot = nullptr;
-	UGameplayStatics::GetAllActorsWithTag(World, FName("LoseSpot"), FoundActors);
-	if (FoundActors.Num() > 0) LoseSpot = FoundActors[0];
-	
-	if (!PTWGameState) return;
-	PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGameResult);
-	
-	int32 WinnerCount = 0;
-	int32 LoserCount = 0;
-	
+	TArray<AActor*> LoseSpots;
+	UGameplayStatics::GetAllActorsWithTag(World, FName("LoseSpot"), LoseSpots);
+
+	int32 CurrentWinIndex = 0;
+	int32 CurrentLoseIndex = 0;
+
 	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
 	{
 		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
@@ -1037,36 +1036,52 @@ void APTWMiniGameMode::StartResultSequence()
 		if (ResultCharacterClass)
 		{
 			bool bIsWinner = (PS->GetDeathOrder() == 0);
+
 			FVector SpawnLoc = FVector::ZeroVector;
 			FRotator SpawnRot = FRotator::ZeroRotator;
+			bool bValidSpotFound = false;
 
-			if (bIsWinner && WinSpot)
+			if (bIsWinner)
 			{
-				SpawnLoc = WinSpot->GetActorLocation() + (WinSpot->GetActorRightVector() * 100.0f * WinnerCount++);
-				SpawnRot = WinSpot->GetActorRotation();
+				if (WinSpots.IsValidIndex(CurrentWinIndex))
+				{
+					SpawnLoc = WinSpots[CurrentWinIndex]->GetActorLocation();
+					SpawnRot = WinSpots[CurrentWinIndex]->GetActorRotation();
+					CurrentWinIndex++;
+					bValidSpotFound = true;
+				}
 			}
-			else if (!bIsWinner && LoseSpot)
+			else
 			{
-				SpawnLoc = LoseSpot->GetActorLocation() + (LoseSpot->GetActorRightVector() * 100.0f * LoserCount++);
-				SpawnRot = LoseSpot->GetActorRotation();
+				if (LoseSpots.IsValidIndex(CurrentLoseIndex))
+				{
+					SpawnLoc = LoseSpots[CurrentLoseIndex]->GetActorLocation();
+					SpawnRot = LoseSpots[CurrentLoseIndex]->GetActorRotation();
+					CurrentLoseIndex++;
+					bValidSpotFound = true;
+				}
 			}
 
-			if (!SpawnLoc.IsZero())
+			if (bValidSpotFound)
 			{
-				FActorSpawnParameters Params;
-				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-				APTWResultCharacter* ResultChar = World->SpawnActor<APTWResultCharacter>(ResultCharacterClass, SpawnLoc, SpawnRot, Params);
+				APTWResultCharacter* ResultChar = World->SpawnActor<APTWResultCharacter>(ResultCharacterClass, SpawnLoc, SpawnRot, SpawnParams);
 
 				if (ResultChar)
 				{
 					ResultChar->InitializeResult(bIsWinner);
 				}
 			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[Result] 스폰 포인트가 부족합니다! 맵에 TargetPoint를 더 배치해주세요."));
+			}
 		}
 	}
-	GetWorldTimerManager().SetTimer(ResultTimerHandle, this, &APTWMiniGameMode::FinishEndGameSequence, ResultSequenceDuration, false);
 
+	GetWorldTimerManager().SetTimer(ResultTimerHandle, this, &APTWMiniGameMode::FinishEndGameSequence, ResultSequenceDuration, false);
 }
 
 void APTWMiniGameMode::FinishEndGameSequence()

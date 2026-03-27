@@ -49,6 +49,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Delivery | Logic")
 	FRandomItemBoxData GetRandomItemRowFromTable();
 	
+	void InitializeRaceRankingUI();
+	
 protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	virtual void RestartPlayer(AController* NewPlayer) override;
@@ -76,7 +78,7 @@ protected:
 	
 	/* 랜덤 아이템 어빌리티 미리 부여 */
 	void GrantItemAbilities(UAbilitySystemComponent* ASC);
-	
+
 private:
 	
 	/* 미니 게임 시작 무기 지급*/
@@ -93,10 +95,6 @@ private:
 	
 	/* UI */
 	void DeliveryUISetting(APTWPlayerCharacter* TargetCharacter);
-	
-	void Test_GiveItems();
-	
-
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
@@ -130,17 +128,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Delivery | Data")
 	TObjectPtr<UDataTable> ItemDataTable;
-	
-	
-	
-	UPROPERTY(EditAnywhere, Category = "Game|Test")
-	TObjectPtr<UPTWItemDefinition> TestItemDef;
-	
-	UPROPERTY(EditAnywhere, Category = "Game|Test")
-	TObjectPtr<UPTWItemDefinition> TestPassive;
-	
-	UPROPERTY(EditAnywhere, Category = "Game|Test")
-	TObjectPtr<UPTWItemDefinition> TestActive;
 
 private:
 	FTimerHandle CountDownTimerHandle;

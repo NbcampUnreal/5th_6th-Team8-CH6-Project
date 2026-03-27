@@ -19,6 +19,7 @@ void AStartDetectorActor::OnDetectOverlap(UPrimitiveComponent* OverlappedCompone
 			if (APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(OtherActor))
 			{
 				DeliveryGameMode->GiveDeliveryItems(PC, EffectToApply);
+				DeliveryGameMode->InitializeRaceRankingUI();
 			}
 		}
 	}

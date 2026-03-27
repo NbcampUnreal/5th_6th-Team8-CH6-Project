@@ -32,11 +32,7 @@ void APTWDeliveryGameMode::StartRound()
 	RemoveBeginGameplayEffect();
 	GetWorld()->GetTimerManager().SetTimer(RankingTimerHandle, this, &APTWDeliveryGameMode::UpdateAllPlayerRanks, 0.1f, true);
 	StartBlocker->HideActor();
-	
-#if WITH_EDITOR
-	Test_GiveItems();
-#endif
-	
+
 	Super::StartRound();
 }
 
@@ -372,20 +368,6 @@ void APTWDeliveryGameMode::DeliveryUISetting(APTWPlayerCharacter* TargetCharacte
 	}
 }
 
-void APTWDeliveryGameMode::Test_GiveItems()
-{
-	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
-	if (!SpawnManager) return;
-	
-	for (APlayerState* AS : PTWGameState->AlivePlayers)
-	{
-		SpawnManager->SpawnSingleItem(Cast<APTWPlayerState>(AS), TestItemDef);
-		SpawnManager->SpawnSingleItem(Cast<APTWPlayerState>(AS), TestPassive);
-		SpawnManager->SpawnSingleItem(Cast<APTWPlayerState>(AS), TestActive);
-	}
-	
-}
-
 void APTWDeliveryGameMode::RemoveBeginGameplayEffect()
 {
 	for (APlayerState* AS : PTWGameState->AlivePlayers)
@@ -435,5 +417,15 @@ void APTWDeliveryGameMode::GrantItemAbilities(UAbilitySystemComponent* ASC)
 				ASC->GiveAbility(ItemSpec);
 			}
 		}
+	}
+}
+
+void APTWDeliveryGameMode::InitializeRaceRankingUI()
+{
+	for (int32 i = 0; i < RankPCList.Num(); ++i)
+	{
+		UPTWDeliveryControllerComponent* DeliveryControllerComp =  Cast<UPTWDeliveryControllerComponent>(RankPCList[i]->GetControllerComponent());
+		if (!DeliveryControllerComp) return;
+		DeliveryControllerComp->RaceRankUpdate();
 	}
 }

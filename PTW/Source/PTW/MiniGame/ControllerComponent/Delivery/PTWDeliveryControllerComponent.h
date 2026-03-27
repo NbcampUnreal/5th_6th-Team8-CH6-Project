@@ -26,6 +26,9 @@ public:
 	FORCEINLINE void SetTraveledDistance(float NewTraveledDistance) { TraveledDistance = NewTraveledDistance;}
 	FORCEINLINE float GetTraveledDistance() const { return TraveledDistance;}
 	
+	UFUNCTION()
+	void RaceRankUpdate();
+	
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentRank)
 	int32 MyCurrentRank = 0;
@@ -41,9 +44,6 @@ protected:
 	
 	UFUNCTION(Client, Reliable)
 	void ClientRPC_SetCountDownText(int32 Count);
-	
-	UFUNCTION()
-	void RaceRankUpdate();
 	
 	UFUNCTION()
 	void OnRep_CurrentRank(int32 OldRank);

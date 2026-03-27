@@ -7,7 +7,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "UI/PTWUISubsystem.h"
 #include "GameFramework/PlayerController.h"
-#include "System/PTWSessionSubsystem.h"
+#include "System/PTWSteamSessionSubsystem.h"
 
 void UPTWPauseMenu::NativeConstruct()
 {
@@ -104,10 +104,10 @@ void UPTWPauseMenu::OnClickedLeaveGame()
 {
 	if (UGameInstance* GI = GetGameInstance())
 	{
-		if (UPTWSessionSubsystem* SessionSubsystem =
-			GI->GetSubsystem<UPTWSessionSubsystem>())
+		if (UPTWSteamSessionSubsystem* SteamSessionSubsystem =
+			UPTWSteamSessionSubsystem::Get(this))
 		{
-			SessionSubsystem->LeaveGameSession();
+			SteamSessionSubsystem->LeaveGameSession();
 		}
 	}
 }

@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "PTWSessionSubsystem.h"
+#include "PTWSteamSessionSubsystem.h"
 #include "OnlineSubsystem.h"
 #include "Algo/RandomShuffle.h"
 #include "Kismet/GameplayStatics.h"
@@ -9,8 +9,51 @@
 #include "Online/OnlineSessionNames.h"
 #include "System/Session/PTWSessionConfig.h"
 
-#define LOCTEXT_NAMESPACE "SESSIONSUBSYSTEM"
-bool UPTWSessionSubsystem::IsUsingSteamSubsystem()
+#define LOCTEXT_NAMESPACE "STEAMSESSIONSUBSYSTEM"
+
+UPTWSteamSessionSubsystem* UPTWSteamSessionSubsystem::Get(const UObject* WorldContextObject)
+{
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+	if (IsValid(World))
+	{
+		if (UGameInstance* GI = World->GetGameInstance())
+		{
+			return GI->GetSubsystem<UPTWSteamSessionSubsystem>();
+		}
+	}
+	return nullptr;
+}
+
+void UPTWSteamSessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+	
+	if (IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get())
+	{
+		SessionInterface = OnlineSubsystem->GetSessionInterface();
+	}
+	
+	if (GEngine)
+	{
+		GEngine->OnNetworkFailure().AddUObject(this, &ThisClass::HandleNetworkFailure);
+	}
+	
+	SessionSearchQueue.Empty();
+	BPSearchResults.Reset();
+}
+
+void UPTWSteamSessionSubsystem::Deinitialize()
+{
+	if (GEngine)
+	{
+		GEngine->OnNetworkFailure().RemoveAll(this);
+	}
+	SessionInterface = nullptr;
+	
+	Super::Deinitialize();
+}
+
+bool UPTWSteamSessionSubsystem::IsUsingSteamSubsystem()
 {
 	if (IOnlineSubsystem* SI = IOnlineSubsystem::Get())
 	{
@@ -19,7 +62,7 @@ bool UPTWSessionSubsystem::IsUsingSteamSubsystem()
 	return false;
 }
 
-FString UPTWSessionSubsystem::GetSteamServerID()
+FString UPTWSteamSessionSubsystem::GetSteamServerID()
 {
 	if (SessionInterface.IsValid())
 	{
@@ -36,7 +79,7 @@ FString UPTWSessionSubsystem::GetSteamServerID()
 	return FString();
 }
 
-int32 UPTWSessionSubsystem::GetMaxPlayers()
+int32 UPTWSteamSessionSubsystem::GetMaxPlayers()
 {
 	if (SessionInterface.IsValid())
 	{
@@ -50,7 +93,7 @@ int32 UPTWSessionSubsystem::GetMaxPlayers()
 	return 16;
 }
 
-int32 UPTWSessionSubsystem::GetMaxRounds()
+int32 UPTWSteamSessionSubsystem::GetMaxRounds()
 {
 	if (SessionInterface.IsValid())
 	{
@@ -71,7 +114,7 @@ int32 UPTWSessionSubsystem::GetMaxRounds()
 	return GetMaxRoundsByLimit(EPTWRoundLimit::Short);
 }
 
-void UPTWSessionSubsystem::OnGameSessionActivated(FString InGameLiftSessionId)
+void UPTWSteamSessionSubsystem::OnGameSessionActivated(FString InGameLiftSessionId)
 {
 	if (!SessionInterface.IsValid()) return;
 	
@@ -81,7 +124,6 @@ void UPTWSessionSubsystem::OnGameSessionActivated(FString InGameLiftSessionId)
 		FString Part2 = InGameLiftSessionId.Mid(100);
 		NewSettings->Set(FName("GameLiftSessionId_1"), Part1, EOnlineDataAdvertisementType::ViaOnlineService);
 		NewSettings->Set(FName("GameLiftSessionId_2"), Part2, EOnlineDataAdvertisementType::ViaOnlineService);
-		NewSettings->bShouldAdvertise = true;
 		
 		if (SessionInterface->UpdateSession(NAME_GameSession, *NewSettings, true))
 		{
@@ -94,7 +136,7 @@ void UPTWSessionSubsystem::OnGameSessionActivated(FString InGameLiftSessionId)
 	}
 }
 
-void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig, bool bTravelOnSuccess)
+void UPTWSteamSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig, bool bTravelOnSuccess)
 {
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
@@ -139,7 +181,7 @@ void UPTWSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfig, bo
     }
 }
 
-void UPTWSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResultBP& BPSearchResult)
+void UPTWSteamSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResultBP& BPSearchResult)
 {
 	if (!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
@@ -155,7 +197,7 @@ void UPTWSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResultBP& B
 	}
 }
 
-void UPTWSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
+void UPTWSteamSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
 	if (Result != EOnJoinSessionCompleteResult::Success)
 	{
@@ -184,7 +226,7 @@ void UPTWSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessi
 	}
 }
 
-void UPTWSessionSubsystem::FindGameSession()
+void UPTWSteamSessionSubsystem::FindGameSession()
 {
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
@@ -209,7 +251,7 @@ void UPTWSessionSubsystem::FindGameSession()
 	SearchForGameSessions();
 }
 
-void UPTWSessionSubsystem::SearchForGameSessions()
+void UPTWSteamSessionSubsystem::SearchForGameSessions()
 {
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
@@ -235,7 +277,7 @@ void UPTWSessionSubsystem::SearchForGameSessions()
 	}
 }
 
-void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
+void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 {
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
@@ -278,7 +320,7 @@ void UPTWSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	}
 }
 
-void UPTWSessionSubsystem::OnQuickMatchFindSessionsComplete()
+void UPTWSteamSessionSubsystem::OnQuickMatchFindSessionsComplete()
 {
 	if(!SessionInterface.IsValid()) return;
 	OnAllSessionSearchFinished.RemoveDynamic(this, &ThisClass::OnQuickMatchFindSessionsComplete);
@@ -310,7 +352,7 @@ void UPTWSessionSubsystem::OnQuickMatchFindSessionsComplete()
 	CreateGameSession(FPTWSessionConfig(), true);
 }
 
-void UPTWSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig)
+void UPTWSteamSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig)
 {
 	FString ServerPath = FPaths::ConvertRelativePathToFull(
 		FPaths::Combine(
@@ -350,7 +392,7 @@ void UPTWSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig
 	}
 }
 
-void UPTWSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig)
+void UPTWSteamSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig)
 {
 	FString Options;
 	if (!IsRunningDedicatedServer())
@@ -372,36 +414,7 @@ void UPTWSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig Sess
 	
 }
 
-void UPTWSessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-	
-	if (IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get())
-	{
-		SessionInterface = OnlineSubsystem->GetSessionInterface();
-	}
-	
-	if (GEngine)
-	{
-		GEngine->OnNetworkFailure().AddUObject(this, &ThisClass::HandleNetworkFailure);
-	}
-	
-	SessionSearchQueue.Empty();
-	BPSearchResults.Reset();
-}
-
-void UPTWSessionSubsystem::Deinitialize()
-{
-	if (GEngine)
-	{
-		GEngine->OnNetworkFailure().RemoveAll(this);
-	}
-	SessionInterface = nullptr;
-	
-	Super::Deinitialize();
-}
-
-void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig, bool bTravelOnSuccess)
+void UPTWSteamSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig, bool bTravelOnSuccess)
 {
 	if(!SessionInterface.IsValid()) return;
 	
@@ -420,14 +433,14 @@ void UPTWSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasS
 	}
 }
 
-void UPTWSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, 
+void UPTWSteamSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, 
 	ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
 	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] HandleNetworkFailure() called"));
 	LeaveGameSession();
 }
 
-void UPTWSessionSubsystem::LeaveGameSession()
+void UPTWSteamSessionSubsystem::LeaveGameSession()
 {
 	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] LeaveGameSession() called"));
 	
@@ -449,7 +462,7 @@ void UPTWSessionSubsystem::LeaveGameSession()
 	OnDestroySessionComplete(NAME_GameSession, true);
 }
 
-bool UPTWSessionSubsystem::UnregisterPlayer(FName SessionName, const FUniqueNetId& PlayerId)
+bool UPTWSteamSessionSubsystem::UnregisterPlayer(FName SessionName, const FUniqueNetId& PlayerId)
 {
 	if (SessionInterface.IsValid())
 	{
@@ -462,7 +475,7 @@ bool UPTWSessionSubsystem::UnregisterPlayer(FName SessionName, const FUniqueNetI
 	}
 }
 
-void UPTWSessionSubsystem::ExitGameSession()
+void UPTWSteamSessionSubsystem::ExitGameSession()
 {
 	if (SessionInterface.IsValid())
 	{
@@ -474,15 +487,15 @@ void UPTWSessionSubsystem::ExitGameSession()
 	}
 }
 
-void UPTWSessionSubsystem::QuickMatchGameSession()
+void UPTWSteamSessionSubsystem::QuickMatchGameSession()
 {
 	if(!SessionInterface.IsValid()) return;
-	OnAllSessionSearchFinished.AddUniqueDynamic(this, &UPTWSessionSubsystem::OnQuickMatchFindSessionsComplete);
+	OnAllSessionSearchFinished.AddUniqueDynamic(this, &UPTWSteamSessionSubsystem::OnQuickMatchFindSessionsComplete);
 	
 	FindGameSession();
 }
 
-void UPTWSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
+void UPTWSteamSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
 	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] OnDestroySessionComplete() called"));
 	if (SessionInterface.IsValid())

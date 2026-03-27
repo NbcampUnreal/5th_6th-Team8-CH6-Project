@@ -16,6 +16,11 @@ UPTWAbilityBattlePSComponent::UPTWAbilityBattlePSComponent()
 	SetIsReplicatedByDefault(true);
 }
 
+void UPTWAbilityBattlePSComponent::Init(APTWPlayerState* PlayerState)
+{
+	ASC = Cast<APTWPlayerState>(GetOwner())->GetAbilitySystemComponent();
+}
+
 void UPTWAbilityBattlePSComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -28,7 +33,7 @@ void UPTWAbilityBattlePSComponent::GetLifetimeReplicatedProps(TArray<class FLife
 
 void UPTWAbilityBattlePSComponent::AddDraftCharges()
 {
-	if (GetOwner() || GetOwner()->HasAuthority())
+	if (GetOwner() && GetOwner()->HasAuthority())
 	{
 		DraftChargeCount++;
 	}
@@ -36,7 +41,7 @@ void UPTWAbilityBattlePSComponent::AddDraftCharges()
 
 void UPTWAbilityBattlePSComponent::DecreaseDraftCharges()
 {
-	if (GetOwner() || GetOwner()->HasAuthority())
+	if (GetOwner() && GetOwner()->HasAuthority())
 	{
 		DraftChargeCount--;
 	}
@@ -59,9 +64,9 @@ void UPTWAbilityBattlePSComponent::UpdateChargeRemainTime(float DecreaseTimer)
 	APTWPlayerState* PlayerState = Cast<APTWPlayerState>(GetOwner());
 	if (!PlayerState) return;
 	
-	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
-	if (ASC && ASC->HasMatchingGameplayTag(GameplayTags::State::Status_Dead)) return;
+	if (!ASC) return;
 	
+	if (ASC->HasMatchingGameplayTag(GameplayTags::State::Status_Dead)) return;
 	ChargeRemainTime -= DecreaseTimer;
 
 	if (ChargeRemainTime <= 0.f)
@@ -71,6 +76,24 @@ void UPTWAbilityBattlePSComponent::UpdateChargeRemainTime(float DecreaseTimer)
 	}
 
 	//UE_LOG(LogTemp, Log, TEXT("ChargeRemainTime: %f"), ChargeRemainTime);
+}
+
+void UPTWAbilityBattlePSComponent::ApplyHealthRegenEffect()
+{
+	if (!ASC || !HealthRegenEffect) return;
+
+	FGameplayEffectContextHandle Context = ASC->MakeEffectContext();
+
+	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(
+		HealthRegenEffect,
+		1.0f,
+		Context
+	);
+
+	if (SpecHandle.IsValid())
+	{
+		ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+	}
 }
 
 void UPTWAbilityBattlePSComponent::OnRep_ChargeRemainTime()

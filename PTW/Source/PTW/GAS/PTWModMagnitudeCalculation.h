@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayModMagnitudeCalculation.h"
 #include "PTWAbilityBattleAttributeSet.h"
+#include "PTWAttributeSet.h"
 #include "PTWWeaponAttributeSet.h"
 #include "PTWModMagnitudeCalculation.generated.h"
 

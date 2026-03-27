@@ -20,13 +20,15 @@ class PTW_API UPTWGameLiftServerSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 	
+public:
+	UPTWGameLiftServerSubsystem();
+	
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UPTWAPIData> ServerAPIData;
 	
 #if WITH_GAMELIFT // 서버 전용 로직
 public:
-	UPTWGameLiftServerSubsystem();
 	static UPTWGameLiftServerSubsystem* Get(const UObject* WorldContextObject);
 	
 protected:

@@ -2,6 +2,7 @@
 
 
 #include "PTWGameLiftServerSubsystem.h"
+#include "Server/PTWAPIData.h"
 #if WITH_GAMELIFT
 #include "GameLiftServerSDK.h"
 #include "HttpModule.h"
@@ -9,13 +10,11 @@
 #include "PTWSteamSessionSubsystem.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Server/GameplayServerTags.h"
-#include "Server/PTWAPIData.h"
 #endif
-
-#if WITH_GAMELIFT
 
 UPTWGameLiftServerSubsystem::UPTWGameLiftServerSubsystem()
 {
+#if WITH_GAMELIFT
 	if (!IsValid(ServerAPIData))
 	{
 		static ConstructorHelpers::FObjectFinder<UPTWAPIData> DataAssetFinder(TEXT("/Game/_PTW/System/Server/DA_PTW_GameLift_ServerAPI.DA_PTW_GameLift_ServerAPI"));
@@ -24,7 +23,10 @@ UPTWGameLiftServerSubsystem::UPTWGameLiftServerSubsystem()
 			ServerAPIData = DataAssetFinder.Object; 
 		}
 	}
+#endif
 }
+
+#if WITH_GAMELIFT
 
 UPTWGameLiftServerSubsystem* UPTWGameLiftServerSubsystem::Get(const UObject* WorldContextObject)
 {

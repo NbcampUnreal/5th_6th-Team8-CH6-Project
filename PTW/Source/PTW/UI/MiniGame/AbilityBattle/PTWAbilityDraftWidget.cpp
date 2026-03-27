@@ -91,21 +91,21 @@ void UPTWAbilityDraftWidget::OnDraftSelected(FName RowId)
 
 void UPTWAbilityDraftWidget::OnShieldChanged(const FOnAttributeChangeData& Data)
 {
-	APlayerController* PlayerController = Cast<APlayerController>(GetOwningPlayer());
-	if (!PlayerController) return;
-
-	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
-	if (!PlayerState) return;
-	
-	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
-	
-	const UPTWAbilityBattleAttributeSet* Set = ASC->GetSet<UPTWAbilityBattleAttributeSet>();
-	if (!Set) return;
-	
 	const float Current = Data.NewValue;
-	const float Max = Set->GetMaxShield();
 	
-	WBP_ShieldBar->SetProgressBarPer(Current, Max);
+	WBP_ShieldBar->SetCurrentShield(Current);
+}
+
+void UPTWAbilityDraftWidget::OnMaxShieldChanged(const FOnAttributeChangeData& Data)
+{
+	const float Current = Data.NewValue;
+	
+	WBP_ShieldBar->SetCurrentMaxShield(Current);
+
+	if (!WBP_ShieldBar->IsVisible())
+	{
+		WBP_ShieldBar->SetVisibility(ESlateVisibility::Visible);
+	}
 }
 
 void UPTWAbilityDraftWidget::NativeConstruct()
@@ -123,9 +123,14 @@ void UPTWAbilityDraftWidget::NativeConstruct()
 	
 	UPTWAbilityBattlePSComponent* PSComponent = Cast<UPTWAbilityBattlePSComponent>(PlayerState->GetMiniGameComponent());
 	if (!PSComponent) return;
+
+	WBP_ShieldBar->SetVisibility(ESlateVisibility::Hidden);
 	
 	PSComponent->OnChangedChargeCount.AddUObject(WBP_DraftCharge, &UPTWDraftCharge::UpdateChargeCount);
 	PSComponent->OnDraftChargedTimeChanged.AddUObject(WBP_DraftCharge, &UPTWDraftCharge::UpdateChargeTime);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(UPTWAttributeSet::GetShieldAttribute()).AddUObject(this, &UPTWAbilityDraftWidget::OnShieldChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(UPTWAbilityBattleAttributeSet::GetMaxShieldAttribute()).AddUObject(this, &UPTWAbilityDraftWidget::OnMaxShieldChanged);
+
+	
 }

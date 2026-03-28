@@ -26,12 +26,13 @@ static int32 GetMaxRoundsByLimit(EPTWRoundLimit Limit)
 
 namespace PTWSessionKey
 {
-	inline const FName ServerName = FName(TEXT("SERVER_NAME"));
-	inline const FName MapName =	FName(TEXT("MAP_NAME"));
-	inline const FName MaxPlayers =	FName(TEXT("MAX_PLAYERS"));
-	inline const FName MaxRounds =	FName(TEXT("MAX_ROUNDS"));
-	inline const FName JOINABLE =	FName(TEXT("JOINABLE"));
-	inline const FName NoGameLift =	FName(TEXT("NoGameLift"));
+	inline const FName ServerName = FName(TEXT("SN"));
+	inline const FName MapName =	FName(TEXT("MN"));
+	inline const FName MaxPlayers =	FName(TEXT("MP"));
+	inline const FName MaxRounds =	FName(TEXT("MR"));
+	inline const FName JOINABLE =	FName(TEXT("JA"));
+	inline const FName NoGameLift =	FName(TEXT("NL"));
+	inline const FName GameLiftSessionId =	FName(TEXT("GI"));
 }
 
 USTRUCT(BlueprintType)

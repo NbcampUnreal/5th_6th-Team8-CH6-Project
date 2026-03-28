@@ -104,6 +104,11 @@ void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
+#if WITH_GAMELIFT
+	// UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
+	// SteamSessionSubsystem->UpdateGameSeesionPlayerCount(GetNumPlayers());
+#endif
+	
 	HandlePlayerJoined(NewPlayer);
 }
 
@@ -117,7 +122,6 @@ void APTWGameMode::HandleStartingNewPlayer_Implementation(APlayerController* New
 
 void APTWGameMode::Logout(AController* Exiting)
 {
-	
 	FString PlayerName = TEXT("Unknown");
 	FUniqueNetIdRepl CachedUniqueNetId;
 	FString CachedPlayerSessionId;
@@ -125,7 +129,6 @@ void APTWGameMode::Logout(AController* Exiting)
 	if (APlayerState* PS = Exiting->GetPlayerState<APlayerState>())
 	{
 		PlayerName = PS->GetPlayerName();
-		CachedUniqueNetId = PS->GetUniqueId();
 		if (APTWPlayerState* PTWPS = Cast<APTWPlayerState>(PS))
 		{
 			CachedPlayerSessionId = PTWPS->GetPlayerSessionId();
@@ -133,18 +136,12 @@ void APTWGameMode::Logout(AController* Exiting)
 	}
 	
 	Super::Logout(Exiting);
-	
-	UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
-	if (IsValid(SteamSessionSubsystem))
-	{
-		SteamSessionSubsystem->UnregisterPlayer(NAME_GameSession, *CachedUniqueNetId.GetUniqueNetId());
-	}
-	
+
 #if WITH_GAMELIFT
 	UPTWGameLiftServerSubsystem* GameLiftServerSubsystem = UPTWGameLiftServerSubsystem::Get(this);
 	if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
 	{
-		if (IsValid(GameLiftServerSubsystem))
+		if (IsValid(GameLiftServerSubsystem) && !CachedPlayerSessionId.IsEmpty())
 		{
 			// 로그아웃한 PlayerSession 제거
 			GameLiftServerSubsystem->RemovePlayerSession(CachedPlayerSessionId);
@@ -152,11 +149,6 @@ void APTWGameMode::Logout(AController* Exiting)
 			if (GetNumPlayers() <= 0)
 			{
 				GameLiftServerSubsystem->ExitGameSession();
-				FTimerHandle TempTimerHandle;
-				GetWorldTimerManager().SetTimer(TempTimerHandle, [=, this]()
-				{
-					GameLiftServerSubsystem->ExitGameSession();
-				}, 2.0f, false);
 			}
 		}
 	}

@@ -5,6 +5,7 @@
 #include "Server/GameplayServerTags.h"
 #include "Server/PTWAPIData.h"
 #include "HttpModule.h"
+#include "PTWSteamSessionSubsystem.h"
 #include "GameFramework/PlayerState.h"
 #include "GenericPlatform/GenericPlatformHttp.h"
 #include "Interfaces/IHttpResponse.h"
@@ -227,10 +228,18 @@ void UPTWGameLiftClientSubsystem::CheckSessionStatusLoop_Response(FHttpRequestPt
 		else if (Response->GetResponseCode() == 200)
 		{
 			GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
-			CreatePlayerSession(GetUniquePlayerId(), SessionId);
+			UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
+			SteamSessionSubsystem->OnFindByIdGameSessionComplete.AddLambda([=, this](const FOnlineSessionSearchResultBP& SearchResult)
+			{
+				CreatePlayerSession(GetUniquePlayerId(), SessionId, SearchResult);
+				SteamSessionSubsystem->OnFindByIdGameSessionComplete.RemoveAll(this);
+			});
+			
+			SteamSessionSubsystem->FindByIdGameSession(SessionId);
 		}
 	}
 }
+
 
 void UPTWGameLiftClientSubsystem::WaitForSessionActivation(const FString& SessionId)
 {
@@ -295,10 +304,11 @@ void UPTWGameLiftClientSubsystem::DescribeGameSession_Response(FHttpRequestPtr R
 	}
 }
 
-void UPTWGameLiftClientSubsystem::CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId)
+void UPTWGameLiftClientSubsystem::CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId, 
+	const FOnlineSessionSearchResultBP& SearchResult)
 {
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
-	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CreatePlayerSession_Response);
+	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CreatePlayerSession_Response, SearchResult);
 	
 	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreatePlayerSession);
 	Request->SetURL(APIUrl);
@@ -316,7 +326,8 @@ void UPTWGameLiftClientSubsystem::CreatePlayerSession(const FString& PlayerId, c
 	Request->ProcessRequest();
 }
 
-void UPTWGameLiftClientSubsystem::CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void UPTWGameLiftClientSubsystem::CreatePlayerSession_Response(FHttpRequestPtr Request, 
+	FHttpResponsePtr Response, bool bWasSuccessful, const FOnlineSessionSearchResultBP SearchResult)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Create PlayerSession Response Received"));
 	
@@ -343,20 +354,20 @@ void UPTWGameLiftClientSubsystem::CreatePlayerSession_Response(FHttpRequestPtr R
 		SessionData.Contains(PortName) && 
 		SessionData.Contains(SteamIdName))
 	{
-		FString ConnectURL = FString::Printf(TEXT("steam.%s:%s?PlayerSessionId=%s"),
-			  *SessionData[SteamIdName],			  // 서버스팀 ID
-			  *SessionData[PortName],
-			  *SessionData[PlayerSessionIdName]      // GameLift 세션 인증용 ID
-		  );
-	
+		// ("steam.%s:%s?PlayerSessionId=%s")
+		
+		FString ConnectURL = FString::Printf(TEXT("?PlayerSessionId=%s"), *SessionData[PlayerSessionIdName]);
+		
+		UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
+		if (!IsValid(SteamSessionSubsystem)) return;
+		
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *ConnectURL);
-		// const FString IpAndPort = PlayerSession.IpAddress; + TEXT(":") + FString::FromInt(PlayerSession.Port);
-		// const FName Address = FName(*IpAndPort);
-		if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, "ClientTravel");
-			PC->ClientTravel(ConnectURL, TRAVEL_Absolute, false);
-		}
+		SteamSessionSubsystem->JoinGameSession(SearchResult, ConnectURL);
+		// if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+		// {
+		// 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, "ClientTravel");
+		// 	PC->ClientTravel(ConnectURL, TRAVEL_Absolute, false);
+		// }
 	}
 }
 

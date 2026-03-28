@@ -9,6 +9,7 @@
 #include "Session/PTWSessionConfig.h"
 #include "PTWSteamSessionSubsystem.generated.h"
 
+
 USTRUCT(BlueprintType)
 struct FOnlineSessionSearchResultBP
 {
@@ -19,6 +20,7 @@ struct FOnlineSessionSearchResultBP
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSessionSearchComplete, const TArray<FOnlineSessionSearchResultBP>&, SearchResult);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllSessionSearchFinished);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSteamSessionMessageReceived, const FText&, Message);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnFindByIdGameSessionComplete, const FOnlineSessionSearchResultBP&);
 
 UCLASS()
 class PTW_API UPTWSteamSessionSubsystem : public UGameInstanceSubsystem
@@ -54,14 +56,19 @@ public:
 	
 	// 세션 참여
 	UFUNCTION(BlueprintCallable, Category = "Session")
-	void JoinGameSession(const FOnlineSessionSearchResultBP& SearchResult);
+	void JoinGameSession(const FOnlineSessionSearchResultBP& SearchResult, const FString Options = TEXT(""));
 	
-	// 세션 탐색
+	// 세션 탐색 선작업
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void FindGameSession();
 	
+	// 세션 검색
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void SearchForGameSessions();
+	
+	// Id기반 세션 검색
+	UFUNCTION(BlueprintCallable, Category = "Session")
+	void FindByIdGameSession(const FString& SteamId);
 	
 	// 데디케이티드 서버 생성 (unused)
 	UFUNCTION(BlueprintCallable, Category = "Session")
@@ -75,7 +82,7 @@ public:
 	void LeaveGameSession();
 	
 	// 스팀 세션 이탈 함수
-	bool UnregisterPlayer( FName SessionName, const FUniqueNetId& PlayerId);
+	bool UnregisterPlayer(FName SessionName, const FUniqueNetId& PlayerId);
 	
 	// 호스트 전용 세션 종료 함수
 	void ExitGameSession();
@@ -83,6 +90,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void QuickMatchGameSession();
 	
+	void UpdateGameSeesionPlayerCount(int32 CurrentPlayerCount);
 
 protected:
 	// 세션 생성 성공 시 호출
@@ -95,10 +103,13 @@ protected:
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	
 	// 세션 참여가 완료됐을 시 호출
-	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
+	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result, const FString Options);
 	
 	// 세션 탐색이 완료됐을 시 호출
 	void OnFindSessionsComplete(bool bWasSuccessful);
+	
+	// id 기반 세션 탐색
+	void OnFindByIdOnComplete(bool bWasSuccessful, const FString SteamId);
 	
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void OnQuickMatchFindSessionsComplete();
@@ -115,7 +126,7 @@ public:
 	FOnSessionSearchComplete OnSessionSearchComplete;
 	FOnAllSessionSearchFinished OnAllSessionSearchFinished;
 	FOnSteamSessionMessageReceived OnSteamSessionMessageReceived;
-	
+	FOnFindByIdGameSessionComplete OnFindByIdGameSessionComplete;
 protected:
 	FDelegateHandle SteamLoginCompletedHandle;
 	FDelegateHandle CreateSessionCompleteDelegateHandle;

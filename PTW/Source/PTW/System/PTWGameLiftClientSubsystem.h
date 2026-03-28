@@ -9,6 +9,7 @@
 
 class UPTWAPIData;
 class FJsonObject;
+struct FOnlineSessionSearchResultBP;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionSearchComplete, const TArray<FPTWGameLiftGameSession>&, SearchResults);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionMessageReceived, const FText&, Message);
@@ -67,17 +68,17 @@ public:
 	void CreateGameSession(FPTWSessionConfig& SessionConfig);
 	void CheckSessionStatus(const FString& SessionId, bool bIsLoop = false);
 	void DescribeGameSession(const FString& SessionId);
-	void CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
+	void CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId, const FOnlineSessionSearchResultBP& SearchResult);
 	void SearchGameSessions();
 	FString GetUniquePlayerId() const;
-
+	
 protected:
 	void CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void CheckSessionStatus_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void CheckSessionStatusLoop_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString SessionId);
 	void DescribeGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void WaitForSessionActivation(const FString& SessionId);
-	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FOnlineSessionSearchResultBP SearchResult);
 	void SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 protected:
@@ -87,6 +88,7 @@ protected:
 public:
 	FOnGameLiftSessionSearchComplete OnSessionSearchComplete;
 	FOnGameLiftSessionMessageReceived OnGameLiftSessionMessageReceived;
+
 private:
 	FTimerHandle CheckSessionLitmitTimer;
 };

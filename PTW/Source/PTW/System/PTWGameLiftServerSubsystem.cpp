@@ -3,6 +3,7 @@
 
 #include "PTWGameLiftServerSubsystem.h"
 #include "Server/PTWAPIData.h"
+#include "Session/PTWSessionConfig.h"
 #if WITH_GAMELIFT
 #include "GameLiftServerSDK.h"
 #include "HttpModule.h"
@@ -97,10 +98,10 @@ void UPTWGameLiftServerSubsystem::UpdateSessionToReady()
 	FString GameLiftSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
 	if (FOnlineSessionSettings* NewSettings = SessionInterface->GetSessionSettings(NAME_GameSession))
 	{
-		FString Part1 = GameLiftSessionId.Left(100);
-		FString Part2 = GameLiftSessionId.Mid(100);
-		NewSettings->Set(FName("GameLiftSessionId_1"), Part1, EOnlineDataAdvertisementType::ViaOnlineService);
-		NewSettings->Set(FName("GameLiftSessionId_2"), Part2, EOnlineDataAdvertisementType::ViaOnlineService);
+		FString RefindSeesionId = GameLiftSessionId.Replace(TEXT("arn:aws:gamelift:"), TEXT(""));
+		RefindSeesionId = RefindSeesionId.Replace(TEXT("::gamesession/"), TEXT("|"));
+		
+		NewSettings->Set(PTWSessionKey::GameLiftSessionId, RefindSeesionId, EOnlineDataAdvertisementType::ViaOnlineService);
 		NewSettings->Set(PTWSessionKey::JOINABLE, true, EOnlineDataAdvertisementType::ViaOnlineService);
 		
 		UpdateSessionCompleteDelegateHandle = SessionInterface->AddOnUpdateSessionCompleteDelegate_Handle(

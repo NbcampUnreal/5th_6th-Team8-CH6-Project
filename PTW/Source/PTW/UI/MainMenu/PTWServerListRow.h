@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "System/Session/PTWSessionConfig.h"
 #include "OnlineSessionSettings.h"
 #include "PTWServerListRow.generated.h"
 

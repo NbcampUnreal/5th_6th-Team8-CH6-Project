@@ -75,6 +75,7 @@ void UPTWServerListRow::OnClickedJoinButton()
 	
 	const FOnlineSession& OnlineSession = SteamSessionInfo.Session;
 	bool bIsNoGameLift = false;
+	const FOnlineSessionSearchResultBP& SteamSessionInfoBP = FOnlineSessionSearchResultBP(SteamSessionInfo);
 	
 	OnlineSession.SessionSettings.Get(PTWSessionKey::NoGameLift, bIsNoGameLift);
 	
@@ -83,34 +84,25 @@ void UPTWServerListRow::OnClickedJoinButton()
 		// 리슨 서버 접속
 		if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
 		{
-			SteamSessionSubsystem->JoinGameSession(FOnlineSessionSearchResultBP(SteamSessionInfo));
+			SteamSessionSubsystem->JoinGameSession(SteamSessionInfoBP);
 		}
 	}
 	else
 	{
 		// 데디케이티드 서버 접속
 		FString GameLiftSessionId;
-		FString Part1, Part2;
-		if (OnlineSession.SessionSettings.Get(FName("GameLiftSessionId_1"), Part1))
-		{
-			if (!Part1.IsEmpty())
-			{
-				GameLiftSessionId = Part1;
-			}
-		}
-		if (OnlineSession.SessionSettings.Get(FName("GameLiftSessionId_2"), Part2))
-		{
-			if (!Part2.IsEmpty())
-			{
-				GameLiftSessionId += Part2;
-			}
-		}
+		OnlineSession.SessionSettings.Get(PTWSessionKey::GameLiftSessionId, GameLiftSessionId);
+		
+		if (GameLiftSessionId.IsEmpty()) return;
+		
+		GameLiftSessionId = GameLiftSessionId.Replace(TEXT("|"), TEXT("::gamesession/"));
+		GameLiftSessionId = TEXT("arn:aws:gamelift:") + GameLiftSessionId;
 		
 		UE_LOG(LogTemp, Log, TEXT("GameLiftSessionId: %s"), *GameLiftSessionId);
 		if (UPTWGameLiftClientSubsystem* GameLiftClientSubsystem = UPTWGameLiftClientSubsystem::Get(this))
 		{
 			const FString UniquePlayerId = GameLiftClientSubsystem->GetUniquePlayerId();
-			GameLiftClientSubsystem->CreatePlayerSession(UniquePlayerId, GameLiftSessionId);
+			GameLiftClientSubsystem->CreatePlayerSession(UniquePlayerId, GameLiftSessionId, SteamSessionInfoBP);
 		}
 	}
 }

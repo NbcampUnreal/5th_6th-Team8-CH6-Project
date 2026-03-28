@@ -168,14 +168,14 @@ void UPTWSteamSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfi
     }
 }
 
-void UPTWSteamSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResultBP& BPSearchResult)
+void UPTWSteamSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResultBP& BPSearchResult, const FString Options)
 {
 	if (!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
 	const FOnlineSessionSearchResult& SearchResult = BPSearchResult.OnlineSessionSearchResult;
 	
 	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(
-		FOnJoinSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnJoinSessionComplete));
+		FOnJoinSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnJoinSessionComplete, Options));
 	
 	if (!SessionInterface->JoinSession(0, NAME_GameSession, SearchResult))
 	{
@@ -184,7 +184,7 @@ void UPTWSteamSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResult
 	}
 }
 
-void UPTWSteamSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
+void UPTWSteamSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result, const FString Options)
 {
 	if (Result != EOnJoinSessionCompleteResult::Success)
 	{
@@ -197,6 +197,7 @@ void UPTWSteamSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoin
 	FString ConnectString;
 	if (SessionInterface->GetResolvedConnectString(SessionName, ConnectString))
 	{
+		ConnectString += Options; 
 		if (APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Executing ClientTravel to: %s"), *ConnectString);
@@ -310,6 +311,88 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Session search failed."));
+	}
+}
+
+void UPTWSteamSessionSubsystem::FindByIdGameSession(const FString& GameSessionId)
+{
+	if(!SessionInterface.IsValid()) return;
+	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+	
+	SessionSearchQueue.Empty();
+	BPSearchResults.Reset();
+	
+	FString Part1 = GameSessionId.Left(100);
+	FString Part2 = GameSessionId.Mid(100);
+	
+	TSharedPtr<FOnlineSessionSearch> DedicatedSessionSearch = MakeShareable(new FOnlineSessionSearch());
+	DedicatedSessionSearch->bIsLanQuery = false;
+	DedicatedSessionSearch->MaxSearchResults = 100;
+	DedicatedSessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, true, EOnlineComparisonOp::Equals);
+	DedicatedSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, false, EOnlineComparisonOp::Equals);
+	DedicatedSessionSearch->QuerySettings.Set(PTWSessionKey::JOINABLE, true, EOnlineComparisonOp::Equals);
+	DedicatedSessionSearch->QuerySettings.Set(FName("GameLiftSessionId_1"), Part1, EOnlineComparisonOp::Equals);
+	DedicatedSessionSearch->QuerySettings.Set(FName("GameLiftSessionId_2"), Part2, EOnlineComparisonOp::Equals);
+	SessionSearchQueue.Enqueue(DedicatedSessionSearch);
+	
+	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
+		FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindByIdOnComplete, GameSessionId)
+	);
+	
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	if (SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), DedicatedSessionSearch.ToSharedRef()))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Session search started..."));
+	}
+	else
+	{
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+		UE_LOG(LogTemp, Warning, TEXT("Failed to start session search."));
+	}
+}
+
+void UPTWSteamSessionSubsystem::OnFindByIdOnComplete(bool bWasSuccessful, const FString GameLiftSessionId)
+{
+	if(!SessionInterface.IsValid()) return;
+	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+	
+	if(SessionSearchQueue.IsEmpty()) return;
+	
+	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+	SessionSearchQueue.Dequeue(SessionSearch);
+	SessionSearchQueue.Empty();
+	
+	if (bWasSuccessful && SessionSearch.IsValid())
+	{
+		UE_LOG(LogTemp, Log, TEXT("Search Complete! Found %d sessions."), SessionSearch->SearchResults.Num());
+		for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
+		{
+			FString TargetSessionId;
+			FString Part1, Part2;
+			if (SearchResult.Session.SessionSettings.Get(FName("GameLiftSessionId_1"), Part1))
+			{
+				if (!Part1.IsEmpty())
+				{
+					TargetSessionId = Part1;
+				}
+			}
+			if (SearchResult.Session.SessionSettings.Get(FName("GameLiftSessionId_2"), Part2))
+			{
+				if (!Part2.IsEmpty())
+				{
+					TargetSessionId += Part2;
+				}
+			}
+			// FString TargetSteamId = SearchResult.Session.SessionInfo->GetSessionId().ToString();
+			
+			if (GameLiftSessionId == TargetSessionId)
+			{
+				if (OnFindByIdGameSessionComplete.IsBound())
+				{
+					OnFindByIdGameSessionComplete.Broadcast(FOnlineSessionSearchResultBP(SearchResult));
+				}
+			}
+		}
 	}
 }
 
@@ -437,22 +520,32 @@ void UPTWSteamSessionSubsystem::LeaveGameSession()
 {
 	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] LeaveGameSession() called"));
 	
-	// 메인메뉴로 이동하여 이탈
-	if (APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController())
-	{
-		PC->ClientTravel(TEXT("MainMenu?closed"), TRAVEL_Absolute);
-	}
-	
 	if (SessionInterface.IsValid())
 	{
 		DestroySessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(
 			FOnDestroySessionCompleteDelegate::CreateUObject(this, &ThisClass::OnDestroySessionComplete));
 		
 		SessionInterface->DestroySession(NAME_GameSession);
-		return;
+	}
+	else
+	{
+		OnDestroySessionComplete(NAME_GameSession, true);
+	}
+}
+
+void UPTWSteamSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
+{
+	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] OnDestroySessionComplete() called"));
+	
+	if (SessionInterface.IsValid())
+	{
+		SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionDelegateHandle);
 	}
 	
-	OnDestroySessionComplete(NAME_GameSession, true);
+	if (APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController())
+	{
+		PC->ClientTravel(TEXT("MainMenu?closed"), TRAVEL_Absolute);
+	}
 }
 
 bool UPTWSteamSessionSubsystem::UnregisterPlayer(FName SessionName, const FUniqueNetId& PlayerId)
@@ -488,14 +581,21 @@ void UPTWSteamSessionSubsystem::QuickMatchGameSession()
 	FindGameSession();
 }
 
-void UPTWSteamSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
+void UPTWSteamSessionSubsystem::UpdateGameSeesionPlayerCount(int32 CurrentPlayerCount)
 {
-	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] OnDestroySessionComplete() called"));
-	if (SessionInterface.IsValid())
+	if(!SessionInterface.IsValid()) return;
+
+	FNamedOnlineSession* Session = SessionInterface->GetNamedSession(NAME_GameSession);
+	if (Session)
 	{
-		SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionDelegateHandle);
+		int32 MaxPlayers = Session->SessionSettings.NumPublicConnections;
+		
+		Session->NumOpenPublicConnections = FMath::Max(0, MaxPlayers - CurrentPlayerCount);
+		
+		SessionInterface->UpdateSession(NAME_GameSession, Session->SessionSettings, true);
+        
+		UE_LOG(LogTemp, Log, TEXT("Steam Session Updated: %d / %d slots open"), Session->NumOpenPublicConnections, MaxPlayers);
 	}
-	
-	UGameplayStatics::OpenLevel(this, FName("MainMenu"), true);
 }
+
 #undef LOCTEXT_NAMESPACE

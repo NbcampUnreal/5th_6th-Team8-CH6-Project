@@ -67,6 +67,46 @@ FString UPTWGameLiftClientSubsystem::SerializeJsonContent(const TMap<FString, FS
 	return Content;
 }
 
+TMap<FString, FString> UPTWGameLiftClientSubsystem::ExtractJsonFields(const FString& JsonString, const TArray<FString>& TargetFields)
+{
+	TMap<FString, FString> ResultMap;
+
+	TSharedPtr<FJsonObject> JsonObject;
+	TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonString);
+    
+	if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
+	{
+		const TSharedPtr<FJsonObject>* DataObjPtr = nullptr;
+
+		if (JsonObject->TryGetObjectField(TEXT("data"), DataObjPtr) && DataObjPtr != nullptr && (*DataObjPtr).IsValid())
+		{
+			for (const FString& FieldName : TargetFields)
+			{
+				TSharedPtr<FJsonValue> JsonValue = (*DataObjPtr)->TryGetField(FieldName);
+          
+				if (JsonValue.IsValid() && !JsonValue->IsNull())
+				{
+					ResultMap.Add(FieldName, JsonValue->AsString());
+				}
+				else
+				{
+					ResultMap.Add(FieldName, TEXT("")); 
+				}
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Helper: 'data' 객체를 찾을 수 없거나 유효하지 않습니다."));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Helper: JSON 파싱에 실패했습니다."));
+	}
+
+	return ResultMap;
+}
+
 void UPTWGameLiftClientSubsystem::CreateGameSession(FPTWSessionConfig& SessionConfig)
 {
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
@@ -103,27 +143,41 @@ void UPTWGameLiftClientSubsystem::CreateGameSession_Response(FHttpRequestPtr Req
 		}
 		return;
 	}
+	FString GameSessionIdName = TEXT("GameSessionId");
+	TArray<FString> FieldsToExtract = { GameSessionIdName };
 	
-	FPTWGameLiftGameSession GameSession;
-	if (ParseDataFromJson<FPTWGameLiftGameSession>(Response->GetContentAsString(), GameSession))
+	TMap<FString, FString> SessionData = ExtractJsonFields(Response->GetContentAsString(), FieldsToExtract);
+	
+	if (SessionData.Contains(GameSessionIdName))
 	{
-		const FString GameSessionId = GameSession.GameSessionId;
-		CheckSessionStatus(GameSessionId);
+		FString GameSessionId = SessionData[GameSessionIdName];
+		CheckSessionStatus(GameSessionId, true);
 	}
+	
+	// FPTWGameLiftGameSession GameSession;
+	// if (ParseDataFromJson<FPTWGameLiftGameSession>(Response->GetContentAsString(), GameSession))
+	// {
+	// 	const FString GameSessionId = GameSession.GameSessionId;
+	// 	CheckSessionStatus(GameSessionId);
+	// }
 }
 
-void UPTWGameLiftClientSubsystem::CheckSessionStatus(const FString& SessionId)
+void UPTWGameLiftClientSubsystem::CheckSessionStatus(const FString& SessionId, bool bIsLoop)
 {
-	if (!IsValid(ClientAPIData))
-	{
-		UE_LOG(LogTemp, Error, TEXT("DescribeGameSession Failed: APIData is NULL!"));
-		return;
-	}
+	check(ClientAPIData);
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, "CheckSessionStatus");
 	
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
-	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CheckSessionStatus_Response);
+	
+	if (bIsLoop)
+	{
+		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CheckSessionStatusLoop_Response, SessionId);
+	}
+	else
+	{
+		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CheckSessionStatus_Response);
+	}
 	
 	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::CheckSessionStatus);
 	FString RefinedURL = APIUrl;
@@ -138,9 +192,23 @@ void UPTWGameLiftClientSubsystem::CheckSessionStatus(const FString& SessionId)
 
 void UPTWGameLiftClientSubsystem::CheckSessionStatus_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
+	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
+	{
+		UE_LOG(LogTemp, Error, TEXT("CheckSessionStatus 통신 실패."));
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("SessionCheckFailed", "알 수 없는 오류가 발생해 세션 체크에 실패하였습니다.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
+	}
+}
+
+void UPTWGameLiftClientSubsystem::CheckSessionStatusLoop_Response(FHttpRequestPtr Request, 
+	FHttpResponsePtr Response, bool bWasSuccessful, FString SessionId)
+{
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, "CheckSessionStatus_Response");
 	
-	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
+	if (!bWasSuccessful || !Response.IsValid() || (Response->GetResponseCode() != 202 && Response->GetResponseCode() != 200))
 	{
 		UE_LOG(LogTemp, Error, TEXT("CheckSessionStatus 통신 실패."));
 		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
@@ -149,27 +217,18 @@ void UPTWGameLiftClientSubsystem::CheckSessionStatus_Response(FHttpRequestPtr Re
 			FText ErrorMessage = LOCTEXT("SessionCheckFailed", "알 수 없는 오류가 발생해 세션 체크에 실패하였습니다.");
 			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
 		}
-		return;
 	}
-
-	TryJoinGameSession(GameSessionLists.GameSessionId, GameSessionLists.SteamId, GameSessionLists.Status);
-}
-
-void UPTWGameLiftClientSubsystem::TryJoinGameSession(const FString& SessionId, const FString& SteamId, const FString& Status)
-{
-	if (Status.Equals(TEXT("ACTIVE")))
+	else if (bWasSuccessful && Response.IsValid())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Found active Game Session. Creating a Player Session..."));
-		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
-		CreatePlayerSession(GetUniquePlayerId(), SessionId);
-	}
-	else if (Status.Equals(TEXT("ACTIVATING")))
-	{
-		WaitForSessionActivation(SessionId);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Unknown Status %s"), *Status);
+		if (Response->GetResponseCode() == 202)
+		{
+			WaitForSessionActivation(SessionId);
+		}
+		else if (Response->GetResponseCode() == 200)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
+			CreatePlayerSession(GetUniquePlayerId(), SessionId);
+		}
 	}
 }
 
@@ -183,7 +242,7 @@ void UPTWGameLiftClientSubsystem::WaitForSessionActivation(const FString& Sessio
 			PC->GetWorldTimerManager().SetTimer(CreateSessionTimer,
 		   [this, SessionId]()
 		   {
-			   CheckSessionStatus(SessionId);
+			   CheckSessionStatus(SessionId, true);
 		   }, 2.0f, false);
 		}
 		else
@@ -274,14 +333,22 @@ void UPTWGameLiftClientSubsystem::CreatePlayerSession_Response(FHttpRequestPtr R
 	
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "CreatePlayerSession_Response");
 	
-	FPTWGameLiftPlayerSession PlayerSession;
-	if (ParseDataFromJson<FPTWGameLiftPlayerSession>(Response->GetContentAsString(), PlayerSession))
+	FString PlayerSessionIdName = TEXT("PlayerSessionId");
+	FString PortName = TEXT("Port");
+	FString SteamIdName = TEXT("SteamId");
+	
+	TArray<FString> FieldsToExtract = { PlayerSessionIdName, PortName, SteamIdName };
+	TMap<FString, FString> SessionData = ExtractJsonFields(Response->GetContentAsString(), FieldsToExtract);
+	if (SessionData.Contains(PlayerSessionIdName) && 
+		SessionData.Contains(PortName) && 
+		SessionData.Contains(SteamIdName))
 	{
-		FString ConnectURL = FString::Printf(TEXT("steam.%s:%d?PlayerSessionId=%s"),
-			  *PlayerSession.IpAddress,			  // 서버스팀 ID
-			  PlayerSession.Port,
-			  *PlayerSession.PlayerSessionId      // GameLift 세션 인증용 ID
+		FString ConnectURL = FString::Printf(TEXT("steam.%s:%s?PlayerSessionId=%s"),
+			  *SessionData[SteamIdName],			  // 서버스팀 ID
+			  *SessionData[PortName],
+			  *SessionData[PlayerSessionIdName]      // GameLift 세션 인증용 ID
 		  );
+	
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *ConnectURL);
 		// const FString IpAndPort = PlayerSession.IpAddress; + TEXT(":") + FString::FromInt(PlayerSession.Port);
 		// const FName Address = FName(*IpAndPort);

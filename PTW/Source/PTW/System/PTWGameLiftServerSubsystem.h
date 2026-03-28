@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #if WITH_GAMELIFT
 #include "Interfaces/IHttpRequest.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #endif
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "PTWGameLiftServerSubsystem.generated.h"
@@ -37,6 +38,7 @@ protected:
 	
 public:
 	FORCEINLINE FGameLiftServerSDKModule* GetGameLiftSdkModule() const { return GameLiftSdkModule; };
+	IOnlineSessionPtr GetSessionInterface() const;
 	
 	void SetGameLiftSdkModule(FGameLiftServerSDKModule* InGameLiftSdkModule) { GameLiftSdkModule = InGameLiftSdkModule; };
 	// void SetInGameSession(const Aws::GameLift::Server::Model::GameSession& NewGameSession) { InGameSession = NewGameSession; };

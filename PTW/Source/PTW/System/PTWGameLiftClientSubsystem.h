@@ -28,6 +28,7 @@ protected:
 	
 public:
 	static FString SerializeJsonContent(const TMap<FString, FString>& Params);
+	static TMap<FString, FString> ExtractJsonFields(const FString& JsonString, const TArray<FString>& TargetFields);
 	template <typename T>
 	static bool ParseDataFromJson(const FString& JsonString, T& OutStruct)
 	{
@@ -38,7 +39,7 @@ public:
 			const TSharedPtr<FJsonObject>* DataObjPtr = nullptr;
 			if (JsonObject->TryGetObjectField(TEXT("data"), DataObjPtr) && DataObjPtr->IsValid())
 			{
-				FPTWGameLiftGameSession GameSession;
+				T GameSession;
 				if (FJsonObjectConverter::JsonObjectToUStruct(DataObjPtr->ToSharedRef(), &GameSession))
 				{
 					return FJsonObjectConverter::JsonObjectToUStruct(DataObjPtr->ToSharedRef(), &OutStruct);
@@ -64,7 +65,7 @@ public:
 	    return false;
 	}
 	void CreateGameSession(FPTWSessionConfig& SessionConfig);
-	void CheckSessionStatus(const FString& SessionId);
+	void CheckSessionStatus(const FString& SessionId, bool bIsLoop = false);
 	void DescribeGameSession(const FString& SessionId);
 	void CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
 	void SearchGameSessions();
@@ -73,8 +74,8 @@ public:
 protected:
 	void CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void CheckSessionStatus_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void CheckSessionStatusLoop_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, FString SessionId);
 	void DescribeGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void TryJoinGameSession(const FString& SessionId, const FString& SteamId, const FString& Status);
 	void WaitForSessionActivation(const FString& SessionId);
 	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);

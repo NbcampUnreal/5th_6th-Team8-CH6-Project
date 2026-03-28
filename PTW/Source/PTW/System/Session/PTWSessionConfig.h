@@ -30,6 +30,7 @@ namespace PTWSessionKey
 	inline const FName MapName =	FName(TEXT("MAP_NAME"));
 	inline const FName MaxPlayers =	FName(TEXT("MAX_PLAYERS"));
 	inline const FName MaxRounds =	FName(TEXT("MAX_ROUNDS"));
+	inline const FName JOINABLE =	FName(TEXT("JOINABLE"));
 	inline const FName NoGameLift =	FName(TEXT("NoGameLift"));
 }
 
@@ -55,6 +56,9 @@ struct FPTWSessionConfig
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
 	int32 MaxRounds = 5;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
+	bool bIsJoinable;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
 	bool bIsNoGameLift;
@@ -121,26 +125,14 @@ struct FPTWGameLiftPlayerSession
 	void Dump() const;
 };
 
-USTRUCT(BlueprintType)
-struct FGameSessionListsTable
-{
-	GENERATED_BODY()
-
-	UPROPERTY() FString GameSessionId;
-	UPROPERTY() FString SteamId;
-	UPROPERTY() FString Status;
-	UPROPERTY() int64 CreatedAt;
-	UPROPERTY() int64 DeleteAt;
-};
-
-USTRUCT(BlueprintType)
-struct FPTWGameLiftSessionJoinData
-{
-	GENERATED_BODY()
-	UPROPERTY() FString IpAddress;
-	UPROPERTY() int32 Port;
-	UPROPERTY() FString PlayerSessionId;
-	UPROPERTY() FString SteamId;
-	
-	void Dump() const;
-};
+// USTRUCT(BlueprintType)
+// struct FGameSessionListsTable
+// {
+// 	GENERATED_BODY()
+//
+// 	UPROPERTY() FString GameSessionId;
+// 	UPROPERTY() FString SteamId;
+// 	UPROPERTY() FString Status;
+// 	UPROPERTY() int64 CreatedAt;
+// 	UPROPERTY() int64 DeleteAt;
+// };

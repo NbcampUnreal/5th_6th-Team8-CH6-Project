@@ -141,9 +141,18 @@ void UPTWSteamSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfi
 	SessionSettings->Set(PTWSessionKey::MaxRounds, SessionConfig.MaxRounds, EOnlineDataAdvertisementType::ViaOnlineService);
     SessionSettings->Set(PTWSessionKey::ServerName, SessionConfig.ServerName, EOnlineDataAdvertisementType::ViaOnlineService);
 	
-	if (SessionConfig.bIsNoGameLift)
+	if (!SessionConfig.bIsDedicatedServer)
+	{
+		SessionSettings->Set(PTWSessionKey::JOINABLE, true, EOnlineDataAdvertisementType::ViaOnlineService);
+	}
+	else if (SessionConfig.bIsNoGameLift)
 	{
 		SessionSettings->Set(PTWSessionKey::NoGameLift, SessionConfig.bIsNoGameLift, EOnlineDataAdvertisementType::ViaOnlineService);
+		SessionSettings->Set(PTWSessionKey::JOINABLE, true, EOnlineDataAdvertisementType::ViaOnlineService);
+	}
+	else
+	{
+		SessionSettings->Set(PTWSessionKey::JOINABLE, false, EOnlineDataAdvertisementType::ViaOnlineService);
 	}
     
     if (!SessionInterface->CreateSession(0, NAME_GameSession, *SessionSettings))
@@ -224,6 +233,7 @@ void UPTWSteamSessionSubsystem::FindGameSession()
 	DedicatedSessionSearch->MaxSearchResults = 100;
 	DedicatedSessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, true, EOnlineComparisonOp::Equals);
 	DedicatedSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, false, EOnlineComparisonOp::Equals);
+	DedicatedSessionSearch->QuerySettings.Set(PTWSessionKey::JOINABLE, true, EOnlineComparisonOp::Equals);
 	SessionSearchQueue.Enqueue(DedicatedSessionSearch);
 	
 	SearchForGameSessions();
@@ -271,6 +281,11 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 		TArray<FOnlineSessionSearchResultBP> BPSearchResultInstances;
 		for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
 		{
+			bool bIsJoinable = false;
+			if (SearchResult.Session.SessionSettings.Get(PTWSessionKey::JOINABLE, bIsJoinable))
+			{
+				if (!bIsJoinable) continue;
+			}
 			BPSearchResultInstances.Add(FOnlineSessionSearchResultBP(SearchResult));
 		}
 		

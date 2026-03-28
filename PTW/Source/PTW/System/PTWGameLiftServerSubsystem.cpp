@@ -59,6 +59,17 @@ void UPTWGameLiftServerSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+IOnlineSessionPtr UPTWGameLiftServerSubsystem::GetSessionInterface() const
+{
+	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
+	{
+		return SteamSessionSubsystem->GetSessionInterface();
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("SessionInterface를 불러오는데 실패하였습니다."));
+	return nullptr;
+}
+
 void UPTWGameLiftServerSubsystem::OnMapLoaded(UWorld* LoadedWorld)
 {
 	if (!LoadedWorld) return;
@@ -66,7 +77,7 @@ void UPTWGameLiftServerSubsystem::OnMapLoaded(UWorld* LoadedWorld)
 	
 	if (GameLiftSdkModule)
 	{
-		RequestGameSessionUpdate();
+		UpdateGameSession();
 	}
 	
 	if (MapLoadDelegateHandle.IsValid())
@@ -78,11 +89,7 @@ void UPTWGameLiftServerSubsystem::OnMapLoaded(UWorld* LoadedWorld)
 
 void UPTWGameLiftServerSubsystem::UpdateSessionToReady()
 {
-	IOnlineSessionPtr SessionInterface = nullptr;
-	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
-	{
-		SessionInterface = SteamSessionSubsystem->GetSessionInterface();
-	}
+	IOnlineSessionPtr SessionInterface = GetSessionInterface();
 	if (!SessionInterface.IsValid()) return;
 	
 	SessionInterface->ClearOnUpdateSessionCompleteDelegate_Handle(UpdateSessionCompleteDelegateHandle);
@@ -94,33 +101,38 @@ void UPTWGameLiftServerSubsystem::UpdateSessionToReady()
 		FString Part2 = GameLiftSessionId.Mid(100);
 		NewSettings->Set(FName("GameLiftSessionId_1"), Part1, EOnlineDataAdvertisementType::ViaOnlineService);
 		NewSettings->Set(FName("GameLiftSessionId_2"), Part2, EOnlineDataAdvertisementType::ViaOnlineService);
-		NewSettings->Set(FName("Status"), TEXT("Ready"), EOnlineDataAdvertisementType::ViaOnlineService);
+		NewSettings->Set(PTWSessionKey::JOINABLE, true, EOnlineDataAdvertisementType::ViaOnlineService);
 		
 		UpdateSessionCompleteDelegateHandle = SessionInterface->AddOnUpdateSessionCompleteDelegate_Handle(
-			FOnUpdateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnUpdateSessionToReadyComplete);
+			FOnUpdateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnUpdateSessionToReadyComplete));
 			
 		if (SessionInterface->UpdateSession(NAME_GameSession, *NewSettings, true))
 		{
-			UE_LOG(LogTemp, Log, TEXT("Session update requested."));
+			UE_LOG(LogTemp, Display, TEXT("[Steam-MasterServer Request] 스팀세션 [준비됨] 상태로 업데이트 요청 전송을 완료했습니다."));
 		}
 		else
 		{
 			SessionInterface->ClearOnUpdateSessionCompleteDelegate_Handle(UpdateSessionCompleteDelegateHandle);
-			UE_LOG(LogTemp, Warning, TEXT("Failed to start session update."));
+			UE_LOG(LogTemp, Display, TEXT("[Steam-MasterServer Request] 스팀세션 [준비됨] 상태로 업데이트 요청 전송을 실패하였습니다."));
 		}
 	}
 }
 
 void UPTWGameLiftServerSubsystem::OnUpdateSessionToReadyComplete(FName SessionName, bool bWasSuccessful)
 {
-	IOnlineSessionPtr SessionInterface = nullptr;
-	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
-	{
-		SessionInterface = SteamSessionSubsystem->GetSessionInterface();
-	}
+	IOnlineSessionPtr SessionInterface = GetSessionInterface();
 	if (!SessionInterface.IsValid()) return;
 	
 	SessionInterface->ClearOnUpdateSessionCompleteDelegate_Handle(UpdateSessionCompleteDelegateHandle);
+	
+	if (bWasSuccessful)
+	{
+		UE_LOG(LogTemp, Display, TEXT("[Steam-MasterServer Response] 스팀 게임세션을 [준비됨] 상태로 업데이트 완료하였습니다."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Steam-MasterServer Response] 스팀 게임세션을 [준비됨] 상태로 업데이트 실패하였습니다."));
+	}
 }
 
 void UPTWGameLiftServerSubsystem::UpdateGameSession()
@@ -133,12 +145,11 @@ void UPTWGameLiftServerSubsystem::UpdateGameSession()
 		SteamId = SteamSessionSubsystem->GetSteamServerID();
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("GameSessionId: %s"), *GameSessionId);
-	UE_LOG(LogTemp, Warning, TEXT("SteamId: %s"), *SteamId);
+	UE_LOG(LogTemp, Display, TEXT("현재: GameSessionId: %s"), *GameSessionId);
+	UE_LOG(LogTemp, Display, TEXT("현재: SteamId: %s"), *SteamId);
 	
-	if (!SteamId.IsEmpty())
+	if (!SteamId.IsEmpty() && !GameSessionId.IsEmpty())
 	{
-		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend SteamId Is Valid"));
 		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::UpdateGameSession_Response);
 		
@@ -154,11 +165,18 @@ void UPTWGameLiftServerSubsystem::UpdateGameSession()
 		
 		const FString Content = UPTWGameLiftClientSubsystem::SerializeJsonContent(Params);
 		Request->SetContentAsString(Content);
-		Request->ProcessRequest();
+		if (Request->ProcessRequest())
+		{
+			UE_LOG(LogTemp, Display, TEXT("[GameLift-MasterServer Request] 게임리프트 게임세션에 SteamId 업데이트 요청 전송을 완료했습니다."));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("[GameLift-MasterServer Request] 게임리프트 게임세션에 SteamId 업데이트 요청 전송을 실패했습니다"));
+		}
 	}
 	else
 	{
-		// NotSteamId
+		UE_LOG(LogTemp, Error, TEXT("GameSessionId 또는 SteamId가 유효하지 않습니다."));
 	}
 }
 
@@ -166,18 +184,12 @@ void UPTWGameLiftServerSubsystem::UpdateGameSession_Response(FHttpRequestPtr Req
 {
 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 	{
-		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend_Response Successful"));
-		UE_LOG(LogTemp, Log, TEXT("Successfully reported Steam ID to Backend."));
-		FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
-		if (!GameSessionId.IsEmpty())
-		{
-			UpdateSessionToReady();
-		}
+		UE_LOG(LogTemp, Display, TEXT("[GameLift-MasterServer Response] 게임리프트 게임세션에 SteamId 업데이트를 완료했습니다."));
+		UpdateSessionToReady();
 	}
 	else
 	{
-		UE_LOG(LogTemp, Log, TEXT("ReportServerInfoToBackend_Response Failed"));
-		UE_LOG(LogTemp, Error, TEXT("Failed to report Steam ID to Backend."));
+		UE_LOG(LogTemp, Error, TEXT("[GameLift-MasterServer Response] 게임리프트 게임세션에 SteamId 업데이트를 실패했습니다."));
 	}
 }
 
@@ -188,12 +200,12 @@ bool UPTWGameLiftServerSubsystem::AcceptPlayerSession(FString PlayerSessionId)
 	
 	if (Outcome.IsSuccess())
 	{
-		UE_LOG(LogTemp, Log, TEXT("GameLift PlayerSession Accepted: %s"), *PlayerSessionId);
+		UE_LOG(LogTemp, Log, TEXT("게임리프트 플레이어세션 접속 수락: %s"), *PlayerSessionId);
 		return true;
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to accept GameLift PlayerSession: %s"), *Outcome.GetError().m_errorMessage);
+		UE_LOG(LogTemp, Error, TEXT("게임리프트 플레이어세션 접속 실패: %s"), *Outcome.GetError().m_errorMessage);
 		return false;
 	}
 }
@@ -214,7 +226,7 @@ void UPTWGameLiftServerSubsystem::RemovePlayerSession(FString PlayerSessionId)
 	if (GameLiftSdkModule)
 	{
 		GameLiftSdkModule->RemovePlayerSession(PlayerSessionId);
-		UE_LOG(LogTemp, Log, TEXT("GameLift 플레이어 세션 제거 완료: %s"), *PlayerSessionId);
+		UE_LOG(LogTemp, Log, TEXT("게임리프트 플레이어 세션 제거 완료: %s"), *PlayerSessionId);
 	}
 }
 

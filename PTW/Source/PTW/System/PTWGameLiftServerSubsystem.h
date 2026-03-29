@@ -49,7 +49,9 @@ public:
 	// 현재 세션을 Ready(준비됨) 상태로
     void UpdateSessionToReady();
 	
-	void UpdateGameSession();
+	void ActivateSessionAndUpdate();
+	
+	void UpdatePlayerCount(FString Action);
 	
 	// 플레이어 세션이 유효한지 검증
 	bool AcceptPlayerSession(FString PlayerSessionId);
@@ -58,14 +60,20 @@ public:
 	void RemovePlayerSession(FString PlayerSessionId);
 	void ExitGameSession();
 	
+	void UpdateSessionState(FString Action = TEXT("ACTIVE"));
+	
 protected:
 	void OnUpdateSessionToReadyComplete(FName SessionName, bool bWasSuccessful);
-	void UpdateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void ActivateSessionAndUpdate_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void UpdatePlayerCount_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void UpdateSessionState_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 protected:
 	FGameLiftServerSDKModule* GameLiftSdkModule;
 	// Aws::GameLift::Server::Model::GameSession InGameSession;
 
+public:
+	FTimerHandle UpdateSessionStateTimer;
 private:
 	FDelegateHandle MapLoadDelegateHandle;
 	FDelegateHandle UpdateSessionCompleteDelegateHandle;

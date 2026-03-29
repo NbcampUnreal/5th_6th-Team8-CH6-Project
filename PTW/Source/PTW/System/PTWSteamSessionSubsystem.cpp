@@ -138,21 +138,14 @@ void UPTWSteamSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfi
     SessionSettings->bAllowJoinViaPresence = !SessionConfig.bIsDedicatedServer;		// 스팀 친구 참여
 	SessionSettings->bUseLobbiesIfAvailable = !SessionConfig.bIsDedicatedServer;
 	
-	SessionSettings->Set(PTWSessionKey::MaxRounds, SessionConfig.MaxRounds, EOnlineDataAdvertisementType::ViaOnlineService);
-    SessionSettings->Set(PTWSessionKey::ServerName, SessionConfig.ServerName, EOnlineDataAdvertisementType::ViaOnlineService);
-	
 	if (!SessionConfig.bIsDedicatedServer)
 	{
-		SessionSettings->Set(PTWSessionKey::JOINABLE, true, EOnlineDataAdvertisementType::ViaOnlineService);
+		SessionSettings->Set(PTWSessionKey::MaxRounds, SessionConfig.MaxRounds, EOnlineDataAdvertisementType::ViaOnlineService);
+		SessionSettings->Set(PTWSessionKey::ServerName, SessionConfig.ServerName, EOnlineDataAdvertisementType::ViaOnlineService);
 	}
 	else if (SessionConfig.bIsNoGameLift)
 	{
 		SessionSettings->Set(PTWSessionKey::NoGameLift, SessionConfig.bIsNoGameLift, EOnlineDataAdvertisementType::ViaOnlineService);
-		SessionSettings->Set(PTWSessionKey::JOINABLE, true, EOnlineDataAdvertisementType::ViaOnlineService);
-	}
-	else
-	{
-		SessionSettings->Set(PTWSessionKey::JOINABLE, false, EOnlineDataAdvertisementType::ViaOnlineService);
 	}
     
     if (!SessionInterface->CreateSession(0, NAME_GameSession, *SessionSettings))
@@ -234,7 +227,7 @@ void UPTWSteamSessionSubsystem::FindGameSession()
 	DedicatedSessionSearch->MaxSearchResults = 100;
 	DedicatedSessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, true, EOnlineComparisonOp::Equals);
 	DedicatedSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, false, EOnlineComparisonOp::Equals);
-	DedicatedSessionSearch->QuerySettings.Set(PTWSessionKey::JOINABLE, true, EOnlineComparisonOp::Equals);
+	DedicatedSessionSearch->QuerySettings.Set(PTWSessionKey::NoGameLift, true, EOnlineComparisonOp::Equals);
 	SessionSearchQueue.Enqueue(DedicatedSessionSearch);
 	
 	SearchForGameSessions();
@@ -282,11 +275,11 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 		TArray<FOnlineSessionSearchResultBP> BPSearchResultInstances;
 		for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
 		{
-			bool bIsJoinable = false;
-			if (SearchResult.Session.SessionSettings.Get(PTWSessionKey::JOINABLE, bIsJoinable))
-			{
-				if (!bIsJoinable) continue;
-			}
+			// bool bIsJoinable = false;
+			// if (SearchResult.Session.SessionSettings.Get(PTWSessionKey::JOINABLE, bIsJoinable))
+			// {
+			// 	if (!bIsJoinable) continue;
+			// }
 			BPSearchResultInstances.Add(FOnlineSessionSearchResultBP(SearchResult));
 		}
 		
@@ -314,29 +307,24 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	}
 }
 
-void UPTWSteamSessionSubsystem::FindByIdGameSession(const FString& GameSessionId)
+void UPTWSteamSessionSubsystem::FindByIdGameSession(const FString& SteamId)
 {
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 	
 	SessionSearchQueue.Empty();
 	BPSearchResults.Reset();
-	
-	FString Part1 = GameSessionId.Left(100);
-	FString Part2 = GameSessionId.Mid(100);
-	
+
 	TSharedPtr<FOnlineSessionSearch> DedicatedSessionSearch = MakeShareable(new FOnlineSessionSearch());
 	DedicatedSessionSearch->bIsLanQuery = false;
 	DedicatedSessionSearch->MaxSearchResults = 100;
 	DedicatedSessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, true, EOnlineComparisonOp::Equals);
 	DedicatedSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, false, EOnlineComparisonOp::Equals);
-	DedicatedSessionSearch->QuerySettings.Set(PTWSessionKey::JOINABLE, true, EOnlineComparisonOp::Equals);
-	DedicatedSessionSearch->QuerySettings.Set(FName("GameLiftSessionId_1"), Part1, EOnlineComparisonOp::Equals);
-	DedicatedSessionSearch->QuerySettings.Set(FName("GameLiftSessionId_2"), Part2, EOnlineComparisonOp::Equals);
+	
 	SessionSearchQueue.Enqueue(DedicatedSessionSearch);
 	
 	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
-		FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindByIdOnComplete, GameSessionId)
+		FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindByIdOnComplete, SteamId)
 	);
 	
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
@@ -351,7 +339,7 @@ void UPTWSteamSessionSubsystem::FindByIdGameSession(const FString& GameSessionId
 	}
 }
 
-void UPTWSteamSessionSubsystem::OnFindByIdOnComplete(bool bWasSuccessful, const FString GameLiftSessionId)
+void UPTWSteamSessionSubsystem::OnFindByIdOnComplete(bool bWasSuccessful, const FString SteamId)
 {
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
@@ -368,24 +356,11 @@ void UPTWSteamSessionSubsystem::OnFindByIdOnComplete(bool bWasSuccessful, const 
 		for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
 		{
 			FString TargetSessionId;
-			FString Part1, Part2;
-			if (SearchResult.Session.SessionSettings.Get(FName("GameLiftSessionId_1"), Part1))
-			{
-				if (!Part1.IsEmpty())
-				{
-					TargetSessionId = Part1;
-				}
-			}
-			if (SearchResult.Session.SessionSettings.Get(FName("GameLiftSessionId_2"), Part2))
-			{
-				if (!Part2.IsEmpty())
-				{
-					TargetSessionId += Part2;
-				}
-			}
-			// FString TargetSteamId = SearchResult.Session.SessionInfo->GetSessionId().ToString();
+			SearchResult.Session.SessionSettings.Get(PTWSessionKey::SteamId, TargetSessionId);
 			
-			if (GameLiftSessionId == TargetSessionId)
+			if (TargetSessionId.IsEmpty()) continue;
+			
+			if (SteamId == TargetSessionId)
 			{
 				if (OnFindByIdGameSessionComplete.IsBound())
 				{
@@ -426,46 +401,6 @@ void UPTWSteamSessionSubsystem::OnQuickMatchFindSessionsComplete()
 	}
 	
 	CreateGameSession(FPTWSessionConfig(), true);
-}
-
-void UPTWSteamSessionSubsystem::LaunchDedicatedServer(FPTWSessionConfig SessionConfig)
-{
-	FString ServerPath = FPaths::ConvertRelativePathToFull(
-		FPaths::Combine(
-			FPaths::ProjectDir() + TEXT("Binaries/Win64/PTWServer.exe")));
-	
-	FString WorkingDir = FPaths::GetPath(ServerPath);
-	FString ProjectPath = FPaths::ConvertRelativePathToFull(FPaths::GetProjectFilePath());
-
-	FString Arguments = FString::Printf(TEXT("\"%s\""), *ProjectPath);
-	
-	Arguments += FString::Printf(TEXT(" ServerEntry"));
-	Arguments += FString::Printf(TEXT("?MaxPlayers=%d"), SessionConfig.MaxPlayers);
-	
-	Arguments += TEXT(" -Server");
-	Arguments += TEXT(" -log");
-	Arguments += TEXT(" -port=7777");
-	Arguments += TEXT(" -QueryPort=27016");
-	
-	uint32 ProcessID = 0;
-	
-	FProcHandle ProcHandle = FPlatformProcess::CreateProc(
-		*ServerPath,	// 데디케이티드 서버 실행파일 경로
-		*Arguments, 	// 명령인자
-		true,  			// 독립 실행 (게임 클라이언가 종료되어도 데디케이티드 서버는 닫히지 않음)
-		false, 			// 데디케이티드 서버 창 숨김
-		false, 			// 완전 숨김. 백그라운드에서 구동되고 표시되지 않음
-		&ProcessID, 	// 프로세스 ID. 인자에 저장
-		0, 				// 우선순위. (0:기본값, -1:낮음, 1:높음)
-		*WorkingDir, 		// 작업 디렉터리(nullptr: 실행파일 위치를 작업디렉터리로 인식)
-		nullptr			// 프로세스간 통신 출력단.
-	);
-
-	if (ProcHandle.IsValid())
-	{
-		UE_LOG(LogTemp, Log, TEXT("Server Create Succeeded! PID: %d"), ProcessID);
-		FPlatformProcess::CloseProc(ProcHandle);
-	}
 }
 
 void UPTWSteamSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig)
@@ -591,9 +526,9 @@ void UPTWSteamSessionSubsystem::UpdateGameSeesionPlayerCount(int32 CurrentPlayer
 		int32 MaxPlayers = Session->SessionSettings.NumPublicConnections;
 		
 		Session->NumOpenPublicConnections = FMath::Max(0, MaxPlayers - CurrentPlayerCount);
-		
 		SessionInterface->UpdateSession(NAME_GameSession, Session->SessionSettings, true);
         
+		
 		UE_LOG(LogTemp, Log, TEXT("Steam Session Updated: %d / %d slots open"), Session->NumOpenPublicConnections, MaxPlayers);
 	}
 }

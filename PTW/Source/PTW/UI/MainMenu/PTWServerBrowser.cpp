@@ -116,6 +116,11 @@ void UPTWServerBrowser::NativeConstruct()
 	{
 		ServerMenuBorder->SetVisibility(ESlateVisibility::Collapsed);
 	}
+#if !UE_EDITOR
+	ServerMenuButton->SetVisibility(ESlateVisibility::Collapsed);
+	FindServerButton->SetVisibility(ESlateVisibility::Collapsed);
+#endif
+	
 }
 
 void UPTWServerBrowser::NativeDestruct()
@@ -216,9 +221,9 @@ void UPTWServerBrowser::OnClickedQuickMatchButton()
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!IsValid(GameInstance)) return;
 	
-	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
+	if (UPTWGameLiftClientSubsystem* GameLiftClientSubsystem = UPTWGameLiftClientSubsystem::Get(this))
 	{
-		SteamSessionSubsystem->QuickMatchGameSession();
+		GameLiftClientSubsystem->SearchQuickSession();
 	}
 }
 

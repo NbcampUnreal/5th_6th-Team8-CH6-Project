@@ -98,6 +98,18 @@ void APTWGameMode::BeginPlay()
 
 		ScoreSubsystem->TravelingBotNames.Empty();
 	}
+	
+#if WITH_GAMELIFT
+	if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
+	{
+		UPTWGameLiftServerSubsystem* GameLiftServerSubsystem = UPTWGameLiftServerSubsystem::Get(this);
+		GetWorldTimerManager().SetTimer(GameLiftServerSubsystem->UpdateSessionStateTimer, [=, this]()
+		{
+			GameLiftServerSubsystem->UpdateSessionState("ACTIVE");
+		},
+		60.0f, true);
+	}
+#endif
 }
 
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)
@@ -105,8 +117,11 @@ void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 	Super::PostLogin(NewPlayer);
 
 #if WITH_GAMELIFT
-	// UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
-	// SteamSessionSubsystem->UpdateGameSeesionPlayerCount(GetNumPlayers());
+	if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
+	{
+		UPTWGameLiftServerSubsystem* GameLiftServerSubsystem = UPTWGameLiftServerSubsystem::Get(this);
+		GameLiftServerSubsystem->UpdatePlayerCount(TEXT("Join"));
+	}
 #endif
 	
 	HandlePlayerJoined(NewPlayer);
@@ -145,9 +160,12 @@ void APTWGameMode::Logout(AController* Exiting)
 		{
 			// 로그아웃한 PlayerSession 제거
 			GameLiftServerSubsystem->RemovePlayerSession(CachedPlayerSessionId);
-			
+			// 플레이어 수 감소
+			GameLiftServerSubsystem->UpdatePlayerCount(TEXT("Leave"));
 			if (GetNumPlayers() <= 0)
 			{
+				GameLiftServerSubsystem->UpdateSessionState(TEXT("TERMINATE"));
+				GetWorld()->GetTimerManager().ClearTimer(GameLiftServerSubsystem->UpdateSessionStateTimer);
 				GameLiftServerSubsystem->ExitGameSession();
 			}
 		}

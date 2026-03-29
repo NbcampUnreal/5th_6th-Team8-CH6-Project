@@ -7,8 +7,8 @@
 UENUM(BlueprintType)
 enum class EPTWRoundLimit : uint8
 {
-	Short	UMETA(DisplayName = "ShortRound"),
-	Long	UMETA(DisplayName = "LongRound")
+	Short	UMETA(DisplayName = "Short"),
+	Long	UMETA(DisplayName = "Long")
 };
 
 static int32 GetMaxRoundsByLimit(EPTWRoundLimit Limit)
@@ -26,13 +26,12 @@ static int32 GetMaxRoundsByLimit(EPTWRoundLimit Limit)
 
 namespace PTWSessionKey
 {
-	inline const FName ServerName = FName(TEXT("SN"));
-	inline const FName MapName =	FName(TEXT("MN"));
-	inline const FName MaxPlayers =	FName(TEXT("MP"));
-	inline const FName MaxRounds =	FName(TEXT("MR"));
-	inline const FName JOINABLE =	FName(TEXT("JA"));
-	inline const FName NoGameLift =	FName(TEXT("NL"));
-	inline const FName GameLiftSessionId =	FName(TEXT("GI"));
+	inline const FName ServerName = FName(TEXT("ServerName"));
+	inline const FName MapName =	FName(TEXT("MapName"));
+	inline const FName MaxPlayers =	FName(TEXT("MaxPlayers"));
+	inline const FName MaxRounds =	FName(TEXT("MaxRounds"));
+	inline const FName NoGameLift =	FName(TEXT("NoGameLift"));
+	inline const FName SteamId =	FName(TEXT("SteamId"));
 }
 
 USTRUCT(BlueprintType)
@@ -126,14 +125,18 @@ struct FPTWGameLiftPlayerSession
 	void Dump() const;
 };
 
-// USTRUCT(BlueprintType)
-// struct FGameSessionListsTable
-// {
-// 	GENERATED_BODY()
-//
-// 	UPROPERTY() FString GameSessionId;
-// 	UPROPERTY() FString SteamId;
-// 	UPROPERTY() FString Status;
-// 	UPROPERTY() int64 CreatedAt;
-// 	UPROPERTY() int64 DeleteAt;
-// };
+USTRUCT(BlueprintType)
+struct FPTWGameSessionListsTable
+{
+	GENERATED_BODY()
+
+	UPROPERTY() FString GameSessionId;
+	UPROPERTY() FString SteamId;
+	UPROPERTY() FString ServerState;
+	UPROPERTY() FString ServerName;
+	UPROPERTY() int32 MaxPlayers;
+	UPROPERTY() int32 CurrentPlayerCount;
+	UPROPERTY() FString MaxRoundType;
+	UPROPERTY() int64 CreatedAt;
+	UPROPERTY() int64 DeleteAt;
+};

@@ -118,17 +118,23 @@ void UPTWGameLiftClientSubsystem::CreateGameSession(FPTWSessionConfig& SessionCo
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	FString MaxRounds = TEXT("Long");
+	if (SessionConfig.MaxRounds == GetMaxRoundsByLimit(EPTWRoundLimit::Short))
+	{
+		MaxRounds = TEXT("Short");
+	}
 	
 	TMap<FString, FString> Params = {
 		{ TEXT("name"),							SessionConfig.ServerName },
-		{ TEXT("maximumPlayerSessionCount"),	FString::FromInt(SessionConfig.MaxPlayers) }
+		{ TEXT("maximumPlayerSessionCount"),	FString::FromInt(SessionConfig.MaxPlayers) },
+		{ TEXT("maxRoundType"),					MaxRounds }, 
 	};
 	
+	GetWorld()->GetTimerManager().SetTimer(CheckSessionLitmitTimer, 20.0f, false);
 	const FString Content = SerializeJsonContent(Params);
 	Request->SetContentAsString(Content);
 	Request->ProcessRequest();
 	
-	GetWorld()->GetTimerManager().SetTimer(CheckSessionLitmitTimer, 20.0f, false);
 }
 
 void UPTWGameLiftClientSubsystem::CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -154,13 +160,6 @@ void UPTWGameLiftClientSubsystem::CreateGameSession_Response(FHttpRequestPtr Req
 		FString GameSessionId = SessionData[GameSessionIdName];
 		CheckSessionStatus(GameSessionId, true);
 	}
-	
-	// FPTWGameLiftGameSession GameSession;
-	// if (ParseDataFromJson<FPTWGameLiftGameSession>(Response->GetContentAsString(), GameSession))
-	// {
-	// 	const FString GameSessionId = GameSession.GameSessionId;
-	// 	CheckSessionStatus(GameSessionId);
-	// }
 }
 
 void UPTWGameLiftClientSubsystem::CheckSessionStatus(const FString& SessionId, bool bIsLoop)
@@ -228,18 +227,10 @@ void UPTWGameLiftClientSubsystem::CheckSessionStatusLoop_Response(FHttpRequestPt
 		else if (Response->GetResponseCode() == 200)
 		{
 			GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
-			UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
-			SteamSessionSubsystem->OnFindByIdGameSessionComplete.AddLambda([=, this](const FOnlineSessionSearchResultBP& SearchResult)
-			{
-				CreatePlayerSession(GetUniquePlayerId(), SessionId, SearchResult);
-				SteamSessionSubsystem->OnFindByIdGameSessionComplete.RemoveAll(this);
-			});
-			
-			SteamSessionSubsystem->FindByIdGameSession(SessionId);
+			CreatePlayerSession(GetUniquePlayerId(), SessionId);
 		}
 	}
 }
-
 
 void UPTWGameLiftClientSubsystem::WaitForSessionActivation(const FString& SessionId)
 {
@@ -248,8 +239,7 @@ void UPTWGameLiftClientSubsystem::WaitForSessionActivation(const FString& Sessio
 		if (GetWorld()->GetTimerManager().IsTimerActive(CheckSessionLitmitTimer))
 		{
 			FTimerHandle CreateSessionTimer;
-			PC->GetWorldTimerManager().SetTimer(CreateSessionTimer,
-		   [this, SessionId]()
+			PC->GetWorldTimerManager().SetTimer(CreateSessionTimer,[this, SessionId]()
 		   {
 			   CheckSessionStatus(SessionId, true);
 		   }, 2.0f, false);
@@ -304,11 +294,10 @@ void UPTWGameLiftClientSubsystem::DescribeGameSession_Response(FHttpRequestPtr R
 	}
 }
 
-void UPTWGameLiftClientSubsystem::CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId, 
-	const FOnlineSessionSearchResultBP& SearchResult)
+void UPTWGameLiftClientSubsystem::CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId)
 {
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
-	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CreatePlayerSession_Response, SearchResult);
+	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::CreatePlayerSession_Response);
 	
 	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::CreatePlayerSession);
 	Request->SetURL(APIUrl);
@@ -326,8 +315,7 @@ void UPTWGameLiftClientSubsystem::CreatePlayerSession(const FString& PlayerId, c
 	Request->ProcessRequest();
 }
 
-void UPTWGameLiftClientSubsystem::CreatePlayerSession_Response(FHttpRequestPtr Request, 
-	FHttpResponsePtr Response, bool bWasSuccessful, const FOnlineSessionSearchResultBP SearchResult)
+void UPTWGameLiftClientSubsystem::CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Create PlayerSession Response Received"));
 	
@@ -350,24 +338,21 @@ void UPTWGameLiftClientSubsystem::CreatePlayerSession_Response(FHttpRequestPtr R
 	
 	TArray<FString> FieldsToExtract = { PlayerSessionIdName, PortName, SteamIdName };
 	TMap<FString, FString> SessionData = ExtractJsonFields(Response->GetContentAsString(), FieldsToExtract);
-	if (SessionData.Contains(PlayerSessionIdName) && 
-		SessionData.Contains(PortName) && 
-		SessionData.Contains(SteamIdName))
+	if (SessionData.Contains(PlayerSessionIdName) && SessionData.Contains(PortName) && SessionData.Contains(SteamIdName))
 	{
 		// ("steam.%s:%s?PlayerSessionId=%s")
 		
 		FString ConnectURL = FString::Printf(TEXT("?PlayerSessionId=%s"), *SessionData[PlayerSessionIdName]);
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *ConnectURL);
 		
 		UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
-		if (!IsValid(SteamSessionSubsystem)) return;
 		
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *ConnectURL);
-		SteamSessionSubsystem->JoinGameSession(SearchResult, ConnectURL);
-		// if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
-		// {
-		// 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::White, "ClientTravel");
-		// 	PC->ClientTravel(ConnectURL, TRAVEL_Absolute, false);
-		// }
+		SteamSessionSubsystem->OnFindByIdGameSessionComplete.AddLambda([=, this](const FOnlineSessionSearchResultBP& SearchResult)
+		{
+			SteamSessionSubsystem->JoinGameSession(SearchResult, ConnectURL);
+			SteamSessionSubsystem->OnFindByIdGameSessionComplete.RemoveAll(this);
+		});
+		SteamSessionSubsystem->FindByIdGameSession(SessionData[SteamIdName]);
 	}
 }
 
@@ -388,19 +373,81 @@ void UPTWGameLiftClientSubsystem::SearchGameSessions()
 
 void UPTWGameLiftClientSubsystem::SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	if (!bWasSuccessful || !Response.IsValid())
+	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
 	{
 		UE_LOG(LogTemp, Error, TEXT("HTTP Request failed!"));
 		return;
 	}
 	
-	TArray<FPTWGameLiftGameSession> GameSessions;
-	ParseDataArrayFromJson(Response->GetContentAsString(), GameSessions);
-	if (GameSessions.IsEmpty()) return;
+	TArray<FPTWGameSessionListsTable> GameSessionLists;
+	ParseDataArrayFromJson(Response->GetContentAsString(), GameSessionLists);
+	if (GameSessionLists.IsEmpty()) return;
 	
 	if (OnSessionSearchComplete.IsBound())
 	{
-		OnSessionSearchComplete.Broadcast(GameSessions);
+		OnSessionSearchComplete.Broadcast(GameSessionLists);
+	}
+}
+
+void UPTWGameLiftClientSubsystem::SearchQuickSession()
+{
+	FHttpModule* Http = &FHttpModule::Get();
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = Http->CreateRequest();
+	
+	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::SearchQuickSession_Response);
+	
+	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::SearchQuickSession);
+	Request->SetURL(APIUrl);
+	Request->SetVerb(TEXT("GET"));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	Request->ProcessRequest();
+	UE_LOG(LogTemp, Log, TEXT("Searching for game sessions..."));
+}
+
+void UPTWGameLiftClientSubsystem::SearchQuickSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
+	{
+		UE_LOG(LogTemp, Error, TEXT("HTTP Request failed!"));
+		return;
+	}
+	
+	TArray<FPTWGameSessionListsTable> GameSessionList;
+	ParseDataArrayFromJson(Response->GetContentAsString(), GameSessionList);
+	
+	TArray<FPTWGameSessionListsTable> ActiveList;
+	TArray<FPTWGameSessionListsTable> ActivatingList;
+	
+	for (FPTWGameSessionListsTable& TargetGameSession : GameSessionList)
+	{
+		if (TargetGameSession.ServerState == TEXT("ACTIVE"))
+		{
+			ActiveList.Add(TargetGameSession);
+		}
+		else if (TargetGameSession.ServerState == TEXT("ACTIVATING"))
+		{
+			ActivatingList.Add(TargetGameSession);
+		}
+	}
+	
+	if (!ActiveList.IsEmpty())
+	{
+		UE_LOG(LogTemp, Display, TEXT("No activating game sessions found"));
+		CreatePlayerSession(GetUniquePlayerId(), ActiveList[0].GameSessionId);
+	}
+	else if (!ActivatingList.IsEmpty())
+	{
+		UE_LOG(LogTemp, Log, TEXT("Activating game sessions found"));
+		GetWorld()->GetTimerManager().SetTimer(CheckSessionLitmitTimer, 20.0f, false);
+		CheckSessionStatus(ActivatingList[0].GameSessionId, true);
+	}
+	else
+	{
+		FPTWSessionConfig SessionConfig;
+		SessionConfig.ServerName = "QuickMatchGameSessions";
+		SessionConfig.MaxPlayers = 8;
+		SessionConfig.MaxRounds = GetMaxRoundsByLimit(EPTWRoundLimit::Short);
+		CreateGameSession(SessionConfig);
 	}
 }
 

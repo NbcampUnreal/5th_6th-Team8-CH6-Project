@@ -36,7 +36,7 @@ void APTWServerEntryGameMode::InitGameLift()
 		if (UPTWSteamSessionSubsystem* SessionSubsystem = GetGameInstance()->GetSubsystem<UPTWSteamSessionSubsystem>())
 		{
 			FPTWSessionConfig SessionConfig;
-			SessionConfig.ServerName = TEXT("NonGameLiftServer");
+			SessionConfig.ServerName = TEXT("1");
 			SessionConfig.MaxPlayers = 16;
 			SessionConfig.bIsDedicatedServer = UE_SERVER;
 			SessionConfig.bIsNoGameLift = true;
@@ -47,11 +47,6 @@ void APTWServerEntryGameMode::InitGameLift()
 			FString MaxPlayers_cmd = FString::Printf(TEXT("-%s="), *PTWSessionKey::MaxPlayers.ToString());
 			
 			SessionSubsystem->CreateGameSession(SessionConfig, true);
-			// FTimerHandle TempTimerHandle;
-			// GetWorld()->GetTimerManager().SetTimer(TempTimerHandle, [=, this]()
-			// {
-			// 	SessionSubsystem->OnGameSessionActivated("1234");
-			// }, 10.0f, false);
 			return;
 		}
 	}
@@ -196,8 +191,13 @@ void APTWServerEntryGameMode::InitGameLift()
 		AsyncTask(ENamedThreads::GameThread, [=, this]()
 		{	
 			UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
+			
 			FPTWSessionConfig SessionConfig;
+			SessionConfig.ServerName = InGameSession.GetName();
+			SessionConfig.MaxPlayers = InGameSession.GetMaximumPlayerSessionCount();
+			SessionConfig.bIsJoinable = false;
 			SessionConfig.bIsDedicatedServer = true;
+			
 			SteamSessionSubsystem->CreateGameSession(SessionConfig, true);
 		});
 	});

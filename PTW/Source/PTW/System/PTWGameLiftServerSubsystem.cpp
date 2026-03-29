@@ -78,7 +78,7 @@ void UPTWGameLiftServerSubsystem::OnMapLoaded(UWorld* LoadedWorld)
 	
 	if (GameLiftSdkModule)
 	{
-		UpdateGameSession();
+		UpdateSessionToReady();
 	}
 	
 	if (MapLoadDelegateHandle.IsValid())
@@ -95,14 +95,12 @@ void UPTWGameLiftServerSubsystem::UpdateSessionToReady()
 	
 	SessionInterface->ClearOnUpdateSessionCompleteDelegate_Handle(UpdateSessionCompleteDelegateHandle);
 	
-	FString GameLiftSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
+	UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
+	FString SteamId = SteamSessionSubsystem->GetSteamServerID();
+		
 	if (FOnlineSessionSettings* NewSettings = SessionInterface->GetSessionSettings(NAME_GameSession))
 	{
-		FString RefindSeesionId = GameLiftSessionId.Replace(TEXT("arn:aws:gamelift:"), TEXT(""));
-		RefindSeesionId = RefindSeesionId.Replace(TEXT("::gamesession/"), TEXT("|"));
-		
-		NewSettings->Set(PTWSessionKey::GameLiftSessionId, RefindSeesionId, EOnlineDataAdvertisementType::ViaOnlineService);
-		NewSettings->Set(PTWSessionKey::JOINABLE, true, EOnlineDataAdvertisementType::ViaOnlineService);
+		NewSettings->Set(PTWSessionKey::SteamId, SteamId, EOnlineDataAdvertisementType::ViaOnlineService);
 		
 		UpdateSessionCompleteDelegateHandle = SessionInterface->AddOnUpdateSessionCompleteDelegate_Handle(
 			FOnUpdateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnUpdateSessionToReadyComplete));
@@ -129,6 +127,7 @@ void UPTWGameLiftServerSubsystem::OnUpdateSessionToReadyComplete(FName SessionNa
 	if (bWasSuccessful)
 	{
 		UE_LOG(LogTemp, Display, TEXT("[Steam-MasterServer Response] 스팀 게임세션을 [준비됨] 상태로 업데이트 완료하였습니다."));
+		ActivateSessionAndUpdate();
 	}
 	else
 	{
@@ -136,7 +135,7 @@ void UPTWGameLiftServerSubsystem::OnUpdateSessionToReadyComplete(FName SessionNa
 	}
 }
 
-void UPTWGameLiftServerSubsystem::UpdateGameSession()
+void UPTWGameLiftServerSubsystem::ActivateSessionAndUpdate()
 {
 	FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
 	FString SteamId;
@@ -152,9 +151,9 @@ void UPTWGameLiftServerSubsystem::UpdateGameSession()
 	if (!SteamId.IsEmpty() && !GameSessionId.IsEmpty())
 	{
 		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
-		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::UpdateGameSession_Response);
+		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::ActivateSessionAndUpdate_Response);
 		
-		const FString APIUrl = ServerAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::UpdateGameSession);
+		const FString APIUrl = ServerAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::ActivateSessionAndUpdate);
 		Request->SetURL(APIUrl);
 		Request->SetVerb(TEXT("POST"));
 		Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
@@ -181,7 +180,7 @@ void UPTWGameLiftServerSubsystem::UpdateGameSession()
 	}
 }
 
-void UPTWGameLiftServerSubsystem::UpdateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void UPTWGameLiftServerSubsystem::ActivateSessionAndUpdate_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 	{
@@ -194,6 +193,54 @@ void UPTWGameLiftServerSubsystem::UpdateGameSession_Response(FHttpRequestPtr Req
 	}
 }
 
+void UPTWGameLiftServerSubsystem::UpdatePlayerCount(FString Action)
+{
+	FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
+	
+	if (!GameSessionId.IsEmpty() && (Action == TEXT("Join") || Action == TEXT("Leave")))
+	{
+		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::UpdatePlayerCount_Response);
+		
+		const FString APIUrl = ServerAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::UpdatePlayerCount);
+		Request->SetURL(APIUrl);
+		Request->SetVerb(TEXT("POST"));
+		Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+		
+		// Action : Join / Leave
+		TMap<FString, FString> Params = {
+			{ TEXT("gameSessionId"),	GameSessionId },
+			{ TEXT("action"),			Action }
+		};
+		
+		const FString Content = UPTWGameLiftClientSubsystem::SerializeJsonContent(Params);
+		Request->SetContentAsString(Content);
+		if (Request->ProcessRequest())
+		{
+			UE_LOG(LogTemp, Display, TEXT("[DynamoDB-MasterServer Request] DynamoDB에 플레이어 수 업데이트 요청 전송을 완료했습니다."));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("[DynamoDB-MasterServer Request] DynamoDB에 플레이어 수 업데이트 요청 전송을 실패했습니다"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("GameSessionId 또는 action이 유효하지 않습니다."));
+	}
+}
+
+void UPTWGameLiftServerSubsystem::UpdatePlayerCount_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
+	{
+		UE_LOG(LogTemp, Display, TEXT("[DynamoDB-MasterServer Response] DynamoDB에 플레이어 수 업데이트를 완료했습니다."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[DynamoDB-MasterServer Response] DynamoDB에 플레이어 수 업데이트를 실패했습니다."));
+	}
+}
 
 bool UPTWGameLiftServerSubsystem::AcceptPlayerSession(FString PlayerSessionId)
 {
@@ -239,4 +286,52 @@ void UPTWGameLiftServerSubsystem::ExitGameSession()
 	}
 }
 
+void UPTWGameLiftServerSubsystem::UpdateSessionState(FString Action)
+{
+	FString GameSessionId = GameLiftSdkModule->GetGameSessionId().GetResult();
+	
+	if (!GameSessionId.IsEmpty() && (Action == TEXT("ACTIVE") || Action == TEXT("TERMINATE")))
+	{
+		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::UpdatePlayerCount_Response);
+		
+		const FString APIUrl = ServerAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::UpdateSessionState);
+		Request->SetURL(APIUrl);
+		Request->SetVerb(TEXT("POST"));
+		Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+		
+		// Action : ACTIVE / TERMINATE
+		TMap<FString, FString> Params = {
+			{ TEXT("gameSessionId"),	GameSessionId },
+			{ TEXT("action"),			Action }
+		};
+		
+		const FString Content = UPTWGameLiftClientSubsystem::SerializeJsonContent(Params);
+		Request->SetContentAsString(Content);
+		if (Request->ProcessRequest())
+		{
+			UE_LOG(LogTemp, Display, TEXT("[DynamoDB-MasterServer Request] DynamoDB에 서버상태 업데이트 요청 전송을 완료했습니다."));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("[DynamoDB-MasterServer Request] DynamoDB에 서버상태 업데이트 요청 전송을 실패했습니다"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("GameSessionId 또는 action이 유효하지 않습니다."));
+	}
+}
+
+void UPTWGameLiftServerSubsystem::UpdateSessionState_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
+	{
+		UE_LOG(LogTemp, Display, TEXT("[DynamoDB-MasterServer Response] DynamoDB에 서버상태 업데이트를 완료했습니다."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[DynamoDB-MasterServer Response] DynamoDB에 서버상태 업데이트를 실패했습니다."));
+	}
+}
 #endif

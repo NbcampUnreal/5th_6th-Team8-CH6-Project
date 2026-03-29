@@ -90,19 +90,15 @@ void UPTWServerListRow::OnClickedJoinButton()
 	else
 	{
 		// 데디케이티드 서버 접속
-		FString GameLiftSessionId;
-		OnlineSession.SessionSettings.Get(PTWSessionKey::GameLiftSessionId, GameLiftSessionId);
-		
-		if (GameLiftSessionId.IsEmpty()) return;
-		
-		GameLiftSessionId = GameLiftSessionId.Replace(TEXT("|"), TEXT("::gamesession/"));
-		GameLiftSessionId = TEXT("arn:aws:gamelift:") + GameLiftSessionId;
-		
-		UE_LOG(LogTemp, Log, TEXT("GameLiftSessionId: %s"), *GameLiftSessionId);
-		if (UPTWGameLiftClientSubsystem* GameLiftClientSubsystem = UPTWGameLiftClientSubsystem::Get(this))
-		{
-			const FString UniquePlayerId = GameLiftClientSubsystem->GetUniquePlayerId();
-			GameLiftClientSubsystem->CreatePlayerSession(UniquePlayerId, GameLiftSessionId, SteamSessionInfoBP);
-		}
+		// FString GameLiftSessionId;
+		// OnlineSession.SessionSettings.Get(PTWSessionKey::GameLiftSessionId, GameLiftSessionId);
+		//
+		// if (GameLiftSessionId.IsEmpty()) return;
+		//
+		// if (UPTWGameLiftClientSubsystem* GameLiftClientSubsystem = UPTWGameLiftClientSubsystem::Get(this))
+		// {
+		// 	const FString UniquePlayerId = GameLiftClientSubsystem->GetUniquePlayerId();
+		// 	GameLiftClientSubsystem->CreatePlayerSession(UniquePlayerId, GameLiftSessionId);
+		// }
 	}
 }

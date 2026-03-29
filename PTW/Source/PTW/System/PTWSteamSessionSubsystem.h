@@ -69,11 +69,7 @@ public:
 	// Id기반 세션 검색
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void FindByIdGameSession(const FString& SteamId);
-	
-	// 데디케이티드 서버 생성 (unused)
-	UFUNCTION(BlueprintCallable, Category = "Session")
-	void LaunchDedicatedServer(FPTWSessionConfig SessionConfig);
-	
+
 	// 리슨서버로 레벨 이동
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig);

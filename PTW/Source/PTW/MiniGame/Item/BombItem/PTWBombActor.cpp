@@ -351,7 +351,7 @@ void APTWBombActor::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults,
 		);
 		if (!NewHandle.IsValid()) continue;
 
-		NewHandle.Data->SetSetByCallerMagnitude(DamageSetByCallerTag, -FinalDamage);
+		NewHandle.Data->SetSetByCallerMagnitude(DamageSetByCallerTag, FinalDamage);
 		TargetASC->ApplyGameplayEffectSpecToSelf(*NewHandle.Data.Get());
 
 		// 피격 큐

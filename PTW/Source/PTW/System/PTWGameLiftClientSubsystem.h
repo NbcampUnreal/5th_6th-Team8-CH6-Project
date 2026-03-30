@@ -11,6 +11,9 @@ class UPTWAPIData;
 class FJsonObject;
 struct FOnlineSessionSearchResultBP;
 
+DECLARE_LOG_CATEGORY_EXTERN(GameLift, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(DynamoDB, Log, All);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionSearchComplete, const TArray<FPTWGameSessionListsTable>&, SearchResults);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionMessageReceived, const FText&, Message);
 

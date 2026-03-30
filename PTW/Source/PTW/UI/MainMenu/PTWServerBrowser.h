@@ -51,9 +51,6 @@ protected:
 	void OnFindSessionsComplete(const TArray<FOnlineSessionSearchResultBP>& SearchResults);
 	
 	UFUNCTION()
-	void OnClickedTestButton();
-	
-	UFUNCTION()
 	void DevJoinAction();
 	
 	UFUNCTION()
@@ -115,9 +112,6 @@ protected:
 	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> DevJoinButton;
-	
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UButton> TestButton;
 	
 private:
 	EPTWRoundLimit RoundLimit;

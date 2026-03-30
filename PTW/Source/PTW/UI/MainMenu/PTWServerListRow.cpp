@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "PTWServerListRow.h"
@@ -60,7 +60,7 @@ void UPTWServerListRow::NativeConstruct()
 
 void UPTWServerListRow::NativeDestruct()
 {
-	if (!IsValid(JoinButton))
+	if (IsValid(JoinButton))
 	{
 		JoinButton->OnClicked.RemoveDynamic(this, &ThisClass::OnClickedJoinButton);
 	}
@@ -75,9 +75,9 @@ void UPTWServerListRow::OnClickedJoinButton()
 	
 	const FOnlineSession& OnlineSession = SteamSessionInfo.Session;
 	bool bIsNoGameLift = false;
-	const FOnlineSessionSearchResultBP& SteamSessionInfoBP = FOnlineSessionSearchResultBP(SteamSessionInfo);
+	FOnlineSessionSearchResultBP SteamSessionInfoBP = FOnlineSessionSearchResultBP(SteamSessionInfo);
 	
-	OnlineSession.SessionSettings.Get(PTWSessionKey::NoGameLift, bIsNoGameLift);
+	OnlineSession.SessionSettings.Get(FName(PTWSessionKey::NoGameLift), bIsNoGameLift);
 	
 	if (!OnlineSession.SessionSettings.bIsDedicated || bIsNoGameLift)
 	{

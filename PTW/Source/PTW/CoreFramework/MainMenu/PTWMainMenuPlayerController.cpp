@@ -6,6 +6,9 @@
 #include "PTW/UI/MainMenu/PTWMainMenu.h"
 #include "UI/PTWUISubsystem.h"
 #include "UI/PTWPopupWidget.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "CoreFramework/PTWGameUserSettings.h"
 
 APTWMainMenuPlayerController::APTWMainMenuPlayerController()
 {
@@ -15,10 +18,48 @@ APTWMainMenuPlayerController::APTWMainMenuPlayerController()
 	}
 }
 
+void APTWMainMenuPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		// (Tab)
+		EIC->BindAction(
+			Toggle,
+			ETriggerEvent::Started,
+			this,
+			&APTWMainMenuPlayerController::ToggleMenu
+		);
+	}
+
+	if (UPTWGameUserSettings* Settings = Cast<UPTWGameUserSettings>(UGameUserSettings::GetGameUserSettings()))
+	{
+		CurrentMouseSensitivity = Settings->MouseSensitivity;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[APTWMainMenuPlayerController] SetupInputComponent"));
+
+}
+
+void APTWMainMenuPlayerController::ApplyMouseSensitivity(float NewValue)
+{
+	CurrentMouseSensitivity = NewValue;
+}
+
 void APTWMainMenuPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (ULocalPlayer* LP = GetLocalPlayer())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+			LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+	}
+
 	if (!IsRunningDedicatedServer())
 	{
 		if (ULocalPlayer* LP = GetLocalPlayer())
@@ -26,7 +67,10 @@ void APTWMainMenuPlayerController::BeginPlay()
 			if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
 			{
 				UISubsystem->ShowSystemWidget(MainMenuClass);
-				UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::UIOnly);
+				UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::GameAndUI);
+
+				UUserWidget* Menu = UISubsystem->GetOrCreateWidget(MainMenuClass);
+				MenuWidget = Cast<UPTWMainMenu>(Menu);
 			}
 		}
 		bShowMouseCursor = true;
@@ -70,6 +114,31 @@ void APTWMainMenuPlayerController::Popup(const FText& InText)
 		if (UPTWPopupWidget* Popup = Cast<UPTWPopupWidget>(TopWidget))
 		{
 			Popup->SetMessage(InText);
+		}
+	}
+}
+
+void APTWMainMenuPlayerController::ToggleMenu()
+{
+	if (!MenuWidget) return;
+
+	bIsMenuOpen = !bIsMenuOpen;
+
+	MenuWidget->ToggleMainMenu(bIsMenuOpen);
+
+	if (ULocalPlayer* LP = GetLocalPlayer())
+	{
+		UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>();
+
+		if (!UISubsystem) return;
+
+		if (bIsMenuOpen)
+		{
+			UISubsystem->ApplyInputPolicy(EUIInputPolicy::GameAndUI);
+		}
+		else
+		{
+			UISubsystem->ApplyInputPolicy(EUIInputPolicy::GameOnly);
 		}
 	}
 }

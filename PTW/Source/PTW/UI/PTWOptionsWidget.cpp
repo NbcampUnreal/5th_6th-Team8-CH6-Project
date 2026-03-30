@@ -18,6 +18,7 @@
 
 #include "CoreFramework/PTWGameUserSettings.h"
 #include "CoreFramework/PTWPlayerController.h"
+#include "CoreFramework/MainMenu/PTWMainMenuPlayerController.h"
 #include "UI/PTWUISubsystem.h"
 
 void UPTWOptionsWidget::NativeConstruct()
@@ -369,6 +370,10 @@ void UPTWOptionsWidget::UpdateInputSettings()
 	if (APTWPlayerController* PC = Cast<APTWPlayerController>(GetOwningPlayer()))
 	{
 		PC->ApplyMouseSensitivity(NewSensitivity);
+	}
+	else if (APTWMainMenuPlayerController* MPC = Cast<APTWMainMenuPlayerController>(GetOwningPlayer()))
+	{
+		MPC->ApplyMouseSensitivity(NewSensitivity);
 	}
 
 	bIsDirty = true;

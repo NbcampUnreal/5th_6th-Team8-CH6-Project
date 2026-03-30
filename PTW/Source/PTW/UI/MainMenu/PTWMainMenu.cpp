@@ -6,6 +6,9 @@
 #include "PTWServerBrowser.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "UI/PTWUISubsystem.h"
+#include "Components/Border.h"
+#include "Components/CanvasPanelSlot.h"
+#include "CoreFramework/MainMenu/PTWMainMenuPlayerController.h"
 
 void UPTWMainMenu::NativeConstruct()
 {
@@ -24,6 +27,15 @@ void UPTWMainMenu::NativeConstruct()
 	if (IsValid(ExitButton))
 	{
 		ExitButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedExitButton);
+	}
+
+	if (MaskingBorder)
+	{
+		UCanvasPanelSlot* BorderSlot = Cast<UCanvasPanelSlot>(MaskingBorder->Slot);
+		if (BorderSlot)
+		{
+			BorderSlot->SetSize(FVector2D(BorderSlot->GetSize().X, MaxHeight));
+		}
 	}
 
 	if (ULocalPlayer* LP = GetOwningLocalPlayer())
@@ -48,6 +60,24 @@ void UPTWMainMenu::NativeDestruct()
 	}
 	
 	Super::NativeDestruct();
+}
+
+void UPTWMainMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	if (!MaskingBorder) return;
+
+	UCanvasPanelSlot* BorderSlot = Cast<UCanvasPanelSlot>(MaskingBorder->Slot);
+	if (BorderSlot)
+	{
+		FVector2D CurrentSize = BorderSlot->GetSize();
+
+		// 현재 높이에서 목표 높이로 부드럽게 보간
+		float NewHeight = FMath::FInterpTo(CurrentSize.Y, TargetHeight, InDeltaTime, SlideSpeed);
+
+		BorderSlot->SetSize(FVector2D(CurrentSize.X, NewHeight));
+	}
 }
 
 void UPTWMainMenu::OnClickedPlayButton()
@@ -84,4 +114,16 @@ void UPTWMainMenu::OnClickedExitButton()
 {
 	UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(), 
 		EQuitPreference::Quit, false);
+}
+
+void UPTWMainMenu::ToggleMainMenu(bool bIsMenuOpen)
+{
+	if (bIsMenuOpen)
+	{
+		TargetHeight = MaxHeight;
+	}
+	else
+	{
+		TargetHeight = MinHeight;
+	}
 }

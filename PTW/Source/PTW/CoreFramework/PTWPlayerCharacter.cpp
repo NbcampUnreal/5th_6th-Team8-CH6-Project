@@ -27,6 +27,7 @@
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "CoreFramework/Character/Component/PTWReactorComponent.h"
 #include "CoreFramework/Character/Component/PTWInteractComponent.h"
+#include "CoreFramework/MainMenu/PTWMainMenuPlayerController.h"
 #include "PTWGameplayTag/GameplayTags.h"
 #include "Kismet/GameplayStatics.h"
 #include "MiniGame/PTWMiniGameMode.h"
@@ -342,6 +343,14 @@ void APTWPlayerCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X * PC->CurrentMouseSensitivity);
 		AddControllerPitchInput(LookAxisVector.Y * PC->CurrentMouseSensitivity);
 		
+		AimPitch = GetControlRotation().Pitch;
+		ServerRPCUpdateAimPitch(AimPitch);
+	}
+	else if (APTWMainMenuPlayerController* MPC = Cast<APTWMainMenuPlayerController>(GetController()))
+	{
+		AddControllerYawInput(LookAxisVector.X * MPC->CurrentMouseSensitivity);
+		AddControllerPitchInput(LookAxisVector.Y * MPC->CurrentMouseSensitivity);
+
 		AimPitch = GetControlRotation().Pitch;
 		ServerRPCUpdateAimPitch(AimPitch);
 	}

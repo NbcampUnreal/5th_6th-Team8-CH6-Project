@@ -100,11 +100,11 @@ public:
 	/* HUD 초기화 */
 	void TryInitializeHUDASC();
 
+	void ApplyInputPolicy(EUIInputPolicy Policy);
+
 private:
 	/* Helpers */
 	APlayerController* GetPlayerController() const;
-
-	void ApplyInputPolicy(EUIInputPolicy Policy);
 
 	/* 입력정책 기본값 저장 */
 	UPROPERTY()

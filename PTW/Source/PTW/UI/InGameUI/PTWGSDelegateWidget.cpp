@@ -95,8 +95,16 @@ void UPTWGSDelegateWidget::HandleGamePhaseChanged(EPTWGamePhase Phase)
 
 void UPTWGSDelegateWidget::HandleRoulettePhaseChanged(FPTWRouletteData RouletteData)
 {
+	APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>();
+	if (!GS) return;
+
+	EPTWGamePhase Phase = GS->GetCurrentGamePhase();
+
 	if (MiniGameTitle)
 	{
-		MiniGameTitle->UpdateTitleByRoulette(RouletteData);
+		if (Phase == EPTWGamePhase::PostGameLobby)
+		{
+			MiniGameTitle->UpdateTitleByRoulette(RouletteData);
+		}
 	}
 }

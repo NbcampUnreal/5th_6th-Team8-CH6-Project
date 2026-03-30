@@ -10,6 +10,7 @@ class UCanvas;
 class UButton;
 class UWidgetSwitcher;
 class UPTWServerBrowser;
+class UBorder;
 
 UCLASS()
 class PTW_API UPTWMainMenu : public UUserWidget
@@ -22,11 +23,15 @@ public:
 	void OnClickedOptionsButton();
 	UFUNCTION()
 	void OnClickedExitButton();
+
+	void ToggleMainMenu(bool bIsMenuOpen);
 	
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 	
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 protected:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<UButton> PlayButton;
@@ -42,4 +47,17 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> OptionsMenuClass;
+
+	UPROPERTY(meta = (BindWidget))
+	UBorder* MaskingBorder;
+
+	// 설정값
+	UPROPERTY(EditAnywhere, Category = "UI Animation")
+	float SlideSpeed = 12.0f;
+	UPROPERTY(EditAnywhere, Category = "UI Animation")
+	float MaxHeight = 800.0f; 
+	UPROPERTY(EditAnywhere, Category = "UI Animation")
+	float MinHeight = 100.0f;
+
+	float TargetHeight = MaxHeight;
 };

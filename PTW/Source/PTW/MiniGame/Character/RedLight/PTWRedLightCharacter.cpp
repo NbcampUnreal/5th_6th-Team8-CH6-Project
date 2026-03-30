@@ -80,10 +80,10 @@ void APTWRedLightCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		if (JumpAction)
+		if (ChargeAction)
 		{
-			EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &APTWRedLightCharacter::OnSpacePressed);
-			EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &APTWRedLightCharacter::OnSpaceReleased);
+			EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Started, this, &APTWRedLightCharacter::OnSpacePressed);
+			EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Completed, this, &APTWRedLightCharacter::OnSpaceReleased);
 		}
 		if (ZoomAction)
 		{

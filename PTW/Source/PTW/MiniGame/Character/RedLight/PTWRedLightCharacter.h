@@ -85,7 +85,7 @@ public:
 	ERedLightPhase CurrentPhase = ERedLightPhase::WaitInput;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight|Input")
-	class UInputAction* JumpAction;
+	TObjectPtr<UInputAction> ChargeAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight|Input")
 	TObjectPtr<UInputAction> ZoomAction;
 

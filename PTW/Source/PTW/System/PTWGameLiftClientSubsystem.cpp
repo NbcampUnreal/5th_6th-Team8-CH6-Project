@@ -13,6 +13,9 @@
 #include "Session/PTWSessionConfig.h"
 #include "UObject/Object.h"
 
+DEFINE_LOG_CATEGORY(GameLift);
+DEFINE_LOG_CATEGORY(DynamoDB);
+
 #define LOCTEXT_NAMESPACE "GAMELIFTCLIENTSUBSYSTEM"
 
 UPTWGameLiftClientSubsystem::UPTWGameLiftClientSubsystem()
@@ -134,21 +137,32 @@ void UPTWGameLiftClientSubsystem::CreateGameSession(FPTWSessionConfig& SessionCo
 	GetWorld()->GetTimerManager().SetTimer(CheckSessionLitmitTimer, 20.0f, false);
 	const FString Content = SerializeJsonContent(Params);
 	Request->SetContentAsString(Content);
-	Request->ProcessRequest();
-	
+	if (Request->ProcessRequest())
+	{
+		UE_LOG(GameLift, Display, TEXT("[게임세션 생성요청] 게임리프트 게임세션 생성요청 전송 완료"));
+	}
+	else
+	{
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("HTTPRequestFailed", "네트워크 문제로 인해 서버에 세션 생성 요청을 보내지 못했습니다. 연결 상태를 확인해 주세요.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
+		UE_LOG(GameLift, Error, TEXT("[게임세션 생성요청] 게임리프트 게임세션 생성요청 전송 실패"));
+		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
+	}
 }
 
 void UPTWGameLiftClientSubsystem::CreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Create Game Session Response Received");
 	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
 	{
-		UE_LOG(LogTemp, Error, TEXT("CreateGameSession Failed."));
 		if (OnGameLiftSessionMessageReceived.IsBound())
 		{
 			FText ErrorMessage = LOCTEXT("SessionCreateFailed", "알 수 없는 오류가 발생해 세션 생성에 실패했습니다.");
 			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
 		}
+		UE_LOG(GameLift, Error, TEXT("[게임세션 생성응답] 게임리프트 게임세션 생성 실패 응답 (Code:%d)"), Response->GetResponseCode());
 		return;
 	}
 	FString GameSessionIdName = TEXT("GameSessionId");
@@ -167,8 +181,6 @@ void UPTWGameLiftClientSubsystem::CheckSessionStatus(const FString& SessionId, b
 {
 	check(ClientAPIData);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, "CheckSessionStatus");
-	
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	
 	if (bIsLoop)
@@ -188,46 +200,60 @@ void UPTWGameLiftClientSubsystem::CheckSessionStatus(const FString& SessionId, b
 	Request->SetURL(RefinedURL);
 	Request->SetVerb(TEXT("GET"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	Request->ProcessRequest();
+	if (Request->ProcessRequest())
+	{
+		UE_LOG(DynamoDB, Display, TEXT("[DB속성 확인요청] DB:GameSessionLists ServerState 확인요청 전송성공 (GameSessionId:%s"), *SessionId);
+	}
+	else
+	{
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("HTTPRequestFailed", "네트워크 문제로 인해 서버에 세션 생성 요청을 보내지 못했습니다. 연결 상태를 확인해 주세요.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
+		UE_LOG(DynamoDB, Error, TEXT("[DB속성 확인요청] DB:GameSessionLists ServerState 확인요청 전송실패 (GameSessionId:%s"), *SessionId);
+		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
+	}
 }
 
 void UPTWGameLiftClientSubsystem::CheckSessionStatus_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
 	{
-		UE_LOG(LogTemp, Error, TEXT("CheckSessionStatus 통신 실패."));
 		if (OnGameLiftSessionMessageReceived.IsBound())
 		{
 			FText ErrorMessage = LOCTEXT("SessionCheckFailed", "알 수 없는 오류가 발생해 세션 체크에 실패하였습니다.");
 			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
 		}
+		UE_LOG(DynamoDB, Error, TEXT("[DB속성 확인응답] DB:GameSessionLists ServerState 확인 실패"));
 	}
 }
 
 void UPTWGameLiftClientSubsystem::CheckSessionStatusLoop_Response(FHttpRequestPtr Request, 
 	FHttpResponsePtr Response, bool bWasSuccessful, FString SessionId)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, "CheckSessionStatus_Response");
-	
 	if (!bWasSuccessful || !Response.IsValid() || (Response->GetResponseCode() != 202 && Response->GetResponseCode() != 200))
 	{
-		UE_LOG(LogTemp, Error, TEXT("CheckSessionStatus 통신 실패."));
 		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
 		if (OnGameLiftSessionMessageReceived.IsBound())
 		{
 			FText ErrorMessage = LOCTEXT("SessionCheckFailed", "알 수 없는 오류가 발생해 세션 체크에 실패하였습니다.");
 			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
 		}
+		UE_LOG(DynamoDB, Error, TEXT("[DB속성 확인응답] DB:GameSessionLists ServerState 확인실패"));
 	}
 	else if (bWasSuccessful && Response.IsValid())
 	{
+		UE_LOG(DynamoDB, Error, TEXT("[DB속성 확인응답] DB:GameSessionLists ServerState 확인성공"));
 		if (Response->GetResponseCode() == 202)
 		{
+			UE_LOG(DynamoDB, Display, TEXT("[DB속성 확인응답] DB:GameSessionLists ServerState: ACTIVATING (GameSessionId:%s"), *SessionId);
 			WaitForSessionActivation(SessionId);
 		}
 		else if (Response->GetResponseCode() == 200)
 		{
 			GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
+			UE_LOG(DynamoDB, Display, TEXT("[DB속성 확인응답] DB:GameSessionLists ServerState: ACTIVE (GameSessionId:%s"), *SessionId);
 			CreatePlayerSession(GetUniquePlayerId(), SessionId);
 		}
 	}
@@ -241,9 +267,10 @@ void UPTWGameLiftClientSubsystem::WaitForSessionActivation(const FString& Sessio
 		{
 			FTimerHandle CreateSessionTimer;
 			PC->GetWorldTimerManager().SetTimer(CreateSessionTimer,[this, SessionId]()
-		   {
-			   CheckSessionStatus(SessionId, true);
-		   }, 2.0f, false);
+			{
+				CheckSessionStatus(SessionId, true);
+				UE_LOG(LogTemp, Display, TEXT("CheckSessionStatus 재시도"));
+			}, 2.0f, false);
 		}
 		else
 		{
@@ -251,6 +278,7 @@ void UPTWGameLiftClientSubsystem::WaitForSessionActivation(const FString& Sessio
 			{
 				FText ErrorMessage = LOCTEXT("SessionCheckTimeOut", "세션 타임아웃이 발생했습니다.");
 				OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+				UE_LOG(LogTemp, Warning, TEXT("WaitForSessionActivation 타임아웃"));
 			}
 		}
 	}
@@ -313,7 +341,20 @@ void UPTWGameLiftClientSubsystem::CreatePlayerSession(const FString& PlayerId, c
 	const FString Content = SerializeJsonContent(Params);
 	
 	Request->SetContentAsString(Content);
-	Request->ProcessRequest();
+	if (Request->ProcessRequest())
+	{
+		UE_LOG(GameLift, Display, TEXT("[플레이어세션 생성요청] 게임리프트 게임세션 - 플레이어세션 생성요청 전송완료 (GameSessionId:%s)"), *GameSessionId);
+	}
+	else
+	{
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("HTTPRequestFailed", "네트워크 문제로 인해 서버에 세션 생성 요청을 보내지 못했습니다. 연결 상태를 확인해 주세요.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
+		UE_LOG(GameLift, Error, TEXT("[플레이어세션 생성요청] 게임리프트 게임세션 - 플레이어세션 생성요청 전송실패 (GameSessionId:%s)"), *GameSessionId);
+		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
+	}
 }
 
 void UPTWGameLiftClientSubsystem::CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -322,16 +363,15 @@ void UPTWGameLiftClientSubsystem::CreatePlayerSession_Response(FHttpRequestPtr R
 	
 	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "CreatePlayerSession 통신 실패.");
 		if (OnGameLiftSessionMessageReceived.IsBound())
 		{
 			FText ErrorMessage = LOCTEXT("SessionCheckTimeOut", "세션 참여에 실패하였습니다.");
 			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
 		}
+		UE_LOG(GameLift, Error, TEXT("[플레이어세션 생성응답] 게임리프트 게임세션 - 플레이어세션 생성실패 응답 (Code:%d)"), Response->GetResponseCode());
 		return;
 	}
-	
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "CreatePlayerSession_Response");
+	UE_LOG(GameLift, Display, TEXT("[플레이어세션 생성응답] 게임리프트 게임세션 - 플레이어세션 생성성공 응답 (Code:%d)"), Response->GetResponseCode());
 	
 	FString PlayerSessionIdName = TEXT("PlayerSessionId");
 	FString PortName = TEXT("Port");
@@ -395,14 +435,20 @@ void UPTWGameLiftClientSubsystem::SearchQuickSession()
 	Request->SetVerb(TEXT("GET"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	
+	GetWorld()->GetTimerManager().SetTimer(CheckSessionLitmitTimer, 20.f, false);
 	if (Request->ProcessRequest())
 	{
-		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
-		GetWorld()->GetTimerManager().SetTimer(CheckSessionLitmitTimer, 20.f, false);
+		UE_LOG(DynamoDB, Display, TEXT("[DB레코드 추출요청] DB:GameSessionLists 레코드 추출요청 전송성공"));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("HTTP Request failed!"));
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("HTTPRequestFailed", "네트워크 문제로 인해 서버에 세션 생성 요청을 보내지 못했습니다. 연결 상태를 확인해 주세요.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
+		UE_LOG(DynamoDB, Error, TEXT("[DB레코드 추출요청] DB:GameSessionLists 레코드 추출요청 전송실패"));
+		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
 	}
 }
 
@@ -411,10 +457,16 @@ void UPTWGameLiftClientSubsystem::SearchQuickSession_Response(FHttpRequestPtr Re
 	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
-		UE_LOG(LogTemp, Error, TEXT("HTTP Request failed!"));
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("SessionCheckTimeOut", "세션 참여에 실패하였습니다.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
+		UE_LOG(DynamoDB, Error, TEXT("[DB레코드 추출응답] DB:GameSessionLists 레코드 추출실패 응답 (Code:%d)"), Response->GetResponseCode());
 		return;
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "SearchQuickSession");
+	UE_LOG(DynamoDB, Display, TEXT("[DB레코드 추출응답] DB:GameSessionLists 레코드 추출성공 응답 (Code:%d)"), Response->GetResponseCode());
+	
 	TArray<FPTWGameSessionListsTable> GameSessionList;
 	ParseDataArrayFromJson(Response->GetContentAsString(), GameSessionList);
 	
@@ -433,18 +485,22 @@ void UPTWGameLiftClientSubsystem::SearchQuickSession_Response(FHttpRequestPtr Re
 		}
 	}
 	
+	UE_LOG(DynamoDB, Display, TEXT("[DB레코드 추출응답] DB:GameSessionLists ServerState:ACTIVE 서버:%d"), ActiveList.Num());
+	UE_LOG(DynamoDB, Display, TEXT("[DB레코드 추출응답] DB:GameSessionLists ServerState:ACTIVATING 서버:%d"), ActivatingList.Num());
+	
 	if (!ActiveList.IsEmpty())
 	{
-		UE_LOG(LogTemp, Display, TEXT("No activating game sessions found"));
+		UE_LOG(LogTemp, Display, TEXT("ServerState:ACTIVE 서버접속 (GameSessionId:%s)"), *ActiveList[0].GameSessionId);
 		CreatePlayerSession(GetUniquePlayerId(), ActiveList[0].GameSessionId);
 	}
 	else if (!ActivatingList.IsEmpty())
 	{
-		UE_LOG(LogTemp, Log, TEXT("Activating game sessions found"));
+		UE_LOG(LogTemp, Display, TEXT("ServerState:ACTIVATING 서버접속 (GameSessionId:%s)"), *ActivatingList[0].GameSessionId);
 		CheckSessionStatus(ActivatingList[0].GameSessionId, true);
 	}
 	else
 	{
+		UE_LOG(LogTemp, Display, TEXT("유효한 서버 비존재. 직접서버 생성"));
 		FPTWSessionConfig SessionConfig;
 		SessionConfig.ServerName = "QuickMatchGameSessions";
 		SessionConfig.MaxPlayers = 8;
@@ -474,26 +530,10 @@ void UPTWGameLiftClientSubsystem::FindByIdAndJoinSession(const FString& SteamId,
 			{
 				SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 			}
-
+			
 			if (bWasSuccessful && DedicatedSessionSearch.IsValid())
 			{
 				UE_LOG(LogTemp, Log, TEXT("Search Complete! Found %d sessions."), DedicatedSessionSearch->SearchResults.Num());
-				
-				// 가끔 스팀에서 세션 탐색에 실패하면 재시도
-				if (DedicatedSessionSearch->SearchResults.IsEmpty())
-				{
-					UE_LOG(LogTemp, Log, TEXT("No activating steam game sessions found"));
-					if (GetWorld()->GetTimerManager().IsTimerActive(CheckSessionLitmitTimer))
-					{
-						FTimerHandle TempTimerHandle;
-						GetWorld()->GetTimerManager().SetTimer(TempTimerHandle, [=, this]()
-						{
-							FindByIdAndJoinSession(SteamId, Options);
-						}, 2.0f, false);
-						return;
-					}
-				}
-				
 				for (const FOnlineSessionSearchResult& SearchResult : DedicatedSessionSearch->SearchResults)
 				{
 					FString TargetSessionId;
@@ -507,6 +547,15 @@ void UPTWGameLiftClientSubsystem::FindByIdAndJoinSession(const FString& SteamId,
 						return;
 					}
 				}
+			}
+			// 가끔 스팀에서 세션 탐색에 실패하면 재시도
+			if (GetWorld()->GetTimerManager().IsTimerActive(CheckSessionLitmitTimer))
+			{
+				FTimerHandle TempTimerHandle;
+				GetWorld()->GetTimerManager().SetTimer(TempTimerHandle, [=, this]()
+				{
+					FindByIdAndJoinSession(SteamId, Options);
+				}, 2.0f, false);
 			}
 		})
 	);

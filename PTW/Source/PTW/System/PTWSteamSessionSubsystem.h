@@ -9,6 +9,7 @@
 #include "Session/PTWSessionConfig.h"
 #include "PTWSteamSessionSubsystem.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(SteamSession, Log, All);
 
 USTRUCT(BlueprintType)
 struct FOnlineSessionSearchResultBP

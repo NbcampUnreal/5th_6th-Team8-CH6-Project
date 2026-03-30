@@ -9,6 +9,8 @@
 #include "Online/OnlineSessionNames.h"
 #include "System/Session/PTWSessionConfig.h"
 
+DEFINE_LOG_CATEGORY(SteamSession);
+
 #define LOCTEXT_NAMESPACE "STEAMSESSIONSUBSYSTEM"
 
 UPTWSteamSessionSubsystem* UPTWSteamSessionSubsystem::Get(const UObject* WorldContextObject)
@@ -148,17 +150,41 @@ void UPTWSteamSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfi
 		SessionSettings->Set(PTWSessionKey::NoGameLift, SessionConfig.bIsNoGameLift, EOnlineDataAdvertisementType::ViaOnlineService);
 	}
     
-    if (!SessionInterface->CreateSession(0, NAME_GameSession, *SessionSettings))
+    if (SessionInterface->CreateSession(0, NAME_GameSession, *SessionSettings))
     {
-        // 생성 요청 실패, 델리게이트 해제
+    	UE_LOG(SteamSession, Display, TEXT("[게임세션 생성요청] 스팀게임세션 생성요청 전송완료"));
+    }
+	else
+    {
         SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
-        UE_LOG(LogTemp, Warning, TEXT("CreateSession Call Failed"));
+		#if !UE_SERVER
     	if (OnSteamSessionMessageReceived.IsBound())
     	{
     		FText ErrorMessage = LOCTEXT("SessionCreateFailed", "알 수 없는 오류가 발생해 세션 생성에 실패했습니다.");
     		OnSteamSessionMessageReceived.Broadcast(ErrorMessage);
     	}
+		#endif
+    	UE_LOG(SteamSession, Error, TEXT("[게임세션 생성요청] 스팀게임세션 생성요청 전송실패"));
     }
+}
+
+void UPTWSteamSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig, bool bTravelOnSuccess)
+{
+	if(!SessionInterface.IsValid()) return;
+	
+	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(DestroySessionDelegateHandle);
+	if (bWasSuccessful)
+	{
+		UE_LOG(SteamSession, Display, TEXT("[게임세션 생성응답] 스팀게임세션 생성성공 응답"));
+		if (bTravelOnSuccess)
+		{
+			OpenServerLevel("lobby", SessionConfig);
+		}
+	}
+	else
+	{
+		UE_LOG(SteamSession, Error, TEXT("[게임세션 생성응답] 스팀게임세션 생성실패 응답"));
+	}
 }
 
 void UPTWSteamSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResultBP& BPSearchResult, const FString Options)
@@ -170,10 +196,19 @@ void UPTWSteamSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResult
 	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(
 		FOnJoinSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnJoinSessionComplete, Options));
 	
-	if (!SessionInterface->JoinSession(0, NAME_GameSession, SearchResult))
+	if (SessionInterface->JoinSession(0, NAME_GameSession, SearchResult))
+	{
+		UE_LOG(SteamSession, Display, TEXT("[게임세션 접속요청] 스팀게임세션 접속요청 전송완료"));
+	}
+	else
 	{
 		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
-		UE_LOG(LogTemp, Warning, TEXT("JoinSession Call Failed"));
+		if (OnSteamSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("JoinSteamSessionFailed", "스팀세션 접속에 실패했습니다.");
+			OnSteamSessionMessageReceived.Broadcast(ErrorMessage);
+		}
+		UE_LOG(SteamSession, Error, TEXT("[게임세션 접속요청] 스팀게임세션 접속요청 전송실패"));
 	}
 }
 
@@ -181,7 +216,7 @@ void UPTWSteamSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoin
 {
 	if (Result != EOnJoinSessionCompleteResult::Success)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Join Session Failed! Result Code: %d"), (int32)Result);
+		UE_LOG(SteamSession, Error, TEXT("[게임세션 접속응답] 스팀게임세션 접속실패 응답 (Code: %d)"), (int32)Result);
 		return;
 	}
 	if (!SessionInterface.IsValid()) return;
@@ -359,25 +394,6 @@ void UPTWSteamSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig
 		UGameplayStatics::OpenLevel(this, MapName, true, Options);
 	}
 	
-}
-
-void UPTWSteamSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful, FPTWSessionConfig SessionConfig, bool bTravelOnSuccess)
-{
-	if(!SessionInterface.IsValid()) return;
-	
-	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(DestroySessionDelegateHandle);
-	if (bWasSuccessful)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Steam Session Created Successfully!"));
-		if (bTravelOnSuccess)
-		{
-			OpenServerLevel("lobby", SessionConfig);
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to Create Steam Session."));
-	}
 }
 
 void UPTWSteamSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, 

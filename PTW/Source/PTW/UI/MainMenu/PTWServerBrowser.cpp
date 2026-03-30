@@ -66,14 +66,6 @@ void UPTWServerBrowser::NativeConstruct()
 		LongRoundButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedLongRoundButton);
 	}
 	
-	if (IsValid(TestButton))
-	{
-		#if WITH_EDITOR
-		TestButton->SetVisibility(ESlateVisibility::Visible);
-		TestButton->OnClicked.AddUniqueDynamic(this, &ThisClass::OnClickedTestButton);
-		#endif
-	}
-	
 	if (IsValid(DevJoinButton))
 	{
 		#if WITH_EDITOR
@@ -206,10 +198,7 @@ void UPTWServerBrowser::OnClickedFindServerButton()
 	ServerListVerticalBox->ClearChildren();
 	
 	if (!IsValid(ServerNameEditableText)) return;
-	
-	UGameInstance* GameInstance = GetGameInstance();
-	if (!IsValid(GameInstance)) return;
-	
+
 	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
 	{
 		SteamSessionSubsystem->FindGameSession();
@@ -218,12 +207,11 @@ void UPTWServerBrowser::OnClickedFindServerButton()
 
 void UPTWServerBrowser::OnClickedQuickMatchButton()
 {
-	UGameInstance* GameInstance = GetGameInstance();
-	if (!IsValid(GameInstance)) return;
 	
 	if (UPTWGameLiftClientSubsystem* GameLiftClientSubsystem = UPTWGameLiftClientSubsystem::Get(this))
 	{
 		GameLiftClientSubsystem->SearchQuickSession();
+		SetIsEnabled(false);
 	}
 }
 
@@ -252,11 +240,6 @@ void UPTWServerBrowser::OnFindSessionsComplete(const TArray<FOnlineSessionSearch
 		ServerListVerticalBox->AddChildToVerticalBox(ServerListRow);
 	}
 	SetIsEnabled(true);
-}
-
-void UPTWServerBrowser::OnClickedTestButton()
-{
-	TestButton->SetIsEnabled(false);
 }
 
 void UPTWServerBrowser::DevJoinAction()

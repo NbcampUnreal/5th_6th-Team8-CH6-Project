@@ -20,7 +20,6 @@ struct FOnlineSessionSearchResultBP
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSessionSearchComplete, const TArray<FOnlineSessionSearchResultBP>&, SearchResult);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllSessionSearchFinished);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSteamSessionMessageReceived, const FText&, Message);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnFindByIdGameSessionComplete, const FOnlineSessionSearchResultBP&);
 
 UCLASS()
 class PTW_API UPTWSteamSessionSubsystem : public UGameInstanceSubsystem
@@ -66,10 +65,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void SearchForGameSessions();
 	
-	// Id기반 세션 검색
-	UFUNCTION(BlueprintCallable, Category = "Session")
-	void FindByIdGameSession(const FString& SteamId);
-
 	// 리슨서버로 레벨 이동
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig);
@@ -103,10 +98,7 @@ protected:
 	
 	// 세션 탐색이 완료됐을 시 호출
 	void OnFindSessionsComplete(bool bWasSuccessful);
-	
-	// id 기반 세션 탐색
-	void OnFindByIdOnComplete(bool bWasSuccessful, const FString SteamId);
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Session")
 	void OnQuickMatchFindSessionsComplete();
 	
@@ -122,7 +114,7 @@ public:
 	FOnSessionSearchComplete OnSessionSearchComplete;
 	FOnAllSessionSearchFinished OnAllSessionSearchFinished;
 	FOnSteamSessionMessageReceived OnSteamSessionMessageReceived;
-	FOnFindByIdGameSessionComplete OnFindByIdGameSessionComplete;
+	
 protected:
 	FDelegateHandle SteamLoginCompletedHandle;
 	FDelegateHandle CreateSessionCompleteDelegateHandle;

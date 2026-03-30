@@ -9,6 +9,7 @@
 #include "GameFramework/PlayerState.h"
 #include "GenericPlatform/GenericPlatformHttp.h"
 #include "Interfaces/IHttpResponse.h"
+#include "Online/OnlineSessionNames.h"
 #include "Session/PTWSessionConfig.h"
 #include "UObject/Object.h"
 
@@ -345,14 +346,7 @@ void UPTWGameLiftClientSubsystem::CreatePlayerSession_Response(FHttpRequestPtr R
 		FString ConnectURL = FString::Printf(TEXT("?PlayerSessionId=%s"), *SessionData[PlayerSessionIdName]);
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *ConnectURL);
 		
-		UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
-		
-		SteamSessionSubsystem->OnFindByIdGameSessionComplete.AddLambda([=, this](const FOnlineSessionSearchResultBP& SearchResult)
-		{
-			SteamSessionSubsystem->JoinGameSession(SearchResult, ConnectURL);
-			SteamSessionSubsystem->OnFindByIdGameSessionComplete.RemoveAll(this);
-		});
-		SteamSessionSubsystem->FindByIdGameSession(SessionData[SteamIdName]);
+		FindByIdAndJoinSession(SessionData[SteamIdName], ConnectURL);
 	}
 }
 
@@ -393,25 +387,34 @@ void UPTWGameLiftClientSubsystem::SearchQuickSession()
 {
 	FHttpModule* Http = &FHttpModule::Get();
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = Http->CreateRequest();
-	
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "SearchQuickSession");
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::SearchQuickSession_Response);
 	
 	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::SearchQuickSession);
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("GET"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	Request->ProcessRequest();
-	UE_LOG(LogTemp, Log, TEXT("Searching for game sessions..."));
+	
+	if (Request->ProcessRequest())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
+		GetWorld()->GetTimerManager().SetTimer(CheckSessionLitmitTimer, 20.f, false);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("HTTP Request failed!"));
+	}
 }
 
 void UPTWGameLiftClientSubsystem::SearchQuickSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	if (!bWasSuccessful || !Response.IsValid() || Response->GetResponseCode() != 200)
 	{
+		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
 		UE_LOG(LogTemp, Error, TEXT("HTTP Request failed!"));
 		return;
 	}
-	
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "SearchQuickSession");
 	TArray<FPTWGameSessionListsTable> GameSessionList;
 	ParseDataArrayFromJson(Response->GetContentAsString(), GameSessionList);
 	
@@ -438,7 +441,6 @@ void UPTWGameLiftClientSubsystem::SearchQuickSession_Response(FHttpRequestPtr Re
 	else if (!ActivatingList.IsEmpty())
 	{
 		UE_LOG(LogTemp, Log, TEXT("Activating game sessions found"));
-		GetWorld()->GetTimerManager().SetTimer(CheckSessionLitmitTimer, 20.0f, false);
 		CheckSessionStatus(ActivatingList[0].GameSessionId, true);
 	}
 	else
@@ -448,6 +450,81 @@ void UPTWGameLiftClientSubsystem::SearchQuickSession_Response(FHttpRequestPtr Re
 		SessionConfig.MaxPlayers = 8;
 		SessionConfig.MaxRounds = GetMaxRoundsByLimit(EPTWRoundLimit::Short);
 		CreateGameSession(SessionConfig);
+	}
+}
+
+void UPTWGameLiftClientSubsystem::FindByIdAndJoinSession(const FString& SteamId, const FString& Options)
+{
+	UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this);
+	IOnlineSessionPtr SessionInterface = SteamSessionSubsystem->GetSessionInterface();
+	
+	if(!SessionInterface.IsValid()) return;
+	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+
+	TSharedPtr<FOnlineSessionSearch> DedicatedSessionSearch = MakeShareable(new FOnlineSessionSearch());
+	DedicatedSessionSearch->bIsLanQuery = false;
+	DedicatedSessionSearch->MaxSearchResults = 100;
+	DedicatedSessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, true, EOnlineComparisonOp::Equals);
+	DedicatedSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, false, EOnlineComparisonOp::Equals);
+
+	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
+		FOnFindSessionsCompleteDelegate::CreateWeakLambda(this, [=, this](bool bWasSuccessful)
+		{
+			if(SessionInterface.IsValid())
+			{
+				SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+			}
+
+			if (bWasSuccessful && DedicatedSessionSearch.IsValid())
+			{
+				UE_LOG(LogTemp, Log, TEXT("Search Complete! Found %d sessions."), DedicatedSessionSearch->SearchResults.Num());
+				
+				// 가끔 스팀에서 세션 탐색에 실패하면 재시도
+				if (DedicatedSessionSearch->SearchResults.IsEmpty())
+				{
+					UE_LOG(LogTemp, Log, TEXT("No activating steam game sessions found"));
+					if (GetWorld()->GetTimerManager().IsTimerActive(CheckSessionLitmitTimer))
+					{
+						FTimerHandle TempTimerHandle;
+						GetWorld()->GetTimerManager().SetTimer(TempTimerHandle, [=, this]()
+						{
+							FindByIdAndJoinSession(SteamId, Options);
+						}, 2.0f, false);
+						return;
+					}
+				}
+				
+				for (const FOnlineSessionSearchResult& SearchResult : DedicatedSessionSearch->SearchResults)
+				{
+					FString TargetSessionId;
+					SearchResult.Session.SessionSettings.Get(PTWSessionKey::SteamId, TargetSessionId);
+
+					if (TargetSessionId.IsEmpty()) continue;
+
+					if (SteamId == TargetSessionId)
+					{
+						SteamSessionSubsystem->JoinGameSession(FOnlineSessionSearchResultBP(SearchResult), Options);
+						return;
+					}
+				}
+			}
+		})
+	);
+
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	if (SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), DedicatedSessionSearch.ToSharedRef()))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Session search started..."));
+	}
+	else
+	{
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+		UE_LOG(LogTemp, Warning, TEXT("Failed to start session search."));
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("FindSteamSessionFailed", "스팀 세션 탐색에 실패했습니다.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
 	}
 }
 

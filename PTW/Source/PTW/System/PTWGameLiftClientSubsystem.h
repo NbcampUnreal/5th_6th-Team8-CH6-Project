@@ -71,6 +71,7 @@ public:
 	void CreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
 	void SearchGameSessions();
 	void SearchQuickSession();
+	void FindByIdAndJoinSession(const FString& SteamId, const FString& Options);
 	FString GetUniquePlayerId() const;
 	
 protected:
@@ -89,7 +90,7 @@ protected:
 public:
 	FOnGameLiftSessionSearchComplete OnSessionSearchComplete;
 	FOnGameLiftSessionMessageReceived OnGameLiftSessionMessageReceived;
-
 private:
 	FTimerHandle CheckSessionLitmitTimer;
+	FDelegateHandle FindSessionsCompleteDelegateHandle;
 };

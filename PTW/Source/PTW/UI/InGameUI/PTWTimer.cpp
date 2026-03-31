@@ -10,20 +10,19 @@ void UPTWTimer::InitTimer()
 {
 	PTWGameState = GetWorld() ? GetWorld()->GetGameState<APTWGameState>() : nullptr;
 
-	if (PTWGameState)
+	if (IsValid(PTWGameState))
 	{
+		// 중복 바인딩 방지 
+		PTWGameState->OnRemainTimeChanged.RemoveDynamic(this, &UPTWTimer::HandleRemainTimeChanged);
+		PTWGameState->OnMiniGameCountdownChanged.RemoveDynamic(this, &UPTWTimer::MiniGameCountdownChanged);
+
 		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_InitGameState);
 
-		UE_LOG(LogTemp, Warning, TEXT("Timer : bind"));
+		UE_LOG(LogTemp, Warning, TEXT("PTWTimer : InitTimer"));
 
 		// 델리게이트 바인딩
-		PTWGameState->OnRemainTimeChanged.AddDynamic(
-			this, &UPTWTimer::HandleRemainTimeChanged
-		);
-
-		PTWGameState->OnMiniGameCountdownChanged.AddDynamic(
-			this, &UPTWTimer::MiniGameCountdownChanged
-		);
+		PTWGameState->OnRemainTimeChanged.AddDynamic(this, &UPTWTimer::HandleRemainTimeChanged);
+		PTWGameState->OnMiniGameCountdownChanged.AddDynamic(this, &UPTWTimer::MiniGameCountdownChanged);
 
 		// 초기 값 반영
 		HandleRemainTimeChanged(PTWGameState->GetRemainTime());

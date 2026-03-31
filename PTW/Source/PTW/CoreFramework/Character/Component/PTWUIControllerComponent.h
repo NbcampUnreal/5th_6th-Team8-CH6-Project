@@ -110,8 +110,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI") 
 	TSubclassOf<class UPTWInGameHUD> HUDClass;
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UUserWidget> DelegateUI;
+	/*UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> DelegateUI;*/
 	UPROPERTY(EditDefaultsOnly, Category = "UI") 
 	TSubclassOf<class UPTWRankingBoard> RankingBoardClass;
 	UPROPERTY(EditDefaultsOnly, Category = "UI") 

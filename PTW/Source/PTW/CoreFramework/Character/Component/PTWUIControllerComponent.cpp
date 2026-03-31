@@ -171,11 +171,11 @@ void UPTWUIControllerComponent::CreateUI()
 			UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, true);
 		}
 	}
-	if (DelegateUI)
+	/*if (DelegateUI)
 	{
 		UISubsystem->CreatePersistentWidget(DelegateUI, 1);
 		UISubsystem->SetWidgetVisibility(DelegateUI, true);
-	}
+	}*/
 
 	UE_LOG(LogTemp, Warning, TEXT("[UIComponent] CreateUI 로직 완료!"));
 }

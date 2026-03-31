@@ -52,17 +52,17 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWCrosshair> CrosshairWidget;
 	/* 인벤토리 위젯 */
-	/*UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWInventoryWidget> InventoryWidget;*/
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWInventoryWidget> InventoryWidget;
 	/* 미니게임인벤토리 위젯 */
-	/*UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWMiniGameInventory> MiniGameInventoryWidget;*/
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWMiniGameInventory> MiniGameInventoryWidget;
 	/* 알림 위젯 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWNotificationWidget> NotificationWidget;
 	/* 미니게임이름 */
-	/*UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWMiniGameTitle> MiniGameTitle;*/
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWMiniGameTitle> MiniGameTitle;
 
 protected:
 	virtual void NativeDestruct() override;
@@ -75,12 +75,16 @@ protected:
 	UFUNCTION()
 	void HandleNotificationFinished();
 
-	/*UFUNCTION()
+	UFUNCTION()
 	void HandleGamePhaseChanged(EPTWGamePhase Phase);
 	UFUNCTION()
 	void HandleRoulettePhaseChanged(FPTWRouletteData RouletteData);
 
-	void BindGamePhase();*/
+	void BindGameState();
+	void UnBindGameState();
+
+	// GameState 대기용
+	FTimerHandle GameStateBindTimerHandle;
 
 	UPROPERTY()
 	TArray<FNotificationData> NotificationQueue;

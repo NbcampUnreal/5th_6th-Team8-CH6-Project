@@ -10,6 +10,8 @@
 #include "CoreFramework/Character/Component/PTWUIControllerComponent.h"
 #include "CoreFramework/PTWPlayerController.h"
 
+#define LOCTEXT_NAMESPACE "PTWGhostChaseMiniGameMode"
+
 APTWGhostChaseMiniGameMode::APTWGhostChaseMiniGameMode()
 {
 	// 규칙 설정
@@ -158,6 +160,12 @@ void APTWGhostChaseMiniGameMode::StartRound()
 	//ApplyInvisibilityToAll();
 }
 
+void APTWGhostChaseMiniGameMode::StartCountDown()
+{
+	NotificateMessage();
+	Super::StartCountDown();
+}
+
 void APTWGhostChaseMiniGameMode::SetupTargetChain()
 {
 	ActiveChasers.Empty();
@@ -256,3 +264,20 @@ void APTWGhostChaseMiniGameMode::StartNameDistinguish()
 		}
 	}
 }
+
+void APTWGhostChaseMiniGameMode::NotificateMessage()
+{
+	for (APlayerState* AS : PTWGameState->PlayerArray)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(AS->GetPlayerController()))
+		{
+			FText BeginSendMessage1 = LOCTEXT("GhostChaseBeginMsg", "자신의 목표만 공격할 수 있습니다. 목표를 차례대로 제거하고 최후의 생존자가 되세요.");
+			PC->SendMessage(BeginSendMessage1, ENotificationPriority::Normal, 5);
+
+			FText BeginSendMessage2 = LOCTEXT("GhostChaseBeginMsg", "게임이 시작되면 목표의 시점이 왼쪽 상단에 표시됩니다.");
+			PC->SendMessage(BeginSendMessage2, ENotificationPriority::Normal, 5);
+		}
+	}
+}
+
+#undef LOCTEXT_NAMESPACE

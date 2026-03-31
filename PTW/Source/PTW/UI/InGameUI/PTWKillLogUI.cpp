@@ -6,6 +6,7 @@
 #include "PTWKillLogEntry.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/Interface/PTWActorInfoInterface.h"
 #include "MiniGame/Item/BombItem/PTWBombActor.h"
 #include "MiniGame/GameMode/PTWBombMiniGameMode.h"
 
@@ -66,7 +67,10 @@ void UPTWKillLogUI::OnKilllogReceived(AActor* DeadActor, AActor* KillerActor)
 		if (!VictimData.PlayerName.IsEmpty()) VictimName = VictimData.PlayerName;
 		else VictimName = VPS->GetPlayerName();
 	}
-
+	else if (DeadActor->Implements<UPTWActorInfoInterface>())
+	{
+		VictimName = IPTWActorInfoInterface::Execute_GetDisplayName(DeadActor).ToString();
+	}
 	AddKillLog(KillerName, VictimName);
 }
 

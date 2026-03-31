@@ -118,7 +118,18 @@ void APTWRedLightGameMode::CheckPlayerMovements()
 			if (CurrentSpeed > MaxAllowedSpeed)
 			{
 				CaughtPlayers.Add(Runner);
-				UE_LOG(LogTemp, Warning, TEXT("🚨 [RedLight] %s 발각됨! (무적 해제 및 저격 대기)"), *Runner->GetName());
+				UE_LOG(LogTemp, Warning, TEXT("[RedLight] %s 발각됨! (무적 해제 및 저격 대기)"), *Runner->GetName());
+
+				if (IsValid(Runner))
+				{
+					if (APTWPlayerController* PC = Runner->GetController<APTWPlayerController>())
+					{
+#define LOCTEXT_NAMESPACE "RedLightGamemode"
+						FText SpottedMsg = LOCTEXT("RedLightGamemodeMsg", "빨간불에 움직여서 걸렸습니다!");
+#undef LOCTEXT_NAMESPACE
+						PC->SendMessage(SpottedMsg, ENotificationPriority::Normal, 3);
+					}
+				}
 
 				CurrentTagger->Multicast_SpottedPlayer(Runner);
 
@@ -140,14 +151,22 @@ void APTWRedLightGameMode::StartRound()
 {
 	Super::StartRound();
 
-	for (AActor* ActorToDestroy : ActorsToDestroyOnStart)
+	for (TSubclassOf<AActor> ClassToDestroy : ActorClassesToDestroyOnStart)
 	{
-		if (IsValid(ActorToDestroy))
+		if (ClassToDestroy)
 		{
-			ActorToDestroy->Destroy();
+			TArray<AActor*> FoundActors;
+			UGameplayStatics::GetAllActorsOfClass(GetWorld(), ClassToDestroy, FoundActors);
+
+			for (AActor* ActorToDestroy : FoundActors)
+			{
+				if (IsValid(ActorToDestroy))
+				{
+					ActorToDestroy->Destroy();
+				}
+			}
 		}
 	}
-	ActorsToDestroyOnStart.Empty();
 
 	TArray<APlayerController*> ValidPlayers;
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)

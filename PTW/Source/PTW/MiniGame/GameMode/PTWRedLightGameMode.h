@@ -49,7 +49,7 @@ public:
 	TObjectPtr<AActor> CachedBlueprintInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RedLight|Environment")
-	TArray<TObjectPtr<AActor>> ActorsToDestroyOnStart;
+	TArray<TSubclassOf<AActor>> ActorClassesToDestroyOnStart;
 
 protected:
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;

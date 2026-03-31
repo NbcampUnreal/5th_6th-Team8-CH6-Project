@@ -88,6 +88,7 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Invincible, "State.Invincible");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Stasis, "State.Stasis");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Slowing, "State.DebuffSlow");
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(Speed, "State.BuffSpeed");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Stealth, "State.Stealth");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Charge, "State.Charge");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Emoting, "State.Emoting");

@@ -10,12 +10,26 @@
 #include "AbilitySystemComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
 
+#define LOCTEXT_NAMESPACE "PTWAbyssMiniGameMode"
+
 APTWAbyssMiniGameMode::APTWAbyssMiniGameMode()
 {
 }
 
 void APTWAbyssMiniGameMode::StartRound()
 {
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		{
+			PC->SendMessage(
+				LOCTEXT("AbyssRoundStartMessage", "어둠이 찾아오면 적을 찾아 잡으세요!"),
+				ENotificationPriority::High,
+				3.f
+			);
+		}
+	}
+
 	bIsBlackoutActive = false;
 	ApplyBlackoutState(false);
 
@@ -276,3 +290,5 @@ void APTWAbyssMiniGameMode::HandleRespawn(APTWPlayerController* PlayerController
 
 	ApplyBlackoutStateToPlayer(PlayerController, bIsBlackoutActive);
 }
+
+#undef LOCTEXT_NAMESPACE

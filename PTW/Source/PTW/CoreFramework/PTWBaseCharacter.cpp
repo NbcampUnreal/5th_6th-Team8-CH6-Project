@@ -59,14 +59,22 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 
 	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
 	{
-		AActor* MyPS = GetPlayerState();
+		AActor* DeadActor = nullptr;
+		if (GetPlayerState())
+		{
+			DeadActor = GetPlayerState();
+		}
+		else
+		{
+			DeadActor = this;
+		}
 		
 		if (GetWorld() && GetWorld()->GetAuthGameMode<APTWBombMiniGameMode>())
 		{
 			return;
 		}
 		
-		GS->Multicast_BroadcastKilllog(MyPS, Attacker);
+		GS->Multicast_BroadcastKilllog(DeadActor, Attacker);
 	}
 }
 

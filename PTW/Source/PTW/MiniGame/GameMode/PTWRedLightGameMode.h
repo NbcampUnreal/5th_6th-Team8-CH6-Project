@@ -51,9 +51,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RedLight|Environment")
 	TArray<TSubclassOf<AActor>> ActorClassesToDestroyOnStart;
 
+
 protected:
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 	virtual void BeginPlay() override;
+
+	virtual void EndGame() override;
+	virtual void WaitingToStartRound() override;
 
 protected:
 	FTimerHandle MovementCheckTimer;

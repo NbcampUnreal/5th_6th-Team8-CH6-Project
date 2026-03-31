@@ -164,16 +164,39 @@ void APTWBaseCharacter::GiveDefaultAbilities()
 {
 	if (!HasAuthority() || !AbilitySystemComponent) return;
 
+	TArray<FGameplayAbilitySpecHandle> AbilitiesToRemove;
+
+	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
+	{
+		bool bIsNeeded = false;
+
+		for (TSubclassOf<UGameplayAbility> NeededAbilityClass : DefaultAbilities)
+		{
+			if (NeededAbilityClass && Spec.Ability == NeededAbilityClass->GetDefaultObject())
+			{
+				bIsNeeded = true;
+				break;
+			}
+		}
+		if (!bIsNeeded)
+		{
+			AbilitiesToRemove.Add(Spec.Handle);
+		}
+	}
+
+	for (const FGameplayAbilitySpecHandle& Handle : AbilitiesToRemove)
+	{
+		AbilitySystemComponent->ClearAbility(Handle);
+	}
+
 	for (TSubclassOf<UGameplayAbility> AbilityClass : DefaultAbilities)
 	{
 		if (AbilityClass)
 		{
-			FGameplayAbilitySpec* ExistingSpec = AbilitySystemComponent->FindAbilitySpecFromClass(AbilityClass);
-			if (ExistingSpec)
+			if (AbilitySystemComponent->FindAbilitySpecFromClass(AbilityClass))
 			{
-				AbilitySystemComponent->ClearAbility(ExistingSpec->Handle);
+				continue;
 			}
-
 			FGameplayAbilitySpec Spec(AbilityClass, 1, INDEX_NONE, this);
 
 			if (const UPTWGameplayAbility* PTWAbility = Cast<UPTWGameplayAbility>(AbilityClass->GetDefaultObject()))
@@ -186,7 +209,6 @@ void APTWBaseCharacter::GiveDefaultAbilities()
 			AbilitySystemComponent->GiveAbility(Spec);
 		}
 	}
-
 	if (APTWPlayerState* PS = GetPlayerState<APTWPlayerState>())
 	{
 		PS->ApplyAdditionalAbilities();

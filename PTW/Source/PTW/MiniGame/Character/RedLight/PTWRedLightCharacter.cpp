@@ -21,6 +21,9 @@
 #include "Components/AudioComponent.h"
 #include "PTWGamePlayTag/GameplayTags.h" 
 #include "Inventory/PTWInventoryComponent.h"
+#include "CoreFramework/PTWPlayerController.h"
+
+#define LOCTEXT_NAMESPACE "RedLightCharacter"
 
 void APTWRedLightCharacter::BeginPlay()
 {
@@ -39,6 +42,20 @@ void APTWRedLightCharacter::BeginPlay()
 	}
 }
 
+void APTWRedLightCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	UpdateEyeLights();
+
+	bUseControllerRotationYaw = true;
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PC->ResetIgnoreLookInput();
+	}
+}
+
 APTWRedLightCharacter::APTWRedLightCharacter()
 {
 	if (GetMesh())
@@ -48,7 +65,6 @@ APTWRedLightCharacter::APTWRedLightCharacter()
 
 	if (GetCharacterMovement())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = 0.f;
 		GetCharacterMovement()->DisableMovement();
 	}
 
@@ -158,35 +174,21 @@ void APTWRedLightCharacter::OnPlayerStateChanged(APlayerState* NewPlayerState, A
 
 	if (HasAuthority() && NewPlayerState)
 	{
-		if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
-		{
-			TArray<FGameplayAbilitySpecHandle> AbilitiesToRemove;
-			for (const FGameplayAbilitySpec& Spec : ASC->GetActivatableAbilities())
-			{
-				AbilitiesToRemove.Add(Spec.Handle);
-			}
+		GetWorldTimerManager().SetTimer(
+			WaitInitTimerHandle,
+			FTimerDelegate::CreateUObject(this, &APTWRedLightCharacter::CheckAndGiveWeapon, NewPlayerState),
+			0.1f,
+			true
+		);
+	}
+}
 
-			for (const FGameplayAbilitySpecHandle& Handle : AbilitiesToRemove)
-			{
-				ASC->ClearAbility(Handle);
-			}
+void APTWRedLightCharacter::CheckAndGiveWeapon(APlayerState* NewPlayerState)
+{
+	if (bIsAbilitiesInitialized)
+	{
+		GetWorldTimerManager().ClearTimer(WaitInitTimerHandle);
 
-			if (AbilitiesToRemove.Num() > 0)
-			{
-				UE_LOG(LogTemp, Log, TEXT("[RedLight] 기존 어빌리티 %d개 초기화 완료."), AbilitiesToRemove.Num());
-			}
-
-			for (TSubclassOf<UGameplayAbility> AbilityClass : DefaultAbilities)
-			{
-				if (AbilityClass)
-				{
-					FGameplayAbilitySpec AbilitySpec(AbilityClass, 1, static_cast<int32>(INDEX_NONE), this);
-					ASC->GiveAbility(AbilitySpec);
-				}
-			}
-			UE_LOG(LogTemp, Log, TEXT("[RedLight] 술래 전용 어빌리티 %d개 부여 완료!"), DefaultAbilities.Num());
-		}
-		
 		if (APTWPlayerState* PS = Cast<APTWPlayerState>(NewPlayerState))
 		{
 			if (UPTWItemSpawnManager* ItemManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
@@ -194,16 +196,12 @@ void APTWRedLightCharacter::OnPlayerStateChanged(APlayerState* NewPlayerState, A
 				if (TaggerWeaponDef)
 				{
 					ItemManager->SpawnSingleItem(PS, TaggerWeaponDef);
-					UE_LOG(LogTemp, Warning, TEXT("[RedLight] 술래에게 무기(%s) 지급 완료!"), *TaggerWeaponDef->GetName());
+					UE_LOG(LogTemp, Warning, TEXT("[RedLight] 초기화 완료! 술래에게 무기(%s) 지급 성공!"), *TaggerWeaponDef->GetName());
 
 					if (UPTWInventoryComponent* InvComp = PS->GetInventoryComponent())
 					{
 						InvComp->EquipWeapon(0);
 					}
-				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("[RedLight] 무기 ItemDef가 선택되지 않았습니다. 캐릭터 BP를 확인해주세요."));
 				}
 			}
 		}
@@ -318,20 +316,21 @@ void APTWRedLightCharacter::UpdateTaggerState()
 
 	if (IsLocallyControlled())
 	{
-		if (APlayerController* PC = Cast<APlayerController>(GetController()))
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(GetController()))
 		{
 			PC->ResetIgnoreLookInput();
 
 			if (bIsRedLight)
 			{
 				PC->SetControlRotation(InitialRotation);
+				FText TaggerMsg = LOCTEXT("RedLightTaggerMsg", "우클릭으로 확대하여 움직인 플레이어를 처치하세요!");
+				PC->SendMessage(TaggerMsg, ENotificationPriority::Normal, 4);
 			}
 			else
 			{
 				FRotator WallFacingRotation = InitialRotation;
 				WallFacingRotation.Yaw += 180.f;
 				PC->SetControlRotation(WallFacingRotation);
-
 				PC->SetIgnoreLookInput(true);
 			}
 
@@ -448,3 +447,35 @@ void APTWRedLightCharacter::StopZoom()
 		bIsZooming = false;
 	}
 }
+
+void APTWRedLightCharacter::Server_ForceStopMechanics_Implementation()
+{
+	GetWorldTimerManager().ClearTimer(RedLightTimerHandle);
+	GetWorldTimerManager().ClearTimer(EndSoundTimerHandle);
+
+	bIsCharging = false;
+
+	Multicast_ForceStopMechanics();
+}
+
+void APTWRedLightCharacter::Multicast_ForceStopMechanics_Implementation()
+{
+	if (ActiveLoopSound && ActiveLoopSound->IsPlaying())
+	{
+		ActiveLoopSound->Stop();
+		ActiveLoopSound = nullptr;
+	}
+
+	if (IsLocallyControlled())
+	{
+		if (APlayerController* PC = Cast<APlayerController>(GetController()))
+		{
+			if (UPTWRedLightControllerComponent* UIComp = PC->FindComponentByClass<UPTWRedLightControllerComponent>())
+			{
+				UIComp->HideTaggerUI();
+			}
+		}
+	}
+}
+
+#undef LOCTEXT_NAMESPACE

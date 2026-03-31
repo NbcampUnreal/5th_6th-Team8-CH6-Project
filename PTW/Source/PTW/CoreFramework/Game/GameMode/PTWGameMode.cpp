@@ -387,6 +387,8 @@ void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		PC->PlayerState->SetIsSpectator(false);
 		PC->PlayerState->SetIsOnlyASpectator(false);
 		PC->bPlayerIsWaiting = false;
+		PC->ResetIgnoreMoveInput();
+		PC->ResetIgnoreLookInput();
 	}
 	else
 	{

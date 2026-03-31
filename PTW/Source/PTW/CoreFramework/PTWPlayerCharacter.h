@@ -135,6 +135,8 @@ public:
 	void ServerRPCUpdateAimPitch(float NewAimPitch);
 	// StealthMode 관련 함수 추가
 	void SetStealthMode(bool bSetStealthMode);
+
+	bool bIsAbilitiesInitialized = false;
 protected:
 	// 8. [Protected] 멤버 변수 (내부 상태값)
 
@@ -167,7 +169,6 @@ protected:
 	FTimerHandle IdleCheckTimerHandle;
 	FTimerHandle InitTimerHandle;
 
-	bool bIsAbilitiesInitialized = false;
 	bool bIsIdleState = false;
 
 

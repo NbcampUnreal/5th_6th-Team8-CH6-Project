@@ -30,6 +30,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SpottedPlayer(ACharacter* CaughtPlayer);
@@ -48,6 +49,12 @@ public:
 
 	void StartZoom();
 	void StopZoom();
+
+	UFUNCTION(Server, Reliable)
+	void Server_ForceStopMechanics();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ForceStopMechanics();
 
 
 protected:
@@ -74,6 +81,7 @@ protected:
 
 	void OnRedLightTimerEnded();
 
+	void CheckAndGiveWeapon(APlayerState* NewPlayerState);
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight")
 	TSubclassOf<UPTWRedLightMark> MarkWidgetClass;
@@ -127,6 +135,7 @@ protected:
 	
 	FTimerHandle RedLightTimerHandle;
 	FTimerHandle EndSoundTimerHandle;
+	FTimerHandle WaitInitTimerHandle;
 
 	bool bIsZooming = false;
 	float DefaultFOV = 90.0f;

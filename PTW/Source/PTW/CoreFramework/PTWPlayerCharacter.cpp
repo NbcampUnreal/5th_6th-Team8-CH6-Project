@@ -119,7 +119,7 @@ void APTWPlayerCharacter::BeginPlay()
 	{
 		Mesh1P->SetHiddenInGame(false);
 		Mesh1P->SetVisibility(true);
-		Mesh1P->HideBoneByName(FName("head"), EPhysBodyOp::PBO_None);
+		Mesh1P->HideBoneByName(FName("neck_01"), EPhysBodyOp::PBO_None);
 	}
 	
 	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerCharacter] BeginPlay 함수 호출 완료, %s "), *GetName());

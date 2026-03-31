@@ -16,6 +16,8 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "GameplayEffect.h"
 
+#define LOCTEXT_NAMESPACE "RedLightGamemode"
+
 void APTWRedLightGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -36,6 +38,18 @@ void APTWRedLightGameMode::BeginPlay()
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("[GameMode] 검색할 블루프린트 클래스가 설정되지 않았습니다! BP_PTWRedLightGameMode의 디테일 패널을 확인하세요."));
+	}
+}
+
+void APTWRedLightGameMode::EndGame()
+{
+	Super::EndGame();
+
+	GetWorldTimerManager().ClearTimer(MovementCheckTimer);
+
+	if (CurrentTagger)
+	{
+		CurrentTagger->Server_ForceStopMechanics();
 	}
 }
 
@@ -124,9 +138,7 @@ void APTWRedLightGameMode::CheckPlayerMovements()
 				{
 					if (APTWPlayerController* PC = Runner->GetController<APTWPlayerController>())
 					{
-#define LOCTEXT_NAMESPACE "RedLightGamemode"
 						FText SpottedMsg = LOCTEXT("RedLightGamemodeMsg", "빨간불에 움직여서 걸렸습니다!");
-#undef LOCTEXT_NAMESPACE
 						PC->SendMessage(SpottedMsg, ENotificationPriority::Normal, 3);
 					}
 				}
@@ -145,6 +157,20 @@ void APTWRedLightGameMode::CheckPlayerMovements()
 bool APTWRedLightGameMode::IsPlayerCaught(ACharacter* PlayerToCheck) const
 {
 	return CaughtPlayers.Contains(PlayerToCheck);
+}
+
+void APTWRedLightGameMode::WaitingToStartRound()
+{
+	Super::WaitingToStartRound();
+	
+	for (APlayerState* AS : PTWGameState->PlayerArray)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(AS->GetPlayerController()))
+		{
+			FText BeginSendMessage = LOCTEXT("RedLightBeginMsg", "술래가 뒤돌아 봤을때 멈추고 살아남아 끝까지 도달하세요!");
+			PC->SendMessage(BeginSendMessage, ENotificationPriority::Normal, 5);
+		}
+	}
 }
 
 void APTWRedLightGameMode::StartRound()
@@ -265,3 +291,5 @@ void APTWRedLightGameMode::PlayerFinished(ACharacter* FinishedPlayer)
 		CheckEndGameCondition();
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

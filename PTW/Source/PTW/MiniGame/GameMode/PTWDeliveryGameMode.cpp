@@ -244,9 +244,15 @@ void APTWDeliveryGameMode::StartResultSequence()
 
 				APTWResultCharacter* ResultChar = World->SpawnActor<APTWResultCharacter>(ResultCharacterClass, SpawnLoc, SpawnRot, SpawnParams);
 
+				FString PlayerName = PS->GetPlayerData().PlayerName;
+				if (PlayerName.IsEmpty())
+				{
+					PlayerName = PS->GetPlayerName();
+				}
+
 				if (ResultChar)
 				{
-					ResultChar->InitializeResult(bIsWinner);
+					ResultChar->InitializeResult(bIsWinner, PlayerName);
 				}
 			}
 			else

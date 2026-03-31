@@ -20,12 +20,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/AudioComponent.h"
 #include "PTWGamePlayTag/GameplayTags.h" 
-#include "AbilitySystemComponent.h"
+#include "Inventory/PTWInventoryComponent.h"
 
 void APTWRedLightCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	InitialRotation = GetActorRotation();
+	InitialRotation = FRotator(0.0f, 90.f, 0.f);
 
 	CachedCameraComp = FindComponentByClass<UCameraComponent>();
 	if (CachedCameraComp)
@@ -195,6 +195,11 @@ void APTWRedLightCharacter::OnPlayerStateChanged(APlayerState* NewPlayerState, A
 				{
 					ItemManager->SpawnSingleItem(PS, TaggerWeaponDef);
 					UE_LOG(LogTemp, Warning, TEXT("[RedLight] 술래에게 무기(%s) 지급 완료!"), *TaggerWeaponDef->GetName());
+
+					if (UPTWInventoryComponent* InvComp = PS->GetInventoryComponent())
+					{
+						InvComp->EquipWeapon(0);
+					}
 				}
 				else
 				{
@@ -283,12 +288,9 @@ float APTWRedLightCharacter::GetChargeProgress() const
 	if (!bIsCharging) return 0.0f;
 
 	float HeldTime = GetWorld()->GetTimeSeconds() - SpacePressedTime;
-	float ClampedTime = FMath::Clamp(HeldTime, 0.75f, 3.0f);
+	const float MaxChargeTime = 3.0f;
 
-	float MinTime = 0.75f;
-	float MaxTime = 3.0f;
-
-	return (ClampedTime - MinTime) / (MaxTime - MinTime);
+	return FMath::Clamp(HeldTime / MaxChargeTime, 0.0f, 1.0f);
 }
 
 void APTWRedLightCharacter::UpdateTaggerState()
@@ -302,6 +304,7 @@ void APTWRedLightCharacter::UpdateTaggerState()
 		{
 			GetCharacterMovement()->bUseControllerDesiredRotation = true;
 		}
+		SetActorRotation(InitialRotation);
 	}
 	else
 	{
@@ -318,9 +321,17 @@ void APTWRedLightCharacter::UpdateTaggerState()
 		if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		{
 			PC->ResetIgnoreLookInput();
-			
-			if (!bIsRedLight)
+
+			if (bIsRedLight)
 			{
+				PC->SetControlRotation(InitialRotation);
+			}
+			else
+			{
+				FRotator WallFacingRotation = InitialRotation;
+				WallFacingRotation.Yaw += 180.f;
+				PC->SetControlRotation(WallFacingRotation);
+
 				PC->SetIgnoreLookInput(true);
 			}
 

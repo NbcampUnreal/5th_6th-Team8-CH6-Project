@@ -27,7 +27,7 @@ APTWBaseCharacter::APTWBaseCharacter()
 
 bool APTWBaseCharacter::IsDead() const
 {
-	return AbilitySystemComponent->HasMatchingGameplayTag(GameplayTags::State::Status_Dead);
+	return IsValid(AbilitySystemComponent) && AbilitySystemComponent->HasMatchingGameplayTag(GameplayTags::State::Status_Dead);
 }
 
 UAbilitySystemComponent* APTWBaseCharacter::GetAbilitySystemComponent() const

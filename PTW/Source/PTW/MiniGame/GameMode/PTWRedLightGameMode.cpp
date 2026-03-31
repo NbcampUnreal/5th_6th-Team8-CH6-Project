@@ -140,6 +140,15 @@ void APTWRedLightGameMode::StartRound()
 {
 	Super::StartRound();
 
+	for (AActor* ActorToDestroy : ActorsToDestroyOnStart)
+	{
+		if (IsValid(ActorToDestroy))
+		{
+			ActorToDestroy->Destroy();
+		}
+	}
+	ActorsToDestroyOnStart.Empty();
+
 	TArray<APlayerController*> ValidPlayers;
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
@@ -155,22 +164,6 @@ void APTWRedLightGameMode::StartRound()
 		APlayerController* SelectedPC = ValidPlayers[RandomIndex];
 
 		AssignTagger(SelectedPC);
-
-		if (TaggerWeaponDef)
-		{
-			if (APTWPlayerState* PS = SelectedPC->GetPlayerState<APTWPlayerState>())
-			{
-				if (UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>())
-				{
-					SpawnManager->SpawnSingleItem(PS, TaggerWeaponDef);
-					UE_LOG(LogTemp, Warning, TEXT("[RedLight] 술래에게 전용 무기가 지급되었습니다."));
-				}
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[RedLight] TaggerWeaponDef(지급할 무기)가 설정되지 않아 무기를 지급하지 않았습니다."));
-		}
 
 		FString TaggerName = SelectedPC->PlayerState ? SelectedPC->PlayerState->GetPlayerName() : TEXT("Unknown");
 		UE_LOG(LogTemp, Warning, TEXT("[RedLight] 라운드 시작! %s 플레이어가 술래로 당첨되었습니다!"), *TaggerName);

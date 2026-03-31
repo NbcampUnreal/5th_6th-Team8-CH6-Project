@@ -19,8 +19,6 @@ class PTW_API APTWRedLightGameMode : public APTWMiniGameMode
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight")
 	TSubclassOf<APTWRedLightCharacter> TaggerClass;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight|Weapon")
-	TObjectPtr<UPTWItemDefinition> TaggerWeaponDef;
 
 	virtual void StartRound() override;
 
@@ -49,6 +47,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RedLight|Classes")
 	TObjectPtr<AActor> CachedBlueprintInstance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RedLight|Environment")
+	TArray<TObjectPtr<AActor>> ActorsToDestroyOnStart;
 
 protected:
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;

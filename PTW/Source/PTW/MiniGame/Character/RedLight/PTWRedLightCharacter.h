@@ -115,7 +115,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RedLight|Lights")
 	TObjectPtr<USpotLightComponent> RightEyeLight;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RedLight|Weapon")
-	TObjectPtr<class UPTWItemDefinition> TaggerWeaponDef;
+	TObjectPtr<UPTWItemDefinition> TaggerWeaponDef;
 	UPROPERTY(BlueprintReadOnly, Category = "RedLight|Charge")
 	bool bIsCharging = false;
 	UPROPERTY()

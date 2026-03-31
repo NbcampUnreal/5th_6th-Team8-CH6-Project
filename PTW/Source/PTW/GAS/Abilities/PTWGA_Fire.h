@@ -117,7 +117,7 @@ protected:
 	virtual void PlayEmptyClickCue();
 	
 private:
-	float MaxRange = 10000.0f;
+	float MaxRange = 25000.0f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "IgnoreTag")
 	FGameplayTag IgnoreTag;

@@ -44,7 +44,7 @@ void APTWDeadArea::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCompon
 	
 	CombatInterface->ApplyGameplayEffectToSelf(DeadEffectClass,1,ContextHandle);
 
-	PlayerCharacter->HandleDeath(nullptr);
+	//PlayerCharacter->HandleDeath(nullptr);
 }
 
 

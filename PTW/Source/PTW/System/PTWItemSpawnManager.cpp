@@ -127,7 +127,7 @@ void UPTWItemSpawnManager::SpawnAndGiveItems(APTWPlayerState* PS)
 		       *PS->GetPlayerName());
 		return;
 	}
-	UPTWInventoryComponent* InventoryComp = PlayerPawn->FindComponentByClass<UPTWInventoryComponent>();
+	UPTWInventoryComponent* InventoryComp = PlayerChar->GetInventoryComponent();
 	if (!InventoryComp)
 	{
 		UE_LOG(LogTemp, Error, TEXT("[SpawnSystem] Inventory Component Not Found on Character: %s"),

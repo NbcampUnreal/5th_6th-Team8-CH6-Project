@@ -310,11 +310,6 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 		TArray<FOnlineSessionSearchResultBP> BPSearchResultInstances;
 		for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
 		{
-			// bool bIsJoinable = false;
-			// if (SearchResult.Session.SessionSettings.Get(PTWSessionKey::JOINABLE, bIsJoinable))
-			// {
-			// 	if (!bIsJoinable) continue;
-			// }
 			BPSearchResultInstances.Add(FOnlineSessionSearchResultBP(SearchResult));
 		}
 		

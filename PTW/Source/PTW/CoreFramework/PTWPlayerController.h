@@ -111,6 +111,9 @@ public:
 	/* Controller Component Getter*/
 	FORCEINLINE UActorComponent* GetControllerComponent() const {return BaseControllerComponent;}
 
+	FORCEINLINE FString GetPlayerSessionId() const { return PlayerSessionId; };
+	FORCEINLINE void SetPlayerSessionId(const FString& NewPlayerSessionId) { PlayerSessionId = NewPlayerSessionId ; };
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -176,6 +179,9 @@ public:
 	FOnSpectateTargetChanged OnSpectateTargetChanged;
 	
 protected:
+	// GameLift 접속을 위한 PlayerSessionId를 캐싱
+	FString PlayerSessionId;
+	
 	/* 캐싱된 Ability System Component */
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> ASC;

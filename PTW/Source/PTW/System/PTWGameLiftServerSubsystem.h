@@ -13,6 +13,8 @@
 class UPTWAPIData;
 class FGameLiftServerSDKModule;
 
+DECLARE_DELEGATE_OneParam(FOnUpdateSessionStateCompleted, const FString&);
+
 /**
  * 
  */
@@ -66,14 +68,16 @@ protected:
 	void OnUpdateSessionToReadyComplete(FName SessionName, bool bWasSuccessful);
 	void ActivateSessionAndUpdate_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void UpdatePlayerCount_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void UpdateSessionState_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void UpdateSessionState_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FString Action);
 
 protected:
 	FGameLiftServerSDKModule* GameLiftSdkModule;
 	// Aws::GameLift::Server::Model::GameSession InGameSession;
-
+	
 public:
 	FTimerHandle UpdateSessionStateTimer;
+	FOnUpdateSessionStateCompleted OnUpdateSessionStateCompleted;
+	
 private:
 	FDelegateHandle MapLoadDelegateHandle;
 	FDelegateHandle UpdateSessionCompleteDelegateHandle;

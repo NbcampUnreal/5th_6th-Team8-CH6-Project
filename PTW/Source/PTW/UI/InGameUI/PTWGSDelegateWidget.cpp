@@ -8,6 +8,9 @@
 #include "Inventory/PTWInventoryComponent.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 
+/* 로그용 */
+#include "CoreFramework/PTWPlayerState.h"
+
 void UPTWGSDelegateWidget::InitializeDelegateWidget()
 {
 	if (InventoryWidget) InventoryWidget->InitPS();
@@ -16,9 +19,20 @@ void UPTWGSDelegateWidget::InitializeDelegateWidget()
 	{
 		if (APawn* Pawn = GetOwningPlayerPawn())
 		{
+			// 로그용
+			APTWPlayerState* PS = GetOwningPlayerState<APTWPlayerState>();
+
 			if (UPTWInventoryComponent* Inventory = Pawn->FindComponentByClass<UPTWInventoryComponent>())
 			{
 				MiniGameInventoryWidget->InitInventory(Inventory);
+
+				UE_LOG(LogTemp, Warning, TEXT("[UPTWGSDelegateWidget] %s 플레이어 InventoryComponenet 전달 성공."),
+					PS ? *PS->GetPlayerName() : TEXT("Unknown"));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[UPTWGSDelegateWidget] %s 플레이어 InventoryComponenet 찾기 실패."),
+					PS ? *PS->GetPlayerName() : TEXT("Unknown"));
 			}
 		}
 	}
@@ -38,7 +52,7 @@ void UPTWGSDelegateWidget::NativeDestruct()
 	GetWorld()->GetTimerManager().ClearTimer(GameStateBindTimerHandle);
 
 	APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>();
-	if (GS)
+	if (IsValid(GS))
 	{
 		GS->OnGamePhaseChanged.RemoveDynamic(this, &ThisClass::HandleGamePhaseChanged);
 		GS->OnRoulettePhaseChanged.RemoveDynamic(this, &ThisClass::HandleRoulettePhaseChanged);
@@ -50,7 +64,7 @@ void UPTWGSDelegateWidget::NativeDestruct()
 void UPTWGSDelegateWidget::TryBindGameState()
 {
 	APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>();
-	if (!GS)
+	if (!IsValid(GS))
 	{
 		GetWorld()->GetTimerManager().SetTimer(GameStateBindTimerHandle, this, &ThisClass::TryBindGameState, 0.1f, false);
 		return;
@@ -96,7 +110,7 @@ void UPTWGSDelegateWidget::HandleGamePhaseChanged(EPTWGamePhase Phase)
 void UPTWGSDelegateWidget::HandleRoulettePhaseChanged(FPTWRouletteData RouletteData)
 {
 	APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>();
-	if (!GS) return;
+	if (!IsValid(GS)) return;
 
 	EPTWGamePhase Phase = GS->GetCurrentGamePhase();
 

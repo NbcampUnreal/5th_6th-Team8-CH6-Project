@@ -90,6 +90,6 @@ APTWPlayerCharacter* UPTWWeaponInstance::GetItemInstanceOwner()
 
 void UPTWWeaponInstance::CopyProperties(UPTWWeaponInstance& CopyInst)
 {
-	CurrentAmmo = CopyInst.CurrentAmmo;
+	CurrentAmmo = CopyInst.GetMaxAmmo();
 	bAlreadyUsing = CopyInst.bAlreadyUsing;
 }

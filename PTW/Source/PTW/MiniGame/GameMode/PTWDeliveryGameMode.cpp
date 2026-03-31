@@ -359,6 +359,7 @@ AActor* APTWDeliveryGameMode::FindPlayerStart_Implementation(AController* Player
 		}
 		
 		SharedCheckPointStart->SetActorLocation(PlayerSpawnPoints[PC]);
+		SharedCheckPointStart->SetActorRotation(FRotator(0, -210.f, 0));
 		return SharedCheckPointStart;
 	}
 	

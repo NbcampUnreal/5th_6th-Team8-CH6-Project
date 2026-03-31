@@ -120,6 +120,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<APlayerStart> SharedCheckPointStart;
 	
+	UPROPERTY(EditAnywhere)
+	TArray<APlayerStart*> PlayerStartPoints; 
+	
 	UPROPERTY(EditAnywhere, Category = "Game|Ranking")
 	TObjectPtr<ARaceTrack> RaceTrackSpline; 
 	

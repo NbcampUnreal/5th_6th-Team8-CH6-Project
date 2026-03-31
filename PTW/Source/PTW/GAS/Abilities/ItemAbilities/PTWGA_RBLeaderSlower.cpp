@@ -22,6 +22,14 @@ void UPTWGA_RBLeaderSlower::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	APTWPlayerController* LeaderController = DeliveryGameMode->GetLeaderController();
 	if (!LeaderController) return;
 	
+	// APTWPlayerCharacter* MyPC = Cast<APTWPlayerCharacter>(GetAvatarActorFromActorInfo());
+	// if (!MyPC) return;
+	//
+	// APTWPlayerController* MyController = Cast<APTWPlayerController>(MyPC->GetController());
+	// if (!MyController) return;
+	//
+	// if (MyController == LeaderController) return;
+	
 	ApplyEffectToTarget(LeaderController);
 	SendActivateMsg(LeaderController);
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);

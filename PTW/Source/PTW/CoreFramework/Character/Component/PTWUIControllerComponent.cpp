@@ -30,6 +30,7 @@
 UPTWUIControllerComponent::UPTWUIControllerComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+	CachedGameState = nullptr;
 }
 
 void UPTWUIControllerComponent::InitializeUIComponent(APTWPlayerController* InPC)
@@ -41,6 +42,11 @@ void UPTWUIControllerComponent::InitializeUIComponent(APTWPlayerController* InPC
 	if (ULocalPlayer* LocalPlayer = OwnerPC->GetLocalPlayer())
 	{
 		UISubsystem = ULocalPlayer::GetSubsystem<UPTWUISubsystem>(LocalPlayer);
+	}
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(GameStateBindRetryHandle);
 	}
 
 	if (OwnerPC->GetWorld())
@@ -60,11 +66,15 @@ void UPTWUIControllerComponent::InitializeUIComponent(APTWPlayerController* InPC
 
 void UPTWUIControllerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (UWorld* World = GetWorld())
-		{
-			World->GetTimerManager().ClearTimer(NameTagTimerHandle);
-			World->GetTimerManager().ClearTimer(GameStateBindRetryHandle);
-		}
+	UWorld* World = GetWorld();
+	if (!World && OwnerPC) World = OwnerPC->GetWorld();
+
+	if (World)
+	{
+		FTimerManager& TM = World->GetTimerManager();
+		TM.ClearTimer(NameTagTimerHandle);
+		TM.ClearTimer(GameStateBindRetryHandle);
+	}
 
 	UnbindGameStateDelegates();
 
@@ -507,14 +517,13 @@ void UPTWUIControllerComponent::UpdateNameTagsVisibility()
 	}
 }
 
-
 void UPTWUIControllerComponent::BindGameStateDelegates()
 {
 	UWorld* World = GetWorld();
 	if (!World) return;
 	
 	APTWGameState* GS = GetWorld() ? GetWorld()->GetGameState<APTWGameState>() : nullptr;
-	if (!GS)
+	if (!IsValid(GS))
 	{
 		// 아직 GameState 안 왔으면 0.2초 후 재시도
 		World->GetTimerManager().SetTimer(
@@ -528,29 +537,29 @@ void UPTWUIControllerComponent::BindGameStateDelegates()
 	}
 	World->GetTimerManager().ClearTimer(GameStateBindRetryHandle);
 
-	CachedGameState = GS;
-
 	// 중복 바인딩 방지
 	UnbindGameStateDelegates();
 
+	CachedGameState = GS;
+
 	// 델리게이트 바인드
-	GS->OnMiniGameCountdownChanged.AddDynamic(this, &ThisClass::OnMiniGameCountdownChanged);
-	GS->OnRoulettePhaseChanged.AddDynamic(this, &ThisClass::HandleRoulettePhaseChanged);
-	GS->OnGamePhaseChanged.AddDynamic(this, &ThisClass::HandleGamePhaseChanged);
+	CachedGameState->OnMiniGameCountdownChanged.AddDynamic(this, &ThisClass::OnMiniGameCountdownChanged);
+	CachedGameState->OnRoulettePhaseChanged.AddDynamic(this, &ThisClass::HandleRoulettePhaseChanged);
+	CachedGameState->OnGamePhaseChanged.AddDynamic(this, &ThisClass::HandleGamePhaseChanged);
 
 	// 현재상태 반영
-	OnMiniGameCountdownChanged(GS->IsMiniGameCountdown());
-	HandleRoulettePhaseChanged(GS->GetRouletteData());
-	HandleGamePhaseChanged(GS->GetCurrentGamePhase());
+	OnMiniGameCountdownChanged(CachedGameState->IsMiniGameCountdown());
+	HandleRoulettePhaseChanged(CachedGameState->GetRouletteData());
+	HandleGamePhaseChanged(CachedGameState->GetCurrentGamePhase());
 }
 
 void UPTWUIControllerComponent::UnbindGameStateDelegates()
 {
 	if (IsValid(CachedGameState))
 	{
-		CachedGameState->OnMiniGameCountdownChanged.Clear();
-		CachedGameState->OnRoulettePhaseChanged.Clear();
-		CachedGameState->OnGamePhaseChanged.Clear();
+		CachedGameState->OnMiniGameCountdownChanged.RemoveDynamic(this, &ThisClass::OnMiniGameCountdownChanged);
+		CachedGameState->OnRoulettePhaseChanged.RemoveDynamic(this, &ThisClass::HandleRoulettePhaseChanged);
+		CachedGameState->OnGamePhaseChanged.RemoveDynamic(this, &ThisClass::HandleGamePhaseChanged);
 	}
 
 	CachedGameState = nullptr;

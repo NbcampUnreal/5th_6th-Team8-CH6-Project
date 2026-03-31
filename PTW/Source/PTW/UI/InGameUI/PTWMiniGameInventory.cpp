@@ -26,6 +26,11 @@ void UPTWMiniGameInventory::NativeConstruct()
 	AbilitySystemComponent =
 		UAbilitySystemBlueprintLibrary
 		::GetAbilitySystemComponent(GetOwningPlayerPawn());
+
+	if (ActiveItemSlot)
+	{
+		ActiveItemSlot->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
 void UPTWMiniGameInventory::NativeDestruct()
@@ -148,7 +153,7 @@ void UPTWMiniGameInventory::SetupActive(UPTWItemInstance* ActiveItem)
 	UE_LOG(LogTemp, Warning, TEXT("[PTWMiniGameInventory] %s 플레이어 SetupActive 함수 호출됨."),
 		PS ? *PS->GetPlayerName() : TEXT("Unknown"));
 
-	if (!ActiveItem)
+	if (!IsValid(ActiveItem))
 	{
 		ActiveItemSlot->ClearSlot();
 		ActiveItemSlot->SetVisibility(ESlateVisibility::Hidden);

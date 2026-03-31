@@ -293,7 +293,7 @@ void UPTWGameLiftServerSubsystem::UpdateSessionState(FString Action)
 	if (!GameSessionId.IsEmpty() && (Action == TEXT("ACTIVE") || Action == TEXT("TERMINATE")))
 	{
 		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
-		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::UpdatePlayerCount_Response);
+		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::UpdateSessionState_Response, Action);
 		
 		const FString APIUrl = ServerAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::UpdateSessionState);
 		Request->SetURL(APIUrl);
@@ -323,11 +323,16 @@ void UPTWGameLiftServerSubsystem::UpdateSessionState(FString Action)
 	}
 }
 
-void UPTWGameLiftServerSubsystem::UpdateSessionState_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void UPTWGameLiftServerSubsystem::UpdateSessionState_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FString Action)
 {
 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 	{
 		UE_LOG(LogTemp, Display, TEXT("[DynamoDB-MasterServer Response] DynamoDB에 서버상태 업데이트를 완료했습니다."));
+		
+		if (OnUpdateSessionStateCompleted.IsBound())
+		{
+			OnUpdateSessionStateCompleted.Execute(Action);
+		}
 	}
 	else
 	{

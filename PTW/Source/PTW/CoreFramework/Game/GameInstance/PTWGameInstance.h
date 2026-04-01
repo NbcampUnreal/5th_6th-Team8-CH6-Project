@@ -60,6 +60,8 @@ public:
 	USoundClass* UISoundClass;
 	UPROPERTY(EditDefaultsOnly, Category = "Class")
 	TSubclassOf<class ACharacter> KeepCharacterClassLoaded;
+	UPROPERTY(EditDefaultsOnly, Category = "Class")
+	TSubclassOf<class AActor> KeepResultCharacterClassLoaded;
 
 protected:
 	UPROPERTY()

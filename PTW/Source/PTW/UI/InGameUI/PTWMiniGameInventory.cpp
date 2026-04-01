@@ -119,7 +119,7 @@ void UPTWMiniGameInventory::SetupWeapons(const TArray<UPTWItemInstance*>& Weapon
 		if (!Item) continue;
 
 		UPTWMiniGameItemSlot* ItemSlot = CreateSlot();
-		if (!Slot) continue;
+		if (!ItemSlot) continue;
 
 		UUniformGridSlot* GridSlot = WeaponGrid->AddChildToUniformGrid(ItemSlot);
 

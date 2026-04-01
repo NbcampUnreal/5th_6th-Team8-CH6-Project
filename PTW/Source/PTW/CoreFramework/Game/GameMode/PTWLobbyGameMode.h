@@ -10,6 +10,7 @@
 class APTWPlayerState;
 class UPTWLobbyItemManager;
 class UPTWRoundEventManager;
+class APTWResultCharacter;
 struct FPTWMiniGameMapRow;
 /**
  * 게임 라운드 및 진행 흐름에 대한 규칙 정의 구조체
@@ -68,6 +69,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
 	FPTWGameFlowRule GameFlowRule;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Result")
+	TSubclassOf<class APTWResultCharacter> ResultCharacterClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Result")
+	TObjectPtr<class UNiagaraSystem> WinnerEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Result")
+	TObjectPtr<USoundBase> WinnerSound;
+
 	/* 로비 복귀시에 지급될 골드 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")
 	int32 RoundClearBonusGold = 300;

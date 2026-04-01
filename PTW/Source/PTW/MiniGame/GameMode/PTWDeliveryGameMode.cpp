@@ -244,9 +244,15 @@ void APTWDeliveryGameMode::StartResultSequence()
 
 				APTWResultCharacter* ResultChar = World->SpawnActor<APTWResultCharacter>(ResultCharacterClass, SpawnLoc, SpawnRot, SpawnParams);
 
+				FString PlayerName = PS->GetPlayerData().PlayerName;
+				if (PlayerName.IsEmpty())
+				{
+					PlayerName = PS->GetPlayerName();
+				}
+
 				if (ResultChar)
 				{
-					ResultChar->InitializeResult(bIsWinner);
+					ResultChar->InitializeResult(bIsWinner, PlayerName);
 				}
 			}
 			else
@@ -322,18 +328,44 @@ bool APTWDeliveryGameMode::CheckingDeadPlayer(AController* NewPlayer)
 void APTWDeliveryGameMode::GiveRoundScore()
 {
 	int32 FirstScore = 6;
-	for (int32 i = 0; i < RankPCList.Num(); i++)
+	TSet<APTWPlayerController*> TempSet;
+	for (int32 i = 0; i < GoalPlayers.Num(); i++)
 	{
-		UPTWDeliveryControllerComponent* DeliveryComp = Cast<UPTWDeliveryControllerComponent>(RankPCList[i]->GetControllerComponent());
-		if (!DeliveryComp) return;
+		APTWPlayerController* Controller = Cast<APTWPlayerController>(GoalPlayers[i]->GetController());
+		if (!Controller) continue;
+		UPTWDeliveryControllerComponent* DeliveryComp = Cast<UPTWDeliveryControllerComponent>(Controller->GetControllerComponent());
+		if (!DeliveryComp) continue;
 		
-		AddRoundScore(RankPCList[i]->GetPlayerState<APlayerState>(), FirstScore);
-		
-		if (FirstScore > 2)
+		if (GoalPlayers[i])
 		{
-			FirstScore--;
+			AddRoundScore(GoalPlayers[i]->GetPlayerState<APlayerState>(), FirstScore);
+			TempSet.Add(Controller);
+			
+			if (FirstScore > 2)
+			{
+				FirstScore--;
+			}
 		}
 	}
+	
+	for (int32 i = 0; i < RankPCList.Num(); i++)
+	{
+		if (TempSet.Contains(RankPCList[i]))
+		{
+			continue;
+		}
+		
+		if (RankPCList[i])
+		{
+			AddRoundScore(RankPCList[i]->GetPlayerState<APlayerState>(), FirstScore);
+		
+			if (FirstScore > 2)
+			{
+				FirstScore--;
+			}
+		}
+	}
+	
 }
 
 IPTWCombatInterface* APTWDeliveryGameMode::CastToPTWCombatInterface(APTWPlayerCharacter* PlayerCharacter)

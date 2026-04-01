@@ -1037,6 +1037,15 @@ void APTWMiniGameMode::StartResultSequence()
 		{
 			bool bIsWinner = (PS->GetDeathOrder() == 0);
 
+			// =======================================================
+			// [추가] PlayerState에서 플레이어 이름 가져오기
+			// =======================================================
+			FString PlayerName = PS->GetPlayerData().PlayerName;
+			if (PlayerName.IsEmpty())
+			{
+				PlayerName = PS->GetPlayerName(); // 데이터가 없으면 스팀/기본 닉네임 사용
+			}
+
 			FVector SpawnLoc = FVector::ZeroVector;
 			FRotator SpawnRot = FRotator::ZeroRotator;
 			bool bValidSpotFound = false;
@@ -1071,7 +1080,8 @@ void APTWMiniGameMode::StartResultSequence()
 
 				if (ResultChar)
 				{
-					ResultChar->InitializeResult(bIsWinner);
+					// [수정] 스폰된 결과 캐릭터에게 승패 여부와 함께 '이름'도 전달!
+					ResultChar->InitializeResult(bIsWinner, PlayerName);
 				}
 			}
 			else

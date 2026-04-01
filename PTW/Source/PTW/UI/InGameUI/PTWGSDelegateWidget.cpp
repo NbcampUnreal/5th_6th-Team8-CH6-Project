@@ -17,12 +17,11 @@ void UPTWGSDelegateWidget::InitializeDelegateWidget()
 
 	if (MiniGameInventoryWidget)
 	{
-		if (APawn* Pawn = GetOwningPlayerPawn())
-		{
-			// 로그용
-			APTWPlayerState* PS = GetOwningPlayerState<APTWPlayerState>();
+		APTWPlayerState* PS = GetOwningPlayerState<APTWPlayerState>();
 
-			if (UPTWInventoryComponent* Inventory = Pawn->FindComponentByClass<UPTWInventoryComponent>())
+		if (PS)
+		{
+			if (UPTWInventoryComponent* Inventory = PS->FindComponentByClass<UPTWInventoryComponent>())
 			{
 				MiniGameInventoryWidget->InitInventory(Inventory);
 

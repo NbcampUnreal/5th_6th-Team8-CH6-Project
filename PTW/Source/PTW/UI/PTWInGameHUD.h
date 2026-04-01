@@ -19,6 +19,7 @@ class UPTWInventoryWidget;
 class UPTWMiniGameInventory;
 class UPTWNotificationWidget;
 class UPTWMiniGameTitle;
+class UPTWPortalCount;
 
 /**
  * 
@@ -63,6 +64,9 @@ public:
 	/* 미니게임이름 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWMiniGameTitle> MiniGameTitle;
+	/* 포탈카운트 */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWPortalCount> PortalCount;
 
 protected:
 	virtual void NativeDestruct() override;

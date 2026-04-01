@@ -16,7 +16,7 @@
 #include "InGameUI/PTWMiniGameInventory.h"
 #include "InGameUI/PTWNotificationWidget.h"
 #include "InGameUI/PTWMiniGameTitle.h"
-
+#include "InGameUI/PTWPortalCount.h"
 #include "Inventory/PTWInventoryComponent.h"
 
 void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
@@ -51,6 +51,7 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 			}
 		}
 	}
+	if (PortalCount) PortalCount->InitializeGameState();
 }
 
 void UPTWInGameHUD::ShowNotification(const FNotificationData& Data)
@@ -152,16 +153,19 @@ void UPTWInGameHUD::HandleGamePhaseChanged(EPTWGamePhase Phase)
 		case EPTWGamePhase::PostGameLobby:
 			InventoryWidget->SetVisibility(ESlateVisibility::Visible);
 			MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+			PortalCount->SetVisibility(ESlateVisibility::Visible);
 			break;
 
 		case EPTWGamePhase::MiniGame:
 			InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 			MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Visible);
+			PortalCount->SetVisibility(ESlateVisibility::Collapsed);
 			break;
 
 		default:
 			InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 			MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+			PortalCount->SetVisibility(ESlateVisibility::Collapsed);
 			break;
 		}
 	}

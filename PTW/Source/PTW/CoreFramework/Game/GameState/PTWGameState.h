@@ -342,7 +342,7 @@ protected:
 	UFUNCTION()
 	void OnRep_RemainTime();
 
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentRound, Category = "GameFlow|Round")
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, ReplicatedUsing = OnRep_CurrentRound, Category = "GameFlow|Round")
 	int32 CurrentRound =0;
 
 	UFUNCTION()

@@ -73,6 +73,8 @@ public:
 	TSubclassOf<class APTWResultCharacter> ResultCharacterClass;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Result")
 	TObjectPtr<class UNiagaraSystem> WinnerEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Result")
+	TObjectPtr<USoundBase> WinnerSound;
 
 	/* 로비 복귀시에 지급될 골드 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "GameFlow")

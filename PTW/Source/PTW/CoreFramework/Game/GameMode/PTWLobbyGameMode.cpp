@@ -374,6 +374,8 @@ void APTWLobbyGameMode::EndGame()
 		{
 			bool bIsWinner = (PS == WinnerPS);
 
+			if (WinnerSound) PC->ClientPlaySound(WinnerSound);
+
 			FString PlayerName = PS->GetPlayerData().PlayerName;
 			if (PlayerName.IsEmpty())
 			{
@@ -430,7 +432,7 @@ void APTWLobbyGameMode::EndGame()
 	}
 
 	FTimerHandle EndGameTimer;
-	GetWorldTimerManager().SetTimer(EndGameTimer, this, &APTWLobbyGameMode::ReturnToMainMenu, 15.f);
+	GetWorldTimerManager().SetTimer(EndGameTimer, this, &APTWLobbyGameMode::ReturnToMainMenu, 10.f);
 }
 
 void APTWLobbyGameMode::ReturnToMainMenu()

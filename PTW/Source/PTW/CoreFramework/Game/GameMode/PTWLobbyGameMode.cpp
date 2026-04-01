@@ -224,16 +224,15 @@ void APTWLobbyGameMode::StartGameLobby()
 		//SetInputBlock(false);
 	}
 	
-	// 게임 로비 진입 5초 후 룰렛 시작
-	// if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
-	// {
-	// 	StartTimer(GameFlowRule.NextMiniGameWaitTime);
-	//
-	// 	FTimerHandle RouletteDelayTimerHandle;
-	// 	GetWorldTimerManager().SetTimer(RouletteDelayTimerHandle, this, &APTWLobbyGameMode::StartRoulette, GameFlowRule.RouletteDelay);
-	// }
+	//게임 로비 진입 5초 후 룰렛 시작
+	if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
+	{
+		StartTimer(GameFlowRule.NextMiniGameWaitTime);
+	
+		StartRoulette();
+	}
 
-	StartRoulette();
+	
 }
 
 void APTWLobbyGameMode::EndTimer()

@@ -168,7 +168,7 @@ void APTWGameMode::Logout(AController* Exiting)
 				GetWorldTimerManager().SetTimer(ExitTempTimerHandle, [=, this]()
 				{
 					GameLiftServerSubsystem->OnUpdateSessionStateCompleted.Execute(TEXT("TERMINATE"));
-				}, 10.0f, true);
+				}, 30.0f, false);
 				
 				GameLiftServerSubsystem->OnUpdateSessionStateCompleted.BindLambda([GameLiftServerSubsystem](const FString& Action)
 				{
@@ -182,15 +182,8 @@ void APTWGameMode::Logout(AController* Exiting)
 				GetWorld()->GetTimerManager().ClearTimer(GameLiftServerSubsystem->UpdateSessionStateTimer);
 				GameLiftServerSubsystem->UpdateSessionState(TEXT("TERMINATE"));
 				return;
-				
 			}
 		}
-	}
-#endif
-#if !UE_EDITOR
-	if (GetNumPlayers() <= 0)
-	{
-		FGenericPlatformMisc::RequestExit(false);
 	}
 #endif
 	

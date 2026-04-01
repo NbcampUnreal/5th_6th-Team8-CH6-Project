@@ -427,7 +427,6 @@ void UPTWGameLiftClientSubsystem::SearchQuickSession()
 {
 	FHttpModule* Http = &FHttpModule::Get();
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = Http->CreateRequest();
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "SearchQuickSession");
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::SearchQuickSession_Response);
 	
 	const FString APIUrl = ClientAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::SearchQuickSession);

@@ -312,6 +312,8 @@ public:
 	FORCEINLINE FPTWRouletteData GetRouletteData() const {return RouletteData;}
 	FORCEINLINE TArray<FPTWTeamInfo>& GetTeams() {return Teams;}
 	FORCEINLINE int32 GetWinTeamId() const {return WinTeamId;}
+	FORCEINLINE int32 GetPortalCurrent() const { return PortalCurrent; }
+	FORCEINLINE int32 GetPortalRequired() const { return PortalRequired; }
 #pragma endregion
 	
 protected:

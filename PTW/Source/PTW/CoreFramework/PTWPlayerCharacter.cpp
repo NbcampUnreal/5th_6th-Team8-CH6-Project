@@ -450,7 +450,7 @@ void APTWPlayerCharacter::InitCharacterState()
 			if (CurrentData.InventoryItemIDs.Num() > 0)
 			{
 				UE_LOG(LogTemp, Log, TEXT("[InitChar][Server] %s: 기존 데이터 로드 성공 (아이템 %d개)"), *PS->GetPlayerName(), CurrentData.InventoryItemIDs.Num());
-				OnPlayerDataLoaded(CurrentData);
+				//OnPlayerDataLoaded(CurrentData);
 			}
 			else
 			{

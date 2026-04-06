@@ -43,4 +43,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TMap<FGameplayTag, UAnimMontage*> WeaponAnimMap;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	FName AttachSocketName;
 };

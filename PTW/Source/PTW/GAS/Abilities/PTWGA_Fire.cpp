@@ -166,8 +166,8 @@ void UPTWGA_Fire::AutoFire()
 		ProjectileTypeFire(Context.PC, Context.WeaponInst);
 	}
 	
-	//캐릭터 반동 함수 호출(박태웅)
-	Context.PC->GetWeaponComponent()->ApplyRecoil();
+	FGameplayTag FireTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Anim.Fire"));
+	Context.PC->GetWeaponComponent()->PlayWeaponMontages(FireTag);
 }
 
 void UPTWGA_Fire::PerformLineTrace(FHitResult& HitResult, APTWPlayerCharacter* PlayerCharacter)

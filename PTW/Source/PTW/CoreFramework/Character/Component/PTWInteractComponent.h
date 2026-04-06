@@ -27,6 +27,13 @@ public:
 	/* [Server] 현재 시점을 기준으로 상호작용 가능한 액터를 즉시 찾아서 반환합니다.*/
 	AActor* GetInteractTargetUnsafe();
 
+protected:
+	/* 상호작용 액터 라인 트레이스 하는 함수 */
+	void TraceInteractable();
+
+	/* 상호작용 액터 윤곽선 보이게 하는 함수 */
+	void ToggleHighlight(AActor* TargetActor, bool bEnable);
+
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Interaction")
 	FOnInteractableFound OnInteractableFound;
@@ -34,10 +41,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Interaction")
 	FOnInteractableLost OnInteractableLost;
 
-protected:
-	void TraceInteractable();
-
-	void ToggleHighlight(AActor* TargetActor, bool bEnable);
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Config")
 	float InteractionDistance = 300.0f;

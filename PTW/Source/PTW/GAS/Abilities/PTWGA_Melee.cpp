@@ -25,7 +25,8 @@ void UPTWGA_Melee::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	
 	if (PC)
 	{
-		PC->GetWeaponComponent()->PlayMontage1P(MeleeAttackMontage);
+		FGameplayTag FireTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Anim.Fire"));
+		PC->GetWeaponComponent()->PlayWeaponMontages(FireTag);
 	}
 	
 	UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(

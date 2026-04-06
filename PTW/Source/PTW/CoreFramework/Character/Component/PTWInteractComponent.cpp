@@ -26,6 +26,18 @@ void UPTWInteractComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	}
 }
 
+void UPTWInteractComponent::PerformInteraction()
+{
+	if (CurrentInteractableActor && CurrentInteractableActor->Implements<UPTWInteractInterface>())
+	{
+		if (IPTWInteractInterface::Execute_IsInteractable(CurrentInteractableActor))
+		{
+			APawn* Instigator = Cast<APawn>(GetOwner());
+			IPTWInteractInterface::Execute_OnInteract(CurrentInteractableActor, Instigator);
+		}
+	}
+}
+
 void UPTWInteractComponent::TraceInteractable()
 {
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
@@ -82,48 +94,6 @@ void UPTWInteractComponent::TraceInteractable()
 	}
 }
 
-void UPTWInteractComponent::PerformInteraction()
-{
-	if (CurrentInteractableActor && CurrentInteractableActor->Implements<UPTWInteractInterface>())
-	{
-		if (IPTWInteractInterface::Execute_IsInteractable(CurrentInteractableActor))
-		{
-			APawn* Instigator = Cast<APawn>(GetOwner());
-			IPTWInteractInterface::Execute_OnInteract(CurrentInteractableActor, Instigator);
-		}
-	}
-}
-
-void UPTWInteractComponent::ToggleHighlight(AActor* TargetActor, bool bEnable)
-{
-	if (!TargetActor) return;
-
-	TArray<UMeshComponent*> Meshes;
-	TargetActor->GetComponents(Meshes);
-
-	for (UMeshComponent* Mesh : Meshes)
-	{
-		if (bEnable)
-		{
-			if (OutlineOverlayMaterial)
-			{
-				Mesh->SetOverlayMaterial(OutlineOverlayMaterial);
-			}
-		}
-		else
-		{
-			Mesh->SetOverlayMaterial(nullptr);
-		}
-	}
-
-	TArray<UWidgetComponent*> Widgets;
-	TargetActor->GetComponents(Widgets);
-	for (UWidgetComponent* Widget : Widgets)
-	{
-		Widget->SetVisibility(bEnable);
-	}
-}
-
 AActor* UPTWInteractComponent::GetInteractTargetUnsafe()
 {
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
@@ -154,4 +124,35 @@ AActor* UPTWInteractComponent::GetInteractTargetUnsafe()
 	}
 
 	return nullptr;
+}
+
+
+void UPTWInteractComponent::ToggleHighlight(AActor* TargetActor, bool bEnable)
+{
+	if (!TargetActor) return;
+
+	TArray<UMeshComponent*> Meshes;
+	TargetActor->GetComponents(Meshes);
+
+	for (UMeshComponent* Mesh : Meshes)
+	{
+		if (bEnable)
+		{
+			if (OutlineOverlayMaterial)
+			{
+				Mesh->SetOverlayMaterial(OutlineOverlayMaterial);
+			}
+		}
+		else
+		{
+			Mesh->SetOverlayMaterial(nullptr);
+		}
+	}
+
+	TArray<UWidgetComponent*> Widgets;
+	TargetActor->GetComponents(Widgets);
+	for (UWidgetComponent* Widget : Widgets)
+	{
+		Widget->SetVisibility(bEnable);
+	}
 }

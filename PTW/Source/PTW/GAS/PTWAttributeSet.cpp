@@ -55,40 +55,6 @@ void UPTWAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	// 해당 코드 주석 처리 (26.03.23)
-	// UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
-	// if (Data.EvaluatedData.Attribute == GetHealthAttribute())
-	// {
-	// 	if (Data.EvaluatedData.Magnitude < 0.f)
-	// 	{
-	// 		HandleDamage(Data);
-	// 	}
-	//
-	// 	SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
-	//
-	// 	if (GetHealth() <= 0.0f)
-	// 	{
-	// 		AActor* TargetActor = Data.Target.GetAvatarActor();
-	// 		APTWBaseCharacter* TargetCharacter = Cast<APTWBaseCharacter>(TargetActor);
-	//
-	// 		if (TargetCharacter && !TargetCharacter->IsDead())
-	// 		{
-	// 			TargetCharacter->HandleDeath(SourceActor);
-	// 		}
-	// 	}
-	// 	if (GetHealth() > 0.0f)
-	// 	{
-	// 		APTWBaseCharacter* TargetChar = Cast<APTWBaseCharacter>(Data.Target.GetAvatarActor());
-	// 		if (TargetChar && !TargetChar->IsDead())
-	// 		{
-	// 			const FHitResult* Hit = Data.EffectSpec.GetContext().GetHitResult();
-	// 			FVector ImpactPoint = Hit ? (FVector)Hit->ImpactPoint : TargetChar->GetActorLocation();
-	//
-	// 			TargetChar->GetReactorComponent()->Multicast_PlayHitReact(ImpactPoint);
-	// 		}
-	// 	}
-	//
-	// }
 	
 	FGameplayEffectContextHandle Context = Data.EffectSpec.GetContext();
 	AActor* SourceActor = Context.GetInstigator();
@@ -146,14 +112,11 @@ void UPTWAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 				if (TargetChar->GetReactorComponent())
 				{
-					TargetChar->GetReactorComponent()->Multicast_PlayHitReact(ImpactPoint);
+					TargetChar->GetReactorComponent()->HitReact(ImpactPoint);
 				}
 			}
 		}
 	}
-
-
-
 	
 	AActor* TargetActor = nullptr;
 	ACharacter* TargetCharacter = nullptr;

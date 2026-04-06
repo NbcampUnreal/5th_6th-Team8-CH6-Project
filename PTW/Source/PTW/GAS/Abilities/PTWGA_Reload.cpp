@@ -78,8 +78,8 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 
 	if (UPTWWeaponComponent* WeaponComp = PC->GetWeaponComponent())
 	{
-		WeaponComp->PlayMontage1P(MontageToPlay);
-		WeaponComp->PlayWeaponMontageByTag(ReloadAnimTag);
+		FGameplayTag ReloadTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Anim.Reload"));
+		WeaponComp->PlayWeaponMontages(ReloadTag);
 	}
 }
 

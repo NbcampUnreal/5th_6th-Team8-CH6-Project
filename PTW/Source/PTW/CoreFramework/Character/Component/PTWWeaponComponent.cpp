@@ -43,8 +43,6 @@ void UPTWWeaponComponent::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 		CurrentWeaponTag = FGameplayTag::EmptyTag;
 		return;
 	}
-
-	// 기존 무기 숨기기
 	if (CurrentWeaponTag.IsValid())
 	{
 		if (FWeaponPair* OldPair = SpawnedWeapons.Find(CurrentWeaponTag))
@@ -53,8 +51,6 @@ void UPTWWeaponComponent::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 			if (OldPair->Weapon3P) OldPair->Weapon3P->SetActorHiddenInGame(true);
 		}
 	}
-
-	// 새 무기 보이기
 	if (FWeaponPair* FoundPair = SpawnedWeapons.Find(NewWeaponTag))
 	{
 		if (FoundPair->Weapon1P && FoundPair->Weapon3P)
@@ -68,9 +64,35 @@ void UPTWWeaponComponent::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 	}
 }
 
+void UPTWWeaponComponent::PlayWeaponMontages(FGameplayTag AnimTag)
+{
+	if (!CurrentWeapon) return;
+
+	const UPTWWeaponData* Data = CurrentWeapon->GetWeaponData();
+	if (!Data) return;
+
+	if (Data->AnimMap.Contains(AnimTag))
+	{
+		UAnimMontage* CharacterMontage = *Data->AnimMap.Find(AnimTag);
+		if (CharacterMontage)
+		{
+			PlayCharacterMontage1P(CharacterMontage);
+		}
+	}
+	if (Data->WeaponAnimMap.Contains(AnimTag))
+	{
+		UAnimMontage* WeaponMontage = *Data->WeaponAnimMap.Find(AnimTag);
+		if (WeaponMontage)
+		{
+			CurrentWeapon->PlayWeaponMontage(WeaponMontage);
+		}
+	}
+}
+
 void UPTWWeaponComponent::AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag)
 {
 	if (!NewWeapon1P || !NewWeapon3P) return;
+
 	APTWPlayerCharacter* PlayerChar = Cast<APTWPlayerCharacter>(GetOwner());
 	if (!PlayerChar) return;
 
@@ -78,12 +100,12 @@ void UPTWWeaponComponent::AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APT
 	Weaponpair.Weapon1P = NewWeapon1P;
 	Weaponpair.Weapon3P = NewWeapon3P;
 	SpawnedWeapons.Add(WeaponTag, Weaponpair);
-	
-	FName TargetSocketName = TEXT("WeaponSocket"); // 기본값 (Rifle 등)
 
-	if (WeaponTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Weapon.Gun.Pistol"))))
+	FName TargetSocketName = TEXT("WeaponSocket");
+
+	if (const UPTWWeaponData* WeaponData = NewWeapon1P->GetWeaponData())
 	{
-		TargetSocketName = TEXT("PistolSocket");
+		TargetSocketName = WeaponData->AttachSocketName; 
 	}
 
 	NewWeapon1P->AttachToComponent(PlayerChar->GetMesh1P(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetSocketName);
@@ -97,56 +119,6 @@ void UPTWWeaponComponent::AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APT
 
 	NewWeapon1P->SetActorEnableCollision(false);
 	NewWeapon3P->SetActorEnableCollision(false);
-}
-
-void UPTWWeaponComponent::ApplyRecoil()
-{
-	if (!CurrentWeapon) return;
-	const UPTWWeaponData* Data = CurrentWeapon->GetWeaponData();
-	if (!Data) return;
-
-	FGameplayTag FireTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Anim.Fire"));
-	if (Data->AnimMap.Contains(FireTag))
-	{
-		UAnimMontage* Montage = *Data->AnimMap.Find(FireTag);
-		if (Montage)
-		{
-			PlayMontage1P(Montage);
-		}
-	}
-}
-
-float UPTWWeaponComponent::PlayMontage1P(UAnimMontage* MontageToPlay)
-{
-	APTWPlayerCharacter* PlayerChar = Cast<APTWPlayerCharacter>(GetOwner());
-	if (!PlayerChar || !PlayerChar->IsLocallyControlled() || !PlayerChar->GetMesh1P() || !MontageToPlay)
-	{
-		return 0.0f;
-	}
-
-	UAnimInstance* AnimInstance = PlayerChar->GetMesh1P()->GetAnimInstance();
-	if (AnimInstance)
-	{
-		return AnimInstance->Montage_Play(MontageToPlay, 1.0f);
-	}
-	return 0.0f;
-}
-
-void UPTWWeaponComponent::PlayWeaponMontageByTag(FGameplayTag AnimTag)
-{
-	if (!CurrentWeapon) return;
-
-	const UPTWWeaponData* Data = CurrentWeapon->GetWeaponData();
-	if (!Data) return;
-
-	if (Data->WeaponAnimMap.Contains(AnimTag))
-	{
-		UAnimMontage* WeaponMontage = *Data->WeaponAnimMap.Find(AnimTag);
-		if (WeaponMontage)
-		{
-			CurrentWeapon->PlayWeaponMontage(WeaponMontage);
-		}
-	}
 }
 
 void UPTWWeaponComponent::OnRep_CurrentWeaponTag(const FGameplayTag& OldTag)
@@ -164,8 +136,18 @@ void UPTWWeaponComponent::OnRep_CurrentWeaponTag(const FGameplayTag& OldTag)
 	}
 }
 
-void UPTWWeaponComponent::OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon)
+float UPTWWeaponComponent::PlayCharacterMontage1P(UAnimMontage* MontageToPlay)
 {
+	APTWPlayerCharacter* PlayerChar = Cast<APTWPlayerCharacter>(GetOwner());
+	if (!PlayerChar || !PlayerChar->IsLocallyControlled() || !PlayerChar->GetMesh1P() || !MontageToPlay)
+	{
+		return 0.0f;
+	}
 
+	UAnimInstance* AnimInstance = PlayerChar->GetMesh1P()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		return AnimInstance->Montage_Play(MontageToPlay, 1.0f);
+	}
+	return 0.0f;
 }
-

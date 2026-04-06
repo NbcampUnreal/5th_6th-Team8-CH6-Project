@@ -17,6 +17,16 @@ UPTWReactorComponent::UPTWReactorComponent()
 	SetIsReplicatedByDefault(true);
 }
 
+void UPTWReactorComponent::ProcessDeath()
+{
+	Multicast_Death();
+}
+
+void UPTWReactorComponent::HitReact(const FVector& ImpactPoint)
+{
+	Multicast_PlayHitReact(ImpactPoint);
+}
+
 void UPTWReactorComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -28,11 +38,6 @@ void UPTWReactorComponent::BeginPlay()
 
 		}
 	}
-}
-
-void UPTWReactorComponent::ProcessDeath()
-{
-	Multicast_Death();
 }
 
 void UPTWReactorComponent::Multicast_Death_Implementation()
@@ -86,9 +91,4 @@ void UPTWReactorComponent::Multicast_PlayHitReact_Implementation(const FVector& 
 	{
 		OwnerCharacter->GetMesh()->GetAnimInstance()->Montage_Play(MontageToPlay, 1.0f);
 	}
-}
-
-void UPTWReactorComponent::OnTagChanged(const FGameplayTag Tag, int32 NewCount)
-{
-
 }

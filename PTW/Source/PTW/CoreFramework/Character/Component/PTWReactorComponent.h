@@ -17,20 +17,22 @@ class PTW_API UPTWReactorComponent : public UActorComponent
 public:
 	UPTWReactorComponent();
 
+	/* 플레이어 피격효과 방향에 따라 재생 */
+	void HitReact(const FVector& ImpactPoint);
+
+	/* 플레이어 사망 처리 */
+	void ProcessDeath();
+
 protected:
 	virtual void BeginPlay() override;
 
-public:
-	void ProcessDeath();
-
-	UFUNCTION(NetMulticast, Unreliable)
-	void Multicast_PlayHitReact(const FVector& ImpactPoint);
-
-protected:
+	/* 플레이어 사망 처리 Multicast */
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Death();
 
-	void OnTagChanged(const FGameplayTag Tag, int32 NewCount);
+	/* 플레이어 피격효과 방향에 따라 재생 Multicast */
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayHitReact(const FVector& ImpactPoint);
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Animation")
@@ -42,8 +44,4 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Animation")
 	TObjectPtr<UAnimMontage> HitReact_Right;
 
-	bool IsInputInverted() const { return bIsInputInverted; }
-
-private:
-	bool bIsInputInverted = false;
 };

@@ -36,31 +36,35 @@ class PTW_API UPTWWeaponComponent : public UActorComponent
 
 public:
 	UPTWWeaponComponent();
+	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	/* 태그를 매개변수로 받아 무기교체 */
+	UFUNCTION(BlueprintCallable, Category = "PTW|Weapon")
 	void EquipWeaponByTag(FGameplayTag NewWeaponTag);
-	void AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag);
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void ApplyRecoil();
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	float PlayMontage1P(UAnimMontage* MontageToPlay);
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void PlayWeaponMontageByTag(FGameplayTag AnimTag);
+	/* 태그 하나만 전달하여 모든 무기 애니메이션 실행 */
+	UFUNCTION(BlueprintCallable, Category = "PTW|Weapon")
+	void PlayWeaponMontages(FGameplayTag AnimTag);
+
+	/* WeaponTag에 따른 무기 소켓에 부착 */
+	void AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag);
 
 protected:
 	UFUNCTION()
 	void OnRep_CurrentWeaponTag(const FGameplayTag& OldTag);
-	UFUNCTION()
-	void OnRep_CurrentWeapon(APTWWeaponActor* OldWeapon);
+
+private:
+	float PlayCharacterMontage1P(UAnimMontage* MontageToPlay);
 
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentWeaponTag, VisibleInstanceOnly, Category = "Weapon")
 	FGameplayTag CurrentWeaponTag;
-	UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
+
+	UPROPERTY(VisibleInstanceOnly, Category = "PTW|Weapon")
 	TMap<FGameplayTag, FWeaponPair> SpawnedWeapons;
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon", ReplicatedUsing = OnRep_CurrentWeapon)
+
+	UPROPERTY(BlueprintReadOnly, Category = "PTW|Weapon")
 	TObjectPtr<APTWWeaponActor> CurrentWeapon;
 };

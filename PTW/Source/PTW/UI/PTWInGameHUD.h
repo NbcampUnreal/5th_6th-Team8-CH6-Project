@@ -36,6 +36,26 @@ public:
 	/* 알림 위젯에 문구 추가 */
 	void ShowNotification(const FNotificationData& Data);
 
+protected:
+	virtual void NativeDestruct() override;
+
+	virtual bool Initialize() override;
+
+	/* 알림 위젯 */
+	void TryShowNextNotification();
+
+	UFUNCTION()
+	void HandleNotificationFinished();
+
+	UFUNCTION()
+	void HandleGamePhaseChanged(EPTWGamePhase Phase);
+	UFUNCTION()
+	void HandleRoulettePhaseChanged(FPTWRouletteData RouletteData);
+
+	void BindGameState();
+	void UnBindGameState();
+
+public:
 	/* 위젯 바인딩 */
 	/* 체력바 */
 	UPROPERTY(meta = (BindWidget))
@@ -69,24 +89,6 @@ public:
 	TObjectPtr<UPTWPortalCount> PortalCount;
 
 protected:
-	virtual void NativeDestruct() override;
-
-	virtual bool Initialize() override;
-
-	/* 알림 위젯 */
-	void TryShowNextNotification();
-
-	UFUNCTION()
-	void HandleNotificationFinished();
-
-	UFUNCTION()
-	void HandleGamePhaseChanged(EPTWGamePhase Phase);
-	UFUNCTION()
-	void HandleRoulettePhaseChanged(FPTWRouletteData RouletteData);
-
-	void BindGameState();
-	void UnBindGameState();
-
 	// GameState 대기용
 	FTimerHandle GameStateBindTimerHandle;
 

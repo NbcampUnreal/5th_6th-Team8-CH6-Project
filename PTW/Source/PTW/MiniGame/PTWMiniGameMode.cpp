@@ -17,6 +17,8 @@
 #include "Camera/CameraActor.h"
 #include "Engine/TargetPoint.h"
 #include "AIController.h"
+#include "Component/PTWSpawnComponent.h"
+#include "Component/PTWWinConditionComponent.h"
 #include "ControllerComponent/PTWBaseControllerComponent.h"
 #include "ControllerComponent/AbilityBattle/PTWAbilityControllerComponent.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
@@ -29,10 +31,14 @@
 
 class UPTWScoreSubsystem;
 
+#pragma region public
+
 APTWMiniGameMode::APTWMiniGameMode()
 {
 	ChaosEventManager = CreateDefaultSubobject<UPTWChaosEventManager>(TEXT("ChaosEventManager"));
-
+	WinConditionComponent = CreateDefaultSubobject<UPTWWinConditionComponent>(TEXT("WinConditionComponent"));
+	SpawnComponent  = CreateDefaultSubobject<UPTWSpawnComponent>(TEXT("SpawnComponent"));
+	
 	bIsGameEnded = false;
 }
 
@@ -63,6 +69,63 @@ FItemArrayWrapper APTWMiniGameMode::GetOldPlayerItems(AController* Controller) c
 	}
 }
 
+void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
+{
+	if (!IsValid(DeadActor)) return;
+	
+	APTWPlayerController* DeadPlayerController = nullptr;
+	APlayerState* DeadPlayerState = nullptr;
+	
+	if (const APawn* DeadPawn = Cast<APawn>(DeadActor))
+	{
+		DeadPlayerController = DeadPawn->GetController<APTWPlayerController>();
+		DeadPlayerState = DeadPawn->GetPlayerState();
+
+		APTWPlayerState* PS = Cast<APTWPlayerState>(DeadPlayerState);
+		if (!PS || !DeadPawn) return;
+
+		UPTWInventoryComponent* InvenComp = PS->GetInventoryComponent();
+		if (!InvenComp) return;
+		
+		DeathPlayerWeaponHandler(InvenComp);
+		
+		APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(DeadActor);
+		if (!PC) return;
+		PlayerMontageStop(PC);
+		
+	}
+
+	APlayerState* KillPlayerState = nullptr;
+	if (IsValid(KillActor))
+	{
+		if (APawn* KillPawn = Cast<APawn>(KillActor))
+		{
+			KillPlayerState = KillPawn->GetPlayerState<APlayerState>();
+		}
+		else
+		{
+			KillPlayerState = Cast<APlayerState>(KillActor);
+		}
+	}
+	
+	AddKillDeathCount(DeadPlayerState, KillPlayerState);
+	
+	if (!PTWGameState) return;
+	PTWGameState->UpdateRanking(MiniGameRule);
+	PTWGameState->AlivePlayers.Remove(DeadPlayerState);
+
+	StartChaosEvent();
+	
+	CheckEndGameCondition();
+	
+	RespawnPlayer(DeadPlayerController);
+}
+#pragma endregion public
+
+#pragma region protected
+
+#pragma region override
+
 void APTWMiniGameMode::InitGameState()
 {
 	Super::InitGameState();
@@ -82,9 +145,14 @@ void APTWMiniGameMode::PostInitializeComponents()
 	
 	if (!PTWGameState) return;
 	
-	// 카오스 이벤트 태그 적용 테스트
 	if (!ChaosEventManager) return;
 	ChaosEventManager->InitChaosEventManager(PTWGameState, MiniGameRule.ChaosEventRule, CachedGameData.ChaosItemEntries);
+
+	if (!WinConditionComponent) return;
+	WinConditionComponent->InitWinConditionComponent(PTWGameState, &MiniGameRule);
+
+	if (!SpawnComponent) return;
+	SpawnComponent->InitSpawnComponent(&MiniGameRule);
 }
 
 void APTWMiniGameMode::BeginPlay()
@@ -185,7 +253,60 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 
 	AttachControllerComponent(NewPlayer);
 }
+void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
+{
+	if (!NewPlayer) return;
+	
+	Super::RestartPlayer(NewPlayer);
+	
+	if (!IsValid(PTWGameState)) return;
+	
+	APlayerState* PlayerState = NewPlayer->GetPlayerState<APlayerState>();
+	if (!PlayerState) return;
+	
+	PTWGameState->AlivePlayers.Add(PlayerState);
 
+	if (NewPlayer->IsA<AAIController>())
+	{
+		if (APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState))
+		{
+			PTWGameState->AddRankedPlayer(PTWPlayerState);
+		}
+	}
+	
+	ApplyMiniGameTag(NewPlayer);
+	RemoveTags(NewPlayer);
+	InitPlayerHealth(NewPlayer);
+	
+	
+	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
+	{
+		BaseCharacter->OnCharacterDied.RemoveDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
+		BaseCharacter->OnCharacterDied.AddDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
+	}
+	
+	if (APTWPlayerController* PC = Cast<APTWPlayerController>(NewPlayer))
+	{
+		PC->Client_RefreshTeamOutline(false, MiniGameRule.TeamRule.bUseTeam, bFriendlyOnlyOutline);
+	}
+	
+	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn());
+	if (!TargetCharacter) return;
+
+	UPTWWeaponComponent* WeaponComp = TargetCharacter->GetWeaponComponent();
+	UPTWInventoryComponent* InvenComp = TargetCharacter->GetInventoryComponent();
+	if (!WeaponComp || !InvenComp) return;
+	
+	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
+	if (!SpawnManager) return;
+	
+	SpawnManager->CopyRestartPlayerItems(TargetCharacter);
+	
+	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::MiniGame)
+	{
+		RefreshTeamOutlineForAllPlayers(true);
+	}
+}
 
 //FIXME : 03/11 박태웅 내부함수 코드 삭제
 void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
@@ -229,90 +350,9 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 	}
 }
 
-void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActorComponent* Component)
-{
-	if (!Controller) return;
+#pragma endregion override
 
-	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Controller);
-	if (!PlayerController) return;
-	
-	if (UActorComponent* BeforeComponent = PlayerController->GetControllerComponent())
-	{
-		BeforeComponent->UnregisterComponent();
-		BeforeComponent->DestroyComponent();
-	}
-	
-	UActorComponent* ActorComponent = Component;
-
-	if (!ActorComponent && ControllerComponentClass)
-	{
-		ActorComponent = NewObject<UActorComponent>(PlayerController, ControllerComponentClass, NAME_None);
-	}
-	if (!ActorComponent) return;
-
-	ActorComponent->SetIsReplicated(true);
-	PlayerController->AddInstanceComponent(ActorComponent);
-	
-	ActorComponent->RegisterComponent();
-
-	PlayerController->SetControllerComponent(ActorComponent);
-
-}
-
-bool APTWMiniGameMode::ShouldUseTeamOutline() const
-{
-	return MiniGameRule.TeamRule.bUseTeam;
-}
-
-void APTWMiniGameMode::RefreshTeamOutlineForAllPlayers(bool bEnable)
-{
-	UWorld* World = GetWorld();
-	if (!World) return;
-
-	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
-	{
-		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
-		if (!PC) continue;
-
-		PC->Client_RefreshTeamOutline(bEnable, MiniGameRule.TeamRule.bUseTeam, bFriendlyOnlyOutline);
-	}
-}
-
-void APTWMiniGameMode::PlayerMontageStop(APTWPlayerCharacter* TargetCharacter)
-{
-	if (TargetCharacter->GetMesh1P())
-	{
-		UAnimInstance* AnimInst = TargetCharacter->GetMesh1P()->GetAnimInstance();
-		if (AnimInst)
-		{
-			AnimInst->Montage_Stop(0.2f); 
-		}
-	}
-	if (TargetCharacter->GetMesh3P())
-	{
-		UAnimInstance* AnimInst = TargetCharacter->GetMesh3P()->GetAnimInstance();
-		if (AnimInst)
-		{
-			AnimInst->Montage_Stop(0.2f); 
-		}
-	}
-}
-
-void APTWMiniGameMode::DeathPlayerWeaponHandler(UPTWInventoryComponent* InvenComp)
-{
-	const TArray<TObjectPtr<UPTWWeaponInstance>>& WeaponArr = InvenComp->GetWeaponArray();
-		
-	for (const auto& WeaponInst : WeaponArr)
-	{
-		if (WeaponInst)
-		{
-			WeaponInst->SpawnedWeapon1P->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			WeaponInst->SpawnedWeapon3P->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			WeaponInst->DestroySpawnedActors();
-		}
-	}
-	InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
-}
+#pragma region GameFlow
 
 void APTWMiniGameMode::StartGame()
 {
@@ -348,6 +388,11 @@ void APTWMiniGameMode::StartGame()
 	WaitingToStartRound();
 }
 
+void APTWMiniGameMode::StartChaosEvent()
+{
+	ChaosEventManager->StartChaosEvent();
+}
+
 void APTWMiniGameMode::WaitingToStartRound()
 {
 	if (!PTWGameState) return;
@@ -372,17 +417,9 @@ void APTWMiniGameMode::WaitingToStartRound()
 	PrepareAllPlayersLoadingScreen(ELoadingScreenType::Lobby, NAME_None);
 }
 
+
 void APTWMiniGameMode::StartCountDown()
 {
-	// CurrentCountDown = StartCountDownTime;
-	//
-	// UE_LOG(LogTemp, Warning, TEXT("StartCountDown : %d"), CurrentCountDown);
-	//
-	// if (APTWGameState* GS = GetGameState<APTWGameState>())
-	// {
-	// 	GS->SetMiniGameCountdown(CurrentCountDown);
-	// }
-
 	if (!PTWGameState) return;
 	
 	RefreshTeamOutlineForAllPlayers(false);
@@ -404,39 +441,8 @@ void APTWMiniGameMode::StartCountDown()
 	GetWorldTimerManager().SetTimer(CountDownTimerHandle, this, &APTWMiniGameMode::TickCountDown, 1.0f, true, 1.f);
 }
 
-void APTWMiniGameMode::ApplyRoundPropRandom()
-{
-	if (!HasAuthority()) return;
-	if (!PTWGameState) return;
-	if (!RoundPropData) return;
-
-	PTWGameState->Server_SetPropData(RoundPropData);
-	PTWGameState->Server_SetPropSeed(FMath::Rand());
-}
-
-void APTWMiniGameMode::RemoveTags(AController* Controller)
-{
-	if (!Controller) return;
-
-	APTWPlayerState* PlayerState = Controller->GetPlayerState<APTWPlayerState>();
-	if (!PlayerState) return;
-
-	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
-	if (!ASC) return;
-	
-	FGameplayTagContainer GameplayTagContainer;
-	ASC->GetOwnedGameplayTags(GameplayTagContainer);
-
-	for (const FGameplayTag& Tag : GameplayTagContainer)
-	{
-		ASC->RemoveLooseGameplayTag(Tag);
-	}
-}
-
-
 void APTWMiniGameMode::TickCountDown()
 {
-	
 	if (!PTWGameState) return;
 
 	PTWGameState->DecreaseCoundDown();
@@ -455,6 +461,35 @@ void APTWMiniGameMode::OnCountDownFinished()
 	StartRound();
 }
 
+void APTWMiniGameMode::StartRound()
+{
+	if (!bApplyPropOnStartGame && bApplyPropOnStartRound)
+	{
+		ApplyRoundPropRandom();
+	}
+	
+	if (MiniGameRule.TimeRule.bUseTimer)
+	{
+		StartTimer(MiniGameRule.TimeRule.Timer);
+	}
+
+	StartChaosEvent();
+	
+	if (GetWorld())
+	{
+		GetWorldTimerManager().SetTimer(CoinSpawnTimerHandle, this, &APTWMiniGameMode::OnCoinSpawnTimerElapsed, CoinSpawnInterval, true);
+	}
+	
+	RefreshTeamOutlineForAllPlayers(true);
+}
+
+void APTWMiniGameMode::UpdateTimer()
+{
+	Super::UpdateTimer();
+
+	StartChaosEvent();
+}
+
 void APTWMiniGameMode::EndTimer()
 {
 	if (bIsGameEnded) return;
@@ -462,7 +497,7 @@ void APTWMiniGameMode::EndTimer()
 	Super::EndTimer();
 	
 	EndRound();
-	//UE_LOG(LogTemp, Warning, TEXT("EndTimer PTWMiniGameMode"));
+	
 }
 
 void APTWMiniGameMode::EndRound()
@@ -511,209 +546,42 @@ void APTWMiniGameMode::EndGame()
 }
 
 
-void APTWMiniGameMode::StartRound()
+#pragma endregion GameFlow
+
+#pragma region other
+
+void APTWMiniGameMode::AttachControllerComponent(AController* Controller, UActorComponent* Component)
 {
-	if (!bApplyPropOnStartGame && bApplyPropOnStartRound)
-	{
-		ApplyRoundPropRandom();
-	}
-	
-	if (MiniGameRule.TimeRule.bUseTimer)
-	{
-		StartTimer(MiniGameRule.TimeRule.Timer);
-	}
+	if (!Controller) return;
 
-	StartChaosEvent();
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Controller);
+	if (!PlayerController) return;
 	
-	if (GetWorld())
+	if (UActorComponent* BeforeComponent = PlayerController->GetControllerComponent())
 	{
-		GetWorldTimerManager().SetTimer(CoinSpawnTimerHandle, this, &APTWMiniGameMode::OnCoinSpawnTimerElapsed, CoinSpawnInterval, true);
+		BeforeComponent->UnregisterComponent();
+		BeforeComponent->DestroyComponent();
 	}
 	
-	RefreshTeamOutlineForAllPlayers(true);
+	UActorComponent* ActorComponent = Component;
+
+	if (!ActorComponent && ControllerComponentClass)
+	{
+		ActorComponent = NewObject<UActorComponent>(PlayerController, ControllerComponentClass, NAME_None);
+	}
+	if (!ActorComponent) return;
+
+	ActorComponent->SetIsReplicated(true);
+	PlayerController->AddInstanceComponent(ActorComponent);
+	
+	ActorComponent->RegisterComponent();
+
+	PlayerController->SetControllerComponent(ActorComponent);
+
 }
-
-void APTWMiniGameMode::UpdateTimer()
-{
-	Super::UpdateTimer();
-
-	StartChaosEvent();
-}
-
-void APTWMiniGameMode::CheckEndGameCondition()
-{
-	switch (MiniGameRule.WinConditionRule.WinType)
-	{
-	case EPTWWinType::Survival:
-		CheckSurvivalCondition();
-		break;
-	case EPTWWinType::Target:
-		CheckTargetCondition();
-		break;
-	default:
-		break;
-	}
-}
-
-void APTWMiniGameMode::CheckSurvivalCondition()
-{
-	if (!PTWGameState) return;
-	
-	// 팀전일 경우 생존 플레이어의 팀을 확인하고 한팀만 있으면 승리
-	if (MiniGameRule.TeamRule.bUseTeam)
-	{
-		TSet<int32> AliveTeams;
-		for (APlayerState* Player : PTWGameState->AlivePlayers)
-		{
-			if (IPTWPlayerRoundDataInterface* PlayerRoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(Player))
-			{
-				AliveTeams.Add(PlayerRoundDataInterface->GetTeamId());
-			}
-		}
-		
-		if (AliveTeams.Num() == 1)
-		{
-			PTWGameState->SetWinTeamId(*AliveTeams.begin());
-			EndGame();
-		}
-		else if (AliveTeams.IsEmpty())
-		{
-			// 생존 팀이 없을 경우 가장 마지막에 죽은 플레이어의 팀 승리
-			if (IPTWPlayerRoundDataInterface* Last = FindLastDeadPlayer())
-			{
-				PTWGameState->SetWinTeamId(Last->GetTeamId());
-				EndGame();
-			}
-		}
-	}
-	else
-	{
-		if (PTWGameState->AlivePlayers.Num() == 1)
-		{
-			EndGame();
-		}
-		else if (PTWGameState->AlivePlayers.IsEmpty())
-		{
-			if (IPTWPlayerRoundDataInterface* Last = FindLastDeadPlayer())
-			{
-				PTWGameState->AlivePlayers.Add(Cast<APlayerState>(Last));
-				EndGame();
-			}
-		}
-	}
-}
-
-void APTWMiniGameMode::CheckTargetCondition()
-{
-	if (!PTWGameState) return;
-	// 팀 및 점수 공유 사용하면 팀 점수 기준으로 승리 체크 후 승리 팀 id 전달
-	if (MiniGameRule.TeamRule.bUseTeam && MiniGameRule.TeamRule.bShareScoreWithinTeam)
-	{
-		for (const FPTWTeamInfo& TeamInfo : PTWGameState->GetTeams())
-		{
-			if (TeamInfo.TeamScore >= MiniGameRule.WinConditionRule.TargetValue)
-			{
-				PTWGameState->SetWinTeamId(TeamInfo.TeamID);
-				EndGame();
-				return;
-			}
-		}
-		
-	}
-	else
-	{
-		TArray<APTWPlayerState*> RankedPlayers = PTWGameState->GetRankedPlayers();
-		if (RankedPlayers.IsEmpty()) return;
-
-		if (RankedPlayers[0]->GetPlayerRoundData().Score >= MiniGameRule.WinConditionRule.TargetValue)
-		{
-			if (MiniGameRule.TeamRule.bUseTeam && !MiniGameRule.TeamRule.bShareScoreWithinTeam)
-			{
-				PTWGameState->SetWinTeamId(RankedPlayers[0]->GetTeamId());
-			}
-			EndGame();
-		}
-	}
-}
-
-void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
-{
-	if (!NewPlayer) return;
-	
-	Super::RestartPlayer(NewPlayer);
-	
-	
-	if (!IsValid(PTWGameState)) return;
-	
-	// if (PlayerStarts.Num() == 0)
-	// {
-	// 	Super::RestartPlayer(NewPlayer);
-	// }
-	// else
-	// {
-	// 	if(PlayerStartCount >= PlayerStarts.Num()-1)
-	// 	{
-	// 		PlayerStartCount = 0;
-	// 	}
-	// 	RestartPlayerAtPlayerStart(NewPlayer, PlayerStarts[PlayerStartCount++]);
-	// }
-
-	APlayerState* PlayerState = NewPlayer->GetPlayerState<APlayerState>();
-	if (!PlayerState) return;
-
-	//SetInputBlock(NewPlayer, true);
-	PTWGameState->AlivePlayers.Add(PlayerState);
-
-	if (NewPlayer->IsA<AAIController>())
-	{
-		if (APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState))
-		{
-			PTWGameState->AddRankedPlayer(PTWPlayerState);
-		}
-	}
-	
-	ApplyMiniGameTag(NewPlayer);
-	RemoveTags(NewPlayer);
-	InitPlayerHealth(NewPlayer);
-	
-	
-	if (APTWBaseCharacter* BaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
-	{
-		BaseCharacter->OnCharacterDied.RemoveDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
-		BaseCharacter->OnCharacterDied.AddDynamic(this, &APTWMiniGameMode::HandlePlayerDeath);
-	}
-	
-	if (APTWPlayerController* PC = Cast<APTWPlayerController>(NewPlayer))
-	{
-		PC->Client_RefreshTeamOutline(false, MiniGameRule.TeamRule.bUseTeam, bFriendlyOnlyOutline);
-	}
-	
-	APTWPlayerCharacter* TargetCharacter = Cast<APTWPlayerCharacter>(NewPlayer->GetPawn());
-	if (!TargetCharacter) return;
-
-	UPTWWeaponComponent* WeaponComp = TargetCharacter->GetWeaponComponent();
-	UPTWInventoryComponent* InvenComp = TargetCharacter->GetInventoryComponent();
-	if (!WeaponComp || !InvenComp) return;
-	
-	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
-	if (!SpawnManager) return;
-	
-	SpawnManager->CopyRestartPlayerItems(TargetCharacter);
-	
-	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::MiniGame)
-	{
-		RefreshTeamOutlineForAllPlayers(true);
-	}
-}
-
 
 void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 {
-	// if (!ItemDefinition)
-	// {
-	// 	UE_LOG(LogTemp, Warning, TEXT("[MiniGameMode] SpawnDefaultWeapon Failed: ItemDefinition is NULL. Please set Default Weapon in Blueprint."));
-	// 	return;
-	// }
 	
 	if (MiniGameRule.LoadoutRule.DefaultWeapon.IsEmpty())
 	{
@@ -730,62 +598,18 @@ void APTWMiniGameMode::SpawnDefaultWeapon(AController* NewPlayer)
 				FGameplayTag WeaponTag = DefaultWeapon->WeaponTag;
 				ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, DefaultWeapon, WeaponTag);
 			}
-
-			// FGameplayTag WeaponTag = ItemDefinition->WeaponTag;
-			// ItemSpawnManager->SpawnWeaponActor(PlayerCharacter, ItemDefinition, WeaponTag);
 		}
 	}
 }
 
-void APTWMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
+void APTWMiniGameMode::ApplyRoundPropRandom()
 {
-	if (!IsValid(DeadActor)) return;
-	
-	APTWPlayerController* DeadPlayerController = nullptr;
-	APlayerState* DeadPlayerState = nullptr;
-	
-	if (const APawn* DeadPawn = Cast<APawn>(DeadActor))
-	{
-		DeadPlayerController = DeadPawn->GetController<APTWPlayerController>();
-		DeadPlayerState = DeadPawn->GetPlayerState();
-
-		APTWPlayerState* PS = Cast<APTWPlayerState>(DeadPlayerState);
-		if (!PS || !DeadPawn) return;
-
-		UPTWInventoryComponent* InvenComp = PS->GetInventoryComponent();
-		if (!InvenComp) return;
-		
-		DeathPlayerWeaponHandler(InvenComp);
-		
-		APTWPlayerCharacter* PC = Cast<APTWPlayerCharacter>(DeadActor);
-		if (!PC) return;
-		PlayerMontageStop(PC);
-		
-	}
-
-	APlayerState* KillPlayerState = nullptr;
-	if (IsValid(KillActor))
-	{
-		if (APawn* KillPawn = Cast<APawn>(KillActor))
-		{
-			KillPlayerState = KillPawn->GetPlayerState<APlayerState>();
-		}
-		else
-		{
-			KillPlayerState = Cast<APlayerState>(KillActor);
-		}
-	}
-	
-	AddKillDeathCount(DeadPlayerState, KillPlayerState);
-	
+	if (!HasAuthority()) return;
 	if (!PTWGameState) return;
-	PTWGameState->UpdateRanking(MiniGameRule);
-	PTWGameState->AlivePlayers.Remove(DeadPlayerState);
+	if (!RoundPropData) return;
 
-	StartChaosEvent();
-	
-	CheckEndGameCondition();
-	RespawnPlayer(DeadPlayerController);
+	PTWGameState->Server_SetPropData(RoundPropData);
+	PTWGameState->Server_SetPropSeed(FMath::Rand());
 }
 
 void APTWMiniGameMode::AddKillDeathCount(APlayerState* DeadPlayerState, APlayerState* KillPlayerState)
@@ -808,7 +632,6 @@ void APTWMiniGameMode::AddKillDeathCount(APlayerState* DeadPlayerState, APlayerS
 		AddRoundScore(KillPlayerState, MiniGameRule.KillRule.KillScore);
 		
 	}
-	//CheckEndGameCondition();
 }
 
 void APTWMiniGameMode::AddRoundScore(APlayerState* ScoreTarget, int32 ScoreValue)
@@ -832,22 +655,30 @@ void APTWMiniGameMode::AddRoundScore(APlayerState* ScoreTarget, int32 ScoreValue
 		}
 	}
 	PTWGameState->UpdateRanking(MiniGameRule);
-	CheckEndGameCondition(); 
+	CheckEndGameCondition();
 }
 
-void APTWMiniGameMode::ApplyMiniGameTag(AController* NewPlayer)
+void APTWMiniGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController)
 {
-	if (!MiniGameEffectClass) return;
+	if (!SpawnPlayerController) return;
+	if (!SpawnComponent) return;
+
+	SpawnComponent->RespawnPlayer(SpawnPlayerController);
 	
-	if (APTWBaseCharacter* PTWBaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
-	{
-		UAbilitySystemComponent* AbilitySystemComponent = PTWBaseCharacter->GetAbilitySystemComponent();
-		if (!AbilitySystemComponent) return;
-	
-		FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
-		
-		PTWBaseCharacter->ApplyGameplayEffectToSelf(MiniGameEffectClass, 1, Context);
-	}
+}
+
+void APTWMiniGameMode::HandleRespawn(APTWPlayerController* PlayerController)
+{
+	if (!SpawnComponent) return;
+
+	SpawnComponent->HandleRespawn(PlayerController);
+}
+
+void APTWMiniGameMode::CheckEndGameCondition()
+{
+	if (!WinConditionComponent) return;
+
+	WinConditionComponent->CheckEndGameCondition();
 }
 
 void APTWMiniGameMode::AssignTeam()
@@ -873,104 +704,6 @@ void APTWMiniGameMode::AssignTeam()
 		int32 AssignTeamId = i % NumTeams;
 		PTWGameState->GetTeams()[AssignTeamId].Members.Add(Players[i]);
 		Cast<IPTWPlayerRoundDataInterface>(Players[i])->SetTeamId(AssignTeamId); 
-	}
-}
-
-IPTWPlayerRoundDataInterface* APTWMiniGameMode::FindLastDeadPlayer()
-{
-	IPTWPlayerRoundDataInterface* LastInterface = nullptr;
-	int32 HighDeathOrder = -1;
-
-	for (APlayerState* Player : PTWGameState->PlayerArray)
-	{
-		if (IPTWPlayerRoundDataInterface* Interface = Cast<IPTWPlayerRoundDataInterface>(Player))
-		{
-			if (Interface->GetDeathOrder() > HighDeathOrder)
-			{
-				HighDeathOrder = Interface->GetDeathOrder();
-				LastInterface = Interface;
-			}
-		}
-	}
-	return LastInterface;
-}
-
-void APTWMiniGameMode::ResetPlayerRoundData()
-{
-	if (!PTWGameState) return;
-	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
-	{
-		if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(PlayerState))
-		{
-			RoundDataInterface->ResetRoundData();
-		}
-	}
-}
-
-void APTWMiniGameMode::ResetPlayerInventoryID()
-{
-	if (!PTWGameState) return;
-	
-	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
-	{
-		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
-		if (!PTWPlayerState) continue;
-
-		PTWPlayerState->ResetInventoryItemId();
-	}
-}
-
-void APTWMiniGameMode::RespawnPlayer(APTWPlayerController* SpawnPlayerController)
-{
-	if (MiniGameRule.SpawnRule.bUseRespawn == false) return;
-	
-	if (IsValid(SpawnPlayerController))
-	{
-		GetWorldTimerManager().ClearTimer(SpawnPlayerController->RespawnTimerHandle);		// 방어 코드
-		TWeakObjectPtr<ThisClass> WeakThis = this;
-		TWeakObjectPtr<APTWPlayerController> WeakDeadController = SpawnPlayerController;
-		GetWorldTimerManager().SetTimer(WeakDeadController->RespawnTimerHandle, [WeakThis, WeakDeadController, this]()
-		{
-			WeakThis->HandleRespawn(WeakDeadController.Get());
-			
-		}, MiniGameRule.SpawnRule.RespawnDelay, false);
-	}
-}
-
-void APTWMiniGameMode::HandleRespawn(APTWPlayerController* PlayerController)
-{
-	if (!IsValid(PlayerController)) return;
-
-	RestartPlayer(PlayerController);
-
-	if (MiniGameRule.SpawnRule.bUseSpawnProtection)
-	{
-		APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
-		if (!PlayerState) return;
-
-		PlayerState->ApplyInvincible(MiniGameRule.SpawnRule.SpawnProtectionTime);
-	}
-}
-
-void APTWMiniGameMode::InitPlayerHealth(AController* Controller)
-{
-	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Controller);
-	if (!PlayerController) return;
-
-	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
-	if (!PlayerState) return;
-
-	UPTWAttributeSet* AttributeSet = Cast<UPTWAttributeSet>(PlayerState->GetAttributeSet());
-	if (!AttributeSet) return;
-
-	AttributeSet->SetHealth(AttributeSet->GetMaxHealth());
-}
-
-void APTWMiniGameMode::SetOldPlayerItemInstanceOuter(TArray<TObjectPtr<UPTWItemInstance>> ItemArr)
-{
-	for (auto Item : ItemArr)
-	{
-		Item->Rename(nullptr, this);
 	}
 }
 
@@ -1113,7 +846,6 @@ void APTWMiniGameMode::FinishEndGameSequence()
 	TravelLevel();
 }
 
-// FIXME : 임시로 관전상태 해제테스트
 void APTWMiniGameMode::ExitSpectatorMode(AController* Controller)
 {
 	APlayerController* PC = Cast<APlayerController>(Controller);
@@ -1155,7 +887,150 @@ void APTWMiniGameMode::SpawnPlayerSavedItems(AController* Controller)
 	}
 }
 
-void APTWMiniGameMode::StartChaosEvent()
+bool APTWMiniGameMode::ShouldUseTeamOutline() const
 {
-	ChaosEventManager->StartChaosEvent();
+	return MiniGameRule.TeamRule.bUseTeam;
 }
+
+void APTWMiniGameMode::RefreshTeamOutlineForAllPlayers(bool bEnable)
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
+		if (!PC) continue;
+
+		PC->Client_RefreshTeamOutline(bEnable, MiniGameRule.TeamRule.bUseTeam, bFriendlyOnlyOutline);
+	}
+}
+
+void APTWMiniGameMode::PlayerMontageStop(APTWPlayerCharacter* TargetCharacter)
+{
+	if (TargetCharacter->GetMesh1P())
+	{
+		UAnimInstance* AnimInst = TargetCharacter->GetMesh1P()->GetAnimInstance();
+		if (AnimInst)
+		{
+			AnimInst->Montage_Stop(0.2f); 
+		}
+	}
+	if (TargetCharacter->GetMesh3P())
+	{
+		UAnimInstance* AnimInst = TargetCharacter->GetMesh3P()->GetAnimInstance();
+		if (AnimInst)
+		{
+			AnimInst->Montage_Stop(0.2f); 
+		}
+	}
+}
+
+void APTWMiniGameMode::DeathPlayerWeaponHandler(UPTWInventoryComponent* InvenComp)
+{
+	const TArray<TObjectPtr<UPTWWeaponInstance>>& WeaponArr = InvenComp->GetWeaponArray();
+		
+	for (const auto& WeaponInst : WeaponArr)
+	{
+		if (WeaponInst)
+		{
+			WeaponInst->SpawnedWeapon1P->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			WeaponInst->SpawnedWeapon3P->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			WeaponInst->DestroySpawnedActors();
+		}
+	}
+	InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
+}
+
+
+#pragma endregion other
+
+#pragma endregion protected
+
+#pragma region private
+
+void APTWMiniGameMode::ApplyMiniGameTag(AController* NewPlayer)
+{
+	if (!MiniGameEffectClass) return;
+	
+	if (APTWBaseCharacter* PTWBaseCharacter = Cast<APTWBaseCharacter>(NewPlayer->GetPawn()))
+	{
+		UAbilitySystemComponent* AbilitySystemComponent = PTWBaseCharacter->GetAbilitySystemComponent();
+		if (!AbilitySystemComponent) return;
+	
+		FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
+		
+		PTWBaseCharacter->ApplyGameplayEffectToSelf(MiniGameEffectClass, 1, Context);
+	}
+}
+
+
+
+void APTWMiniGameMode::ResetPlayerRoundData()
+{
+	if (!PTWGameState) return;
+	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
+	{
+		if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(PlayerState))
+		{
+			RoundDataInterface->ResetRoundData();
+		}
+	}
+}
+
+void APTWMiniGameMode::ResetPlayerInventoryID()
+{
+	if (!PTWGameState) return;
+	
+	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
+	{
+		APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState);
+		if (!PTWPlayerState) continue;
+
+		PTWPlayerState->ResetInventoryItemId();
+	}
+}
+
+void APTWMiniGameMode::InitPlayerHealth(AController* Controller)
+{
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Controller);
+	if (!PlayerController) return;
+
+	APTWPlayerState* PlayerState = PlayerController->GetPlayerState<APTWPlayerState>();
+	if (!PlayerState) return;
+
+	UPTWAttributeSet* AttributeSet = Cast<UPTWAttributeSet>(PlayerState->GetAttributeSet());
+	if (!AttributeSet) return;
+
+	AttributeSet->SetHealth(AttributeSet->GetMaxHealth());
+}
+
+void APTWMiniGameMode::RemoveTags(AController* Controller)
+{
+	if (!Controller) return;
+
+	APTWPlayerState* PlayerState = Controller->GetPlayerState<APTWPlayerState>();
+	if (!PlayerState) return;
+
+	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
+	if (!ASC) return;
+	
+	FGameplayTagContainer GameplayTagContainer;
+	ASC->GetOwnedGameplayTags(GameplayTagContainer);
+
+	for (const FGameplayTag& Tag : GameplayTagContainer)
+	{
+		ASC->RemoveLooseGameplayTag(Tag);
+	}
+}
+
+void APTWMiniGameMode::SetOldPlayerItemInstanceOuter(TArray<TObjectPtr<UPTWItemInstance>> ItemArr)
+{
+	for (auto Item : ItemArr)
+	{
+		Item->Rename(nullptr, this);
+	}
+}
+
+#pragma endregion private
+

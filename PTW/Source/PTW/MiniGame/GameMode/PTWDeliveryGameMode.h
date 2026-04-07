@@ -27,6 +27,7 @@ public:
 	
 	virtual void StartRound() override;
 	
+	/* 초반 배달 아이템 및 GE 적용 */
 	void GiveDeliveryItems(APTWPlayerCharacter* TargetCharacter, TSubclassOf<UGameplayEffect> EffectToApply);
 	
 	/* 도착 지점에 도착했을 때 배열에 저장시키는 함수 */
@@ -38,10 +39,13 @@ public:
 	/* 충전 완료*/
 	void EndBatteryCharge(APTWPlayerCharacter* TargetCharacter);
 	
+	/* 세이브 포인트로 해당 플레이어 스폰*/
 	void SetPlayerSpawnLocation(APTWPlayerController* PC, FVector NewLocation);
 	
+	/* 세이브 포인트 위치 반환*/
 	FTransform GetPlayerSpawnTransform(APTWPlayerController* PC);
 
+	/* GE 적용 */
 	void ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect);
 	
 	FORCEINLINE APTWPlayerController* GetLeaderController() const { return RankPCList[0];}

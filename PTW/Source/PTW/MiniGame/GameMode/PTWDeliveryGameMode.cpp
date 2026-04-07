@@ -30,7 +30,6 @@ void APTWDeliveryGameMode::StartRound()
 {
 	SetMiniGameRule();
 	GrantDeliveryAttributeSet();
-	RemoveBeginGameplayEffect();
 	GetWorld()->GetTimerManager().SetTimer(RankingTimerHandle, this, &APTWDeliveryGameMode::UpdateAllPlayerRanks, 0.1f, true);
 	StartBlocker->HideActor();
 
@@ -80,7 +79,6 @@ FRandomItemBoxData APTWDeliveryGameMode::GetRandomItemRowFromTable()
     
 	if (!ItemDataTable)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ItemDataTable is null!"));
 		return OutRow;
 	}
 
@@ -129,10 +127,6 @@ void APTWDeliveryGameMode::RestartPlayer(AController* NewPlayer)
 	if (CheckingDeadPlayer(NewPlayer))
 	{
 		CombatInterface->ApplyGameplayEffectToSelf(RestartPlayerEffect, 1.0f, FGameplayEffectContextHandle());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("RESTART PLAYER"));
 	}
 }
 
@@ -254,10 +248,6 @@ void APTWDeliveryGameMode::StartResultSequence()
 				{
 					ResultChar->InitializeResult(bIsWinner, PlayerName);
 				}
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("[Result] 스폰 포인트가 부족합니다! 맵에 TargetPoint를 더 배치해주세요."));
 			}
 		}
 	}
@@ -513,17 +503,6 @@ bool APTWDeliveryGameMode::WinnerChecking(APTWPlayerController* PC)
 	{
 		return Player && Player->GetController() == PC;
 	});
-}
-
-void APTWDeliveryGameMode::RemoveBeginGameplayEffect()
-{
-	for (APlayerState* AS : PTWGameState->AlivePlayers)
-	{
-		if (IPTWCombatInterface* CombatInterface = CastToPTWCombatInterface(Cast<APTWPlayerCharacter>(AS->GetPawn())))
-		{
-			CombatInterface->RemoveEffectWithTag(GameplayTags::State::Stun);
-		}
-	}
 }
 
 void APTWDeliveryGameMode::SendMessgeBeginPlay()

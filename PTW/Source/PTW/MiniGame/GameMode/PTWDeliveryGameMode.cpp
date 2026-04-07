@@ -30,7 +30,6 @@ void APTWDeliveryGameMode::StartRound()
 {
 	SetMiniGameRule();
 	GrantDeliveryAttributeSet();
-	RemoveBeginGameplayEffect();
 	GetWorld()->GetTimerManager().SetTimer(RankingTimerHandle, this, &APTWDeliveryGameMode::UpdateAllPlayerRanks, 0.1f, true);
 	StartBlocker->HideActor();
 
@@ -80,7 +79,6 @@ FRandomItemBoxData APTWDeliveryGameMode::GetRandomItemRowFromTable()
     
 	if (!ItemDataTable)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ItemDataTable is null!"));
 		return OutRow;
 	}
 
@@ -129,10 +127,6 @@ void APTWDeliveryGameMode::RestartPlayer(AController* NewPlayer)
 	if (CheckingDeadPlayer(NewPlayer))
 	{
 		CombatInterface->ApplyGameplayEffectToSelf(RestartPlayerEffect, 1.0f, FGameplayEffectContextHandle());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("RESTART PLAYER"));
 	}
 }
 
@@ -244,14 +238,16 @@ void APTWDeliveryGameMode::StartResultSequence()
 
 				APTWResultCharacter* ResultChar = World->SpawnActor<APTWResultCharacter>(ResultCharacterClass, SpawnLoc, SpawnRot, SpawnParams);
 
+				FString PlayerName = PS->GetPlayerData().PlayerName;
+				if (PlayerName.IsEmpty())
+				{
+					PlayerName = PS->GetPlayerName();
+				}
+
 				if (ResultChar)
 				{
-					ResultChar->InitializeResult(bIsWinner);
+					ResultChar->InitializeResult(bIsWinner, PlayerName);
 				}
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("[Result] 스폰 포인트가 부족합니다! 맵에 TargetPoint를 더 배치해주세요."));
 			}
 		}
 	}
@@ -322,18 +318,44 @@ bool APTWDeliveryGameMode::CheckingDeadPlayer(AController* NewPlayer)
 void APTWDeliveryGameMode::GiveRoundScore()
 {
 	int32 FirstScore = 6;
-	for (int32 i = 0; i < RankPCList.Num(); i++)
+	TSet<APTWPlayerController*> TempSet;
+	for (int32 i = 0; i < GoalPlayers.Num(); i++)
 	{
-		UPTWDeliveryControllerComponent* DeliveryComp = Cast<UPTWDeliveryControllerComponent>(RankPCList[i]->GetControllerComponent());
-		if (!DeliveryComp) return;
+		APTWPlayerController* Controller = Cast<APTWPlayerController>(GoalPlayers[i]->GetController());
+		if (!Controller) continue;
+		UPTWDeliveryControllerComponent* DeliveryComp = Cast<UPTWDeliveryControllerComponent>(Controller->GetControllerComponent());
+		if (!DeliveryComp) continue;
 		
-		AddRoundScore(RankPCList[i]->GetPlayerState<APlayerState>(), FirstScore);
-		
-		if (FirstScore > 2)
+		if (GoalPlayers[i])
 		{
-			FirstScore--;
+			AddRoundScore(GoalPlayers[i]->GetPlayerState<APlayerState>(), FirstScore);
+			TempSet.Add(Controller);
+			
+			if (FirstScore > 2)
+			{
+				FirstScore--;
+			}
 		}
 	}
+	
+	for (int32 i = 0; i < RankPCList.Num(); i++)
+	{
+		if (TempSet.Contains(RankPCList[i]))
+		{
+			continue;
+		}
+		
+		if (RankPCList[i])
+		{
+			AddRoundScore(RankPCList[i]->GetPlayerState<APlayerState>(), FirstScore);
+		
+			if (FirstScore > 2)
+			{
+				FirstScore--;
+			}
+		}
+	}
+	
 }
 
 IPTWCombatInterface* APTWDeliveryGameMode::CastToPTWCombatInterface(APTWPlayerCharacter* PlayerCharacter)
@@ -481,17 +503,6 @@ bool APTWDeliveryGameMode::WinnerChecking(APTWPlayerController* PC)
 	{
 		return Player && Player->GetController() == PC;
 	});
-}
-
-void APTWDeliveryGameMode::RemoveBeginGameplayEffect()
-{
-	for (APlayerState* AS : PTWGameState->AlivePlayers)
-	{
-		if (IPTWCombatInterface* CombatInterface = CastToPTWCombatInterface(Cast<APTWPlayerCharacter>(AS->GetPawn())))
-		{
-			CombatInterface->RemoveEffectWithTag(GameplayTags::State::Stun);
-		}
-	}
 }
 
 void APTWDeliveryGameMode::SendMessgeBeginPlay()

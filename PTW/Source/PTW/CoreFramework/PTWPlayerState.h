@@ -67,9 +67,6 @@ public:
 	void SetMiniGameComponent(UActorComponent* NewMiniGameComponent);
 	FORCEINLINE UActorComponent* GetMiniGameComponent(){return MiniGameComponent;}
 	
-	FORCEINLINE FString GetPlayerSessionId() const { return PlayerSessionId; };
-	FORCEINLINE void SetPlayerSessionId(const FString& NewPlayerSessionId) { PlayerSessionId = NewPlayerSessionId ; };
-	
 	/** * 상점에 아이템 구매 요청
 	 * @param ItemID : 구매할 아이템 ID (FName)
 	 * @param Cost : 가격
@@ -131,9 +128,7 @@ protected:
 	//스폰 무적 이펙트
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UGameplayEffect> InvincibleEffectClass;
-	
-	// GameLift 접속을 위한 PlayerSessionId를 캐싱
-	FString PlayerSessionId;
+
 public:
 	virtual void SetDeathOrder(int32 Order) override;
 	virtual void SetTeamId(int32 TeamId) override;

@@ -98,18 +98,6 @@ void APTWGameMode::BeginPlay()
 
 		ScoreSubsystem->TravelingBotNames.Empty();
 	}
-	
-#if WITH_GAMELIFT
-	if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
-	{
-		UPTWGameLiftServerSubsystem* GameLiftServerSubsystem = UPTWGameLiftServerSubsystem::Get(this);
-		GetWorldTimerManager().SetTimer(GameLiftServerSubsystem->UpdateSessionStateTimer, [=, this]()
-		{
-			GameLiftServerSubsystem->UpdateSessionState("ACTIVE");
-		},
-		60.0f, true);
-	}
-#endif
 }
 
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)
@@ -144,9 +132,9 @@ void APTWGameMode::Logout(AController* Exiting)
 	if (APlayerState* PS = Exiting->GetPlayerState<APlayerState>())
 	{
 		PlayerName = PS->GetPlayerName();
-		if (APTWPlayerState* PTWPS = Cast<APTWPlayerState>(PS))
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(Exiting))
 		{
-			CachedPlayerSessionId = PTWPS->GetPlayerSessionId();
+			CachedPlayerSessionId = PC->GetPlayerSessionId();
 		}
 	}
 	
@@ -164,17 +152,25 @@ void APTWGameMode::Logout(AController* Exiting)
 			GameLiftServerSubsystem->UpdatePlayerCount(TEXT("Leave"));
 			if (GetNumPlayers() <= 0)
 			{
-				GameLiftServerSubsystem->UpdateSessionState(TEXT("TERMINATE"));
+				FTimerHandle ExitTempTimerHandle;
+				GetWorldTimerManager().SetTimer(ExitTempTimerHandle, [=, this]()
+				{
+					GameLiftServerSubsystem->OnUpdateSessionStateCompleted.Execute(TEXT("TERMINATE"));
+				}, 30.0f, false);
+				GameLiftServerSubsystem->OnUpdateSessionStateCompleted.BindLambda([GameLiftServerSubsystem](const FString& Action)
+				{
+					if(Action == TEXT("TERMINATE"))
+					{
+						GameLiftServerSubsystem->ExitGameSession();
+						FGenericPlatformMisc::RequestExit(false);
+					}
+				});
+				
 				GetWorld()->GetTimerManager().ClearTimer(GameLiftServerSubsystem->UpdateSessionStateTimer);
-				GameLiftServerSubsystem->ExitGameSession();
+				GameLiftServerSubsystem->UpdateSessionState(TEXT("TERMINATE"));
+				return;
 			}
 		}
-	}
-#endif
-#if !UE_EDITOR
-	if (GetNumPlayers() <= 0)
-	{
-		FGenericPlatformMisc::RequestExit(false);
 	}
 #endif
 	
@@ -264,9 +260,9 @@ FString APTWGameMode::InitNewPlayer(APlayerController* NewPlayer, const FUniqueN
 	{
 		FString PlayerSessionId = UGameplayStatics::ParseOption(Options, TEXT("PlayerSessionId"));
 		
-		if (APTWPlayerState* PTWPS = Cast<APTWPlayerState>(NewPlayer->PlayerState))
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(NewPlayer))
 		{
-			PTWPS->SetPlayerSessionId(PlayerSessionId);
+			PC->SetPlayerSessionId(PlayerSessionId);
 			UE_LOG(LogTemp, Log, TEXT("PlayerSessionId [%s] 캐싱 완료!"), *PlayerSessionId);
 		}
 	}
@@ -371,6 +367,8 @@ void APTWGameMode::HandleSeamlessTravelPlayer(AController*& C)
 		PC->PlayerState->SetIsSpectator(false);
 		PC->PlayerState->SetIsOnlyASpectator(false);
 		PC->bPlayerIsWaiting = false;
+		PC->ResetIgnoreMoveInput();
+		PC->ResetIgnoreLookInput();
 	}
 	else
 	{

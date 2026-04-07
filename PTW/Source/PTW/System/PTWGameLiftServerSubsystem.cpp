@@ -79,6 +79,11 @@ void UPTWGameLiftServerSubsystem::OnMapLoaded(UWorld* LoadedWorld)
 	if (GameLiftSdkModule)
 	{
 		UpdateSessionToReady();
+		GetWorld()->GetTimerManager().SetTimer(UpdateSessionStateTimer, [=, this]()
+		{
+			UpdateSessionState("ACTIVE");
+		},
+		60.0f, true);
 	}
 	
 	if (MapLoadDelegateHandle.IsValid())
@@ -101,7 +106,6 @@ void UPTWGameLiftServerSubsystem::UpdateSessionToReady()
 	if (FOnlineSessionSettings* NewSettings = SessionInterface->GetSessionSettings(NAME_GameSession))
 	{
 		NewSettings->Set(PTWSessionKey::SteamId, SteamId, EOnlineDataAdvertisementType::ViaOnlineService);
-		
 		UpdateSessionCompleteDelegateHandle = SessionInterface->AddOnUpdateSessionCompleteDelegate_Handle(
 			FOnUpdateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnUpdateSessionToReadyComplete));
 			
@@ -245,7 +249,6 @@ void UPTWGameLiftServerSubsystem::UpdatePlayerCount_Response(FHttpRequestPtr Req
 bool UPTWGameLiftServerSubsystem::AcceptPlayerSession(FString PlayerSessionId)
 {
 	FGameLiftGenericOutcome Outcome = GameLiftSdkModule->AcceptPlayerSession(PlayerSessionId);
-	
 	if (Outcome.IsSuccess())
 	{
 		UE_LOG(LogTemp, Log, TEXT("게임리프트 플레이어세션 접속 수락: %s"), *PlayerSessionId);
@@ -293,7 +296,7 @@ void UPTWGameLiftServerSubsystem::UpdateSessionState(FString Action)
 	if (!GameSessionId.IsEmpty() && (Action == TEXT("ACTIVE") || Action == TEXT("TERMINATE")))
 	{
 		TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
-		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::UpdatePlayerCount_Response);
+		Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::UpdateSessionState_Response, Action);
 		
 		const FString APIUrl = ServerAPIData->GetAPIEndPoint(GameplayServerTags::GameSessionsAPI::UpdateSessionState);
 		Request->SetURL(APIUrl);
@@ -323,11 +326,16 @@ void UPTWGameLiftServerSubsystem::UpdateSessionState(FString Action)
 	}
 }
 
-void UPTWGameLiftServerSubsystem::UpdateSessionState_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void UPTWGameLiftServerSubsystem::UpdateSessionState_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FString Action)
 {
 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 	{
 		UE_LOG(LogTemp, Display, TEXT("[DynamoDB-MasterServer Response] DynamoDB에 서버상태 업데이트를 완료했습니다."));
+		
+		if (OnUpdateSessionStateCompleted.IsBound())
+		{
+			OnUpdateSessionStateCompleted.Execute(Action);
+		}
 	}
 	else
 	{

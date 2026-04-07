@@ -22,6 +22,15 @@ APTWBaseCharacter::APTWBaseCharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
+	bAlwaysRelevant = true;
+
+	if (USkeletalMeshComponent* CharacterMesh = GetMesh())
+	{
+		CharacterMesh->SetCullDistance(0.0f);
+		CharacterMesh->BoundsScale = 2.0f;
+		CharacterMesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+	}
+
 	ReactorComponent = CreateDefaultSubobject<UPTWReactorComponent>(TEXT("ReactorComponent"));
 }
 
@@ -59,14 +68,22 @@ void APTWBaseCharacter::HandleDeath(AActor* Attacker)
 
 	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
 	{
-		AActor* MyPS = GetPlayerState();
+		AActor* DeadActor = nullptr;
+		if (GetPlayerState())
+		{
+			DeadActor = GetPlayerState();
+		}
+		else
+		{
+			DeadActor = this;
+		}
 		
 		if (GetWorld() && GetWorld()->GetAuthGameMode<APTWBombMiniGameMode>())
 		{
 			return;
 		}
 		
-		GS->Multicast_BroadcastKilllog(MyPS, Attacker);
+		GS->Multicast_BroadcastKilllog(DeadActor, Attacker);
 	}
 }
 
@@ -147,13 +164,37 @@ void APTWBaseCharacter::GiveDefaultAbilities()
 {
 	if (!HasAuthority() || !AbilitySystemComponent) return;
 
+	TArray<FGameplayAbilitySpecHandle> AbilitiesToRemove;
+
+	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
+	{
+		bool bIsNeeded = false;
+
+		for (TSubclassOf<UGameplayAbility> NeededAbilityClass : DefaultAbilities)
+		{
+			if (NeededAbilityClass && Spec.Ability == NeededAbilityClass->GetDefaultObject())
+			{
+				bIsNeeded = true;
+				break;
+			}
+		}
+		if (!bIsNeeded)
+		{
+			AbilitiesToRemove.Add(Spec.Handle);
+		}
+	}
+
+	for (const FGameplayAbilitySpecHandle& Handle : AbilitiesToRemove)
+	{
+		AbilitySystemComponent->ClearAbility(Handle);
+	}
+
 	for (TSubclassOf<UGameplayAbility> AbilityClass : DefaultAbilities)
 	{
 		if (AbilityClass)
 		{
 			if (AbilitySystemComponent->FindAbilitySpecFromClass(AbilityClass))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("이미 있음"));
 				continue;
 			}
 			FGameplayAbilitySpec Spec(AbilityClass, 1, INDEX_NONE, this);
@@ -165,11 +206,9 @@ void APTWBaseCharacter::GiveDefaultAbilities()
 					Spec.DynamicAbilityTags.AddTag(PTWAbility->StartupInputTag);
 				}
 			}
-
 			AbilitySystemComponent->GiveAbility(Spec);
 		}
 	}
-
 	if (APTWPlayerState* PS = GetPlayerState<APTWPlayerState>())
 	{
 		PS->ApplyAdditionalAbilities();

@@ -138,7 +138,7 @@ void UPTWGA_BombPistol::RemoveSourceWeapon(APTWPlayerCharacter* SourcePC)
 {
 	if (IPTWCombatInterface* TargetCombatInt = Cast<IPTWCombatInterface>(SourcePC))
 	{
-		TargetCombatInt->RemoveEffectWithTag(GameplayTags::State::Slowing);
+		TargetCombatInt->RemoveEffectWithTag(GameplayTags::State::Speed);
 	}
 
 	if (UPTWInventoryComponent* Inven = SourcePC->GetInventoryComponent())

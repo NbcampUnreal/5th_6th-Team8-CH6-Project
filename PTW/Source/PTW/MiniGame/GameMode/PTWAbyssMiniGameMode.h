@@ -20,7 +20,7 @@ protected:
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;
 	virtual void StartRound() override;
 	virtual void EndRound() override;
-	// virtual void HandleRespawn(APTWPlayerController* PlayerController) override;
+	virtual void HandleRespawn(APTWPlayerController* PlayerController) override;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Blackout")
@@ -42,6 +42,7 @@ protected:
 	void StartBlackout();
 	void EndBlackout();
 	void ApplyBlackoutState(bool bEnable);
+	void ApplyBlackoutStateToPlayer(APTWPlayerController* PC, bool bEnable);
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category="Abyss|Reveal")

@@ -27,6 +27,7 @@ public:
 	
 	virtual void StartRound() override;
 	
+	/* 초반 배달 아이템 및 GE 적용 */
 	void GiveDeliveryItems(APTWPlayerCharacter* TargetCharacter, TSubclassOf<UGameplayEffect> EffectToApply);
 	
 	/* 도착 지점에 도착했을 때 배열에 저장시키는 함수 */
@@ -38,10 +39,13 @@ public:
 	/* 충전 완료*/
 	void EndBatteryCharge(APTWPlayerCharacter* TargetCharacter);
 	
+	/* 세이브 포인트로 해당 플레이어 스폰*/
 	void SetPlayerSpawnLocation(APTWPlayerController* PC, FVector NewLocation);
 	
+	/* 세이브 포인트 위치 반환*/
 	FTransform GetPlayerSpawnTransform(APTWPlayerController* PC);
 
+	/* GE 적용 */
 	void ApplyGameEffect(APTWPlayerCharacter* Target, TSubclassOf<UGameplayEffect> TargetGameplayEffect);
 	
 	FORCEINLINE APTWPlayerController* GetLeaderController() const { return RankPCList[0];}
@@ -57,24 +61,34 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void StartCountDown() override;
 	virtual void StartResultSequence();
-	void StartEndCountDown();
-	void UpdateCountDown();
-	void StopCountDown();
-	bool CheckingDeadPlayer(AController* NewPlayer);
-	void GiveRoundScore();
-	
-	IPTWCombatInterface* CastToPTWCombatInterface(APTWPlayerCharacter* PlayerCharacter);
-	
 	virtual AActor* FindPlayerStart_Implementation(AController* Player, const FString& IncomingName) override;
 	
+	/* 카운트 다운 위젯 표시를 위한 함수 */
+	void StartEndCountDown();
+	/* 카운트 업데이트 */
+	void UpdateCountDown();
+	
+	void StopCountDown();
+	
+	/* 플레이어 사망 체크 */
+	bool CheckingDeadPlayer(AController* NewPlayer);
+	
+	/* 점수 부여 로직 */
+	void GiveRoundScore();
+	
+	/* CombatInterface 캐스팅 공통 함수 */
+	IPTWCombatInterface* CastToPTWCombatInterface(APTWPlayerCharacter* PlayerCharacter);
+	
+	/* 거리 계산 로직 */
 	float GetDistanceForActor(AActor* TargetActor);
 	
+	/* 등수 계산 로직 */
 	void UpdateAllPlayerRanks();
 	
-	void RemoveBeginGameplayEffect();
-	
+	/* 초반 알림 UI */
 	void SendMessgeBeginPlay();
 	
+	/* 초반 GE 적용 */
 	void ApplyBeginPlayEffect(APTWPlayerController* PC);
 	
 	/* 랜덤 아이템 어빌리티 미리 부여 */
@@ -97,6 +111,7 @@ private:
 	/* UI */
 	void DeliveryUISetting(APTWPlayerCharacter* TargetCharacter);
 	
+	/* 결과 연출에서 사용하는 승리자 체크 로직 */
 	bool WinnerChecking(APTWPlayerController* PC);
 
 protected:
@@ -134,8 +149,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Delivery | Data")
 	TObjectPtr<UDataTable> ItemDataTable;
-	
-	
 
 private:
 	FTimerHandle CountDownTimerHandle;

@@ -39,6 +39,9 @@ protected:
 	/* GameStart 단계: 3분 제한시간 및 게임 로직 활성화 */
 	virtual void StartRound() override;
 
+	/* 카운트 다운 */
+	virtual void StartCountDown() override;
+
 private:
 	/* 플레이어들을 랜덤하게 섞고 원형 타겟 체인 생성 */
 	void SetupTargetChain();
@@ -54,6 +57,9 @@ private:
 
 	/* 닉네임 강조 로직 */
 	void StartNameDistinguish();
+
+	/* 게임시작 메세지 */
+	void NotificateMessage();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "GE")

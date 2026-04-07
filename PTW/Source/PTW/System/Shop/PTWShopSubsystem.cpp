@@ -114,18 +114,18 @@ int32 UPTWShopSubsystem::GetItemPrice(FName ItemID) const
 
 float UPTWShopSubsystem::GetPriceMultiplier() const
 {
-	// 1. [인플레이션] 물가 폭등 (2배)
-	// 태그: Event.Round.Economy.Inflation
-	if (CurrentRoundEventTag.MatchesTag(FGameplayTag::RequestGameplayTag("Event.Round.Economy.Inflation")))
-	{
-		return 2.0f;
-	}
-	// 2. [경제 대공황] 물가 대폭락 (50% 할인)
-	// 태그: Event.Round.Economy.Depression
-	if (CurrentRoundEventTag.MatchesTag(FGameplayTag::RequestGameplayTag("Event.Round.Economy.Depression")))
-	{
-		return 0.5f;
-	}
+	//// 1. [인플레이션] 물가 폭등 (2배)
+	//// 태그: Event.Round.Economy.Inflation
+	//if (CurrentRoundEventTag.MatchesTag(FGameplayTag::RequestGameplayTag("Event.Round.Economy.Inflation")))
+	//{
+	//	return 2.0f;
+	//}
+	//// 2. [경제 대공황] 물가 대폭락 (50% 할인)
+	//// 태그: Event.Round.Economy.Depression
+	//if (CurrentRoundEventTag.MatchesTag(FGameplayTag::RequestGameplayTag("Event.Round.Economy.Depression")))
+	//{
+	//	return 0.5f;
+	//}
 	
 	return 1.0f;
 }

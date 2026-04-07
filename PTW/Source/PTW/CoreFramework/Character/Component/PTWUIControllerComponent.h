@@ -77,29 +77,6 @@ protected:
 	UFUNCTION()
 	void HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase);
 
-private:
-	UPROPERTY()
-	TObjectPtr<APTWPlayerController> OwnerPC;
-
-	UPROPERTY()
-	TObjectPtr<UPTWUISubsystem> UISubsystem;
-
-	UPROPERTY()
-	TObjectPtr<class APTWGameState> CachedGameState;
-
-	bool bAbleRankingBoard = false;
-	bool bAbleChat = false;
-	bool bKeyGuideOn = false;
-
-	UPROPERTY()
-	UPTWDevWidget* DevWidgetInstance;
-
-	FTimerHandle NameTagTimerHandle;
-	FTimerHandle GameStateBindRetryHandle;
-
-	UPROPERTY()
-	class UPTWGhostChaseControllerComponent* CachedGhostChaseComp;
-
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag") 
 	float NameTagMaxDistance = 1500.f;
@@ -110,8 +87,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI") 
 	TSubclassOf<class UPTWInGameHUD> HUDClass;
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UUserWidget> DelegateUI;
 	UPROPERTY(EditDefaultsOnly, Category = "UI") 
 	TSubclassOf<class UPTWRankingBoard> RankingBoardClass;
 	UPROPERTY(EditDefaultsOnly, Category = "UI") 
@@ -134,4 +109,25 @@ public:
 	TSubclassOf<UUserWidget> SpectatorHUDClass;
 	UPROPERTY(EditAnywhere, Category = "UI") 
 	TSubclassOf<class UPTWDevWidget> DevWidgetClass;
+
+private:
+	UPROPERTY()
+	TObjectPtr<APTWPlayerController> OwnerPC;
+	UPROPERTY()
+	TObjectPtr<UPTWUISubsystem> UISubsystem;
+	UPROPERTY()
+	TObjectPtr<class APTWGameState> CachedGameState;
+
+	bool bAbleRankingBoard = false;
+	bool bAbleChat = false;
+	bool bKeyGuideOn = false;
+
+	FTimerHandle NameTagTimerHandle;
+	FTimerHandle GameStateBindRetryHandle;
+
+	UPROPERTY()
+	UPTWDevWidget* DevWidgetInstance;
+
+	UPROPERTY()
+	class UPTWGhostChaseControllerComponent* CachedGhostChaseComp;
 };

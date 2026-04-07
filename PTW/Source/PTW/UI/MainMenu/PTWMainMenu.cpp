@@ -9,6 +9,7 @@
 #include "Components/Border.h"
 #include "Components/CanvasPanelSlot.h"
 #include "CoreFramework/MainMenu/PTWMainMenuPlayerController.h"
+#include "System/PTWGameLiftClientSubsystem.h"
 
 void UPTWMainMenu::NativeConstruct()
 {
@@ -45,6 +46,8 @@ void UPTWMainMenu::NativeConstruct()
 			UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::UIOnly);
 		}
 	}
+	
+	SetIsEnabled(true);
 }
 
 void UPTWMainMenu::NativeDestruct()
@@ -82,6 +85,7 @@ void UPTWMainMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 void UPTWMainMenu::OnClickedPlayButton()
 {
+#if WITH_EDITOR
 	if (IsValid(ServerBrowserClass))
 	{
 		if (ULocalPlayer* LP = GetOwningLocalPlayer())
@@ -93,6 +97,14 @@ void UPTWMainMenu::OnClickedPlayButton()
 			}
 		}
 	}
+#else
+	if (UPTWGameLiftClientSubsystem* GameLiftClientSubsystem = UPTWGameLiftClientSubsystem::Get(this))
+	{
+		GameLiftClientSubsystem->SearchQuickSession();
+		SetIsEnabled(false);
+	}
+#endif
+	
 }
 
 void UPTWMainMenu::OnClickedOptionsButton()

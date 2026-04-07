@@ -19,6 +19,7 @@ class UPTWInventoryWidget;
 class UPTWMiniGameInventory;
 class UPTWNotificationWidget;
 class UPTWMiniGameTitle;
+class UPTWPortalCount;
 
 /**
  * 
@@ -35,6 +36,26 @@ public:
 	/* 알림 위젯에 문구 추가 */
 	void ShowNotification(const FNotificationData& Data);
 
+protected:
+	virtual void NativeDestruct() override;
+
+	virtual bool Initialize() override;
+
+	/* 알림 위젯 */
+	void TryShowNextNotification();
+
+	UFUNCTION()
+	void HandleNotificationFinished();
+
+	UFUNCTION()
+	void HandleGamePhaseChanged(EPTWGamePhase Phase);
+	UFUNCTION()
+	void HandleRoulettePhaseChanged(FPTWRouletteData RouletteData);
+
+	void BindGameState();
+	void UnBindGameState();
+
+public:
 	/* 위젯 바인딩 */
 	/* 체력바 */
 	UPROPERTY(meta = (BindWidget))
@@ -52,35 +73,24 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWCrosshair> CrosshairWidget;
 	/* 인벤토리 위젯 */
-	/*UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWInventoryWidget> InventoryWidget;*/
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWInventoryWidget> InventoryWidget;
 	/* 미니게임인벤토리 위젯 */
-	/*UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWMiniGameInventory> MiniGameInventoryWidget;*/
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWMiniGameInventory> MiniGameInventoryWidget;
 	/* 알림 위젯 */
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UPTWNotificationWidget> NotificationWidget;
 	/* 미니게임이름 */
-	/*UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UPTWMiniGameTitle> MiniGameTitle;*/
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWMiniGameTitle> MiniGameTitle;
+	/* 포탈카운트 */
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UPTWPortalCount> PortalCount;
 
 protected:
-	virtual void NativeDestruct() override;
-
-	virtual bool Initialize() override;
-
-	/* 알림 위젯 */
-	void TryShowNextNotification();
-
-	UFUNCTION()
-	void HandleNotificationFinished();
-
-	/*UFUNCTION()
-	void HandleGamePhaseChanged(EPTWGamePhase Phase);
-	UFUNCTION()
-	void HandleRoulettePhaseChanged(FPTWRouletteData RouletteData);
-
-	void BindGamePhase();*/
+	// GameState 대기용
+	FTimerHandle GameStateBindTimerHandle;
 
 	UPROPERTY()
 	TArray<FNotificationData> NotificationQueue;

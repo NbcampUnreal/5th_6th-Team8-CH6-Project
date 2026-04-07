@@ -45,5 +45,9 @@ public:
 	FString SelectedLanguage = TEXT("en");
 
 	/* KeyGuide On/Off */
+	void SetbKeyGuideOn(bool KeyGuide);
+	FORCEINLINE bool GetbKeyGuideOn() { return bKeyGuideOn; }
+
+private:
 	bool bKeyGuideOn = true;
 };

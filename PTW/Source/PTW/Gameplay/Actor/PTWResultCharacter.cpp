@@ -4,6 +4,8 @@
 #include "Gameplay/Actor/PTWResultCharacter.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SceneComponent.h"
+#include "Components/WidgetComponent.h"
+#include "UI/CharacterUI/PTWPlayerName.h"
 
 APTWResultCharacter::APTWResultCharacter()
 {
@@ -17,22 +19,35 @@ APTWResultCharacter::APTWResultCharacter()
 	MeshComp->SetupAttachment(Scene);
 	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
 	MeshComp->SetCastShadow(true);
+
+	NameTagWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("NameTagWidget"));
+	NameTagWidget->SetupAttachment(RootComponent);
+	NameTagWidget->SetRelativeLocation(FVector(0.f, 0.f, 200.f));
+	NameTagWidget->SetWidgetSpace(EWidgetSpace::Screen);
+	NameTagWidget->SetDrawAtDesiredSize(true);
 }
 
-void APTWResultCharacter::InitializeResult(bool bIsWinner)
+void APTWResultCharacter::InitializeResult(bool bIsWinner, const FString& InPlayerName)
 {
 	if (HasAuthority())
 	{
-		Multicast_SetResultState(bIsWinner);
+		Multicast_SetResultState(bIsWinner, InPlayerName);
 	}
 }
 
-void APTWResultCharacter::Multicast_SetResultState_Implementation(bool bIsWinner)
+void APTWResultCharacter::Multicast_SetResultState_Implementation(bool bIsWinner, const FString& InPlayerName)
 {
 	UAnimMontage* MontageToPlay = bIsWinner ? WinMontage : LoseMontage;
-
 	if (MontageToPlay && MeshComp->GetAnimInstance())
 	{
 		MeshComp->GetAnimInstance()->Montage_Play(MontageToPlay);
+	}
+
+	if (UPTWPlayerName* NameWidget = Cast<UPTWPlayerName>(NameTagWidget->GetUserWidgetObject()))
+	{
+		NameWidget->SetPlayerName(InPlayerName);
+
+		FLinearColor NameColor = bIsWinner ? FLinearColor(1.0f, 0.8f, 0.0f) : FLinearColor(0.5f, 0.5f, 0.5f);
+		NameWidget->SetNameColor(NameColor);
 	}
 }

@@ -45,7 +45,7 @@ void APTWPickupItemBase::OnSphereOverlap(UPrimitiveComponent* OverlappedComp, AA
 
 		if (PickupSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation());
+			if(APlayerController* PC = Cast<APlayerController>(PlayerCharacter->GetController()))PC->ClientPlaySound(PickupSound);
 		}
 		if (PickupVFX)
 		{

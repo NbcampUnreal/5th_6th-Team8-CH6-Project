@@ -13,7 +13,7 @@
 #include "PTWGameplayTag/GameplayTags.h"
 #include "System/PTWItemSpawnManager.h"
 
-
+#define LOCTEXT_NAMESPACE "COPSANDROBBERSGAMEMODE"
 APTWCopsAndRobbersGameMode::APTWCopsAndRobbersGameMode()
 {
 	MiniGameRule.TimeRule.bUseTimer = true;
@@ -161,6 +161,14 @@ void APTWCopsAndRobbersGameMode::WaitingToStartRound()
 		
 		ASC->AddLooseGameplayTag(GameplayTags::Role::Robber, 1, EGameplayTagReplicationState::TagAndCountToAll);
 		UE_LOG(LogTemp, Display, TEXT("Robber: %s"), *Robber->GetPlayerName());
+		
+		if (APlayerController* PC = Robber->GetPlayerController())
+		{
+			if (APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC))
+			{
+				PTWPC->SendMessage(LOCTEXT("CAR_RobbersStart", "당신은 도둑입니다. 경찰을 피해 시민들 사이에 섞여 숨으세요."),ENotificationPriority::High,10.f);
+			}
+		}
 	}
 	
 	for (APlayerState* Cop : CopsTeam.Members)
@@ -190,8 +198,14 @@ void APTWCopsAndRobbersGameMode::WaitingToStartRound()
 		APTWPlayerCharacter* PlayerCharacter = Cop->GetPawn<APTWPlayerCharacter>();
 		check(PlayerCharacter);
 		SpawnManager->SpawnWeaponActor(PlayerCharacter, CopsWeaponDefinition, CopsWeaponDefinition->WeaponTag);;
-		// APTWPlayerState* PTWPS = CastChecked<APTWPlayerState>(Cop);
-		// SpawnManager->SpawnSingleItem(PTWPS, CopsWeaponDefinition, CopsWeaponDefinition->WeaponTag);
+		
+		if (APlayerController* PC = Cop->GetPlayerController())
+		{
+			if (APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC))
+			{
+				PTWPC->SendMessage(LOCTEXT("CAR_CopsStart", "당신은 경찰입니다. 시민 사이에 숨은 도둑들을 검거하세요."),ENotificationPriority::High,10.f);
+			}
+		}
 	}
 	
 	// 경찰은 도둑들의 PlayerNameTagWidget을 볼 수 없도록 Widget을 파괴.
@@ -213,3 +227,4 @@ void APTWCopsAndRobbersGameMode::WaitingToStartRound()
 		}
 	}
 }
+#undef LOCTEXT_NAMESPACE

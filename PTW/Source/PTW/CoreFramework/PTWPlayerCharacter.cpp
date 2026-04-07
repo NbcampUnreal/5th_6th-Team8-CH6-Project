@@ -119,7 +119,7 @@ void APTWPlayerCharacter::BeginPlay()
 	{
 		Mesh1P->SetHiddenInGame(false);
 		Mesh1P->SetVisibility(true);
-		Mesh1P->HideBoneByName(FName("head"), EPhysBodyOp::PBO_None);
+		Mesh1P->HideBoneByName(FName("neck_01"), EPhysBodyOp::PBO_None);
 	}
 	
 	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerCharacter] BeginPlay 함수 호출 완료, %s "), *GetName());
@@ -450,7 +450,7 @@ void APTWPlayerCharacter::InitCharacterState()
 			if (CurrentData.InventoryItemIDs.Num() > 0)
 			{
 				UE_LOG(LogTemp, Log, TEXT("[InitChar][Server] %s: 기존 데이터 로드 성공 (아이템 %d개)"), *PS->GetPlayerName(), CurrentData.InventoryItemIDs.Num());
-				OnPlayerDataLoaded(CurrentData);
+				//OnPlayerDataLoaded(CurrentData);
 			}
 			else
 			{

@@ -51,3 +51,8 @@ void UPTWGameUserSettings::ApplyLanguageSettings()
 		FInternationalization::Get().SetCurrentCulture(SelectedLanguage);
 	}
 }
+
+void UPTWGameUserSettings::SetbKeyGuideOn(bool KeyGuide)
+{
+	bKeyGuideOn = KeyGuide;
+}

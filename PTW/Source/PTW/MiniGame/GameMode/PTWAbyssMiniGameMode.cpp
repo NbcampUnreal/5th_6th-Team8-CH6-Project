@@ -10,12 +10,26 @@
 #include "AbilitySystemComponent.h"
 #include "PTWGameplayTag/GameplayTags.h"
 
+#define LOCTEXT_NAMESPACE "PTWAbyssMiniGameMode"
+
 APTWAbyssMiniGameMode::APTWAbyssMiniGameMode()
 {
 }
 
 void APTWAbyssMiniGameMode::StartRound()
 {
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		{
+			PC->SendMessage(
+				LOCTEXT("AbyssRoundStartMessage", "어둠이 찾아오면 적을 찾아 잡으세요!"),
+				ENotificationPriority::High,
+				3.f
+			);
+		}
+	}
+
 	bIsBlackoutActive = false;
 	ApplyBlackoutState(false);
 
@@ -67,6 +81,33 @@ void APTWAbyssMiniGameMode::EndRound()
 	Super::EndRound();
 }
 
+void APTWAbyssMiniGameMode::ApplyBlackoutStateToPlayer(APTWPlayerController* PC, bool bEnable)
+{
+	if (!PC) return;
+
+	PC->Client_SetAbyssDark(bEnable);
+
+	if (APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(PC->GetPawn()))
+	{
+		Character->SetStealthMode(bEnable);
+
+		if (APTWPlayerState* PS = Character->GetPlayerState<APTWPlayerState>())
+		{
+			if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+			{
+				if (bEnable)
+				{
+					ASC->RemoveLooseGameplayTag(GameplayTags::State::Abyss::NoFire);
+				}
+				else
+				{
+					ASC->AddLooseGameplayTag(GameplayTags::State::Abyss::NoFire);
+				}
+			}
+		}
+	}
+}
+
 void APTWAbyssMiniGameMode::ApplyBlackoutState(bool bEnable)
 {
 	if (!GetWorld()) return;
@@ -75,27 +116,7 @@ void APTWAbyssMiniGameMode::ApplyBlackoutState(bool bEnable)
 	{
 		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
 		{
-			PC->Client_SetAbyssDark(bEnable);
-
-			if (APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(PC->GetPawn()))
-			{
-				Character->SetStealthMode(bEnable);
-
-				if (APTWPlayerState* PS = Character->GetPlayerState<APTWPlayerState>())
-				{
-					if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
-					{
-						if (bEnable)
-						{
-							ASC->RemoveLooseGameplayTag(GameplayTags::State::Abyss::NoFire);
-						}
-						else
-						{
-							ASC->AddLooseGameplayTag(GameplayTags::State::Abyss::NoFire);
-						}
-					}
-				}
-			}
+			ApplyBlackoutStateToPlayer(PC, bEnable);
 		}
 	}
 
@@ -260,3 +281,14 @@ void APTWAbyssMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillAct
 	PTWGameState->UpdateRanking(MiniGameRule);
 	CheckEndGameCondition();
 }
+
+void APTWAbyssMiniGameMode::HandleRespawn(APTWPlayerController* PlayerController)
+{
+	Super::HandleRespawn(PlayerController);
+
+	if (!IsValid(PlayerController)) return;
+
+	ApplyBlackoutStateToPlayer(PlayerController, bIsBlackoutActive);
+}
+
+#undef LOCTEXT_NAMESPACE

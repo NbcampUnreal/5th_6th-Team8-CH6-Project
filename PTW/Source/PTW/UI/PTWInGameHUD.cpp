@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h" // ASC 
 
 #include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "CoreFramework/PTWPlayerState.h"
 
 #include "InGameUI/PTWHealthBar.h"
 #include "InGameUI/PTWKillLogUI.h"
@@ -15,7 +16,7 @@
 #include "InGameUI/PTWMiniGameInventory.h"
 #include "InGameUI/PTWNotificationWidget.h"
 #include "InGameUI/PTWMiniGameTitle.h"
-
+#include "InGameUI/PTWPortalCount.h"
 #include "Inventory/PTWInventoryComponent.h"
 
 void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
@@ -27,7 +28,7 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 	}
 	UE_LOG(LogTemp, Error, TEXT("UPTWInGameHUD: ASC."));
 
-	//BindGamePhase();
+	BindGameState();
 
 	/* Timer 초기화 */
 	if (Timer) Timer->InitTimer();
@@ -38,21 +39,19 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 	/* 크로스헤어 초기화 */
 	if (CrosshairWidget) CrosshairWidget->InitWithASC(ASC);
 	/* 인벤토리 위젯 초기화 */
-	//if (InventoryWidget) InventoryWidget->InitPS();
+	if (InventoryWidget) InventoryWidget->InitPS();
 	/* 미니게임인벤토리 위젯 초기화 */
-	/*if (MiniGameInventoryWidget)
+	if (MiniGameInventoryWidget)
 	{
-		if (APawn* Pawn = GetOwningPlayerPawn())
+		if (APTWPlayerState* PS = GetOwningPlayerState<APTWPlayerState>())
 		{
-			if (UPTWInventoryComponent* Inventory =
-				Pawn->FindComponentByClass<UPTWInventoryComponent>())
+			if (UPTWInventoryComponent* Inventory =	PS->FindComponentByClass<UPTWInventoryComponent>())
 			{
 				MiniGameInventoryWidget->InitInventory(Inventory);
 			}
 		}
-	}*/
-	///* 미니게임이름 초기화 */
-	//if (MiniGameTitle) MiniGameTitle->InitPS();
+	}
+	if (PortalCount) PortalCount->InitializeGameState();
 }
 
 void UPTWInGameHUD::ShowNotification(const FNotificationData& Data)
@@ -89,6 +88,11 @@ void UPTWInGameHUD::ShowNotification(const FNotificationData& Data)
 
 void UPTWInGameHUD::NativeDestruct()
 {
+	GetWorld()->GetTimerManager().ClearTimer(GameStateBindTimerHandle);
+
+	UnBindGameState();
+
+	Super::NativeDestruct();
 }
 
 bool UPTWInGameHUD::Initialize()
@@ -140,63 +144,80 @@ void UPTWInGameHUD::HandleNotificationFinished()
 	TryShowNextNotification();
 }
 
-//void UPTWInGameHUD::HandleGamePhaseChanged(EPTWGamePhase Phase)
-//{
-//	if (!InventoryWidget || !MiniGameInventoryWidget)
-//		return;
-//
-//	switch (Phase)
-//	{
-//	case EPTWGamePhase::PostGameLobby:
-//	{
-//		InventoryWidget->SetVisibility(ESlateVisibility::Visible);
-//		MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-//
-//		APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>();
-//		if (!GS) return;
-//
-//		GS->OnRoulettePhaseChanged.AddDynamic(this, &UPTWInGameHUD::HandleRoulettePhaseChanged);
-//		HandleRoulettePhaseChanged(GS->GetRouletteData());
-//
-//		break;
-//	}
-//
-//	case EPTWGamePhase::MiniGame:
-//	{
-//		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-//		MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Visible);
-//		break;
-//	}
-//
-//	default:
-//	{
-//		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-//		MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-//		break;
-//	}
-//	}
-//
-//	if (MiniGameTitle)
-//	{
-//		MiniGameTitle->UpdateTitleByPhase(Phase);
-//	}
-//}
-//
-//void UPTWInGameHUD::HandleRoulettePhaseChanged(FPTWRouletteData RouletteData)
-//{
-//	if (MiniGameTitle)
-//	{
-//		MiniGameTitle->UpdateTitleByRoulette(RouletteData);
-//	}
-//}
-//
-//void UPTWInGameHUD::BindGamePhase()
-//{
-//	APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>();
-//	if (!GS) return;
-//
-//	GS->OnGamePhaseChanged.AddDynamic(this, &UPTWInGameHUD::HandleGamePhaseChanged);
-//	
-//	// 현재 상태 즉시 동기화
-//	HandleGamePhaseChanged(GS->GetCurrentGamePhase());
-//}
+void UPTWInGameHUD::HandleGamePhaseChanged(EPTWGamePhase Phase)
+{
+	if (InventoryWidget && MiniGameInventoryWidget)
+	{
+		switch (Phase)
+		{
+		case EPTWGamePhase::PostGameLobby:
+			InventoryWidget->SetVisibility(ESlateVisibility::Visible);
+			MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+			PortalCount->SetVisibility(ESlateVisibility::Visible);
+			break;
+
+		case EPTWGamePhase::MiniGame:
+			InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+			MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Visible);
+			PortalCount->SetVisibility(ESlateVisibility::Collapsed);
+			break;
+
+		default:
+			InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+			MiniGameInventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+			PortalCount->SetVisibility(ESlateVisibility::Collapsed);
+			break;
+		}
+	}
+
+	if (MiniGameTitle)
+	{
+		MiniGameTitle->UpdateTitleByPhase(Phase);
+	}
+}
+
+void UPTWInGameHUD::HandleRoulettePhaseChanged(FPTWRouletteData RouletteData)
+{
+	APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>();
+	if (!IsValid(GS)) return;
+
+	EPTWGamePhase Phase = GS->GetCurrentGamePhase();
+
+	if (MiniGameTitle)
+	{
+		if (Phase == EPTWGamePhase::PostGameLobby)
+		{
+			MiniGameTitle->UpdateTitleByRoulette(RouletteData);
+		}
+	}
+}
+
+void UPTWInGameHUD::BindGameState()
+{
+	APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>();
+	if (!IsValid(GS))
+	{
+		GetWorld()->GetTimerManager().SetTimer(GameStateBindTimerHandle, this, &ThisClass::BindGameState, 0.1f, false);
+		return;
+	}
+	GetWorld()->GetTimerManager().ClearTimer(GameStateBindTimerHandle);
+
+	UnBindGameState();
+
+	GS->OnGamePhaseChanged.AddDynamic(this, &ThisClass::HandleGamePhaseChanged);
+	GS->OnRoulettePhaseChanged.AddDynamic(this, &ThisClass::HandleRoulettePhaseChanged);
+
+	// 초기화 시점 동기화
+	HandleGamePhaseChanged(GS->GetCurrentGamePhase());
+	HandleRoulettePhaseChanged(GS->GetRouletteData());
+}
+
+void UPTWInGameHUD::UnBindGameState()
+{
+	APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>();
+	if (IsValid(GS))
+	{
+		GS->OnGamePhaseChanged.RemoveDynamic(this, &ThisClass::HandleGamePhaseChanged);
+		GS->OnRoulettePhaseChanged.RemoveDynamic(this, &ThisClass::HandleRoulettePhaseChanged);
+	}
+}

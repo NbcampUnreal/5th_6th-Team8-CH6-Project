@@ -17,6 +17,7 @@
 #include "Camera/CameraActor.h"
 #include "Engine/TargetPoint.h"
 #include "AIController.h"
+#include "Component/PTWResultSequenceComponent.h"
 #include "Component/PTWSpawnComponent.h"
 #include "Component/PTWWinConditionComponent.h"
 #include "ControllerComponent/PTWBaseControllerComponent.h"
@@ -38,6 +39,7 @@ APTWMiniGameMode::APTWMiniGameMode()
 	ChaosEventManager = CreateDefaultSubobject<UPTWChaosEventManager>(TEXT("ChaosEventManager"));
 	WinConditionComponent = CreateDefaultSubobject<UPTWWinConditionComponent>(TEXT("WinConditionComponent"));
 	SpawnComponent  = CreateDefaultSubobject<UPTWSpawnComponent>(TEXT("SpawnComponent"));
+	ResultSequenceComponent = CreateDefaultSubobject<UPTWResultSequenceComponent>(TEXT("ResultSequenceComponent"));
 	
 	bIsGameEnded = false;
 }
@@ -147,12 +149,6 @@ void APTWMiniGameMode::PostInitializeComponents()
 	
 	if (!ChaosEventManager) return;
 	ChaosEventManager->InitChaosEventManager(PTWGameState, MiniGameRule.ChaosEventRule, CachedGameData.ChaosItemEntries);
-
-	if (!WinConditionComponent) return;
-	WinConditionComponent->InitWinConditionComponent(PTWGameState, &MiniGameRule);
-
-	if (!SpawnComponent) return;
-	SpawnComponent->InitSpawnComponent(&MiniGameRule);
 }
 
 void APTWMiniGameMode::BeginPlay()
@@ -865,7 +861,6 @@ void APTWMiniGameMode::ExitSpectatorMode(AController* Controller)
 	PC->SetViewTarget(PC);
 }
 
-
 void APTWMiniGameMode::SpawnPlayerSavedItems(AController* Controller)
 {
 	if (!Controller) return;
@@ -941,7 +936,6 @@ void APTWMiniGameMode::DeathPlayerWeaponHandler(UPTWInventoryComponent* InvenCom
 	}
 	InvenComp->SendEquipEventToASC(InvenComp->GetCurrentSlotIndex());
 }
-
 
 #pragma endregion other
 

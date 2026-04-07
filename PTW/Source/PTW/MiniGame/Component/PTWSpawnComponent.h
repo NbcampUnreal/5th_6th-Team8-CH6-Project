@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "PTWGameModeBaseComponent.h"
 #include "PTWSpawnComponent.generated.h"
 
 
@@ -11,7 +11,7 @@ struct FPTWMiniGameRule;
 class APTWPlayerController;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class PTW_API UPTWSpawnComponent : public UActorComponent
+class PTW_API UPTWSpawnComponent : public UPTWGameModeBaseComponent
 {
 	GENERATED_BODY()
 

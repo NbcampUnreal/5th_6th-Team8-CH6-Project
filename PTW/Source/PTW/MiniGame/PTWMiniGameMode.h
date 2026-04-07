@@ -10,6 +10,7 @@
 #include "System/Prop/PTWPropData.h"
 #include "PTWMiniGameMode.generated.h"
 
+class UPTWResultSequenceComponent;
 class UPTWSpawnComponent;
 class UPTWWinConditionComponent;
 class UPTWInventoryComponent;
@@ -225,4 +226,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UPTWSpawnComponent> SpawnComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPTWResultSequenceComponent> ResultSequenceComponent;
 };

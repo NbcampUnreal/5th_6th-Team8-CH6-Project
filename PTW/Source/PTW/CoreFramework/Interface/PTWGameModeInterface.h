@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "PTWGameModeInterface.generated.h"
 
+class APTWPlayerState;
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UPTWGameModeInterface : public UInterface
@@ -24,4 +25,6 @@ class PTW_API IPTWGameModeInterface
 public:
 	virtual void EndGame() = 0;
 	virtual void RestartPlayer(AController*) = 0;
+	virtual void TravelLevel() = 0;
+	virtual bool IsWinner(APTWPlayerState* PlayerState) = 0;
 };

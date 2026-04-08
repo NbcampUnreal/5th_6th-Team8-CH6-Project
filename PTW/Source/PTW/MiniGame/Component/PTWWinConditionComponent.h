@@ -3,16 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "PTWGameModeBaseComponent.h"
 #include "MiniGame/PTWMiniGameRule.h"
 #include "PTWWinConditionComponent.generated.h"
 
 
 class IPTWPlayerRoundDataInterface;
-class APTWGameState;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class PTW_API UPTWWinConditionComponent : public UActorComponent
+class PTW_API UPTWWinConditionComponent : public UPTWGameModeBaseComponent
 {
 	GENERATED_BODY()
 
@@ -34,8 +33,5 @@ private:
 	IPTWPlayerRoundDataInterface* FindLastDeadPlayer();
 
 private:
-	UPROPERTY()
-	TObjectPtr<APTWGameState> GameState;
-
 	const FPTWMiniGameRule* MiniGameRule;
 };

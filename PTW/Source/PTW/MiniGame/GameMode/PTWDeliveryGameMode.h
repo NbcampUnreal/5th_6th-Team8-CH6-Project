@@ -60,7 +60,6 @@ protected:
 	virtual void RestartPlayer(AController* NewPlayer) override;
 	virtual void BeginPlay() override;
 	virtual void StartCountDown() override;
-	virtual void StartResultSequence();
 	virtual AActor* FindPlayerStart_Implementation(AController* Player, const FString& IncomingName) override;
 	
 	/* 카운트 다운 위젯 표시를 위한 함수 */
@@ -95,7 +94,6 @@ protected:
 	void GrantItemAbilities(UAbilitySystemComponent* ASC);
 
 private:
-	
 	/* 미니 게임 시작 무기 지급*/
 	void GivingDefaultWeapon(APTWPlayerCharacter* TargetCharacter);
 	
@@ -112,8 +110,7 @@ private:
 	void DeliveryUISetting(APTWPlayerCharacter* TargetCharacter);
 	
 	/* 결과 연출에서 사용하는 승리자 체크 로직 */
-	bool WinnerChecking(APTWPlayerController* PC);
-
+	virtual bool IsWinner(APTWPlayerState* PlayerState) override;
 protected:
 	UPROPERTY(EditAnywhere, Category = "GAS|Effect")
 	TSubclassOf<UGameplayEffect> KillBonusEffect;

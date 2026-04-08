@@ -4,8 +4,11 @@
 #include "MiniGame/Component/PTWResultSequenceComponent.h"
 
 #include "CoreFramework/PTWPlayerController.h"
+#include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "Gameplay/Actor/PTWResultCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "MiniGame/PTWMiniGameMode.h"
 
 UPTWResultSequenceComponent::UPTWResultSequenceComponent()
 {
@@ -71,7 +74,16 @@ void UPTWResultSequenceComponent::StartResultSequence()
 
 		if (ResultCharacterClass)
 		{
-			bool bIsWinner = (PS->GetDeathOrder() == 0);
+			bool bIsWinner = IsWinner(PS);
+
+			// =======================================================
+			// [추가] PlayerState에서 플레이어 이름 가져오기
+			// =======================================================
+			FString PlayerName = PS->GetPlayerData().PlayerName;
+			if (PlayerName.IsEmpty())
+			{
+				PlayerName = PS->GetPlayerName(); // 데이터가 없으면 스팀/기본 닉네임 사용
+			}
 
 			FVector SpawnLoc = FVector::ZeroVector;
 			FRotator SpawnRot = FRotator::ZeroRotator;
@@ -107,7 +119,8 @@ void UPTWResultSequenceComponent::StartResultSequence()
 
 				if (ResultChar)
 				{
-					ResultChar->InitializeResult(bIsWinner);
+					// [수정] 스폰된 결과 캐릭터에게 승패 여부와 함께 '이름'도 전달!
+					ResultChar->InitializeResult(bIsWinner, PlayerName);
 				}
 			}
 			else
@@ -117,5 +130,38 @@ void UPTWResultSequenceComponent::StartResultSequence()
 		}
 	}
 
-	GetWorldTimerManager().SetTimer(ResultTimerHandle, this, &APTWMiniGameMode::FinishEndGameSequence, ResultSequenceDuration, false);
+	GetWorld()->GetTimerManager().SetTimer(ResultTimerHandle, this, &UPTWResultSequenceComponent::FinishEndGameSequence, ResultSequenceDuration, false);
+}
+
+void UPTWResultSequenceComponent::FinishEndGameSequence()
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APTWPlayerController* PC = Cast<APTWPlayerController> (It->Get());
+		if (!PC) continue;
+
+		PC->ChangeState(NAME_Playing);
+		PC->ClientGotoState(NAME_Playing);
+
+		if (PC->PlayerState)
+		{
+			PC->PlayerState->SetIsSpectator(false);
+			PC->PlayerState->SetIsOnlyASpectator(false);
+		}
+
+		PC->SetControllerComponent(nullptr);
+	}
+
+	IPTWGameModeInterface* GameModeInterface = Cast<IPTWGameModeInterface>(GetOwner());
+	if (!GameModeInterface) return;
+	
+	GameModeInterface->TravelLevel();
+}
+
+bool UPTWResultSequenceComponent::IsWinner(APTWPlayerState* PlayerState)
+{
+	IPTWGameModeInterface* GameModeInterface = Cast<IPTWGameModeInterface>(GetOwner());
+	if (!GameModeInterface) return false;
+	
+	return GameModeInterface->IsWinner(PlayerState);
 }

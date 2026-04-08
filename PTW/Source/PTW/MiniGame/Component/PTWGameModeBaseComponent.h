@@ -15,7 +15,6 @@ class PTW_API UPTWGameModeBaseComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	
 	UPTWGameModeBaseComponent();
 
 protected:

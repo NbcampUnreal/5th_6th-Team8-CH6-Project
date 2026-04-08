@@ -6,6 +6,10 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 
 
+UPTWGameModeBaseComponent::UPTWGameModeBaseComponent()
+{
+}
+
 void UPTWGameModeBaseComponent::BeginPlay()
 {
 	Super::BeginPlay();

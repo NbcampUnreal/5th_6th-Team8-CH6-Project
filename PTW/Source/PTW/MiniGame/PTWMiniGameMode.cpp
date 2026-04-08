@@ -214,19 +214,6 @@ void APTWMiniGameMode::Logout(AController* Exiting)
 
 void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
-	/*
-	if (IsValid(PTWGameState) && PTWGameState->IsMatchInProgress())
-	{
-		if(PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::MiniGame)
-		{
-			NewPlayer->StartSpectatingOnly();
-			return;
-		}
-	}*/
-
-	//FIXME : 03/09 박태웅 테스트로 주석처리
-	//FIXME : 임시로 난입플레이어도 관전상태해제
-	//ExitSpectatorMode(NewPlayer);
 	
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	
@@ -239,14 +226,7 @@ void APTWMiniGameMode::HandleStartingNewPlayer_Implementation(APlayerController*
 	//SetInputBlock(true);
 	
 	PTWGameState->AddRankedPlayer(PlayerState);
-
-	//FIXME : 03/09 박태웅 테스트로 주석처리
-	//FIXME : 임시로 난입플레이어도 리스타트 플레이어 시키기
-	//if (NewPlayer->GetPawn() == nullptr)
-	//{
-	//	RestartPlayer(NewPlayer);
-	//}
-
+	
 	AttachControllerComponent(NewPlayer);
 }
 void APTWMiniGameMode::RestartPlayer(AController* NewPlayer)
@@ -541,6 +521,17 @@ void APTWMiniGameMode::EndGame()
 	GetWorldTimerManager().SetTimer(ResultSequenceTimerHandle, this, &ThisClass::StartResultSequence, 3.0f, false);
 }
 
+void APTWMiniGameMode::TravelLevel()
+{
+	ResetPlayerRoundData();
+	ResetPlayerInventoryID();
+	
+	if (!PTWGameState) return;
+	PTWGameState->ResetChaosItemEntries();
+	
+	Super::TravelLevel();
+}
+
 
 #pragma endregion GameFlow
 
@@ -713,143 +704,18 @@ void APTWMiniGameMode::OnCoinSpawnTimerElapsed()
 
 void APTWMiniGameMode::StartResultSequence()
 {
-	UWorld* World = GetWorld();
-	if (!World) return;
-
-	if (PTWGameState)
-	{
-		PTWGameState->SetCurrentPhase(EPTWGamePhase::MiniGameResult);
-	}
-
-	AActor* ResultCamera = nullptr;
-	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsWithTag(World, FName("ResultCamera"), FoundActors);
-	if (FoundActors.Num() > 0) ResultCamera = FoundActors[0];
-
-	TArray<AActor*> WinSpots;
-	UGameplayStatics::GetAllActorsWithTag(World, FName("WinSpot"), WinSpots);
-
-	TArray<AActor*> LoseSpots;
-	UGameplayStatics::GetAllActorsWithTag(World, FName("LoseSpot"), LoseSpots);
-
-	int32 CurrentWinIndex = 0;
-	int32 CurrentLoseIndex = 0;
-
-	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
-	{
-		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
-		if (!PC) continue;
-
-		APTWPlayerState* PS = PC->GetPlayerState<APTWPlayerState>();
-		if (!PS) continue;
-
-		PC->SetIgnoreMoveInput(true);
-		PC->SetIgnoreLookInput(true);
-
-		if (APawn* OriginalPawn = PC->GetPawn())
-		{
-			OriginalPawn->SetActorHiddenInGame(true);
-			OriginalPawn->SetActorEnableCollision(false);
-		}
-
-		if (ResultCamera)
-		{
-			FViewTargetTransitionParams Params;
-			Params.BlendTime = 1.0f;
-			Params.BlendFunction = EViewTargetBlendFunction::VTBlend_Linear;
-			Params.bLockOutgoing = true;
-
-			PC->ClientSetViewTarget(ResultCamera, Params);
-		}
-
-		if (ResultCharacterClass)
-		{
-			bool bIsWinner = (PS->GetDeathOrder() == 0);
-
-			// =======================================================
-			// [추가] PlayerState에서 플레이어 이름 가져오기
-			// =======================================================
-			FString PlayerName = PS->GetPlayerData().PlayerName;
-			if (PlayerName.IsEmpty())
-			{
-				PlayerName = PS->GetPlayerName(); // 데이터가 없으면 스팀/기본 닉네임 사용
-			}
-
-			FVector SpawnLoc = FVector::ZeroVector;
-			FRotator SpawnRot = FRotator::ZeroRotator;
-			bool bValidSpotFound = false;
-
-			if (bIsWinner)
-			{
-				if (WinSpots.IsValidIndex(CurrentWinIndex))
-				{
-					SpawnLoc = WinSpots[CurrentWinIndex]->GetActorLocation();
-					SpawnRot = WinSpots[CurrentWinIndex]->GetActorRotation();
-					CurrentWinIndex++;
-					bValidSpotFound = true;
-				}
-			}
-			else
-			{
-				if (LoseSpots.IsValidIndex(CurrentLoseIndex))
-				{
-					SpawnLoc = LoseSpots[CurrentLoseIndex]->GetActorLocation();
-					SpawnRot = LoseSpots[CurrentLoseIndex]->GetActorRotation();
-					CurrentLoseIndex++;
-					bValidSpotFound = true;
-				}
-			}
-
-			if (bValidSpotFound)
-			{
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-				APTWResultCharacter* ResultChar = World->SpawnActor<APTWResultCharacter>(ResultCharacterClass, SpawnLoc, SpawnRot, SpawnParams);
-
-				if (ResultChar)
-				{
-					// [수정] 스폰된 결과 캐릭터에게 승패 여부와 함께 '이름'도 전달!
-					ResultChar->InitializeResult(bIsWinner, PlayerName);
-				}
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("[Result] 스폰 포인트가 부족합니다! 맵에 TargetPoint를 더 배치해주세요."));
-			}
-		}
-	}
-
-	GetWorldTimerManager().SetTimer(ResultTimerHandle, this, &APTWMiniGameMode::FinishEndGameSequence, ResultSequenceDuration, false);
+	if (!ResultSequenceComponent) return;
+	ResultSequenceComponent->StartResultSequence();
 }
 
-void APTWMiniGameMode::FinishEndGameSequence()
+bool APTWMiniGameMode::IsWinner(APTWPlayerState* InPlayerState)
 {
-	ResetPlayerRoundData();
-	ResetPlayerInventoryID();
-	
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	if (InPlayerState)
 	{
-		APTWPlayerController* PC = Cast<APTWPlayerController> (It->Get());
-		if (!PC) continue;
-
-		PC->ChangeState(NAME_Playing);
-		PC->ClientGotoState(NAME_Playing);
-
-		if (PC->PlayerState)
-		{
-			PC->PlayerState->SetIsSpectator(false);
-			PC->PlayerState->SetIsOnlyASpectator(false);
-		}
-
-		PC->SetControllerComponent(nullptr);
+		return (InPlayerState->GetDeathOrder() == 0);
 	}
 
-	// 로비로 이동 전 구매한 카오스 아이템 목록 삭제
-	if (!PTWGameState) return;
-	PTWGameState->ResetChaosItemEntries();
-	
-	TravelLevel();
+	return false;
 }
 
 void APTWMiniGameMode::ExitSpectatorMode(AController* Controller)

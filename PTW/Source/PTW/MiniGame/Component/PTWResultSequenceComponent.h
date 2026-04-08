@@ -8,6 +8,9 @@
 #include "PTWResultSequenceComponent.generated.h"
 
 
+class APTWPlayerState;
+class APTWResultCharacter;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PTW_API UPTWResultSequenceComponent : public UPTWGameModeBaseComponent
 {
@@ -15,10 +18,23 @@ class PTW_API UPTWResultSequenceComponent : public UPTWGameModeBaseComponent
 
 public:	
 	UPTWResultSequenceComponent();
-
+	
+	void StartResultSequence();
 protected:
 	virtual void BeginPlay() override;
 
 private:
-	void StartResultSequence();
+	
+	void FinishEndGameSequence();
+	
+	bool IsWinner(APTWPlayerState* PlayerState);
+
+	
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Rule|Result")
+	TSubclassOf<APTWResultCharacter> ResultCharacterClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Rule|Result")
+	float ResultSequenceDuration = 15.0f;
+
+	FTimerHandle ResultTimerHandle;
 };

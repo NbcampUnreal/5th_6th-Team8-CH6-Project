@@ -262,6 +262,29 @@ void UPTWGA_Fire::ApplyDamageToTarget(const FGameplayAbilityTargetDataHandle& Ta
 				SpecHandle.Data->SetSetByCallerMagnitude(Tag_Damage, -CurrentDamage);
 				ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, TargetData);
 			}
+
+			if (HitResult->bBlockingHit)
+			{
+				UAbilitySystemComponent* MyASC = GetAbilitySystemComponentFromActorInfo();
+				if (MyASC)
+				{
+					FGameplayCueParameters CueParams;
+					CueParams.Instigator = GetAvatarActorFromActorInfo();
+					CueParams.Location = HitResult->ImpactPoint;
+
+					if (HitResult->BoneName == FName("head"))
+					{
+						CueParams.AggregatedSourceTags.AddTag(
+							GameplayTags::State::HitReaction_HeadShot
+						);
+					}
+
+					MyASC->ExecuteGameplayCue(
+						GameplayTags::GameplayCue::Hit::Confirm,
+						CueParams
+					);
+				}
+			}
 		}
 		else
 		{

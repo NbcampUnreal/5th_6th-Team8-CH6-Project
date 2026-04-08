@@ -272,6 +272,32 @@ void UPTWUISubsystem::ShowDamageIndicator(const FVector& DamageCauserLocation)
 	Indicator->Init(DamageCauserLocation);
 }
 
+void UPTWUISubsystem::ShowHitIndicator(TSubclassOf<UUserWidget> WidgetClass, bool bHeadShot)
+{
+	if (!WidgetClass) return;
+
+	UUserWidget* Widget = CreatePersistentWidget(WidgetClass, 10);
+	if (!Widget) return;
+
+	Widget->SetVisibility(ESlateVisibility::Visible);
+
+	// ⭐ 타이머 리셋
+	GetWorld()->GetTimerManager().ClearTimer(HitIndicatorTimerHandle);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		HitIndicatorTimerHandle,
+		[this, Widget]()
+		{
+			if (IsValid(Widget))
+			{
+				Widget->SetVisibility(ESlateVisibility::Hidden);
+			}
+		},
+		0.1f,
+		false
+	);
+}
+
 UUserWidget* UPTWUISubsystem::GetOrCreateWidget(TSubclassOf<UUserWidget> WidgetClass)
 {
 	if (!WidgetClass)

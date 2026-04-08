@@ -348,22 +348,6 @@ void UPTWInventoryComponent::SetWeaponActorHidden(UPTWItemInstance* Weapon, bool
 	}
 }
 
-void UPTWInventoryComponent::SetSavedWeaponActor(AController* TargetController,
-	FSavedWeaponData SavedWeaponActors)
-{
-	SavedWeaponMaps.Add(TargetController, SavedWeaponActors);
-}
-
-const TArray<FWeaponPair>* UPTWInventoryComponent::GetWeaponActorsArr(AController* TargetController) const
-{
-	if (const FSavedWeaponData* FoundData = SavedWeaponMaps.Find(TargetController))
-	{
-		return &FoundData->WeaponArray;
-	}
-	
-	return nullptr;
-}
-
 void UPTWInventoryComponent::UseActiveItem()
 {
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());

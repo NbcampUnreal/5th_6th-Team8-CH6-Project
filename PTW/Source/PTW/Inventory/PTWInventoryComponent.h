@@ -45,21 +45,22 @@ public:
 	
 	FORCEINLINE TArray<TObjectPtr<UPTWWeaponInstance>> GetWeaponArray() const { return WeaponArr;}
 	
+	/* WeaponInstance Setter*/
 	void SetCurrentWeaponInst(const UPTWItemInstance* WeaponInst);
 	
+	/* 무기 비주얼 세팅 */
 	void WeaponVisibleSetting(const FGameplayTag& WeaponTag, bool bSetHidden);
 	
+	/* 인벤토리 Clear */
 	void ClearAndDestroyInventory();
 	
+	/* 장착 시 이벤트 보내주는 함수 */
 	void SendEquipEventToASC(int32 SlotIndex);
 	
+	/* 무기 액터 가려주는 함수*/
 	void SetWeaponActorHidden(UPTWItemInstance* Weapon, bool bInHidden);
 	
 	FORCEINLINE int32 GetCurrentSlotIndex() const { return CurSelectingWeaponSlot;}
-	
-	void SetSavedWeaponActor(AController* TargetController, FSavedWeaponData SavedWeaponActors);
-	
-	const TArray<FWeaponPair>* GetWeaponActorsArr(AController* TargetController) const;
 	
 	/*사용 아이템 사용 함수*/
 	UFUNCTION(BlueprintCallable)
@@ -69,32 +70,46 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool EquipActiveItem(UPTWItemInstance* ActiveItemInstance);
 	
+	/* 액티브 아이템 사용 함수 */
 	void ConsumeActiveItem();
 	
+	/* 추가된 아이템 Instance에 대한 설정 */
 	void OnItemInstanceCreated(UPTWItemInstance* ItemInstance);
 	
+	/* Passive 아이템 GE 적용 */
 	void ApplyAllPassiveItems(UPTWItemInstance* ItemInstance);
 	
+	/* Passive 아이템 GE 제거*/
 	void RemoveAllPassiveItems(UPTWItemInstance* ItemInstance);
 	
+	/* 무기 아이템 제거 */
 	void RemoveWeaponItem();
 	
+	/* 무기 아이템 GA 적용 */
 	void ApplyWeaponData();
 	
+	/* 무기 아이템 GA 제거 */
 	void RemoveWeaponData();
 	
+	/* 무기 드랍 */
 	void DropItem();
 	
 	FORCEINLINE const TArray<TObjectPtr<UPTWItemInstance>>& GetAllItems() const { return ItemArr; }
 	
+	/* 액티브 아이템 사용 시 부여된 SpecHandle 제거 */
 	void RemoveActiveItemGameplayAbilityHandle();
 	
+	/* 무기 배열 전부 제거 */
 	void ClearWeaponArr();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	
 	void SendGameplayEvent(UPTWItemInstance* ItemInstance, FGameplayTag SendTag, int32 SlotIndex);
+	
+public:
+	/* 델리게이트 */
+	FOnInventoryChanged OnInventoryChanged;
 	
 protected:
 	
@@ -118,8 +133,4 @@ private:
 	FGameplayAbilitySpecHandle CurrentWeaponAbilitySpec;
 	
 	TMap<AController*, FSavedWeaponData> SavedWeaponMaps;
-
-public:
-	/* 델리게이트 */
-	FOnInventoryChanged OnInventoryChanged;
 };

@@ -262,6 +262,7 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	
 	if (bWasSuccessful && SessionSearch.IsValid())
 	{
+		UE_LOG(Log_Steam, Display, TEXT("[게임세션 탐색응답] 스팀게임세션 탐색성공 응답"));
 		TArray<FOnlineSessionSearchResultBP> BPSearchResultInstances;
 		for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
 		{
@@ -274,6 +275,8 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 		}
 		
 		BPSearchResults += BPSearchResultInstances;
+		
+		// 마지막 탐색에서 리스트 반환
 		if(SessionSearchQueue.IsEmpty())
 		{
 			if (OnAllSessionSearchFinished.IsBound())
@@ -288,31 +291,30 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Session search failed."));
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 탐색응답] 스팀게임세션 탐색실패 응답"));
 	}
 }
 
 void UPTWSteamSessionSubsystem::LeaveGameSession()
 {
-	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] LeaveGameSession() called"));
+	if (!SessionInterface.IsValid()) return;
 	
-	if (SessionInterface.IsValid())
-	{
-		DestroySessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(
-			FOnDestroySessionCompleteDelegate::CreateUObject(this, &ThisClass::OnDestroySessionComplete));
+	DestroySessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(
+		FOnDestroySessionCompleteDelegate::CreateUObject(this, &ThisClass::OnDestroySessionComplete));
 		
-		SessionInterface->DestroySession(NAME_GameSession);
+	if (SessionInterface->DestroySession(NAME_GameSession))
+	{
+		UE_LOG(Log_Steam, Display, TEXT("[게임세션 파괴요청] 스팀게임세션 파괴요청 전송완료"));
 	}
 	else
 	{
-		OnDestroySessionComplete(NAME_GameSession, true);
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 파괴요청] 스팀게임세션 파괴요청 전송실패"));
+		OnDestroySessionComplete(NAME_GameSession, false);
 	}
 }
 
 void UPTWSteamSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] OnDestroySessionComplete() called"));
-	
 	if (SessionInterface.IsValid())
 	{
 		SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionDelegateHandle);
@@ -321,18 +323,6 @@ void UPTWSteamSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool
 	if (APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController())
 	{
 		PC->ClientTravel(TEXT("MainMenu?closed"), TRAVEL_Absolute);
-	}
-}
-
-void UPTWSteamSessionSubsystem::ExitGameSession()
-{
-	if (SessionInterface.IsValid())
-	{
-		if (SessionInterface.IsValid())
-		{
-			SessionInterface->DestroySession(NAME_GameSession); 
-			UE_LOG(LogTemp, Log, TEXT("Server's Steam Session Destroyed."));
-		}
 	}
 }
 
@@ -368,7 +358,7 @@ void UPTWSteamSessionSubsystem::Deinitialize()
 void UPTWSteamSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, 
 	ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
-	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] HandleNetworkFailure() called"));
+	UE_LOG(Log_Steam, Error, TEXT("[게임세션 오류] 스팀게임세션 끊김발생"));
 	LeaveGameSession();
 }
 

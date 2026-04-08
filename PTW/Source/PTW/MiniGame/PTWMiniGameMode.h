@@ -10,6 +10,7 @@
 #include "System/Prop/PTWPropData.h"
 #include "PTWMiniGameMode.generated.h"
 
+class UPTWResultSequenceComponent;
 class UPTWSpawnComponent;
 class UPTWWinConditionComponent;
 class UPTWInventoryComponent;
@@ -97,6 +98,8 @@ protected:
 	//* 미니 게임이 완전히 끝났을 때 호출하는 함수 */
 	virtual void EndGame() override;
 
+	//* 레벨 이동 */
+	virtual void TravelLevel() override;
 
 	//* Controller Component PlayerController에 연결 */
 	virtual void AttachControllerComponent(AController* Controller, UActorComponent* Component = nullptr);
@@ -126,7 +129,7 @@ protected:
 	
 	//연출 단계 함수
 	virtual void StartResultSequence();
-	void FinishEndGameSequence();
+	virtual bool IsWinner(APTWPlayerState* InPlayerState = nullptr) override;
 
 	// FIXME : 임시로 관전상태 해제테스트
 	/* 플레이어 관전상태 해제 */
@@ -165,21 +168,13 @@ protected:
 	
 	//UPROPERTY()
 	//TArray<TObjectPtr<APlayerStart>> PlayerStarts;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Rule|Result")
-	TSubclassOf<class APTWResultCharacter> ResultCharacterClass;
-	UPROPERTY(EditDefaultsOnly, Category = "Rule|Result")
-	float ResultSequenceDuration = 15.0f;
-
 	
 	/* 이미 게임 종료가 호출됬는지 체크 */
 	bool bIsGameEnded = false;
-
 	
 	FTimerHandle CountDownTimerHandle;
 	FTimerHandle CoinSpawnTimerHandle;
-	FTimerHandle ResultTimerHandle;
-
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	TObjectPtr<UDataTable> MiniGameMapTable;
 
@@ -225,4 +220,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UPTWSpawnComponent> SpawnComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPTWResultSequenceComponent> ResultSequenceComponent;
 };

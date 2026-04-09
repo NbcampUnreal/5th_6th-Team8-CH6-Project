@@ -183,9 +183,11 @@ void UPTWSteamSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoin
 	if (!SessionInterface.IsValid()) return;
 	
 	SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+	
 	FString ConnectString;
 	if (SessionInterface->GetResolvedConnectString(SessionName, ConnectString))
 	{
+		UE_LOG(Log_Steam, Display, TEXT("[게임세션 접속응답] 스팀게임세션 접속성공 응답"));
 		ConnectString += Options; 
 		if (APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController())
 		{
@@ -194,7 +196,12 @@ void UPTWSteamSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoin
 	}
 	else
 	{
-		UE_LOG(Log_Steam, Error, TEXT("게임세션 접속실패] 세션 접속 정보 해석 실패. 유효하지 않은 세션 또는 네트워크 상태 확인"));
+		if (OnSteamSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("JoinSteamSessionFailed", "스팀세션 접속에 실패했습니다.");
+			OnSteamSessionMessageReceived.Broadcast(ErrorMessage);
+		}
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 접속실패] 세션 접속 정보 해석 실패. 유효하지 않은 세션 또는 네트워크 상태 확인"));
 	}
 }
 

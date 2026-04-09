@@ -260,13 +260,13 @@ void UPTWGameLiftClientSubsystem::CreatePlayerSession(const FString& PlayerId, c
 	}
 	else
 	{
+		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
 		if (OnGameLiftSessionMessageReceived.IsBound())
 		{
 			FText ErrorMessage = LOCTEXT("HTTPRequestFailed", "네트워크 문제로 인해 서버에 세션 생성 요청을 보내지 못했습니다. 연결 상태를 확인해 주세요.");
 			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
 		}
 		UE_LOG(Log_GameLift, Error, TEXT("[플레이어세션 생성요청] 게임리프트 게임세션 - 플레이어세션 생성요청 전송실패 (GameSessionId:%s)"), *GameSessionId);
-		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
 	}
 }
 
@@ -298,12 +298,19 @@ void UPTWGameLiftClientSubsystem::CreatePlayerSession_Response(FHttpRequestPtr R
 		
 		FindByIdAndJoinSession(SessionData[SteamIdName], ConnectURL);
 	}
+	else
+	{
+		if (OnGameLiftSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("HTTPRequestFailed", "네트워크 문제로 인해 서버에 세션 생성 요청을 보내지 못했습니다. 연결 상태를 확인해 주세요.");
+			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
+		}
+	}
 }
 
 void UPTWGameLiftClientSubsystem::SearchGameSessions()
 {
-	FHttpModule* Http = &FHttpModule::Get();
-	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = Http->CreateRequest();
+	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	
 	Request->OnProcessRequestComplete().BindUObject(this, &ThisClass::SearchGameSessions_Response);
 	
@@ -312,7 +319,6 @@ void UPTWGameLiftClientSubsystem::SearchGameSessions()
 	Request->SetVerb(TEXT("GET"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	Request->ProcessRequest();
-	UE_LOG(LogTemp, Log, TEXT("Searching for game sessions..."));
 }
 
 void UPTWGameLiftClientSubsystem::SearchGameSessions_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -351,13 +357,13 @@ void UPTWGameLiftClientSubsystem::SearchQuickSession()
 	}
 	else
 	{
+		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
 		if (OnGameLiftSessionMessageReceived.IsBound())
 		{
 			FText ErrorMessage = LOCTEXT("HTTPRequestFailed", "네트워크 문제로 인해 서버에 세션 생성 요청을 보내지 못했습니다. 연결 상태를 확인해 주세요.");
 			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
 		}
 		UE_LOG(Log_DynamoDB, Error, TEXT("[DB레코드 추출요청] DB:GameSessionLists 레코드 추출요청 전송실패"));
-		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
 	}
 }
 
@@ -442,7 +448,7 @@ void UPTWGameLiftClientSubsystem::FindByIdAndJoinSession(const FString& SteamId,
 			
 			if (bWasSuccessful && DedicatedSessionSearch.IsValid())
 			{
-				UE_LOG(LogTemp, Log, TEXT("Search Complete! Found %d sessions."), DedicatedSessionSearch->SearchResults.Num());
+				UE_LOG(Log_Steam, Display, TEXT("[게임세션 탐색응답] 스팀게임세션 탐색성공 응답"));
 				for (const FOnlineSessionSearchResult& SearchResult : DedicatedSessionSearch->SearchResults)
 				{
 					FString TargetSessionId;
@@ -456,6 +462,10 @@ void UPTWGameLiftClientSubsystem::FindByIdAndJoinSession(const FString& SteamId,
 						return;
 					}
 				}
+			}
+			else
+			{
+				UE_LOG(Log_Steam, Error, TEXT("[게임세션 탐색응답] 스팀게임세션 탐색실패 응답"));
 			}
 			// 가끔 스팀에서 세션 탐색에 실패하면 재시도
 			if (GetWorld()->GetTimerManager().IsTimerActive(CheckSessionLitmitTimer))
@@ -472,17 +482,18 @@ void UPTWGameLiftClientSubsystem::FindByIdAndJoinSession(const FString& SteamId,
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	if (SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), DedicatedSessionSearch.ToSharedRef()))
 	{
-		UE_LOG(LogTemp, Log, TEXT("Session search started..."));
+		UE_LOG(Log_Steam, Display, TEXT("[게임세션 탐색요청] 스팀게임세션 탐색요청 전송완료"));
 	}
 	else
 	{
+		GetWorld()->GetTimerManager().ClearTimer(CheckSessionLitmitTimer);
 		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
-		UE_LOG(LogTemp, Warning, TEXT("Failed to start session search."));
 		if (OnGameLiftSessionMessageReceived.IsBound())
 		{
 			FText ErrorMessage = LOCTEXT("FindSteamSessionFailed", "스팀 세션 탐색에 실패했습니다.");
 			OnGameLiftSessionMessageReceived.Broadcast(ErrorMessage);
 		}
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 탐색요청] 스팀게임세션 탐색요청 전송실패"));
 	}
 }
 

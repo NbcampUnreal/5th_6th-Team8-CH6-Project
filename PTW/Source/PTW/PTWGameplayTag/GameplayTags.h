@@ -203,6 +203,7 @@ namespace GameplayTags
 		namespace Hit
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Wall);
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Confirm);
 		}
 		namespace MiniGame
 		{

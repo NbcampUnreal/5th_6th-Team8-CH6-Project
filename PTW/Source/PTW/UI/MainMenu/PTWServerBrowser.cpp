@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "PTWServerBrowser.h"
@@ -109,7 +109,7 @@ void UPTWServerBrowser::NativeConstruct()
 		ServerMenuBorder->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	
-	ServerMenuButton->SetVisibility(ESlateVisibility::Collapsed);
+	//ServerMenuButton->SetVisibility(ESlateVisibility::Collapsed);
 	FindServerButton->SetVisibility(ESlateVisibility::Collapsed);
 }
 

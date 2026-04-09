@@ -42,4 +42,6 @@ public:
 	
 	/** 승리 예상 선수 투표 */
 	virtual void VotePredictedPlayer(FUniqueNetIdRepl PredictedPlayer) = 0;
+
+	
 };

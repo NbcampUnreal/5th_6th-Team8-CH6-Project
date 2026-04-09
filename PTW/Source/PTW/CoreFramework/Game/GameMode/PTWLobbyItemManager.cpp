@@ -29,7 +29,7 @@ int32 UPTWLobbyItemManager::TakeSavingsReward(APTWPlayerState* PlayerState)
 	// 적금 아이템이 있을 경우 적금 골드를 받을 수 있는 지 확인하고 골드 추가
 	if (!PlayerState->GetLobbyItemData().SavingData.IsEmpty())
 	{
-		TArray<FSavingData> SavingDataArray = PlayerState->GetLobbyItemData().SavingData;
+		TArray<FSavingData>& SavingDataArray = PlayerState->GetLobbyItemData().SavingData;
 
 		if (SavingDataArray.IsEmpty()) return 0;
 		
@@ -51,7 +51,7 @@ int32 UPTWLobbyItemManager::TakePredictionWinReward(APTWPlayerState* PlayerState
 	UWorld* World = GetWorld();
 	if (!World) return 0;
 	
-	FUniqueNetIdRepl PredictedId = PlayerState->GetLobbyItemData().PredictedPlayer;
+	FUniqueNetIdRepl PredictedId = PlayerState->GetLobbyItemData().PredictedData.PredictedPlayer;
 	if (!PredictedId.IsValid()) return 0;
 	
 	UPTWScoreSubsystem* ScoreSubsystem = World->GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>();
@@ -66,7 +66,7 @@ int32 UPTWLobbyItemManager::TakePredictionWinReward(APTWPlayerState* PlayerState
 		{
 			AddGold(PlayerState, PredictionWinReward);
 			
-			//PlayerState->SetLobbyItemData()
+			PlayerState->GetLobbyItemData().PredictedData.PredictedPlayer = nullptr;
 		}
 	}
 	return  0;
@@ -146,9 +146,13 @@ void UPTWLobbyItemManager::HandlePredictionWin(APTWPlayerState* Buyer,
 {
 	if (!Buyer || !LobbyItemDefinition) return;
 
-	PredictionWinReward = LobbyItemDefinition->PredictionReward;
+	Buyer->GetLobbyItemData().PredictedData.RewardAmount = LobbyItemDefinition->PredictionReward;
 	
 	// 여기서 투표 ui 출력
+
+	//임시로 구매자가 승리 예측자로 설정
+
+	Buyer->GetLobbyItemData().PredictedData.PredictedPlayer = Buyer->GetUniqueId();
 }
 
 void UPTWLobbyItemManager::AddGold(APTWPlayerState* Buyer, int32 Gold)

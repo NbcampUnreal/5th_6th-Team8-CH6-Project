@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "CoreMinimal.h"
 #include "type_traits"
-#include "JsonObjectConverter.h"
 #include "Session/PTWSessionConfig.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Subsystems/GameInstanceSubsystem.h"
@@ -14,6 +13,9 @@ struct FOnlineSessionSearchResultBP;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionSearchComplete, const TArray<FPTWGameSessionListsTable>&, SearchResults);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameLiftSessionMessageReceived, const FText&, Message);
 
+/*
+ * 클라이언트 전용 로직을 관리하는 게임리프트 서브 시스템입니다.
+ */
 UCLASS()
 class PTW_API UPTWGameLiftClientSubsystem : public UGameInstanceSubsystem
 {

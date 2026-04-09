@@ -155,7 +155,8 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 	
 	// 데이터 초기화 및 골드 지급
 	PTWPlayerState->ResetInventoryItemId();
-	AddGold(PTWPlayerState, RoundClearBonusGold + LobbyItemManager->TakeSavingsReward(PTWPlayerState));
+	int32 LobbyItemReward = LobbyItemManager->TakeGoldReward(PTWPlayerState);
+	AddGold(PTWPlayerState, RoundClearBonusGold + LobbyItemReward);
 	
 }
 

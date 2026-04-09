@@ -166,11 +166,9 @@ void APTWPlayerController::OnVoicePressed()
 {
 	if (IsLocalPlayerController())
 	{
-		IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
-		if (Subsystem)
+		if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
 		{
-			IOnlineVoicePtr VoiceInterface = Subsystem->GetVoiceInterface();
-			if (VoiceInterface.IsValid())
+			if (IOnlineVoicePtr VoiceInterface = Subsystem->GetVoiceInterface())
 			{
 				VoiceInterface->StartNetworkedVoice(0);
 			}
@@ -182,11 +180,9 @@ void APTWPlayerController::OnVoiceReleased()
 {
 	if (IsLocalPlayerController())
 	{
-		IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
-		if (Subsystem)
+		if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
 		{
-			IOnlineVoicePtr VoiceInterface = Subsystem->GetVoiceInterface();
-			if (VoiceInterface.IsValid())
+			if (IOnlineVoicePtr VoiceInterface = Subsystem->GetVoiceInterface())
 			{
 				VoiceInterface->StopNetworkedVoice(0);
 			}
@@ -382,13 +378,13 @@ void APTWPlayerController::SetupInputComponent()
 			VoiceAction,
 			ETriggerEvent::Started,
 			this,
-			&APTWPlayerController::OnVoicePressed
+			&ThisClass::OnVoicePressed
 		);
 		EIC->BindAction(
 			VoiceAction,
 			ETriggerEvent::Completed,
 			this,
-			&APTWPlayerController::OnVoiceReleased
+			&ThisClass::OnVoiceReleased
 		);
 
 		// 개발자용 UI (F6)

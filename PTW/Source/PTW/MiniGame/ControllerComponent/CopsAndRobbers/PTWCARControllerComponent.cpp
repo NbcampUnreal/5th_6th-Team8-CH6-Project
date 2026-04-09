@@ -1,18 +1,23 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "PTWCARControllerComponent.h"
-
+﻿#include "PTWCARControllerComponent.h"
 #include "Components/WidgetComponent.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
-#include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "GameFramework/PlayerState.h"
-#include "Net/UnrealNetwork.h"
 
 UPTWCARControllerComponent::UPTWCARControllerComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
+}
+
+void UPTWCARControllerComponent::ClientRPC_TargetDestroyNameTag_Implementation(APlayerState* TargetState)
+{
+	if (IsRunningDedicatedServer()) return;
+	if (!IsValid(TargetState)) return;
+	
+	if (APTWPlayerCharacter* TargetCharacter = TargetState->GetPawn<APTWPlayerCharacter>())
+	{
+		TargetCharacter->GetNameTagWidget()->DestroyComponent();
+	}
 }
 
 void UPTWCARControllerComponent::BeginPlay()
@@ -35,22 +40,4 @@ void UPTWCARControllerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	// DOREPLIFETIME(ThisClass, TeamId);
-}
-
-void UPTWCARControllerComponent::InitializeController()
-{
-}
-
-void UPTWCARControllerComponent::ClientRPC_TargetDestroyNameTag_Implementation(APlayerState* TargetState)
-{
-	if (IsRunningDedicatedServer()) return;
-	if (!IsValid(TargetState)) return;
-		
-	if (IPTWPlayerDataInterface* TargetRoundData = Cast<IPTWPlayerDataInterface>(TargetState))
-	{
-		APTWPlayerCharacter* TargetCharacter = TargetState->GetPawn<APTWPlayerCharacter>();
-		if (!IsValid(TargetCharacter)) return;
-		
-		TargetCharacter->GetNameTagWidget()->DestroyComponent();
-	}
 }

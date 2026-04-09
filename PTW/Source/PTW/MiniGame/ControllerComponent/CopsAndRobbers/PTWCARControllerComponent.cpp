@@ -46,7 +46,7 @@ void UPTWCARControllerComponent::ClientRPC_TargetDestroyNameTag_Implementation(A
 	if (IsRunningDedicatedServer()) return;
 	if (!IsValid(TargetState)) return;
 		
-	if (IPTWPlayerRoundDataInterface* TargetRoundData = Cast<IPTWPlayerRoundDataInterface>(TargetState))
+	if (IPTWPlayerDataInterface* TargetRoundData = Cast<IPTWPlayerDataInterface>(TargetState))
 	{
 		APTWPlayerCharacter* TargetCharacter = TargetState->GetPawn<APTWPlayerCharacter>();
 		if (!IsValid(TargetCharacter)) return;

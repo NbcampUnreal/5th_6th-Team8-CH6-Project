@@ -4,12 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "PTWGameModeInterface.generated.h"
+#include "PTWMiniGameModeInterface.generated.h"
 
+struct FPTWMiniGameRule;
 class APTWPlayerState;
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UPTWGameModeInterface : public UInterface
+class UPTWMiniGameModeInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -17,7 +18,7 @@ class UPTWGameModeInterface : public UInterface
 /**
  * 
  */
-class PTW_API IPTWGameModeInterface
+class PTW_API IPTWMiniGameModeInterface
 {
 	GENERATED_BODY()
 
@@ -27,4 +28,5 @@ public:
 	virtual void RestartPlayer(AController*) = 0;
 	virtual void TravelLevel() = 0;
 	virtual bool IsWinner(APTWPlayerState* PlayerState) = 0;
+	virtual const FPTWMiniGameRule* GetMiniGameRule() const = 0;
 };

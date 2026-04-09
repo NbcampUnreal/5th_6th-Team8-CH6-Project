@@ -93,6 +93,6 @@ struct FPTWLobbyItemData
 	
 	// 승리 예측 플레이어
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<APTWPlayerState> PredictedPlayer = nullptr;
+	FUniqueNetIdRepl PredictedPlayer = nullptr;
 
 };

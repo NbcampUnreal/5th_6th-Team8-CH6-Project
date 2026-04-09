@@ -19,13 +19,10 @@ public:
 	// Sets default values for this component's properties
 	UPTWSpawnComponent();
 
-
-	void InitSpawnComponent(const FPTWMiniGameRule* InMiniGameRule);
+	
 	//* 리스폰 타이머 시작 함수 */
 	void RespawnPlayer(APTWPlayerController* SpawnPlayerController);
 	//* RestartPlayer함수 실행  */
 	void HandleRespawn(APTWPlayerController* PlayerController);
-
-private:
-	const FPTWMiniGameRule* MiniGameRule;
+	
 };

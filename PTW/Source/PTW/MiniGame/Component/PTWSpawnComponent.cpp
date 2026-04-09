@@ -5,7 +5,7 @@
 
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
-#include "CoreFramework/Interface/PTWGameModeInterface.h"
+#include "CoreFramework/Interface/PTWMiniGameModeInterface.h"
 #include "MiniGame/PTWMiniGameRule.h"
 
 // Sets default values for this component's properties
@@ -14,13 +14,10 @@ UPTWSpawnComponent::UPTWSpawnComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UPTWSpawnComponent::InitSpawnComponent(const FPTWMiniGameRule* InMiniGameRule)
-{
-	MiniGameRule = InMiniGameRule;
-}
-
 void UPTWSpawnComponent::RespawnPlayer(APTWPlayerController* SpawnPlayerController)
 {
+	if (!MiniGameRule) return;
+	
 	if (MiniGameRule->SpawnRule.bUseRespawn == false) return;
 	
 	if (IsValid(SpawnPlayerController))
@@ -39,8 +36,9 @@ void UPTWSpawnComponent::RespawnPlayer(APTWPlayerController* SpawnPlayerControll
 void UPTWSpawnComponent::HandleRespawn(APTWPlayerController* PlayerController)
 {
 	if (!IsValid(PlayerController)) return;
-
-	IPTWGameModeInterface* GameModeInterface = Cast<IPTWGameModeInterface>(GetOwner());
+	if (!MiniGameRule) return;
+	
+	IPTWMiniGameModeInterface* GameModeInterface = Cast<IPTWMiniGameModeInterface>(GetOwner());
 	if (!GameModeInterface) return;
 	
 	GameModeInterface->RestartPlayer(PlayerController);

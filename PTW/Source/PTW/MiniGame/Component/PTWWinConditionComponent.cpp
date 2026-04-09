@@ -3,10 +3,10 @@
 
 #include "MiniGame/Component/PTWWinConditionComponent.h"
 
-#include "CoreFramework/PTWPlayerRoundDataInterface.h"
+#include "CoreFramework/PTWPlayerDataInterface.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
-#include "CoreFramework/Interface/PTWGameModeInterface.h"
+#include "CoreFramework/Interface/PTWMiniGameModeInterface.h"
 #include "GameFramework/PlayerState.h"
 
 
@@ -14,41 +14,36 @@ UPTWWinConditionComponent::UPTWWinConditionComponent()
 {
 }
 
-void UPTWWinConditionComponent::InitWinConditionComponent(APTWGameState* InGameState,
-                                                          const FPTWMiniGameRule* InMiniGameRule)
-{
-	this->GameState = InGameState;
-	this->MiniGameRule = InMiniGameRule;
-}
-
 void UPTWWinConditionComponent::CheckEndGameCondition()
 {
+	if (!GameState || !MiniGameRule) return;
+
+	IPTWMiniGameModeInterface* GameModeInterface = Cast<IPTWMiniGameModeInterface>(GetOwner());
+	if (!GameModeInterface) return;
+	
 	switch (MiniGameRule->WinConditionRule.WinType)
 	{
 	case EPTWWinType::Survival:
-		CheckSurvivalCondition();
+		CheckSurvivalCondition(GameModeInterface);
 		break;
 	case EPTWWinType::Target:
-		CheckTargetScoreCondition();
+		CheckTargetScoreCondition(GameModeInterface);
 		break;
 	default:
 		break;
 	}
 }
 
-void UPTWWinConditionComponent::CheckSurvivalCondition()
+void UPTWWinConditionComponent::CheckSurvivalCondition(IPTWMiniGameModeInterface* GameModeInterface)
 {
-	if (!GameState) return;
-
-	IPTWGameModeInterface* GameModeInterface = Cast<IPTWGameModeInterface>(GetOwner());
-	if (!GameModeInterface) return;
+	if (!GameState || !MiniGameRule || !GameModeInterface) return;
 	
 	if (MiniGameRule->TeamRule.bUseTeam)
 	{
 		TSet<int32> AliveTeams;
 		for (APlayerState* Player : GameState->AlivePlayers)
 		{
-			if (IPTWPlayerRoundDataInterface* PlayerRoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(Player))
+			if (IPTWPlayerDataInterface* PlayerRoundDataInterface = Cast<IPTWPlayerDataInterface>(Player))
 			{
 				AliveTeams.Add(PlayerRoundDataInterface->GetTeamId());
 			}
@@ -62,7 +57,7 @@ void UPTWWinConditionComponent::CheckSurvivalCondition()
 		else if (AliveTeams.IsEmpty())
 		{
 			// 생존 팀이 없을 경우 가장 마지막에 죽은 플레이어의 팀 승리
-			if (IPTWPlayerRoundDataInterface* Last = FindLastDeadPlayer())
+			if (IPTWPlayerDataInterface* Last = FindLastDeadPlayer())
 			{
 				GameState->SetWinTeamId(Last->GetTeamId());
 				GameModeInterface->EndGame();
@@ -77,7 +72,7 @@ void UPTWWinConditionComponent::CheckSurvivalCondition()
 		}
 		else if (GameState->AlivePlayers.IsEmpty())
 		{
-			if (IPTWPlayerRoundDataInterface* Last = FindLastDeadPlayer())
+			if (IPTWPlayerDataInterface* Last = FindLastDeadPlayer())
 			{
 				GameState->AlivePlayers.Add(Cast<APlayerState>(Last));
 				GameModeInterface->EndGame();
@@ -86,12 +81,9 @@ void UPTWWinConditionComponent::CheckSurvivalCondition()
 	}
 }
 
-void UPTWWinConditionComponent::CheckTargetScoreCondition()
+void UPTWWinConditionComponent::CheckTargetScoreCondition(IPTWMiniGameModeInterface* GameModeInterface)
 {
-	if (!GameState) return;
-
-	IPTWGameModeInterface* GameModeInterface = Cast<IPTWGameModeInterface>(GetOwner());
-	if (!GameModeInterface) return;
+	if (!GameState || !MiniGameRule || !GameModeInterface) return;
 	
 	if (MiniGameRule->TeamRule.bUseTeam && MiniGameRule->TeamRule.bShareScoreWithinTeam)
 	{
@@ -122,16 +114,16 @@ void UPTWWinConditionComponent::CheckTargetScoreCondition()
 	}
 }
 
-IPTWPlayerRoundDataInterface* UPTWWinConditionComponent::FindLastDeadPlayer()
+IPTWPlayerDataInterface* UPTWWinConditionComponent::FindLastDeadPlayer()
 {
 	if (!GameState) return nullptr;
 	
-	IPTWPlayerRoundDataInterface* LastInterface = nullptr;
+	IPTWPlayerDataInterface* LastInterface = nullptr;
 	int32 HighDeathOrder = -1;
 
 	for (APlayerState* Player : GameState->PlayerArray)
 	{
-		if (IPTWPlayerRoundDataInterface* Interface = Cast<IPTWPlayerRoundDataInterface>(Player))
+		if (IPTWPlayerDataInterface* Interface = Cast<IPTWPlayerDataInterface>(Player))
 		{
 			if (Interface->GetDeathOrder() > HighDeathOrder)
 			{

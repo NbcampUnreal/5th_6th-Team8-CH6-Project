@@ -6,7 +6,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameFramework/PlayerState.h"
 #include "PTWPlayerData.h"
-#include "PTWPlayerRoundDataInterface.h"
+#include "PTWPlayerDataInterface.h"
 #include "PTWPlayerState.generated.h"
 
 
@@ -23,7 +23,7 @@ class UPTWWeaponAttributeSet;
 class APTWShopNPC;
 
 UCLASS()
-class PTW_API APTWPlayerState : public APlayerState, public IAbilitySystemInterface, public IPTWPlayerRoundDataInterface
+class PTW_API APTWPlayerState : public APlayerState, public IAbilitySystemInterface, public IPTWPlayerDataInterface
 {
 	GENERATED_BODY()
 	
@@ -62,7 +62,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	void SetLobbyItemData(const FPTWLobbyItemData& NewData);
-	FPTWLobbyItemData& GetLobbyItemData() {return LobbyItemData;}
+	const FPTWLobbyItemData& GetLobbyItemData() const {return LobbyItemData;}
 
 	void SetMiniGameComponent(UActorComponent* NewMiniGameComponent);
 	FORCEINLINE UActorComponent* GetMiniGameComponent(){return MiniGameComponent;}
@@ -140,6 +140,8 @@ public:
 	virtual void AddScore(int32 AddScore) override;
 	virtual void ResetRoundData() override;
 
+	virtual void VotePredictedPlayer(FUniqueNetIdRepl PredictedPlayer) override;
+	
 	UFUNCTION(BlueprintCallable)
 	void AddGold(int32 Amount);
 

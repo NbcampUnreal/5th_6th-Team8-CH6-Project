@@ -101,7 +101,7 @@ void APTWGameState::AddRankedPlayer(APTWPlayerState* NewPlayerState)
 
 void APTWGameState::AddTeamScore(APlayerState* Player, int32 Score)
 {
-	if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(Player))
+	if (IPTWPlayerDataInterface* RoundDataInterface = Cast<IPTWPlayerDataInterface>(Player))
 	{
 		int32 TeamId = RoundDataInterface->GetTeamId();
 		Teams[TeamId].TeamScore += Score;

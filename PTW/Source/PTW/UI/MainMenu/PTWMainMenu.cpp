@@ -85,7 +85,7 @@ void UPTWMainMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 void UPTWMainMenu::OnClickedPlayButton()
 {
-#if WITH_EDITOR
+#if WITH_EDITOR || true
 	if (IsValid(ServerBrowserClass))
 	{
 		if (ULocalPlayer* LP = GetOwningLocalPlayer())

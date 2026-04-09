@@ -80,6 +80,8 @@ public:
 	UFUNCTION()
 	void ShowDamageIndicator(const FVector& DamageCauserLocation);
 	void SetDamageIndicatorClass(TSubclassOf<UPTWDamageIndicator> InClass) { DamageIndicatorClass = InClass; }
+	/* 히트 인디케이터 */
+	void ShowHitIndicator(TSubclassOf<UUserWidget> WidgetClass, bool bHeadShot);
 
 	/* 채팅 */
 	void SetChatInputClass(TSubclassOf<UPTWChatInput> InClass) { ChatInputClass = InClass; }
@@ -134,6 +136,8 @@ private:
 	
 	/* ASC get 타이머 */
 	FTimerHandle ASCInitTimerHandle;
+
+	FTimerHandle HitIndicatorTimerHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> PopupWidgetClass;

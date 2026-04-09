@@ -50,7 +50,8 @@ void UPTWRankingBoard::UnbindPlayerStates()
 	{
 		if (PS)
 		{
-			PS->OnPlayerDataUpdated.RemoveAll(this);
+			//PS->OnPlayerDataUpdated.RemoveAll(this);
+			PS->OnPlayerDataUpdated.RemoveDynamic(this, &ThisClass::OnPlayerDataChanged);
 		}
 	}
 	CachedPlayerStates.Empty();

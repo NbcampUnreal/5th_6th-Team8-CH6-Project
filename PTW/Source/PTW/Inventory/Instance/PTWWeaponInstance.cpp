@@ -73,6 +73,18 @@ int32 UPTWWeaponInstance::GetMaxAmmo()
 	return 0;
 }
 
+int32 UPTWWeaponInstance::GetCurrentAmmo()
+{
+	if (APTWPlayerCharacter* PlayerCharacter = GetItemInstanceOwner())
+	{
+		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(PlayerCharacter))
+		{
+			return ASC->GetNumericAttribute(UPTWWeaponAttributeSet::GetCurrentAmmoAttribute());
+		}
+	}
+	return 0;
+}
+
 APTWPlayerCharacter* UPTWWeaponInstance::GetItemInstanceOwner()
 {
 	UPTWInventoryComponent* OwnerComp = Cast<UPTWInventoryComponent>(GetOuter());
@@ -90,6 +102,6 @@ APTWPlayerCharacter* UPTWWeaponInstance::GetItemInstanceOwner()
 
 void UPTWWeaponInstance::CopyProperties(UPTWWeaponInstance& CopyInst)
 {
-	CurrentAmmo = CopyInst.GetMaxAmmo();
+	CurrentAmmo = CopyInst.GetWeaponData()->MaxAmmo;
 	bAlreadyUsing = CopyInst.bAlreadyUsing;
 }

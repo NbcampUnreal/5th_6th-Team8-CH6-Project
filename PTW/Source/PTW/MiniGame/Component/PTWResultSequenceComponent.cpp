@@ -25,11 +25,9 @@ void UPTWResultSequenceComponent::StartResultSequence()
 {
 	UWorld* World = GetWorld();
 	if (!World) return;
-
-	if (GameState)
-	{
-		GameState->SetCurrentPhase(EPTWGamePhase::MiniGameResult);
-	}
+	if (!GameState) return;
+	
+	GameState->SetCurrentPhase(EPTWGamePhase::MiniGameResult);
 
 	AActor* ResultCamera = nullptr;
 	TArray<AActor*> FoundActors;
@@ -45,6 +43,9 @@ void UPTWResultSequenceComponent::StartResultSequence()
 	int32 CurrentWinIndex = 0;
 	int32 CurrentLoseIndex = 0;
 
+	TArray<FPTWLastWinnerInfo>& LastWinnerInfo = GameState->GameData.LastWinnerInfos;
+	LastWinnerInfo.Empty();
+	
 	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
 	{
 		APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get());
@@ -91,6 +92,11 @@ void UPTWResultSequenceComponent::StartResultSequence()
 
 			if (bIsWinner)
 			{
+				FPTWLastWinnerInfo WinnerInfo;
+				WinnerInfo.WinnerId = PS->GetUniqueId();
+
+				LastWinnerInfo.Add(WinnerInfo);
+				
 				if (WinSpots.IsValidIndex(CurrentWinIndex))
 				{
 					SpawnLoc = WinSpots[CurrentWinIndex]->GetActorLocation();
@@ -152,7 +158,7 @@ void UPTWResultSequenceComponent::FinishEndGameSequence()
 		PC->SetControllerComponent(nullptr);
 	}
 
-	IPTWGameModeInterface* GameModeInterface = Cast<IPTWGameModeInterface>(GetOwner());
+	IPTWMiniGameModeInterface* GameModeInterface = Cast<IPTWMiniGameModeInterface>(GetOwner());
 	if (!GameModeInterface) return;
 	
 	GameModeInterface->TravelLevel();
@@ -160,7 +166,7 @@ void UPTWResultSequenceComponent::FinishEndGameSequence()
 
 bool UPTWResultSequenceComponent::IsWinner(APTWPlayerState* PlayerState)
 {
-	IPTWGameModeInterface* GameModeInterface = Cast<IPTWGameModeInterface>(GetOwner());
+	IPTWMiniGameModeInterface* GameModeInterface = Cast<IPTWMiniGameModeInterface>(GetOwner());
 	if (!GameModeInterface) return false;
 	
 	return GameModeInterface->IsWinner(PlayerState);

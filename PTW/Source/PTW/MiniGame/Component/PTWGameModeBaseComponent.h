@@ -7,6 +7,7 @@
 #include "PTWGameModeBaseComponent.generated.h"
 
 
+struct FPTWMiniGameRule;
 class APTWGameState;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -19,9 +20,10 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	
 
 protected:
 	UPROPERTY()
 	TObjectPtr<APTWGameState> GameState;
+
+	const FPTWMiniGameRule* MiniGameRule;
 };

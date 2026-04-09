@@ -8,6 +8,7 @@
 #include "Instance/PTWItemInstance.h"
 #include "../Weapon/PTWWeaponActor.h"
 #include "CoreFramework/PTWCombatInterface.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "CoreFramework/Character/Component/PTWWeaponComponent.h"
 #include "Engine/ActorChannel.h"
@@ -352,41 +353,30 @@ void UPTWInventoryComponent::SetWeaponActorHidden(UPTWItemInstance* Weapon, bool
 void UPTWInventoryComponent::UseActiveItem()
 {
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
-	
-	// if (ASC && ActiveItemAbilityHandle.IsValid())
-	// {
-	// 	// 핸들 숫자만 보는게 아니라, 실제 스펙(데이터)이 내 ASC에 있는지 확인
-	// 	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(ActiveItemAbilityHandle);
- //    
-	// 	if (Spec)
-	// 	{
-	// 		ASC->TryActivateAbility(ActiveItemAbilityHandle);
-	// 	}
-	// 	else
-	// 	{
-	// 		// 아직 데이터가 복제되지 않았음을 알 수 있음
-	// 		UE_LOG(LogTemp, Warning, TEXT("핸들 값은 있지만, 아직 ASC에 등록되지 않았습니다 (복제 대기 중)"));
-	// 	}
-	// }
-	
-	
-	if (ASC && ActiveItemAbilityHandle.IsValid())
-	{
-		FString RoleString = GetOwner()->HasAuthority() ? TEXT("Server") : TEXT("Client");
-		UE_LOG(LogTemp, Log, TEXT("[%s] Handle Value: %s"), *RoleString, *ActiveItemAbilityHandle.ToString());
+	if (!ASC) return;
 
-		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(ActiveItemAbilityHandle);
-		if (!Spec)
+	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(ActiveItemAbilityHandle);
+
+	if (!Spec && CurrentActiveItemSlot && CurrentActiveItemSlot->ItemDef->AbilityToGrant) // 사용 시점에 Spec이 없다면 -> 재할당
+	{
+		TSubclassOf<UGameplayAbility> AbilityClass = CurrentActiveItemSlot->ItemDef->AbilityToGrant;
+        
+		Spec = ASC->FindAbilitySpecFromClass(AbilityClass);
+
+		if (Spec)
 		{
-			// 여기서 ASC가 가진 모든 어빌리티 핸들을 출력해봅니다.
-			for (const FGameplayAbilitySpec& AbilitySpec : ASC->GetActivatableAbilities())
-			{
-				UE_LOG(LogTemp, Log, TEXT("[%s] Registred Handle: %s"), *RoleString, *AbilitySpec.Handle.ToString());
-			}
+			ActiveItemAbilityHandle = Spec->Handle;
+		}
+		else if (GetOwner()->HasAuthority())
+		{
+			ActiveItemAbilityHandle = ASC->GiveAbility(FGameplayAbilitySpec(AbilityClass, 1));
+			Spec = ASC->FindAbilitySpecFromHandle(ActiveItemAbilityHandle);
 		}
 	}
-	
-	
+	if (Spec)
+	{
+		ASC->TryActivateAbility(ActiveItemAbilityHandle);
+	}
 }
 
 
@@ -413,6 +403,8 @@ bool UPTWInventoryComponent::EquipActiveItem(UPTWItemInstance* ActiveItemInstanc
 	if (GetOwner()->HasAuthority())
 	{
 		FGameplayAbilitySpec Spec(AbilityClass, 1, INDEX_NONE, this);
+		CurrentActiveItemSlot = Cast<UPTWActiveItemInstance>(ActiveItemInstance);
+		CurrentActiveItemSlot->SetCurrentCount();
 		ActiveItemAbilityHandle = ASC->GiveAbility(Spec);
 	}
 

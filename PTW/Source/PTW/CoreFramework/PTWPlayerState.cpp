@@ -266,7 +266,7 @@ void APTWPlayerState::VotePredictedPlayer(FUniqueNetIdRepl PredictedPlayer)
 {
 	if (HasAuthority())
 	{
-		LobbyItemData.PredictedPlayer = PredictedPlayer;
+		LobbyItemData.PredictedData.PredictedPlayer = PredictedPlayer;
 	}
 }
 

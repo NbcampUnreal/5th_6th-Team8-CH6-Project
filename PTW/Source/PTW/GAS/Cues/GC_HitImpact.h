@@ -26,5 +26,8 @@ protected:
 	TObjectPtr<UNiagaraSystem> WallHitImpactFX;
 
 	UPROPERTY(EditAnywhere, Category = "Effects")
-	TObjectPtr<USoundBase> ImpactSound;
+	TObjectPtr<USoundBase> PlayerImpactSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	TObjectPtr<USoundBase> ETCImpactSound;
 };

@@ -202,6 +202,7 @@ namespace GameplayTags
 		namespace Hit
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Wall, "GameplayCue.Hit.Wall");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Confirm, "GameplayCue.Hit.Confirm");
 		}
 		
 		namespace MiniGame

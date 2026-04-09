@@ -9,11 +9,17 @@
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/GameState.h"
 #include "GameFramework/PlayerState.h"
+#include "GameFramework/SpectatorPawn.h"
 #include "GameplayTagContainer.h"
 #include "EngineUtils.h"
 #include "Components/WidgetComponent.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/PostProcessVolume.h"
+#include "OnlineSubsystemUtils.h"
 
+#include "PTWGameplayTag/GameplayTags.h"
 #include "CoreFramework/PTWGameUserSettings.h"
 #include "CoreFramework/PTWBaseCharacter.h"
 #include "CoreFramework/PTWPlayerCharacter.h"
@@ -21,7 +27,8 @@
 #include "CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "CoreFramework/Character/Component/PTWUIControllerComponent.h"
-#include "GameFramework/SpectatorPawn.h"
+#include "CoreFramework/Character/Component/PTWDeveloperComponent.h"
+#include "CoreFrameWork/Game/GameMode/PTWLobbyGameMode.h"
 #include "UI/PTWUISubsystem.h"
 #include "UI/PTWHUD.h"
 #include "UI/PTWInGameHUD.h"
@@ -31,21 +38,13 @@
 #include "UI/InGameUI/PTWDamageIndicator.h"
 #include "UI/MiniGame/PTWGameStartTimer.h"
 #include "UI/MiniGame/Bomb/PTWBombWarning.h"
-#include "Inventory/Instance/PTWItemInstance.h"
-#include "Kismet/GameplayStatics.h"
-#include "Net/UnrealNetwork.h"
-#include "System/PTWSteamSessionSubsystem.h"
-#include "Weapon/PTWWeaponActor.h"
-#include "MiniGame/Item/BombItem/PTWBombActor.h"
-#include "OnlineSubsystemUtils.h"
 #include "UI/Dev/PTWDevWidget.h"
-#include "CoreFramework/Character/Component/PTWDeveloperComponent.h"
+#include "MiniGame/Item/BombItem/PTWBombActor.h"
 #include "MiniGame/ControllerComponent/Abyss/PTWAbyssControllerComponent.h"
 #include "MiniGame/ControllerComponent/GhostChase/PTWGhostChaseControllerComponent.h"
-#include "Engine/PostProcessVolume.h"
-#include "EngineUtils.h"
-#include "Game/GameMode/PTWLobbyGameMode.h"
-#include "PTWGameplayTag/GameplayTags.h"
+#include "Inventory/Instance/PTWItemInstance.h"
+#include "System/PTWSteamSessionSubsystem.h"
+#include "Weapon/PTWWeaponActor.h"
 
 APTWPlayerController::APTWPlayerController()
 {
@@ -136,7 +135,6 @@ void APTWPlayerController::BindBombDelegate(APTWBombActor* NewBomb)
 		CachedBombActor->OnBombOwnerChanged.AddUObject(this, &APTWPlayerController::HandleBombOwnerChanged);
 	}
 
-	// UI 생성
 	if (!BombWarningWidgetClass) return;
 
 	UUserWidget* Widget = UISubsystem->ShowSystemWidget(BombWarningWidgetClass, 70);
@@ -146,7 +144,6 @@ void APTWPlayerController::BindBombDelegate(APTWBombActor* NewBomb)
 	}
 	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, false);
 
-	// 바인딩 시점에 이미 폭탄 주인이 결정되어 있다면 UI에 전달
 	if (CachedBombActor->GetBombOwnerPawn())
 	{
 		HandleBombOwnerChanged(CachedBombActor->GetBombOwnerPawn());
@@ -155,13 +152,11 @@ void APTWPlayerController::BindBombDelegate(APTWBombActor* NewBomb)
 
 void APTWPlayerController::UnBindBombDelegate()
 {
-	// 델리게이트 제거
 	if (CachedBombActor)
 	{
 		CachedBombActor->OnBombOwnerChanged.RemoveAll(this);
 	}
 
-	// UI 제거
 	if (!BombWarningWidgetClass) return;
 
 	UISubsystem->HideSystemWidget(BombWarningWidgetClass);
@@ -177,7 +172,6 @@ void APTWPlayerController::OnVoicePressed()
 			IOnlineVoicePtr VoiceInterface = Subsystem->GetVoiceInterface();
 			if (VoiceInterface.IsValid())
 			{
-				UE_LOG(LogTemp, Warning, TEXT("OnVoicePressed"))
 				VoiceInterface->StartNetworkedVoice(0);
 			}
 		}
@@ -206,18 +200,11 @@ void APTWPlayerController::BeginPlay()
 
 	if (!IsLocalController()) return;
 
-	/*if (UIControllerComponent)
-	{
-		UIControllerComponent->InitializeUIComponent(this);
-	}*/
-
-	/* UI 서브시스템 등록 */
 	if (ULocalPlayer* LP = GetLocalPlayer())
 	{
 		UISubsystem = LP->GetSubsystem<UPTWUISubsystem>();
 	}
 
-	/* Input Mapping Context 추가 */
 	if (ULocalPlayer* LP = GetLocalPlayer())
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
@@ -229,23 +216,17 @@ void APTWPlayerController::BeginPlay()
 
 	UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::GameOnly);
 
-	/* 게임설정 */
 	if (UPTWGameUserSettings* Settings = Cast<UPTWGameUserSettings>(UGameUserSettings::GetGameUserSettings()))
 	{
 		CurrentMouseSensitivity = Settings->MouseSensitivity;
 	}
 
 	ReInitializeUI();
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 BeginPlay - ReInitializeUI 함수 호출됨."), 
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 EndPlay 함수 호출됨."), 
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::OnRep_PlayerState()
@@ -257,7 +238,6 @@ void APTWPlayerController::OnRep_PlayerState()
 		return;
 	}
 
-	/* ASC 등록 */
 	APTWPlayerState* PS = GetPlayerState<APTWPlayerState>();
 	if (PS)
 	{
@@ -268,42 +248,27 @@ void APTWPlayerController::OnRep_PlayerState()
 void APTWPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnRep_Pawn 함수 호출됨."), 
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 
 	ReInitializeUI();
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnRep_Pawn - ReInitializeUI 함수 호출됨."),
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	/* 로딩완료 */
 	Server_ReportLoadingComplete();
-	
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 컨트롤러 Possess 함수 호출됨."), 
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 
 	ReInitializeUI();
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnPossess - ReInitializeUI 함수 호출됨."), 
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::OnUnPossess()
 {
 	Super::OnUnPossess();
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 OnUnPossess 함수 호출됨."), 
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 void APTWPlayerController::BeginSpectatingState()
 {
 	Super::BeginSpectatingState();
-	
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 BeginSpectatingState 함수 호출됨."), 
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
 }
 
 ASpectatorPawn* APTWPlayerController::SpawnSpectatorPawn()
@@ -343,19 +308,8 @@ ASpectatorPawn* APTWPlayerController::SpawnSpectatorPawn()
 					{
 						SpawnedSpectator->SetActorTickEnabled(true);
 					}
-
-					UE_LOG(LogPlayerController, Verbose, TEXT("Spawned spectator %s [server:%d]"), *GetNameSafe(SpawnedSpectator), GetNetMode() < NM_Client);
-				}
-				else
-				{
-					UE_LOG(LogPlayerController, Warning, TEXT("Failed to spawn spectator with class %s"), *GetNameSafe(SpectatorClass));
 				}
 			}
-		}
-		else
-		{
-			// This normally happens on clients if the Player is replicated but the GameState has not yet.
-			UE_LOG(LogPlayerController, Verbose, TEXT("NULL GameState when trying to spawn spectator!"));
 		}
 	}
 
@@ -369,7 +323,6 @@ void APTWPlayerController::NotifyLoadedWorld(FName WorldPackageName, bool bFinal
 	if (bFinalDest && IsLocalController())
 	{
 		//Server_NotifyMapLoaded();
-		UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] Server_NotifyMapLoaded 함수 호출됨."));
 	}
 }
 
@@ -452,9 +405,6 @@ void APTWPlayerController::PostSeamlessTravel()
 {
 	Super::PostSeamlessTravel();
 
-	UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] %s 플레이어 PostSeamlessTravel 함수 호출됨."), 
-		PlayerState ? *PlayerState->GetPlayerName() : TEXT("Unknown"));
-
 	// 로컬 컨트롤러인지 다시 확인
 	if (IsLocalController())
 	{
@@ -465,7 +415,6 @@ void APTWPlayerController::PostSeamlessTravel()
 		}
 
 		ReInitializeUI();
-		UE_LOG(LogTemp, Warning, TEXT("[PTWPlayerController] PostSeamlessTravel - ReInitializeUI 함수 호출됨."));
 	}
 }
 

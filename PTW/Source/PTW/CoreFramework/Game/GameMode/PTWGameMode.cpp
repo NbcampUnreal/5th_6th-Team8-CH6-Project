@@ -98,18 +98,6 @@ void APTWGameMode::BeginPlay()
 
 		ScoreSubsystem->TravelingBotNames.Empty();
 	}
-	
-#if WITH_GAMELIFT
-	if (!FParse::Param(FCommandLine::Get(), *PTWSessionKey::NoGameLift.ToString()))
-	{
-		UPTWGameLiftServerSubsystem* GameLiftServerSubsystem = UPTWGameLiftServerSubsystem::Get(this);
-		GetWorldTimerManager().SetTimer(GameLiftServerSubsystem->UpdateSessionStateTimer, [=, this]()
-		{
-			GameLiftServerSubsystem->UpdateSessionState("ACTIVE");
-		},
-		60.0f, true);
-	}
-#endif
 }
 
 void APTWGameMode::PostLogin(APlayerController* NewPlayer)
@@ -169,7 +157,6 @@ void APTWGameMode::Logout(AController* Exiting)
 				{
 					GameLiftServerSubsystem->OnUpdateSessionStateCompleted.Execute(TEXT("TERMINATE"));
 				}, 30.0f, false);
-				
 				GameLiftServerSubsystem->OnUpdateSessionStateCompleted.BindLambda([GameLiftServerSubsystem](const FString& Action)
 				{
 					if(Action == TEXT("TERMINATE"))

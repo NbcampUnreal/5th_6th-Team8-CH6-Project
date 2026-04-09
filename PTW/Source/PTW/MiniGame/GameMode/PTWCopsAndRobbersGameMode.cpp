@@ -148,7 +148,7 @@ void APTWCopsAndRobbersGameMode::WaitingToStartRound()
     
 		TargetTeam.Members.Add(PS);
     
-		if (IPTWPlayerRoundDataInterface* RoundData = Cast<IPTWPlayerRoundDataInterface>(PS))
+		if (IPTWPlayerDataInterface* RoundData = Cast<IPTWPlayerDataInterface>(PS))
 		{
 			RoundData->SetTeamId(TargetTeamId);
 		}

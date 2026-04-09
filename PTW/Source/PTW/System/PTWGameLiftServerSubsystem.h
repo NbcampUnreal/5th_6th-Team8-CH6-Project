@@ -1,6 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #if WITH_GAMELIFT
@@ -16,7 +14,7 @@ class FGameLiftServerSDKModule;
 DECLARE_DELEGATE_OneParam(FOnUpdateSessionStateCompleted, const FString&);
 
 /**
- * 
+ * 서버 전용 게임리프트 서브 시스템
  */
 UCLASS()
 class PTW_API UPTWGameLiftServerSubsystem : public UGameInstanceSubsystem
@@ -25,54 +23,40 @@ class PTW_API UPTWGameLiftServerSubsystem : public UGameInstanceSubsystem
 	
 public:
 	UPTWGameLiftServerSubsystem();
-	
-protected:
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<UPTWAPIData> ServerAPIData;
-	
-#if WITH_GAMELIFT // 서버 전용 로직
-public:
 	static UPTWGameLiftServerSubsystem* Get(const UObject* WorldContextObject);
 	
+#if WITH_GAMELIFT // 서버 전용 로직
+	FORCEINLINE FGameLiftServerSDKModule* GetGameLiftSdkModule() const { return GameLiftSdkModule; };
+	IOnlineSessionPtr GetSessionInterface() const;
+	void SetGameLiftSdkModule(FGameLiftServerSDKModule* InGameLiftSdkModule) { GameLiftSdkModule = InGameLiftSdkModule; };
+	
+	void SetupMapLoadDelegateHandle();
+	
+	void UpdateSessionToReady();
+	void ActivateSessionAndUpdate();
+	void UpdatePlayerCount(FString Action);
+	void UpdateSessionState(FString Action = TEXT("ACTIVE"));
+	bool AcceptPlayerSession(FString PlayerSessionId);
+	void RemovePlayerSession(FString PlayerSessionId);
+	void ExitGameSession();
+
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	
-public:
-	FORCEINLINE FGameLiftServerSDKModule* GetGameLiftSdkModule() const { return GameLiftSdkModule; };
-	IOnlineSessionPtr GetSessionInterface() const;
-	
-	void SetGameLiftSdkModule(FGameLiftServerSDKModule* InGameLiftSdkModule) { GameLiftSdkModule = InGameLiftSdkModule; };
-	// void SetInGameSession(const Aws::GameLift::Server::Model::GameSession& NewGameSession) { InGameSession = NewGameSession; };
-	
-	void SetupMapLoadDelegateHandle();
-	virtual void OnMapLoaded(UWorld* LoadedWorld);
-	
-	// 현재 세션을 Ready(준비됨) 상태로
-    void UpdateSessionToReady();
-	
-	void ActivateSessionAndUpdate();
-	
-	void UpdatePlayerCount(FString Action);
-	
-	// 플레이어 세션이 유효한지 검증
-	bool AcceptPlayerSession(FString PlayerSessionId);
-	
-	// 종료한 플레이어 세션을 제거
-	void RemovePlayerSession(FString PlayerSessionId);
-	void ExitGameSession();
-	
-	void UpdateSessionState(FString Action = TEXT("ACTIVE"));
-	
-protected:
+	void OnMapLoaded(UWorld* LoadedWorld);
 	void OnUpdateSessionToReadyComplete(FName SessionName, bool bWasSuccessful);
 	void ActivateSessionAndUpdate_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void UpdatePlayerCount_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void UpdateSessionState_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, const FString Action);
 
+#endif
 protected:
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UPTWAPIData> ServerAPIData;
+	
+#if WITH_GAMELIFT
 	FGameLiftServerSDKModule* GameLiftSdkModule;
-	// Aws::GameLift::Server::Model::GameSession InGameSession;
 	
 public:
 	FTimerHandle UpdateSessionStateTimer;

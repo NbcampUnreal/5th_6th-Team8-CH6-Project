@@ -4,17 +4,21 @@
 
 #include "CoreMinimal.h"
 #include "PTWMiniGameRule.h"
+#include "CoreFramework/Interface/PTWMiniGameModeInterface.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "System/Prop/PTWPropData.h"
 #include "PTWMiniGameMode.generated.h"
 
+class UPTWResultSequenceComponent;
+class UPTWSpawnComponent;
+class UPTWWinConditionComponent;
 class UPTWInventoryComponent;
 class APTWPlayerCharacter;
 class APTWPlayerController;
 class UPTWBaseControllerComponent;
 class UPTWItemInstance;
-class IPTWPlayerRoundDataInterface;
+class IPTWPlayerDataInterface;
 class UPTWChaosEventManager;
 class UGameplayEffect;
 class AController;
@@ -30,7 +34,7 @@ struct FItemArrayWrapper
 };
 
 UCLASS()
-class PTW_API APTWMiniGameMode : public APTWGameMode
+class PTW_API APTWMiniGameMode : public APTWGameMode, public IPTWMiniGameModeInterface
 {
 	GENERATED_BODY()
 
@@ -46,9 +50,12 @@ public:
 	/** 플레이어 사망할 때 호출되는 함수 */
 	UFUNCTION()
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor);
-	
+
+	/** 미니 게임 룰 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule")
 	FPTWMiniGameRule MiniGameRule;
+
+	virtual const FPTWMiniGameRule* GetMiniGameRule() const override {return &MiniGameRule;}
 protected:
 	virtual void InitGameState() override;
 	virtual void PostInitializeComponents() override;
@@ -59,15 +66,29 @@ protected:
 	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 
 	virtual void PlayerReadyToPlay(APlayerController* Controller) override;
-
-	//* Controller Component PlayerController에 연결 */
-	virtual void AttachControllerComponent(AController* Controller, UActorComponent* Component = nullptr);
 	
 	//* 미니 게임 시작 */
 	UFUNCTION()
 	virtual void StartGame();
-	virtual void StartRound();
+	
+	//* 카오스 이벤트 시작 */
+	void StartChaosEvent();
 
+	//* 미니 게임 라운드 시작 대기 */
+	virtual void WaitingToStartRound();
+	
+	/** 카운트 다운 시작 */
+	virtual void StartCountDown();
+	
+	/** 매초마다 카운트다운 감소 */
+	void TickCountDown();
+
+	/** 카운트 다운 종료 시 호출 */
+	UFUNCTION()
+	virtual void OnCountDownFinished();
+	
+	virtual void StartRound();
+	
 	virtual void UpdateTimer() override;
 	
 	//* 타이머기 종료되면 호출되는 함수 */
@@ -77,41 +98,31 @@ protected:
 	virtual void EndRound();
 	
 	//* 미니 게임이 완전히 끝났을 때 호출하는 함수 */
-	virtual void EndGame();
+	virtual void EndGame() override;
+
+	//* 레벨 이동 */
+	virtual void TravelLevel() override;
+
+	//* Controller Component PlayerController에 연결 */
+	virtual void AttachControllerComponent(AController* Controller, UActorComponent* Component = nullptr);
+
+	//* 기본 무기 스폰 */
+	virtual void SpawnDefaultWeapon(AController* NewPlayer);
+
+	void ApplyRoundPropRandom();
 	
 	/** 미니 게임 룰에 따라 킬/데스,승점을 부여한다. */
 	void AddKillDeathCount(APlayerState* DeadPlayerState, APlayerState* KillPlayerState);
 	/** 설정된 점수 부여. */
 	void AddRoundScore(APlayerState* ScoreTarget, int32 ScoreValue = 1);
 	
-	virtual void SpawnDefaultWeapon(AController* NewPlayer);
-
-	//* 미니 게임 라운드 시작 대기 */
-	virtual void WaitingToStartRound();
-	
-	/** 카운트 다운 시작 */
-	virtual void StartCountDown();
-	/** 매초마다 카운트다운 감소 */
-	void TickCountDown();
-	
-	/** 카운트 다운 종료 시 호출 */
-	UFUNCTION()
-	virtual void OnCountDownFinished();
-	
-	void ApplyRoundPropRandom();
-
 	/** 플레이어 리스폰 */
 	virtual void RespawnPlayer(APTWPlayerController* SpawnPlayerController);
 	virtual void HandleRespawn(APTWPlayerController* PlayerController);
-
-	/** 플레이어 모든 태그 제거*/
-	void RemoveTags(AController* Controller);
 	
 	/** 승리 조건 체크 */
 	virtual void CheckEndGameCondition();
-	virtual void CheckSurvivalCondition();
-	virtual void CheckTargetCondition();
-
+	
 	/** 팀 결정 */
 	virtual void AssignTeam();
 	
@@ -120,7 +131,7 @@ protected:
 	
 	//연출 단계 함수
 	virtual void StartResultSequence();
-	void FinishEndGameSequence();
+	virtual bool IsWinner(APTWPlayerState* InPlayerState = nullptr) override;
 
 	// FIXME : 임시로 관전상태 해제테스트
 	/* 플레이어 관전상태 해제 */
@@ -128,8 +139,6 @@ protected:
 
 	/* 인벤토리 아이템에 따른 아이템 지급 함수 */
 	void SpawnPlayerSavedItems(AController* Controller);
-
-	void StartChaosEvent();
 	
 	virtual bool ShouldUseTeamOutline() const;
 	void RefreshTeamOutlineForAllPlayers(bool bEnable);
@@ -158,23 +167,25 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UActorComponent> ControllerComponentClass;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPTWWinConditionComponent> WinConditionComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPTWSpawnComponent> SpawnComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPTWResultSequenceComponent> ResultSequenceComponent;
 	
 	//UPROPERTY()
 	//TArray<TObjectPtr<APlayerStart>> PlayerStarts;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Rule|Result")
-	TSubclassOf<class APTWResultCharacter> ResultCharacterClass;
-	UPROPERTY(EditDefaultsOnly, Category = "Rule|Result")
-	float ResultSequenceDuration = 15.0f;
-
 	
 	/* 이미 게임 종료가 호출됬는지 체크 */
 	bool bIsGameEnded = false;
 	
 	FTimerHandle CountDownTimerHandle;
 	FTimerHandle CoinSpawnTimerHandle;
-	FTimerHandle ResultTimerHandle;
-
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Data")
 	TObjectPtr<UDataTable> MiniGameMapTable;
 
@@ -182,23 +193,23 @@ private:
 	/** 플레이어에게 미니 게임 태그 적용 */
 	void ApplyMiniGameTag(AController* NewPlayer);
 	
-	/** 마지막으로 사망한 플레이어 찾기 */
-	IPTWPlayerRoundDataInterface* FindLastDeadPlayer();
-	
 	/** 라운드 종료 시 플레이어의 라운드 전용 데이터 초기화*/
 	void ResetPlayerRoundData();
 
 	/**라운드 종료 시 플레이어의 인벤토리 ID 초기화 */
 	void ResetPlayerInventoryID();
-
-	
 	
 	/** 리스폰 시 플레이어 체력 초기화 */
 	void InitPlayerHealth(AController* Controller);
+
+	/** 플레이어 모든 태그 제거*/
+	void RemoveTags(AController* Controller);
 	
 	/* 플레이어 인벤토리 ItemInstance Outer 재설정*/
 	void SetOldPlayerItemInstanceOuter(TArray<TObjectPtr<UPTWItemInstance>> ItemArr);
 
+private:
+	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> MiniGameEffectClass;
 
@@ -214,4 +225,5 @@ private:
 	int32 CurrentDeathOrder = 1;
 	
 	TMap<AController*, FItemArrayWrapper> PendingRespawnItems;
+	
 };

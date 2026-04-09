@@ -7,7 +7,10 @@
 
 void UPTWPortalCount::NativeDestruct()
 {
-	PTWGameState->OnPortalCountChanged.RemoveDynamic(this, &UPTWPortalCount::UpdatePortalText);
+	if (PTWGameState)
+	{
+		PTWGameState->OnPortalCountChanged.RemoveDynamic(this, &UPTWPortalCount::UpdatePortalText);
+	}
 
 	Super::NativeDestruct();
 }

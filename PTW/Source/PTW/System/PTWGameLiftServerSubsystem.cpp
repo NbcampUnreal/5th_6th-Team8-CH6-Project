@@ -1,4 +1,6 @@
 ﻿#include "PTWGameLiftServerSubsystem.h"
+
+#include "Debug/PTWLogCategorys.h"
 #include "Server/PTWAPIData.h"
 #include "Session/PTWSessionConfig.h"
 #include "Utilities/PTWJsonUtility.h"
@@ -77,12 +79,12 @@ void UPTWGameLiftServerSubsystem::UpdateSessionToReady()
 			
 		if (SessionInterface->UpdateSession(NAME_GameSession, *NewSettings, true))
 		{
-			UE_LOG(LogTemp, Display, TEXT("[Steam-MasterServer Request] 스팀세션 [준비됨] 상태로 업데이트 요청 전송을 완료했습니다."));
+			UE_LOG(Log_Steam, Display, TEXT("[게임세션 갱신요청] 스팀게임세션 갱신요청 전송성공"));
 		}
 		else
 		{
 			SessionInterface->ClearOnUpdateSessionCompleteDelegate_Handle(UpdateSessionCompleteDelegateHandle);
-			UE_LOG(LogTemp, Display, TEXT("[Steam-MasterServer Request] 스팀세션 [준비됨] 상태로 업데이트 요청 전송을 실패하였습니다."));
+			UE_LOG(Log_Steam, Error, TEXT("[게임세션 갱신요청] 스팀게임세션 갱신요청 전송실패"));
 		}
 	}
 }
@@ -96,12 +98,12 @@ void UPTWGameLiftServerSubsystem::OnUpdateSessionToReadyComplete(FName SessionNa
 	
 	if (bWasSuccessful)
 	{
-		UE_LOG(LogTemp, Display, TEXT("[Steam-MasterServer Response] 스팀 게임세션을 [준비됨] 상태로 업데이트 완료하였습니다."));
+		UE_LOG(Log_Steam, Display, TEXT("[게임세션 갱신응답] 스팀게임세션 갱신성공 응답"));
 		ActivateSessionAndUpdate();
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("[Steam-MasterServer Response] 스팀 게임세션을 [준비됨] 상태로 업데이트 실패하였습니다."));
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 갱신응답] 스팀게임세션 갱신실패 응답"));
 	}
 }
 
@@ -114,9 +116,6 @@ void UPTWGameLiftServerSubsystem::ActivateSessionAndUpdate()
 	{
 		SteamId = SteamSessionSubsystem->GetSteamServerID();
 	}
-	
-	UE_LOG(LogTemp, Display, TEXT("현재: GameSessionId: %s"), *GameSessionId);
-	UE_LOG(LogTemp, Display, TEXT("현재: SteamId: %s"), *SteamId);
 	
 	if (!SteamId.IsEmpty() && !GameSessionId.IsEmpty())
 	{
@@ -137,16 +136,17 @@ void UPTWGameLiftServerSubsystem::ActivateSessionAndUpdate()
 		Request->SetContentAsString(Content);
 		if (Request->ProcessRequest())
 		{
-			UE_LOG(LogTemp, Display, TEXT("[GameLift-MasterServer Request] 게임리프트 게임세션에 SteamId 업데이트 요청 전송을 완료했습니다."));
+			UE_LOG(Log_DynamoDB, Display, TEXT("[DB 갱신요청] DynamoDB 갱신요청 전송성공 (SteamId)"));
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("[GameLift-MasterServer Request] 게임리프트 게임세션에 SteamId 업데이트 요청 전송을 실패했습니다"));
+			UE_LOG(Log_DynamoDB, Error, TEXT("[DB 갱신요청] DynamoDB 갱신요청 전송실패 (SteamId)"));
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("GameSessionId 또는 SteamId가 유효하지 않습니다."));
+		UE_LOG(LogTemp, Error, TEXT("GameSessionId or SteamId 유효하지 않습니다."));
+		UE_LOG(Log_DynamoDB, Error, TEXT("[DB 갱신요청] DynamoDB 갱신요청 전송실패 (SteamId)"));
 	}
 }
 
@@ -154,12 +154,12 @@ void UPTWGameLiftServerSubsystem::ActivateSessionAndUpdate_Response(FHttpRequest
 {
 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 	{
-		UE_LOG(LogTemp, Display, TEXT("[GameLift-MasterServer Response] 게임리프트 게임세션에 SteamId 업데이트를 완료했습니다."));
+		UE_LOG(Log_DynamoDB, Display, TEXT("[DB 갱신응답] DynamoDB에 SteamId 갱신성공 응답"));
 		UpdateSessionToReady();
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("[GameLift-MasterServer Response] 게임리프트 게임세션에 SteamId 업데이트를 실패했습니다."));
+		UE_LOG(Log_DynamoDB, Error, TEXT("[DB 갱신응답] DynamoDB에 SteamId 갱신실패 응답"));
 	}
 }
 
@@ -187,16 +187,17 @@ void UPTWGameLiftServerSubsystem::UpdateSessionState(FString Action)
 		Request->SetContentAsString(Content);
 		if (Request->ProcessRequest())
 		{
-			UE_LOG(LogTemp, Display, TEXT("[DynamoDB-MasterServer Request] DynamoDB에 서버상태 업데이트 요청 전송을 완료했습니다."));
+			UE_LOG(Log_DynamoDB, Display, TEXT("[DB 갱신요청] DynamoDB 속성 갱신요청 전송성공 (ServerState: %s)"), *Action);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("[DynamoDB-MasterServer Request] DynamoDB에 서버상태 업데이트 요청 전송을 실패했습니다"));
+			UE_LOG(Log_DynamoDB, Error, TEXT("[DB 갱신요청] DynamoDB 속성 갱신요청 전송실패 (ServerState: %s)"), *Action);
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("GameSessionId 또는 action이 유효하지 않습니다."));
+		UE_LOG(LogTemp, Error, TEXT("GameSessionId or Action이 유효하지 않습니다."));
+		UE_LOG(Log_DynamoDB, Error, TEXT("[DB 갱신요청] DynamoDB 속성 갱신요청 전송실패 (ServerState: %s)"), *Action);
 	}
 }
 
@@ -204,8 +205,7 @@ void UPTWGameLiftServerSubsystem::UpdateSessionState_Response(FHttpRequestPtr Re
 {
 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 	{
-		UE_LOG(LogTemp, Display, TEXT("[DynamoDB-MasterServer Response] DynamoDB에 서버상태 업데이트를 완료했습니다."));
-		
+		UE_LOG(Log_DynamoDB, Display, TEXT("[DB 갱신응답] DynamoDB 속성 갱신성공 응답"));
 		if (OnUpdateSessionStateCompleted.IsBound())
 		{
 			OnUpdateSessionStateCompleted.Execute(Action);
@@ -213,7 +213,7 @@ void UPTWGameLiftServerSubsystem::UpdateSessionState_Response(FHttpRequestPtr Re
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("[DynamoDB-MasterServer Response] DynamoDB에 서버상태 업데이트를 실패했습니다."));
+		UE_LOG(Log_DynamoDB, Error, TEXT("[DB 갱신응답] DynamoDB 속성 갱신실패 응답"));
 	}
 }
 
@@ -222,12 +222,12 @@ bool UPTWGameLiftServerSubsystem::AcceptPlayerSession(FString PlayerSessionId)
 	FGameLiftGenericOutcome Outcome = GameLiftSdkModule->AcceptPlayerSession(PlayerSessionId);
 	if (Outcome.IsSuccess())
 	{
-		UE_LOG(LogTemp, Log, TEXT("게임리프트 플레이어세션 접속 수락: %s"), *PlayerSessionId);
+		UE_LOG(Log_GameLift, Display, TEXT("[플레이어 세션수락] 플레이어세션 접속 수락: %s"), *PlayerSessionId);
 		return true;
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("게임리프트 플레이어세션 접속 실패: %s"), *Outcome.GetError().m_errorMessage);
+		UE_LOG(Log_GameLift, Error, TEXT("[플레이어 세션수락] 플레이어세션 접속 거절: %s"), *Outcome.GetError().m_errorMessage);
 		return false;
 	}
 }
@@ -256,16 +256,17 @@ void UPTWGameLiftServerSubsystem::UpdatePlayerCount(FString Action)
 		Request->SetContentAsString(Content);
 		if (Request->ProcessRequest())
 		{
-			UE_LOG(LogTemp, Display, TEXT("[DynamoDB-MasterServer Request] DynamoDB에 플레이어 수 업데이트 요청 전송을 완료했습니다."));
+			UE_LOG(Log_DynamoDB, Display, TEXT("[DB 갱신요청] DynamoDB 속성갱신 요청성공 (CurrentPlayerCount)"));
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("[DynamoDB-MasterServer Request] DynamoDB에 플레이어 수 업데이트 요청 전송을 실패했습니다"));
+			UE_LOG(Log_DynamoDB, Error, TEXT("[DB 갱신요청] DynamoDB 속성갱신 요청실패 (CurrentPlayerCount)"));
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("GameSessionId 또는 action이 유효하지 않습니다."));
+		UE_LOG(LogTemp, Error, TEXT("GameSessionId or Action이 유효하지 않습니다."));
+		UE_LOG(Log_DynamoDB, Error, TEXT("[DB 갱신요청] DynamoDB 속성갱신 요청실패 (CurrentPlayerCount)"));
 	}
 }
 
@@ -273,11 +274,11 @@ void UPTWGameLiftServerSubsystem::UpdatePlayerCount_Response(FHttpRequestPtr Req
 {
 	if (bWasSuccessful && Response.IsValid() && EHttpResponseCodes::IsOk(Response->GetResponseCode()))
 	{
-		UE_LOG(LogTemp, Display, TEXT("[DynamoDB-MasterServer Response] DynamoDB에 플레이어 수 업데이트를 완료했습니다."));
+		UE_LOG(Log_DynamoDB, Display, TEXT("[DB 갱신응답] DynamoDB 속성갱신 성공응답 (CurrentPlayerCount)"));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("[DynamoDB-MasterServer Response] DynamoDB에 플레이어 수 업데이트를 실패했습니다."));
+		UE_LOG(Log_DynamoDB, Error, TEXT("[DB 갱신응답] DynamoDB 속성갱신 실패응답 (CurrentPlayerCount)"));
 	}
 }
 
@@ -286,7 +287,7 @@ void UPTWGameLiftServerSubsystem::RemovePlayerSession(FString PlayerSessionId)
 	if (GameLiftSdkModule)
 	{
 		GameLiftSdkModule->RemovePlayerSession(PlayerSessionId);
-		UE_LOG(LogTemp, Log, TEXT("게임리프트 플레이어 세션 제거 완료: %s"), *PlayerSessionId);
+		UE_LOG(Log_GameLift, Display, TEXT("[플레이어 세션제거] 플레이어세션 제거: %s"), *PlayerSessionId);
 	}
 }
 

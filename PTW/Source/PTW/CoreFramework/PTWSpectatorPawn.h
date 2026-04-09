@@ -34,13 +34,7 @@ public:
 	void OnTargetDeath(AActor* DeadActor, AActor* KillerActor);
 	UFUNCTION()
 	void BlockSpectating();
-	
-	void Move(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
-	void Zoom(const FInputActionValue& Value);
-	void OnInputSpectateNext();
-	void SwitchToFirstThirdPerson();
-	
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -49,8 +43,11 @@ protected:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_Controller() override;
 
-public:
-	FTimerHandle SpectateTimer;
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	void Zoom(const FInputActionValue& Value);
+	void OnInputSpectateNext();
+	void SwitchToFirstThirdPerson();
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
@@ -77,29 +74,30 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* SpectateNextAction;
 	
-	// TObjectPtr<ACharacter> CurrentViewTarget;
-	
-	/* 현재 줌 값 */
+	// 현재 줌 값
 	UPROPERTY(VisibleAnywhere, Category = "ThirdPerson")
 	float CurrentZoomDistance;
 	float Current3PZoomDistance;
 	float Starting3PZoomDistance;
 	
-	/* 최대 줌 길이 */
+	// 최대 줌 길이
 	UPROPERTY(EditDefaultsOnly, Category = "ThirdPerson|Zoom", meta=(ClampMin="100.0", ClampMax="1000.0"))
 	float MaxZoom;
 	
-	/* 최소 줌 길이 (1인칭은 개별적인 '0'값을 사용) */
+	// 최소 줌 길이 (1인칭은 개별적인 '0'값을 사용)
 	UPROPERTY(EditDefaultsOnly, Category = "ThirdPerson|Zoom", meta=(ClampMin="100.0", ClampMax="1000.0"))
 	float MinZoom;
 	
-	/* 한번에 줌이 될 길이 */
+	// 한번에 줌이 될 길이
 	UPROPERTY(EditDefaultsOnly, Category = "ThirdPerson|Zoom", meta=(ClampMin="100.0", ClampMax="1000.0"))
 	float ZoomStep;
 	
 	bool bIsFreeCamera;
 	bool bIsFirstPerson;
-	
+
 private:
 	TObjectPtr<APTWBaseCharacter> CurrentViewCharacter;
+	
+public:
+	FTimerHandle SpectateTimer;
 };

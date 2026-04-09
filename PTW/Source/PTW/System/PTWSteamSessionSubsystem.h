@@ -47,7 +47,8 @@ public:
 	void SearchForGameSessions();
 	void JoinGameSession(const FOnlineSessionSearchResultBP& SearchResult, const FString Options = TEXT(""));
 	void LeaveGameSession();
-
+	
+	void QuickMatchGame();
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;

@@ -122,6 +122,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
 	TObjectPtr<UPTWActiveItemInstance> CurrentActiveItemSlot;
 	
+	UPROPERTY(Replicated)
 	FGameplayAbilitySpecHandle ActiveItemAbilityHandle;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)

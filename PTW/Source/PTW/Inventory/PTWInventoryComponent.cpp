@@ -55,6 +55,7 @@ void UPTWInventoryComponent::GetLifetimeReplicatedProps(TArray<class FLifetimePr
 	DOREPLIFETIME(UPTWInventoryComponent, CurrentWeapon);
 	DOREPLIFETIME(UPTWInventoryComponent, CurrentActiveItemSlot);
 	DOREPLIFETIME(UPTWInventoryComponent, CurSelectingWeaponSlot);
+	DOREPLIFETIME(UPTWInventoryComponent, ActiveItemAbilityHandle);
 }
 
  bool UPTWInventoryComponent::ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch,
@@ -352,35 +353,68 @@ void UPTWInventoryComponent::UseActiveItem()
 {
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
 	
+	// if (ASC && ActiveItemAbilityHandle.IsValid())
+	// {
+	// 	// 핸들 숫자만 보는게 아니라, 실제 스펙(데이터)이 내 ASC에 있는지 확인
+	// 	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(ActiveItemAbilityHandle);
+ //    
+	// 	if (Spec)
+	// 	{
+	// 		ASC->TryActivateAbility(ActiveItemAbilityHandle);
+	// 	}
+	// 	else
+	// 	{
+	// 		// 아직 데이터가 복제되지 않았음을 알 수 있음
+	// 		UE_LOG(LogTemp, Warning, TEXT("핸들 값은 있지만, 아직 ASC에 등록되지 않았습니다 (복제 대기 중)"));
+	// 	}
+	// }
+	
+	
 	if (ASC && ActiveItemAbilityHandle.IsValid())
 	{
-		ASC->TryActivateAbility(ActiveItemAbilityHandle);
+		FString RoleString = GetOwner()->HasAuthority() ? TEXT("Server") : TEXT("Client");
+		UE_LOG(LogTemp, Log, TEXT("[%s] Handle Value: %s"), *RoleString, *ActiveItemAbilityHandle.ToString());
+
+		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(ActiveItemAbilityHandle);
+		if (!Spec)
+		{
+			// 여기서 ASC가 가진 모든 어빌리티 핸들을 출력해봅니다.
+			for (const FGameplayAbilitySpec& AbilitySpec : ASC->GetActivatableAbilities())
+			{
+				UE_LOG(LogTemp, Log, TEXT("[%s] Registred Handle: %s"), *RoleString, *AbilitySpec.Handle.ToString());
+			}
+		}
 	}
+	
+	
 }
 
 
 bool UPTWInventoryComponent::EquipActiveItem(UPTWItemInstance* ActiveItemInstance)
 {
-	if (CurrentActiveItemSlot) return false; // 이미 장착된 아이템이 있다면
-	if (!ActiveItemInstance || !ActiveItemInstance->ItemDef->AbilityToGrant) return false; 
-	
-	if (UPTWActiveItemInstance* Active = Cast<UPTWActiveItemInstance>(ActiveItemInstance))
-	{
-		Active->SetCurrentCount();
-		CurrentActiveItemSlot = Active;
-	}
-	
 	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
-	if (ASC)
+	if (!ASC || !ActiveItemInstance || !ActiveItemInstance->ItemDef->AbilityToGrant) return false;
+
+	TSubclassOf<UGameplayAbility> AbilityClass = ActiveItemInstance->ItemDef->AbilityToGrant;
+	
+	FGameplayAbilitySpec* ExistingSpec = ASC->FindAbilitySpecFromClass(AbilityClass);
+	if (ExistingSpec)
 	{
-		if (ActiveItemAbilityHandle.IsValid())
-		{
-			ASC->ClearAbility(ActiveItemAbilityHandle);
-		}
-		ActiveItemAbilityHandle = ASC->GiveAbility(FGameplayAbilitySpec(CurrentActiveItemSlot->ItemDef->AbilityToGrant, 1));
+		ActiveItemAbilityHandle = ExistingSpec->Handle; // 기존 핸들 재사용
+		return true;
 	}
 	
-	OnInventoryChanged.Broadcast();
+	if (ActiveItemAbilityHandle.IsValid())
+	{
+		ASC->ClearAbility(ActiveItemAbilityHandle);
+		ActiveItemAbilityHandle = FGameplayAbilitySpecHandle(); // 초기화
+	}
+	
+	if (GetOwner()->HasAuthority())
+	{
+		FGameplayAbilitySpec Spec(AbilityClass, 1, INDEX_NONE, this);
+		ActiveItemAbilityHandle = ASC->GiveAbility(Spec);
+	}
 
 	return true;
 }

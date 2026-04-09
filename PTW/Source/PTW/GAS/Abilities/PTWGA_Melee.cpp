@@ -26,15 +26,18 @@ void UPTWGA_Melee::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	if (PC)
 	{
 		FGameplayTag FireTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Anim.Fire"));
-		PC->GetWeaponComponent()->PlayWeaponMontages(FireTag);
+		UAnimMontage* MontageToPlay = PC->GetWeaponComponent()->PlayWeaponMontages(FireTag, false);
+
+		if (MontageToPlay)
+		{
+			UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+				this, NAME_None, MontageToPlay);
+
+			MontageTask->OnCompleted.AddDynamic(this, &ThisClass::K2_EndAbility);
+			MontageTask->OnInterrupted.AddDynamic(this, &ThisClass::K2_EndAbility);
+			MontageTask->ReadyForActivation();
+		}
 	}
-	
-	UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-this, NAME_None, MeleeAttackMontage);
-	
-	MontageTask->OnCompleted.AddDynamic(this, &ThisClass::K2_EndAbility);
-	MontageTask->OnInterrupted.AddDynamic(this, &ThisClass::K2_EndAbility);
-	MontageTask->ReadyForActivation(); 
 }
 
 void UPTWGA_Melee::OnMeleeHitReceived(FGameplayEventData Payload)

@@ -44,9 +44,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "PTW|Weapon")
 	void EquipWeaponByTag(FGameplayTag NewWeaponTag);
 
-	/* 태그 하나만 전달하여 모든 무기 애니메이션 실행 */
+	/* 태그와 자동 몽타주 플레이를 실행받을지만 받아 무기 애니메이션 실행 */
 	UFUNCTION(BlueprintCallable, Category = "PTW|Weapon")
-	void PlayWeaponMontages(FGameplayTag AnimTag);
+	UAnimMontage* PlayWeaponMontages(FGameplayTag AnimTag, bool bAutoPlayCharacterMontage = false);
 
 	/* WeaponTag에 따른 무기 소켓에 부착 */
 	void AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag);
@@ -65,6 +65,6 @@ public:
 	UPROPERTY(VisibleInstanceOnly, Category = "PTW|Weapon")
 	TMap<FGameplayTag, FWeaponPair> SpawnedWeapons;
 
-	UPROPERTY(BlueprintReadOnly, Category = "PTW|Weapon")
+	UPROPERTY(BlueprintReadOnly, Category = "PTW|Weapon", Replicated)
 	TObjectPtr<APTWWeaponActor> CurrentWeapon;
 };

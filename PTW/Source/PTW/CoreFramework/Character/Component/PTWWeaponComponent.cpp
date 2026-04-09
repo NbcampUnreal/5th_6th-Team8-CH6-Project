@@ -64,21 +64,13 @@ void UPTWWeaponComponent::EquipWeaponByTag(FGameplayTag NewWeaponTag)
 	}
 }
 
-void UPTWWeaponComponent::PlayWeaponMontages(FGameplayTag AnimTag)
+UAnimMontage* UPTWWeaponComponent::PlayWeaponMontages(FGameplayTag AnimTag, bool bAutoPlayCharacterMontage)
 {
-	if (!CurrentWeapon) return;
+	if (!CurrentWeapon) return nullptr;
 
 	const UPTWWeaponData* Data = CurrentWeapon->GetWeaponData();
-	if (!Data) return;
+	if (!Data) return nullptr;
 
-	if (Data->AnimMap.Contains(AnimTag))
-	{
-		UAnimMontage* CharacterMontage = *Data->AnimMap.Find(AnimTag);
-		if (CharacterMontage)
-		{
-			PlayCharacterMontage1P(CharacterMontage);
-		}
-	}
 	if (Data->WeaponAnimMap.Contains(AnimTag))
 	{
 		UAnimMontage* WeaponMontage = *Data->WeaponAnimMap.Find(AnimTag);
@@ -87,6 +79,25 @@ void UPTWWeaponComponent::PlayWeaponMontages(FGameplayTag AnimTag)
 			CurrentWeapon->PlayWeaponMontage(WeaponMontage);
 		}
 	}
+
+	if (Data->AnimMap.Contains(AnimTag))
+	{
+		UAnimMontage* CharacterMontage = *Data->AnimMap.Find(AnimTag);
+		if (CharacterMontage)
+		{
+			if (bAutoPlayCharacterMontage)
+			{
+				PlayCharacterMontage1P(CharacterMontage);
+				return nullptr;
+			}
+			else
+			{
+				return CharacterMontage;
+			}
+		}
+	}
+
+	return nullptr;
 }
 
 void UPTWWeaponComponent::AttachWeaponToSocket(APTWWeaponActor* NewWeapon1P, APTWWeaponActor* NewWeapon3P, FGameplayTag WeaponTag)

@@ -80,6 +80,20 @@ struct FSavingData
 	int32 RewardAmount = 0;
 };
 
+USTRUCT(BlueprintType)
+struct FPredictedData
+{
+	GENERATED_BODY()
+
+	/** 예측 대상 */
+	UPROPERTY()
+	FUniqueNetIdRepl PredictedPlayer = nullptr;
+
+	/** 지급될 골드 */
+	UPROPERTY()
+	int32 RewardAmount = 0;
+};
+
 /**
  * 로비 아이템 관련 데이터를 저장하는 구조체
  */
@@ -93,6 +107,6 @@ struct FPTWLobbyItemData
 	
 	// 승리 예측 플레이어
 	UPROPERTY(EditAnywhere)
-	FUniqueNetIdRepl PredictedPlayer = nullptr;
+	FPredictedData PredictedData;
 
 };

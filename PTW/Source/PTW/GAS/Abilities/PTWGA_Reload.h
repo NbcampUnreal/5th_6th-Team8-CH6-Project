@@ -37,6 +37,9 @@ protected:
 	/** AnimNotify로부터 게임플레이 이벤트를 수신했을 때 (여기서 GE 적용) */
 	UFUNCTION()
 	void OnGameplayEventReceived(FGameplayEventData Payload);
+	
+	/* 총알이 Max치인지 확인 함수 */
+	bool CheckAmmo(APTWPlayerCharacter* PC);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect")

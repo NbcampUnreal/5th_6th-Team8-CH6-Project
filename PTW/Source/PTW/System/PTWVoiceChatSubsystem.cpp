@@ -10,9 +10,12 @@ UPTWVoiceChatSubsystem* UPTWVoiceChatSubsystem::Get(const UObject* WorldContextO
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
 	if (IsValid(World))
 	{
-		if (UGameInstance* GI = World->GetGameInstance())
+		if (APlayerController* PC = World->GetFirstPlayerController())
 		{
-			return GI->GetSubsystem<UPTWVoiceChatSubsystem>();
+			if (ULocalPlayer* LocalPlayer = PC->GetLocalPlayer())
+			{
+				return LocalPlayer->GetSubsystem<UPTWVoiceChatSubsystem>();
+			}
 		}
 	}
 	return nullptr;

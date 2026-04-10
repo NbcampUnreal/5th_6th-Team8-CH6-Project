@@ -18,6 +18,7 @@ public:
 	APTWAbyssMiniGameMode();
 
 protected:
+	virtual void StartCountDown() override;
 	virtual void StartRound() override;
 	virtual void EndRound() override;
 	virtual void HandlePlayerDeath(AActor* DeadActor, AActor* KillActor) override;

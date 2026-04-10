@@ -16,6 +16,13 @@ APTWAbyssMiniGameMode::APTWAbyssMiniGameMode()
 {
 }
 
+void APTWAbyssMiniGameMode::StartCountDown()
+{
+	Super::StartCountDown();
+	
+	ApplyBlackoutStateToAllPlayers(false);
+}
+
 void APTWAbyssMiniGameMode::StartRound()
 {
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)

@@ -65,7 +65,7 @@ void UPTWPredictWinVote::OnOKClicked()
 	APTWPlayerState* MyPS = GetOwningPlayerState<APTWPlayerState>();
 	if (MyPS)
 	{
-		// MyPS->ServerSetPredictedWinner(CurrentSelectedName);
+		MyPS->VotePredictedPlayer(MyPS->GetUniqueId());
 	}
 
 	// UI 닫기

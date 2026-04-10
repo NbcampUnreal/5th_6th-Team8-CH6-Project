@@ -58,9 +58,6 @@ struct FPTWSessionConfig
 	int32 MaxRounds = 5;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
-	bool bIsJoinable;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Session")
 	bool bIsNoGameLift;
 };
 

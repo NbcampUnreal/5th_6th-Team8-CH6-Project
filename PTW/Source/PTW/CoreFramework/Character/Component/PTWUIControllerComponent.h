@@ -41,6 +41,9 @@ public:
 	void ShowDamageIndicator(FVector DamageCauserLocation);
 	void BuyVoteItem();
 	
+	UFUNCTION(Client, Reliable)
+	void Client_OpenPredictVoteUI();
+
 	/* 알림 위젯 */
 	UFUNCTION(Client, Reliable)
 	void Client_ShowNotification(const FNotificationData& Data);
@@ -76,6 +79,8 @@ protected:
 	/* 페이즈 변경 델리게이트 수신 함수 */
 	UFUNCTION()
 	void HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase);
+
+	void HandleOpenPredictVoteUI();
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag") 

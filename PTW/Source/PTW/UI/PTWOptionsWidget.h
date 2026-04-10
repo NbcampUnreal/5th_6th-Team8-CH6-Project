@@ -15,6 +15,7 @@ class UWidgetSwitcher;
 class USoundClass;
 class USoundMix;
 class UEditableText;
+class UPTWPlayerVoiceVolume;
 
 USTRUCT()
 struct FOptionSnapshot
@@ -154,6 +155,10 @@ protected:
 	USoundClass* UISoundClass;
 	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
 	USoundClass* VoiceSoundClass;
+	
+	// 보이스챗 플레이어 리스트 위젯
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Sound|Voice")
+	TSubclassOf<UPTWPlayerVoiceVolume> PlayerVoiceVolumeClass;
 	
 private:
 	FOptionSnapshot InitialSnapshot; // 초기값 저장

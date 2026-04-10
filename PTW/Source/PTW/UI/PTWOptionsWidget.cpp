@@ -19,6 +19,7 @@
 #include "CoreFramework/PTWGameUserSettings.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/MainMenu/PTWMainMenuPlayerController.h"
+#include "OptionsWidget/PTWPlayerVoiceVolume.h"
 #include "UI/PTWUISubsystem.h"
 
 void UPTWOptionsWidget::NativeConstruct()

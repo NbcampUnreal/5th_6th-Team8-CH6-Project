@@ -31,7 +31,7 @@ public:
 	// Sets default values for this component's properties
 	UPTWInventoryComponent();
 	
-	void AddItem(TObjectPtr<UPTWItemInstance>);
+	void AddItem(TObjectPtr<UPTWItemInstance>ItemClass);
 	
 	UFUNCTION(BlueprintCallable)
 	void EquipWeapon(int32 SlotIndex);
@@ -74,7 +74,7 @@ public:
 	void ConsumeActiveItem();
 	
 	/* 추가된 아이템 Instance에 대한 설정 */
-	void OnItemInstanceCreated(UPTWItemInstance* ItemInstance);
+	bool OnItemInstanceCreated(UPTWItemInstance* ItemInstance);
 	
 	/* Passive 아이템 GE 적용 */
 	void ApplyAllPassiveItems(UPTWItemInstance* ItemInstance);
@@ -99,8 +99,11 @@ public:
 	/* 액티브 아이템 사용 시 부여된 SpecHandle 제거 */
 	void RemoveActiveItemGameplayAbilityHandle();
 	
+	void AddWeaponArr(UPTWWeaponInstance* WeaponInst);
+	
 	/* 무기 배열 전부 제거 */
 	void ClearWeaponArr();
+	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -134,4 +137,6 @@ private:
 	FGameplayAbilitySpecHandle CurrentWeaponAbilitySpec;
 	
 	TMap<AController*, FSavedWeaponData> SavedWeaponMaps;
+	
+	const int32 MAX_SLOT_COUNT = 3;
 };

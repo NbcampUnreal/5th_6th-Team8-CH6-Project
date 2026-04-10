@@ -176,6 +176,7 @@ namespace GameplayTags
 		namespace Melee
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Knife);
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Hand);
 		}
 	}
 	

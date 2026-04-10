@@ -26,6 +26,7 @@ UPTWInventoryComponent::UPTWInventoryComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
+	WeaponArr.Init(nullptr, MAX_SLOT_COUNT);
 }
 
 
@@ -35,9 +36,10 @@ void UPTWInventoryComponent::AddItem(TObjectPtr<UPTWItemInstance> ItemClass)
 	if (!GetOwner()->HasAuthority()) return;
 	ItemArr.Add(ItemClass);
 	
-	OnItemInstanceCreated(ItemClass);
-
-	OnInventoryChanged.Broadcast();
+	if (OnItemInstanceCreated(ItemClass))
+	{
+		OnInventoryChanged.Broadcast();
+	}
 }
 
 void UPTWInventoryComponent::EquipWeapon(int32 SlotIndex)
@@ -91,9 +93,9 @@ void UPTWInventoryComponent::WeaponVisibleSetting(const FGameplayTag& WeaponTag,
 	}
 }
 
-void UPTWInventoryComponent::OnItemInstanceCreated(UPTWItemInstance* ItemInstance)
+bool UPTWInventoryComponent::OnItemInstanceCreated(UPTWItemInstance* ItemInstance)
 {
-	if (!ItemInstance || !GetOwner()->HasAuthority()) return;
+	if (!ItemInstance || !GetOwner()->HasAuthority()) return false;
 	
 	if (ItemInstance->IsA(UPTWPassiveItemInstance::StaticClass()))
 	{
@@ -107,8 +109,15 @@ void UPTWInventoryComponent::OnItemInstanceCreated(UPTWItemInstance* ItemInstanc
 	
 	if (ItemInstance->IsA(UPTWWeaponInstance::StaticClass()))
 	{
-		WeaponArr.Add(Cast<UPTWWeaponInstance>(ItemInstance));
+		if (WeaponArr.Num() >= 4)
+		{
+			return false;
+		}
+		
+		AddWeaponArr(Cast<UPTWWeaponInstance>(ItemInstance));
 	}
+	
+	return true;
 }
 
 
@@ -257,6 +266,27 @@ void UPTWInventoryComponent::RemoveActiveItemGameplayAbilityHandle()
 	}
 }
 
+void UPTWInventoryComponent::AddWeaponArr(UPTWWeaponInstance* WeaponInst)
+{
+	if (!WeaponInst) return;
+	
+	if (WeaponInst->ItemDef->bIsMelee)
+	{
+		WeaponArr[2] = WeaponInst;
+	}
+	else
+	{
+		if (WeaponArr[0] == nullptr)
+		{
+			WeaponArr[0] = WeaponInst;
+		}
+		else
+		{
+			WeaponArr[1] = WeaponInst;
+		}
+	}
+}
+
 void UPTWInventoryComponent::ClearWeaponArr()
 {
 	WeaponArr.Empty();
@@ -328,14 +358,14 @@ void UPTWInventoryComponent::SendEquipEventToASC(int32 SlotIndex)
 		CurSelectingWeaponSlot = SlotIndex;
 		ApplyWeaponData();
 	}
-	else // 같은 슬롯 인덱스인 경우 장착 해제
-	{
-		RemoveWeaponData();
-		TargetInstance = CurrentWeapon;
-		SendTag = GameplayTags::Weapon::State::UnEquip;
-		CurrentWeapon = nullptr;
-		CurSelectingWeaponSlot = -1;
-	}
+	// else // 같은 슬롯 인덱스인 경우 장착 해제
+	// {
+	// 	RemoveWeaponData();
+	// 	TargetInstance = CurrentWeapon;
+	// 	SendTag = GameplayTags::Weapon::State::UnEquip;
+	// 	CurrentWeapon = nullptr;
+	// 	CurSelectingWeaponSlot = -1;
+	// }
 	
 	SendGameplayEvent(TargetInstance, SendTag, SlotIndex);
 }

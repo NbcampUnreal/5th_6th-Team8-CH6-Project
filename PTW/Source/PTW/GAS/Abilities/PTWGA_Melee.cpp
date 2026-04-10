@@ -26,7 +26,7 @@ void UPTWGA_Melee::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	if (PC)
 	{
 		FGameplayTag FireTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Anim.Fire"));
-		UAnimMontage* MontageToPlay = PC->GetWeaponComponent()->PlayWeaponMontages(FireTag, false);
+		UAnimMontage* MontageToPlay = PC->GetWeaponComponent()->PlayWeaponMontages(FireTag, true);
 
 		if (MontageToPlay)
 		{

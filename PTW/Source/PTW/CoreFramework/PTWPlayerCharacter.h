@@ -95,6 +95,7 @@ protected:
 	/*인벤토리 관련 인풋 바인딩 함수(현정석(26.02.03))*/
 	void EquipFirstWeapon(const FInputActionValue& Value);
 	void EquipSecondWeapon(const FInputActionValue& Value);
+	void EquipThirdWeapon(const FInputActionValue& Value);
 	void UseActiveItem(const FInputActionValue& Value);
 
 	/* 위젯에 닉네임 전달 */
@@ -152,6 +153,8 @@ protected:
 	TObjectPtr<UInputAction> EquipFirstWeaponAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> EquipSecondWeaponAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> EquipThirdWeaponAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> UseActiveItemAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")

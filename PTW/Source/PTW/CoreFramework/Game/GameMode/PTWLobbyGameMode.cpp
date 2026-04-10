@@ -15,6 +15,8 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Gameplay/Actor/PTWResultCharacter.h"
+#include "Inventory/PTWInventoryComponent.h"
+#include "System/PTWItemSpawnManager.h"
 
 APTWLobbyGameMode::APTWLobbyGameMode()
 {
@@ -127,6 +129,8 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 			StartTimer(GameFlowRule.WaitingTime);
 		}
 	}
+	
+	GiveMeleeWeapon(NewPlayer);
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)
@@ -181,6 +185,21 @@ void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
 		GetWorldTimerManager().ClearTimer(LoadingDelayTimer);
 		GetWorldTimerManager().SetTimer(LoadingDelayTimer, this, &APTWLobbyGameMode::StartGameLobby, 3.f);
 	}
+}
+
+void APTWLobbyGameMode::GiveMeleeWeapon(APlayerController* NewPlayer)
+{
+	UPTWItemSpawnManager* SpawnManager = GetWorld()->GetSubsystem<UPTWItemSpawnManager>();
+	if (!SpawnManager) return;
+	
+	SpawnManager->SpawnSingleItem(NewPlayer->GetPlayerState<APTWPlayerState>(), MeleeDef);
+	
+	// 자동 근접 무기 장착
+	APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
+	UPTWInventoryComponent* InvenComp = PTWPlayerState->GetInventoryComponent();
+	if (!InvenComp) return;
+	
+	InvenComp->SendEquipEventToASC(2);
 }
 
 

@@ -297,6 +297,7 @@ void APTWPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		{
 			EnhancedInputComponent->BindAction(EquipFirstWeaponAction, ETriggerEvent::Started, this, &APTWPlayerCharacter::EquipFirstWeapon);
 			EnhancedInputComponent->BindAction(EquipSecondWeaponAction, ETriggerEvent::Started, this, &APTWPlayerCharacter::EquipSecondWeapon);
+			EnhancedInputComponent->BindAction(EquipThirdWeaponAction, ETriggerEvent::Started, this, &APTWPlayerCharacter::EquipThirdWeapon);
 		}
 		if (UseActiveItemAction)
 		{
@@ -369,6 +370,14 @@ void APTWPlayerCharacter::EquipSecondWeapon(const FInputActionValue& Value)
 	if (IsLocallyControlled())
 	{
 		ServerRPCEquipWeapon(1);
+	}
+}
+
+void APTWPlayerCharacter::EquipThirdWeapon(const FInputActionValue& Value)
+{
+	if (IsLocallyControlled())
+	{
+		ServerRPCEquipWeapon(2);
 	}
 }
 

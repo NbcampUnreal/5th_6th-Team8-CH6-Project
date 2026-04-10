@@ -7,6 +7,7 @@
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "PTWLobbyGameMode.generated.h"
 
+class UPTWItemDefinition;
 class APTWPlayerState;
 class UPTWLobbyItemManager;
 class UPTWRoundEventManager;
@@ -93,6 +94,8 @@ protected:
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 	virtual void PlayerReadyToPlay(APlayerController* Controller) override;
 	
+	void GiveMeleeWeapon(APlayerController* NewPlayer);
+	
 	//* PreGameLobby 상태에서 타이머가 종료되면 게임 시작 /
 	void StartGameLobby();
 
@@ -117,6 +120,9 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Test")
 	bool bSkipFirstLobby = false;
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UPTWItemDefinition> MeleeDef;
 	
 	bool bIsFirstLobby;
 	bool bWaitingTimerStarted = false;

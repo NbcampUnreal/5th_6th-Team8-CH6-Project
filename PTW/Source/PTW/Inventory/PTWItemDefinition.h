@@ -65,6 +65,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon",meta = (EditCondition = "ItemType == EItemType::Weapon", EditConditionHides))
 	FGameplayTag WeaponTag;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon",meta = (EditCondition = "ItemType == EItemType::Weapon", EditConditionHides))
+	bool bIsMelee;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Passive",meta = (EditCondition = "ItemType == EItemType::Passive", EditConditionHides))
 	TArray<TSubclassOf<UGameplayEffect>> PassiveEffects;
 	

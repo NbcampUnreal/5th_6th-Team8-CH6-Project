@@ -88,11 +88,11 @@ UAnimMontage* UPTWWeaponComponent::PlayWeaponMontages(FGameplayTag AnimTag, bool
 			if (bAutoPlayCharacterMontage)
 			{
 				PlayCharacterMontage1P(CharacterMontage);
-				return nullptr;
+				return CharacterMontage;
 			}
 			else
 			{
-				return CharacterMontage;
+				return nullptr;
 			}
 		}
 	}

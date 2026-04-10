@@ -173,6 +173,7 @@ namespace GameplayTags
 		namespace Melee
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(Knife, "Weapon.Melee.Knife");
+			PTW_API UE_DEFINE_GAMEPLAY_TAG(Hand, "Weapon.Melee.Hand");
 		}
 	}
 	

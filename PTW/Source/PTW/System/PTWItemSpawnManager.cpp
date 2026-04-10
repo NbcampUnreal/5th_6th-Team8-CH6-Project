@@ -66,16 +66,30 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 
 	UPTWWeaponInstance* WeaponItemInst = NewObject<UPTWWeaponInstance>(Inventory);
 	if (!WeaponItemInst) return;
-
+	WeaponItemInst->ItemDef = ItemDefinition;
+	
+	// if (WeaponItemInst->ItemDef->bIsMelee)
+	// {
+	// 	Inventory->AddItem(WeaponItemInst);
+	// 	return;
+	// }
+	
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = TargetPlayer;
 	SpawnParams.Instigator = TargetPlayer;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	APTWWeaponActor* SpawnedWeapon1P = GetWorld()->SpawnActor<
+	APTWWeaponActor* SpawnedWeapon1P = nullptr;
+	APTWWeaponActor* SpawnedWeapon3P = nullptr;
+	
+	if (ItemDefinition->WeaponClass)
+	{
+		SpawnedWeapon1P = GetWorld()->SpawnActor<
 		APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
-	APTWWeaponActor* SpawnedWeapon3P = GetWorld()->SpawnActor<
-		APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+		SpawnedWeapon3P = GetWorld()->SpawnActor<
+			APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+	}
+	
 	//Fix 박태웅(01.29) - (크래시방지)
 	if (!SpawnedWeapon1P || !SpawnedWeapon3P)
 	{
@@ -83,7 +97,7 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 		if (SpawnedWeapon3P) SpawnedWeapon3P->Destroy();
 		return;
 	}
-
+	
 	SpawnedWeapon1P->SetFirstPersonMode(true);
 	SpawnedWeapon3P->SetFirstPersonMode(false);
 
@@ -91,7 +105,7 @@ void UPTWItemSpawnManager::SpawnWeaponActor(APTWPlayerCharacter* TargetPlayer, U
 	SpawnedWeapon1P->ForceNetUpdate();
 	SpawnedWeapon3P->ForceNetUpdate();
 
-	WeaponItemInst->ItemDef = ItemDefinition;
+
 	WeaponItemInst->SpawnedWeapon1P = SpawnedWeapon1P;
 	WeaponItemInst->SpawnedWeapon3P = SpawnedWeapon3P;
 
@@ -461,8 +475,15 @@ void UPTWItemSpawnManager::CopyRestartPlayerItems(APTWPlayerCharacter* TargetPla
 		UPTWWeaponInstance* NewWeaponInst = NewObject<UPTWWeaponInstance>(Inven);
 		if (!NewWeaponInst) continue;
 		
-		APTWWeaponActor* Spawned1P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
-		APTWWeaponActor* Spawned3P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+		APTWWeaponActor* Spawned1P = nullptr;
+		APTWWeaponActor* Spawned3P = nullptr;	
+		
+		if (ItemDefinition->WeaponClass)
+		{
+			 Spawned1P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+			 Spawned3P = GetWorld()->SpawnActor<APTWWeaponActor>(ItemDefinition->WeaponClass, SpawnParams);
+		}
+	
         
 		if (Spawned1P && Spawned3P)
 		{

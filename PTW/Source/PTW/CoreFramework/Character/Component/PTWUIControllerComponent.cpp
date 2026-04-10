@@ -352,6 +352,14 @@ void UPTWUIControllerComponent::HandleGamePhaseChanged(EPTWGamePhase CurrentGame
 	}
 }
 
+void UPTWUIControllerComponent::HandleOpenPredictVoteUI()
+{
+	if (UISubsystem && PredictWinVote)
+	{
+		UISubsystem->PushWidget(PredictWinVote, EUIInputPolicy::UIOnly);
+	}
+}
+
 void UPTWUIControllerComponent::ShowDamageIndicator(FVector DamageCauserLocation)
 {
 	if (!OwnerPC || !UISubsystem) return;
@@ -361,10 +369,19 @@ void UPTWUIControllerComponent::ShowDamageIndicator(FVector DamageCauserLocation
 
 void UPTWUIControllerComponent::BuyVoteItem()
 {
-	if (UISubsystem)
+	if (GetOwner()->HasAuthority())
 	{
-		UISubsystem->PushWidget(PredictWinVote, EUIInputPolicy::UIOnly);
+		Client_OpenPredictVoteUI();
 	}
+	else
+	{
+		HandleOpenPredictVoteUI();
+	}
+}
+
+void UPTWUIControllerComponent::Client_OpenPredictVoteUI_Implementation()
+{
+	HandleOpenPredictVoteUI();
 }
 
 void UPTWUIControllerComponent::Client_ShowNotification_Implementation(const FNotificationData& Data)

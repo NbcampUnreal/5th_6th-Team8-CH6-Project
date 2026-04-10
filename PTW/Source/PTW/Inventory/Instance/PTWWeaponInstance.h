@@ -40,6 +40,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	int32 GetMaxAmmo();
 	
+	int32 GetCurrentAmmo();
+	
 	APTWPlayerCharacter* GetItemInstanceOwner();
 	
 	void CopyProperties(UPTWWeaponInstance& CopyInst);

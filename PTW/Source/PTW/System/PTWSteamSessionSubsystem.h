@@ -18,6 +18,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSessionSearchComplete, const TArr
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllSessionSearchFinished);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSteamSessionMessageReceived, const FText&, Message);
 
+/*
+ * 스팀 세션을 관리하는 서브 시스템입니다.
+ */
 UCLASS()
 class PTW_API UPTWSteamSessionSubsystem : public UGameInstanceSubsystem
 {
@@ -44,7 +47,6 @@ public:
 	void SearchForGameSessions();
 	void JoinGameSession(const FOnlineSessionSearchResultBP& SearchResult, const FString Options = TEXT(""));
 	void LeaveGameSession();
-	void ExitGameSession();
 
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;

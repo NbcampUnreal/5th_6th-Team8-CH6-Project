@@ -14,7 +14,7 @@ class FGameLiftServerSDKModule;
 DECLARE_DELEGATE_OneParam(FOnUpdateSessionStateCompleted, const FString&);
 
 /**
- * 서버 전용 게임리프트 서브 시스템
+ * 서버 전용 로직을 관리하는 게임리프트 서브 시스템입니다.
  */
 UCLASS()
 class PTW_API UPTWGameLiftServerSubsystem : public UGameInstanceSubsystem

@@ -161,6 +161,8 @@ void UPTWUIControllerComponent::ToggleRankingBoard(bool bShow)
 {
 	if (!OwnerPC || !UISubsystem || !RankingBoardClass) return;
 
+	if (!bAbleRankingBoard) return;
+
 	if (bShow)
 	{
 		UISubsystem->SetWidgetVisibility(RankingBoardClass, true);
@@ -355,6 +357,14 @@ void UPTWUIControllerComponent::ShowDamageIndicator(FVector DamageCauserLocation
 	if (!OwnerPC || !UISubsystem) return;
 
 	UISubsystem->ShowDamageIndicator(DamageCauserLocation);
+}
+
+void UPTWUIControllerComponent::BuyVoteItem()
+{
+	if (UISubsystem)
+	{
+		UISubsystem->PushWidget(PredictWinVote, EUIInputPolicy::UIOnly);
+	}
 }
 
 void UPTWUIControllerComponent::Client_ShowNotification_Implementation(const FNotificationData& Data)

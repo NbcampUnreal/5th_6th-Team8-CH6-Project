@@ -108,9 +108,6 @@ void UPTWServerBrowser::NativeConstruct()
 	{
 		ServerMenuBorder->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	
-	//ServerMenuButton->SetVisibility(ESlateVisibility::Collapsed);
-	FindServerButton->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UPTWServerBrowser::NativeDestruct()

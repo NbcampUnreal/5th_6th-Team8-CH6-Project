@@ -5,7 +5,9 @@
 
 #include "PTWGameMode.h"
 #include "PTWLobbyGameMode.h"
+#include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/Character/Component/PTWUIControllerComponent.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "MiniGame/Data/PTWLobbyItemDefinition.h"
 #include "MiniGame/Data/PTWLobbyItemRow.h"
@@ -151,13 +153,7 @@ void UPTWLobbyItemManager::HandlePredictionWin(APTWPlayerState* Buyer,
 
 	Buyer->GetLobbyItemData().PredictedData.RewardAmount = LobbyItemDefinition->PredictionReward;
 	
-	// 여기서 투표 ui 출력
-
-	//임시로 구매자가 승리 예측자로 설정
-
-	Buyer->GetLobbyItemData().PredictedData.PredictedPlayer = Buyer->GetUniqueId();
-
-	
+	Cast<APTWPlayerController>(Buyer->GetPlayerController())->UIControllerComponent->BuyVoteItem();
 }
 
 void UPTWLobbyItemManager::AddGold(APTWPlayerState* Buyer, int32 Gold)

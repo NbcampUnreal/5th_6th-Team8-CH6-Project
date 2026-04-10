@@ -39,7 +39,7 @@ public:
 	void UpdateTargetPOV(APawn* NewTarget);
 	void RefreshTargetViewHiddenActors();
 	void ShowDamageIndicator(FVector DamageCauserLocation);
-
+	void BuyVoteItem();
 	
 	/* 알림 위젯 */
 	UFUNCTION(Client, Reliable)
@@ -109,6 +109,8 @@ public:
 	TSubclassOf<UUserWidget> SpectatorHUDClass;
 	UPROPERTY(EditAnywhere, Category = "UI") 
 	TSubclassOf<class UPTWDevWidget> DevWidgetClass;
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> PredictWinVote;
 
 private:
 	UPROPERTY()

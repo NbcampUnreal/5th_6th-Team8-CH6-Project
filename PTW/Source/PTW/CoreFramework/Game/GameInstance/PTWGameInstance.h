@@ -58,6 +58,8 @@ public:
 	USoundClass* SFXSoundClass;
 	UPROPERTY(EditDefaultsOnly, Category = "Audio")
 	USoundClass* UISoundClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	USoundClass* VoiceSoundClass;
 	UPROPERTY(EditDefaultsOnly, Category = "Class")
 	TSubclassOf<class ACharacter> KeepCharacterClassLoaded;
 	UPROPERTY(EditDefaultsOnly, Category = "Class")

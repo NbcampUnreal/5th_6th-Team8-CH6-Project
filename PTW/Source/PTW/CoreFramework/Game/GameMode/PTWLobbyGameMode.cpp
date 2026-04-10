@@ -155,7 +155,9 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 	
 	// 데이터 초기화 및 골드 지급
 	PTWPlayerState->ResetInventoryItemId();
-	AddGold(PTWPlayerState, RoundClearBonusGold + LobbyItemManager->TakeSavingsReward(PTWPlayerState));
+	int32 LobbyItemReward = LobbyItemManager->TakeGoldReward(PTWPlayerState);
+	AddGold(PTWPlayerState, RoundClearBonusGold + LobbyItemReward);
+	
 }
 
 void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
@@ -457,11 +459,11 @@ void APTWLobbyGameMode::ReturnToMainMenu()
 	}
 }
 
-void APTWLobbyGameMode::ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId, APTWPlayerState* WinTarget)
+void APTWLobbyGameMode::ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId)
 {
 	if (!LobbyItemManager) return;
 	
-	LobbyItemManager->ApplyLobbyItem(Buyer, ItemId, WinTarget);
+	LobbyItemManager->ApplyLobbyItem(Buyer, ItemId);
 }
 
 void APTWLobbyGameMode::AddChaosItemEntry(const FPTWChaosItemEntry& Entry)

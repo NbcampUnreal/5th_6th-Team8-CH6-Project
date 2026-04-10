@@ -20,6 +20,15 @@ struct FPTWChaosItemEntry
 	FString PlayerName;
 };
 
+USTRUCT(Blueprintable)
+struct FPTWLastWinnerInfo 
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	FUniqueNetIdRepl WinnerId;
+	
+};
 
 USTRUCT(Blueprintable)
 struct FPTWGameData 
@@ -31,4 +40,7 @@ struct FPTWGameData
 
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FName> PlayedMapRowNames;
+
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FPTWLastWinnerInfo> LastWinnerInfos;
 };

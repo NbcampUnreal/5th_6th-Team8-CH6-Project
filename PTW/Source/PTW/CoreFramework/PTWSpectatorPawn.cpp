@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "CoreFramework/PTWSpectatorPawn.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -89,112 +86,40 @@ void APTWSpectatorPawn::SetViewTarget(bool bIsSameViewTarget)
 	}
 }
 
-void APTWSpectatorPawn::Move(const FInputActionValue& Value)
+void APTWSpectatorPawn::SetSpectatorTarget(APawn* NewViewTarget)
 {
-	if (GetAttachParentActor()) return;
+	APlayerController* PC = GetController<APlayerController>();
+	if (!IsValid(PC) || !IsValid(NewViewTarget)) return;
 	
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (IsValid(Controller))
+	if (IsValid(CurrentViewCharacter))
 	{
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+		CurrentViewCharacter->OnCharacterDied.RemoveDynamic(this, &ThisClass::OnTargetDeath);
+		CurrentViewCharacter = nullptr;
 	}
-}
-
-void APTWSpectatorPawn::Look(const FInputActionValue& Value)
-{
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	AttachToActor(NewViewTarget, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	
-	if (APTWPlayerController* PC = GetController<APTWPlayerController>())
+	if (APTWBaseCharacter* CurrentCharacter = Cast<APTWBaseCharacter>(NewViewTarget))
 	{
-		AddControllerYawInput(LookAxisVector.X * PC->CurrentMouseSensitivity);
-		AddControllerPitchInput(LookAxisVector.Y * PC->CurrentMouseSensitivity);
+		CurrentViewCharacter = CurrentCharacter;
+		CurrentViewCharacter->OnCharacterDied.AddUniqueDynamic(this, &ThisClass::OnTargetDeath);
 	}
-}
-
-void APTWSpectatorPawn::Zoom(const FInputActionValue& Value)
-{
-	if (bIsFirstPerson) return;
 	
-	float InputValue = Value.Get<float>();
-	if (FMath::IsNearlyZero(InputValue)) return;
-	
-	CurrentZoomDistance -= (InputValue * ZoomStep);
-	CurrentZoomDistance = FMath::Clamp(CurrentZoomDistance, MinZoom, MaxZoom);
-}
-
-void APTWSpectatorPawn::StartSpectate()
-{
-	if (APlayerController* PC = GetController<APlayerController>())
+	// TODO: PTWCharacter BP의 카메라 콜리전을 IGNORE로 변경하고 삭제하면 될 것.
+	if (UCapsuleComponent* TargetCapsule = NewViewTarget->FindComponentByClass<UCapsuleComponent>())
 	{
-		UPTWUIControllerComponent* UIControllerComponent = nullptr;
-		if (UActorComponent* TempComponent = PC->GetComponentByClass(UPTWUIControllerComponent::StaticClass()))
+		TargetCapsule->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	}
+	
+	SetViewTarget(false);
+	
+	if (APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC))
+	{
+		if (PTWPC->OnSpectateTargetChanged.IsBound())
 		{
-			UIControllerComponent = Cast<UPTWUIControllerComponent>(TempComponent);
-		}
-		if (IsValid(UIControllerComponent))
-		{
-			if (ULocalPlayer* LP = PC->GetLocalPlayer())
+			if (APlayerState* PS = CurrentViewCharacter->GetPlayerState())
 			{
-				if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
-				{
-					UISubsystem->ShowSystemWidget(UIControllerComponent->SpectatorHUDClass);
-				}
-			}
-		}
-	}
-	SpectateNextPlayer();
-}
-
-void APTWSpectatorPawn::SpectateNextPlayer()
-{
-	APawn* NewTargetView = nullptr;
-	if (FindNextSpectatorTarget(NewTargetView))
-	{
-		SetSpectatorTarget(NewTargetView);
-	}
-}
-
-void APTWSpectatorPawn::BeginSpectate()
-{
-	GetWorldTimerManager().SetTimer(SpectateTimer, this, &ThisClass::StartSpectate, 3.0f, false);
-	
-	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
-	{
-		GS->OnMiniGameEnded.AddUniqueDynamic(this, &ThisClass::BlockSpectating);
-	}
-}
-
-void APTWSpectatorPawn::EndSpectate()
-{
-	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
-	{
-		GS->OnMiniGameEnded.RemoveAll(this);
-	}
-	
-	if (APlayerController* PC = GetController<APlayerController>())
-	{
-		UPTWUIControllerComponent* UIControllerComponent = nullptr;
-		if (UActorComponent* TempComponent = PC->GetComponentByClass(UPTWUIControllerComponent::StaticClass()))
-		{
-			UIControllerComponent = Cast<UPTWUIControllerComponent>(TempComponent);
-		}
-		if (IsValid(UIControllerComponent))
-		{
-			if (ULocalPlayer* LP = PC->GetLocalPlayer())
-			{
-				if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
-				{
-					UISubsystem->HideSystemWidget(UIControllerComponent->SpectatorHUDClass);
-				}
+				PTWPC->OnSpectateTargetChanged.Broadcast(PS->GetPlayerName());
 			}
 		}
 	}
@@ -202,14 +127,6 @@ void APTWSpectatorPawn::EndSpectate()
 
 bool APTWSpectatorPawn::FindNextSpectatorTarget(APawn*& NewViewTarget)
 {
-	// APlayerState* TempPS = GetPlayerState();
-	// UE_LOG(LogTemp, Warning, TEXT("GetPlayerState = %s"), TempPS ? *TempPS->GetName() : nullptr);
-	// UE_LOG(LogTemp, Warning, TEXT("Controller = %s"), *Controller->GetName());
-	// UE_LOG(LogTemp, Warning, TEXT("Controller->PS = %s"), *GetController<APlayerController>()->PlayerState->GetName());
-	// APlayerController* TEMPPC =  GetController<APlayerController>();
-	// UE_LOG(LogTemp, Warning, TEXT("Controller->GetPawn() = %s"), TEMPPC ? *TEMPPC->GetName() : nullptr);
-	// UE_LOG(LogTemp, Warning, TEXT("Controller->PS->GetPawn() = %s"), TEMPPC->PlayerState->GetPawn() ? *TEMPPC->PlayerState->GetPawn()->GetName() : nullptr);
-	
 	UWorld* World = GetWorld();
 	if (!IsValid(World)) return false;
 	
@@ -265,75 +182,73 @@ bool APTWSpectatorPawn::FindNextSpectatorTarget(APawn*& NewViewTarget)
 	return false;
 }
 
-void APTWSpectatorPawn::SetSpectatorTarget(APawn* NewViewTarget)
+void APTWSpectatorPawn::SpectateNextPlayer()
 {
-	APlayerController* PC = GetController<APlayerController>();
-	if (!IsValid(PC) || !IsValid(NewViewTarget)) return;
-	
-	if (IsValid(CurrentViewCharacter))
+	APawn* NewTargetView = nullptr;
+	if (FindNextSpectatorTarget(NewTargetView))
 	{
-		CurrentViewCharacter->OnCharacterDied.RemoveDynamic(this, &ThisClass::OnTargetDeath);
-		CurrentViewCharacter = nullptr;
+		SetSpectatorTarget(NewTargetView);
 	}
-	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	AttachToActor(NewViewTarget, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+}
+
+void APTWSpectatorPawn::BeginSpectate()
+{
+	GetWorldTimerManager().SetTimer(SpectateTimer, this, &ThisClass::StartSpectate, 3.0f, false);
 	
-	if (APTWBaseCharacter* CurrentCharacter = Cast<APTWBaseCharacter>(NewViewTarget))
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
 	{
-		CurrentViewCharacter = CurrentCharacter;
-		CurrentViewCharacter->OnCharacterDied.AddUniqueDynamic(this, &ThisClass::OnTargetDeath);
+		GS->OnMiniGameEnded.AddUniqueDynamic(this, &ThisClass::BlockSpectating);
+	}
+}
+
+void APTWSpectatorPawn::EndSpectate()
+{
+	if (APTWGameState* GS = GetWorld()->GetGameState<APTWGameState>())
+	{
+		GS->OnMiniGameEnded.RemoveAll(this);
 	}
 	
-	// TODO: PTWCharacter BP의 카메라 콜리전을 IGNORE로 변경하고 삭제하면 될 것.
-	if (UCapsuleComponent* TargetCapsule = NewViewTarget->FindComponentByClass<UCapsuleComponent>())
+	if (APlayerController* PC = GetController<APlayerController>())
 	{
-		TargetCapsule->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-	}
-	
-	SetViewTarget(false);
-	
-	if (APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC))
-	{
-		if (PTWPC->OnSpectateTargetChanged.IsBound())
+		UPTWUIControllerComponent* UIControllerComponent = nullptr;
+		if (UActorComponent* TempComponent = PC->GetComponentByClass(UPTWUIControllerComponent::StaticClass()))
 		{
-			if (APlayerState* PS = CurrentViewCharacter->GetPlayerState())
+			UIControllerComponent = Cast<UPTWUIControllerComponent>(TempComponent);
+		}
+		if (IsValid(UIControllerComponent))
+		{
+			if (ULocalPlayer* LP = PC->GetLocalPlayer())
 			{
-				PTWPC->OnSpectateTargetChanged.Broadcast(PS->GetPlayerName());
+				if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
+				{
+					UISubsystem->HideSystemWidget(UIControllerComponent->SpectatorHUDClass);
+				}
 			}
 		}
 	}
 }
 
-void APTWSpectatorPawn::OnInputSpectateNext()
+void APTWSpectatorPawn::StartSpectate()
 {
-	if (IsLocallyControlled())
+	if (APlayerController* PC = GetController<APlayerController>())
 	{
-		if (GetWorldTimerManager().IsTimerActive(SpectateTimer)) return;
-		
-		APlayerController* PC = Cast<APlayerController>(GetController());
-		if (IsValid(PC) && PC->GetStateName() == NAME_Spectating)
+		UPTWUIControllerComponent* UIControllerComponent = nullptr;
+		if (UActorComponent* TempComponent = PC->GetComponentByClass(UPTWUIControllerComponent::StaticClass()))
 		{
-			GetWorldTimerManager().ClearTimer(SpectateTimer);
-			SpectateNextPlayer();
+			UIControllerComponent = Cast<UPTWUIControllerComponent>(TempComponent);
+		}
+		if (IsValid(UIControllerComponent))
+		{
+			if (ULocalPlayer* LP = PC->GetLocalPlayer())
+			{
+				if (UPTWUISubsystem* UISubsystem = LP->GetSubsystem<UPTWUISubsystem>())
+				{
+					UISubsystem->ShowSystemWidget(UIControllerComponent->SpectatorHUDClass);
+				}
+			}
 		}
 	}
-}
-
-void APTWSpectatorPawn::SwitchToFirstThirdPerson()
-{
-	if (GetWorldTimerManager().IsTimerActive(SpectateTimer)) return;
-	
-	if (IsValid(CurrentViewCharacter))
-	{
-		if (!bIsFirstPerson)
-		{
-			Current3PZoomDistance = CurrentZoomDistance;
-		}
-			
-		bIsFirstPerson = !bIsFirstPerson;
-	}
-	
-	SetViewTarget(true);
+	SpectateNextPlayer();
 }
 
 void APTWSpectatorPawn::OnTargetDeath(AActor* DeadActor, AActor* KillerActor)
@@ -350,29 +265,12 @@ void APTWSpectatorPawn::BlockSpectating()
 
 void APTWSpectatorPawn::BeginPlay()
 {
-	if (APlayerState* PS = GetPlayerState())
-	{
-		UE_LOG(LogTemp, Log, TEXT("[PTWSpectatorPawn] %s: BeginPlay() called"), *PS->GetPlayerName());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("[PTWSpectatorPawn] BeginPlay() called"));
-	}
 	Super::BeginPlay();
 	
 }
 
 void APTWSpectatorPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (APlayerState* PS = GetPlayerState())
-	{
-		UE_LOG(LogTemp, Log, TEXT("[PTWSpectatorPawn] %s: EndPlay() called"), *PS->GetPlayerName());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("[PTWSpectatorPawn] EndPlay() called"));
-	}
-	
 	if (IsLocallyControlled())
 	{
 		BlockSpectating();
@@ -392,7 +290,6 @@ void APTWSpectatorPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		{
 			if (IMC_Spectator)
 			{
-				UE_LOG(LogTemp, Display, TEXT("IMC_Spectator"));
 				Subsystem->AddMappingContext(IMC_Spectator, 0);
 			}
 		}
@@ -458,4 +355,78 @@ void APTWSpectatorPawn::OnRep_Controller()
 	{
 		BeginSpectate();
 	}
+}
+
+void APTWSpectatorPawn::Move(const FInputActionValue& Value)
+{
+	if (GetAttachParentActor()) return;
+	
+	FVector2D MovementVector = Value.Get<FVector2D>();
+
+	if (IsValid(Controller))
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		AddMovementInput(ForwardDirection, MovementVector.Y);
+		AddMovementInput(RightDirection, MovementVector.X);
+	}
+}
+
+void APTWSpectatorPawn::Look(const FInputActionValue& Value)
+{
+	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	
+	if (APTWPlayerController* PC = GetController<APTWPlayerController>())
+	{
+		AddControllerYawInput(LookAxisVector.X * PC->CurrentMouseSensitivity);
+		AddControllerPitchInput(LookAxisVector.Y * PC->CurrentMouseSensitivity);
+	}
+}
+
+void APTWSpectatorPawn::Zoom(const FInputActionValue& Value)
+{
+	if (bIsFirstPerson) return;
+	
+	float InputValue = Value.Get<float>();
+	if (FMath::IsNearlyZero(InputValue)) return;
+	
+	CurrentZoomDistance -= (InputValue * ZoomStep);
+	CurrentZoomDistance = FMath::Clamp(CurrentZoomDistance, MinZoom, MaxZoom);
+}
+
+void APTWSpectatorPawn::OnInputSpectateNext()
+{
+	if (IsLocallyControlled())
+	{
+		if (GetWorldTimerManager().IsTimerActive(SpectateTimer)) return;
+		
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		if (IsValid(PC) && PC->GetStateName() == NAME_Spectating)
+		{
+			GetWorldTimerManager().ClearTimer(SpectateTimer);
+			SpectateNextPlayer();
+		}
+	}
+}
+
+void APTWSpectatorPawn::SwitchToFirstThirdPerson()
+{
+	if (GetWorldTimerManager().IsTimerActive(SpectateTimer)) return;
+	
+	if (IsValid(CurrentViewCharacter))
+	{
+		if (!bIsFirstPerson)
+		{
+			Current3PZoomDistance = CurrentZoomDistance;
+		}
+			
+		bIsFirstPerson = !bIsFirstPerson;
+	}
+	
+	SetViewTarget(true);
 }

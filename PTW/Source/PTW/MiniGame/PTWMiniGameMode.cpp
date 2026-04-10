@@ -149,6 +149,7 @@ void APTWMiniGameMode::PostInitializeComponents()
 	
 	if (!ChaosEventManager) return;
 	ChaosEventManager->InitChaosEventManager(PTWGameState, MiniGameRule.ChaosEventRule, CachedGameData.ChaosItemEntries);
+	
 }
 
 void APTWMiniGameMode::BeginPlay()
@@ -603,7 +604,7 @@ void APTWMiniGameMode::AddKillDeathCount(APlayerState* DeadPlayerState, APlayerS
 {
 	if (!IsValid(DeadPlayerState)) return;
 	
-	if (IPTWPlayerRoundDataInterface* DeadPlayerData = Cast<IPTWPlayerRoundDataInterface>(DeadPlayerState))
+	if (IPTWPlayerDataInterface* DeadPlayerData = Cast<IPTWPlayerDataInterface>(DeadPlayerState))
 	{
 		DeadPlayerData->AddDeathCount(1);
 		DeadPlayerData->SetDeathOrder(CurrentDeathOrder++);
@@ -613,7 +614,7 @@ void APTWMiniGameMode::AddKillDeathCount(APlayerState* DeadPlayerState, APlayerS
 
 	if (!IsValid(KillPlayerState)) return;
 	
-	if (IPTWPlayerRoundDataInterface* KillPlayerData = Cast<IPTWPlayerRoundDataInterface>(KillPlayerState))
+	if (IPTWPlayerDataInterface* KillPlayerData = Cast<IPTWPlayerDataInterface>(KillPlayerState))
 	{
 		KillPlayerData->AddKillCount();
 		AddRoundScore(KillPlayerState, MiniGameRule.KillRule.KillScore);
@@ -627,7 +628,7 @@ void APTWMiniGameMode::AddRoundScore(APlayerState* ScoreTarget, int32 ScoreValue
 	// 미니 게임 진행 중이 아니면 점수 부여 X
 	if (!PTWGameState && PTWGameState->GetCurrentGamePhase() != EPTWGamePhase::MiniGame) return;
 	
-	if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(ScoreTarget))
+	if (IPTWPlayerDataInterface* RoundDataInterface = Cast<IPTWPlayerDataInterface>(ScoreTarget))
 	{
 		if (MiniGameRule.TeamRule.bUseTeam && MiniGameRule.TeamRule.bShareScoreWithinTeam)
 		{
@@ -690,7 +691,7 @@ void APTWMiniGameMode::AssignTeam()
 	{
 		int32 AssignTeamId = i % NumTeams;
 		PTWGameState->GetTeams()[AssignTeamId].Members.Add(Players[i]);
-		Cast<IPTWPlayerRoundDataInterface>(Players[i])->SetTeamId(AssignTeamId); 
+		Cast<IPTWPlayerDataInterface>(Players[i])->SetTeamId(AssignTeamId); 
 	}
 }
 
@@ -834,14 +835,12 @@ void APTWMiniGameMode::ApplyMiniGameTag(AController* NewPlayer)
 	}
 }
 
-
-
 void APTWMiniGameMode::ResetPlayerRoundData()
 {
 	if (!PTWGameState) return;
 	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 	{
-		if (IPTWPlayerRoundDataInterface* RoundDataInterface = Cast<IPTWPlayerRoundDataInterface>(PlayerState))
+		if (IPTWPlayerDataInterface* RoundDataInterface = Cast<IPTWPlayerDataInterface>(PlayerState))
 		{
 			RoundDataInterface->ResetRoundData();
 		}

@@ -9,6 +9,7 @@
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "MiniGame/Data/PTWLobbyItemDefinition.h"
 #include "MiniGame/Data/PTWLobbyItemRow.h"
+#include "System/PTWScoreSubsystem.h"
 
 void UPTWLobbyItemManager::InitLobbyItemManager(UDataTable* DataTable, APTWGameState* GameState)
 {
@@ -29,6 +30,8 @@ int32 UPTWLobbyItemManager::TakeSavingsReward(APTWPlayerState* PlayerState)
 	if (!PlayerState->GetLobbyItemData().SavingData.IsEmpty())
 	{
 		TArray<FSavingData>& SavingDataArray = PlayerState->GetLobbyItemData().SavingData;
+
+		if (SavingDataArray.IsEmpty()) return 0;
 		
 		for (int32 i = SavingDataArray.Num() - 1; i >= 0; i--)
 		{
@@ -43,6 +46,41 @@ int32 UPTWLobbyItemManager::TakeSavingsReward(APTWPlayerState* PlayerState)
 	return SavingGold;
 }
 
+int32 UPTWLobbyItemManager::TakePredictionWinReward(APTWPlayerState* PlayerState)
+{
+	UWorld* World = GetWorld();
+	if (!World) return 0;
+	
+	FUniqueNetIdRepl PredictedId = PlayerState->GetLobbyItemData().PredictedData.PredictedPlayer;
+	if (!PredictedId.IsValid()) return 0;
+	
+	UPTWScoreSubsystem* ScoreSubsystem = World->GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>();
+	if (!ScoreSubsystem) return 0;
+
+	const TArray<FPTWLastWinnerInfo>& LastWinnerInfos = ScoreSubsystem->GetSavedGameData().LastWinnerInfos;
+	if (LastWinnerInfos.IsEmpty()) return 0;
+	
+	for (const FPTWLastWinnerInfo& Info : LastWinnerInfos)
+	{
+		if (Info.WinnerId == PredictedId)
+		{
+			AddGold(PlayerState, PredictionWinReward);
+			
+			PlayerState->GetLobbyItemData().PredictedData.PredictedPlayer = nullptr;
+		}
+	}
+	return  0;
+}
+
+int32 UPTWLobbyItemManager::TakeGoldReward(APTWPlayerState* PlayerState)
+{
+	int RewardGold = 0;
+
+	RewardGold += TakeSavingsReward(PlayerState) + TakePredictionWinReward(PlayerState);
+
+	return RewardGold;
+}
+
 void UPTWLobbyItemManager::InitLobbyItemTable(UDataTable* DataTable)
 {
 	LobbyItemTable = DataTable;
@@ -53,7 +91,7 @@ void UPTWLobbyItemManager::InitGameState(APTWGameState* GameState)
 	CachedGameState = GameState;
 }
 
-void UPTWLobbyItemManager::ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId, APTWPlayerState* WinTarget)
+void UPTWLobbyItemManager::ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId)
 {
 	if (!Buyer) return;
 
@@ -68,6 +106,7 @@ void UPTWLobbyItemManager::ApplyLobbyItem(APTWPlayerState* Buyer, const FName It
 		HandleSavingGold(Buyer, LobbyItemDefinition);
 		break;
 	case ELobbyItemType::PredictionWin:
+		HandlePredictionWin(Buyer, LobbyItemDefinition);
 		break;
 	case ELobbyItemType::GambleBox:
 		HandleGambleBox(Buyer, LobbyItemDefinition);
@@ -96,17 +135,35 @@ void UPTWLobbyItemManager::HandleSavingGold(APTWPlayerState* Buyer, const UPTWLo
 void UPTWLobbyItemManager::HandleGambleBox(APTWPlayerState* Buyer, const UPTWLobbyItemDefinition* LobbyItemDefinition)
 {
 	if (!Buyer || !LobbyItemDefinition) return;
+	
+	int32 RandGold = FMath::RandRange(1, LobbyItemDefinition->GambleBoxMaxAmount);
+	
+	AddGold(Buyer, RandGold);
+}
 
+void UPTWLobbyItemManager::HandlePredictionWin(APTWPlayerState* Buyer,
+	const UPTWLobbyItemDefinition* LobbyItemDefinition)
+{
+	if (!Buyer || !LobbyItemDefinition) return;
+
+	Buyer->GetLobbyItemData().PredictedData.RewardAmount = LobbyItemDefinition->PredictionReward;
+	
+	// 여기서 투표 ui 출력
+
+	//임시로 구매자가 승리 예측자로 설정
+
+	Buyer->GetLobbyItemData().PredictedData.PredictedPlayer = Buyer->GetUniqueId();
+}
+
+void UPTWLobbyItemManager::AddGold(APTWPlayerState* Buyer, int32 Gold)
+{
 	UObject* Owner = GetOuter();
 	if (!Owner) return;
 	
 	APTWLobbyGameMode* LobbyGameMode = Cast<APTWLobbyGameMode>(Owner);
 	if (!LobbyGameMode) return;
 
-	int32 RandGold = FMath::RandRange(1, LobbyItemDefinition->GambleBoxMaxAmount);
-	
-	LobbyGameMode->AddGold(Buyer, RandGold);
-	
+	LobbyGameMode->AddGold(Buyer, Gold);
 }
 
 

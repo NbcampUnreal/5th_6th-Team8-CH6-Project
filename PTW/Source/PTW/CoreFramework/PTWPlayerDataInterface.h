@@ -4,11 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "PTWPlayerRoundDataInterface.generated.h"
+#include "PTWPlayerDataInterface.generated.h"
 
+class APTWPlayerState;
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UPTWPlayerRoundDataInterface : public UInterface
+class UPTWPlayerDataInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,7 +17,7 @@ class UPTWPlayerRoundDataInterface : public UInterface
 /**
  * 
  */
-class PTW_API IPTWPlayerRoundDataInterface
+class PTW_API IPTWPlayerDataInterface
 {
 	GENERATED_BODY()
 
@@ -38,4 +39,9 @@ public:
 	
 	/** 라운드 더어터 초기화 */
 	virtual void ResetRoundData() = 0;
+	
+	/** 승리 예상 선수 투표 */
+	virtual void VotePredictedPlayer(FUniqueNetIdRepl PredictedPlayer) = 0;
+
+	
 };

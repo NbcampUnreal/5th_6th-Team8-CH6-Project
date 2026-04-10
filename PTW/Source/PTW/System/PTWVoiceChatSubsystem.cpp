@@ -8,20 +8,15 @@
 void UPTWVoiceChatSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	
-	// FTimerHandle TimerHandle;
-	// GetWorld()->GetTimerManager().SetTimer(TimerHandle, [=, this]()
-	// {
-		if (IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get())
+
+	if (IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get())
+	{
+		if (IOnlineVoicePtr VoiceInterface = OnlineSubsystem->GetVoiceInterface())
 		{
-			if (IOnlineVoicePtr VoiceInterface = OnlineSubsystem->GetVoiceInterface())
-			{
-				VoiceStateDelegateHandle = VoiceInterface->AddOnPlayerTalkingStateChangedDelegate_Handle(
-					FOnPlayerTalkingStateChangedDelegate::CreateUObject(this, &ThisClass::HandlePlayerVoiceStateChanged));
-			}
+			VoiceStateDelegateHandle = VoiceInterface->AddOnPlayerTalkingStateChangedDelegate_Handle(
+				FOnPlayerTalkingStateChangedDelegate::CreateUObject(this, &ThisClass::HandlePlayerVoiceStateChanged));
 		}
-	// }, 15.0f, false);
-	
+	}
 }
 
 void UPTWVoiceChatSubsystem::Deinitialize()
@@ -39,7 +34,6 @@ void UPTWVoiceChatSubsystem::Deinitialize()
 
 void UPTWVoiceChatSubsystem::HandlePlayerVoiceStateChanged(TSharedRef<const FUniqueNetId> TalkerId, bool bIsTalking)
 {
-	UE_LOG(LogTemp, Error, TEXT("HandlePlayerVoiceStateChanged"));
 	FString TalkerIdString = TalkerId->ToString();
 	
 	OnVoiceStateUpdated.Broadcast(TalkerIdString, bIsTalking);

@@ -13,6 +13,8 @@
 #include "GAS/PTWDeliveryAttributeSet.h"
 #include "CoreFramework/Game/Gamestate/PTWGamestate.h"
 #include "CoreFramework/PTWPlayerController.h"
+#include "Game/GameMode/PTWGameMode.h"
+#include "Game/GameMode/PTWLobbyGameMode.h"
 #include "Inventory/PTWInventoryComponent.h"
 
 APTWPlayerState::APTWPlayerState()
@@ -40,6 +42,7 @@ void APTWPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME(APTWPlayerState, CurrentPlayerData);
 	DOREPLIFETIME(APTWPlayerState, PlayerRoundData);
+	DOREPLIFETIME(APTWPlayerState, LobbyItemData);
 	DOREPLIFETIME(APTWPlayerState, MiniGameComponent);
 }
 
@@ -259,6 +262,14 @@ void APTWPlayerState::ResetRoundData()
 	}
 }
 
+void APTWPlayerState::VotePredictedPlayer(FUniqueNetIdRepl PredictedPlayer)
+{
+	if (HasAuthority())
+	{
+		LobbyItemData.PredictedData.PredictedPlayer = PredictedPlayer;
+	}
+}
+
 void APTWPlayerState::ResetInventoryItemId()
 {
 	if (HasAuthority())
@@ -320,6 +331,14 @@ void APTWPlayerState::ServerRequestPurchase_Implementation(APTWShopNPC* ShopNPC,
 
 				GameState->AddChaosItemEntry(ChaosEntry);
 				UE_LOG(LogTemp, Log, TEXT("[Chaos Item] 카오스 아이템 구매 성공! GameState에 등록됨: %s (구매자: %s)"), *NewItemIDStr, *GetPlayerName());
+			}
+		}
+		else if (NewItemIDStr.StartsWith(TEXT("Lobby_"), ESearchCase::IgnoreCase))
+		{
+			if (APTWLobbyGameMode* LobbyGameMode = Cast<APTWLobbyGameMode>(GetWorld()->GetAuthGameMode()))
+			{
+				LobbyGameMode->ApplyLobbyItem(this, ItemID);
+				UE_LOG(LogTemp, Log, TEXT("[Lobby Item] 로비 아이템 구매 성공! (구매자: %s)"), *GetPlayerName());
 			}
 		}
 		else

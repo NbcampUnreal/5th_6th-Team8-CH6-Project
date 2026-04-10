@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "PTWMiniGameRule.h"
-#include "CoreFramework/Interface/PTWGameModeInterface.h"
+#include "CoreFramework/Interface/PTWMiniGameModeInterface.h"
 #include "Inventory/PTWItemDefinition.h"
 #include "PTW/CoreFramework/Game/GameMode/PTWGameMode.h"
 #include "System/Prop/PTWPropData.h"
@@ -18,7 +18,7 @@ class APTWPlayerCharacter;
 class APTWPlayerController;
 class UPTWBaseControllerComponent;
 class UPTWItemInstance;
-class IPTWPlayerRoundDataInterface;
+class IPTWPlayerDataInterface;
 class UPTWChaosEventManager;
 class UGameplayEffect;
 class AController;
@@ -34,7 +34,7 @@ struct FItemArrayWrapper
 };
 
 UCLASS()
-class PTW_API APTWMiniGameMode : public APTWGameMode, public IPTWGameModeInterface
+class PTW_API APTWMiniGameMode : public APTWGameMode, public IPTWMiniGameModeInterface
 {
 	GENERATED_BODY()
 
@@ -54,6 +54,8 @@ public:
 	/** 미니 게임 룰 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Rule")
 	FPTWMiniGameRule MiniGameRule;
+
+	virtual const FPTWMiniGameRule* GetMiniGameRule() const override {return &MiniGameRule;}
 protected:
 	virtual void InitGameState() override;
 	virtual void PostInitializeComponents() override;
@@ -165,6 +167,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UActorComponent> ControllerComponentClass;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPTWWinConditionComponent> WinConditionComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPTWSpawnComponent> SpawnComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPTWResultSequenceComponent> ResultSequenceComponent;
 	
 	//UPROPERTY()
 	//TArray<TObjectPtr<APlayerStart>> PlayerStarts;
@@ -215,12 +226,4 @@ private:
 	
 	TMap<AController*, FItemArrayWrapper> PendingRespawnItems;
 	
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UPTWWinConditionComponent> WinConditionComponent;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UPTWSpawnComponent> SpawnComponent;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UPTWResultSequenceComponent> ResultSequenceComponent;
 };

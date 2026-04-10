@@ -35,6 +35,12 @@ void UPTWGA_Reload::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 	
+	if (!CheckAmmo(PC))
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+	
 	UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this, NAME_None, MontageToPlay, 1.0f, NAME_None, false);
 	
@@ -104,6 +110,22 @@ void UPTWGA_Reload::OnGameplayEventReceived(FGameplayEventData Payload)
 			ApplyGameplayEffectSpecToOwner(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), SpecHandle);
 		}
 	}
+}
+
+bool UPTWGA_Reload::CheckAmmo(APTWPlayerCharacter* PC)
+{
+	UPTWInventoryComponent* Inven = PC->GetInventoryComponent();
+	if (!Inven) return false;
+	
+	UPTWWeaponInstance* CurWeaponInstance = Inven->GetCurrentWeaponInst<UPTWWeaponInstance>();
+	if (!CurWeaponInstance) return false;
+	
+	if (CurWeaponInstance->GetCurrentAmmo() == CurWeaponInstance->GetMaxAmmo())
+	{
+		return false;
+	}
+	
+	return true;
 }
 
 void UPTWGA_Reload::OnMontageCompleted()

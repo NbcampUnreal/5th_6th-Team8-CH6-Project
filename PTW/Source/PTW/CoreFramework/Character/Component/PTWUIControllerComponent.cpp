@@ -161,6 +161,8 @@ void UPTWUIControllerComponent::ToggleRankingBoard(bool bShow)
 {
 	if (!OwnerPC || !UISubsystem || !RankingBoardClass) return;
 
+	if (!bAbleRankingBoard) return;
+
 	if (bShow)
 	{
 		UISubsystem->SetWidgetVisibility(RankingBoardClass, true);
@@ -350,11 +352,36 @@ void UPTWUIControllerComponent::HandleGamePhaseChanged(EPTWGamePhase CurrentGame
 	}
 }
 
+void UPTWUIControllerComponent::HandleOpenPredictVoteUI()
+{
+	if (UISubsystem && PredictWinVote)
+	{
+		UISubsystem->PushWidget(PredictWinVote, EUIInputPolicy::UIOnly);
+	}
+}
+
 void UPTWUIControllerComponent::ShowDamageIndicator(FVector DamageCauserLocation)
 {
 	if (!OwnerPC || !UISubsystem) return;
 
 	UISubsystem->ShowDamageIndicator(DamageCauserLocation);
+}
+
+void UPTWUIControllerComponent::BuyVoteItem()
+{
+	if (GetOwner()->HasAuthority())
+	{
+		Client_OpenPredictVoteUI();
+	}
+	else
+	{
+		HandleOpenPredictVoteUI();
+	}
+}
+
+void UPTWUIControllerComponent::Client_OpenPredictVoteUI_Implementation()
+{
+	HandleOpenPredictVoteUI();
 }
 
 void UPTWUIControllerComponent::Client_ShowNotification_Implementation(const FNotificationData& Data)

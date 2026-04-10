@@ -39,8 +39,11 @@ public:
 	void UpdateTargetPOV(APawn* NewTarget);
 	void RefreshTargetViewHiddenActors();
 	void ShowDamageIndicator(FVector DamageCauserLocation);
-
+	void BuyVoteItem();
 	
+	UFUNCTION(Client, Reliable)
+	void Client_OpenPredictVoteUI();
+
 	/* 알림 위젯 */
 	UFUNCTION(Client, Reliable)
 	void Client_ShowNotification(const FNotificationData& Data);
@@ -77,6 +80,8 @@ protected:
 	UFUNCTION()
 	void HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase);
 
+	void HandleOpenPredictVoteUI();
+
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag") 
 	float NameTagMaxDistance = 1500.f;
@@ -109,6 +114,8 @@ public:
 	TSubclassOf<UUserWidget> SpectatorHUDClass;
 	UPROPERTY(EditAnywhere, Category = "UI") 
 	TSubclassOf<class UPTWDevWidget> DevWidgetClass;
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> PredictWinVote;
 
 private:
 	UPROPERTY()

@@ -2,18 +2,25 @@
 
 #include "MiniGame/GameMode/PTWAbyssMiniGameMode.h"
 
-#include "CoreFramework/PTWPlayerController.h"
-#include "CoreFramework/PTWPlayerCharacter.h"
-#include "CoreFramework/PTWPlayerState.h"
-#include "GameFramework/PlayerController.h"
-#include "GameFramework/Pawn.h"
 #include "AbilitySystemComponent.h"
+#include "CoreFramework/PTWPlayerCharacter.h"
+#include "CoreFramework/PTWPlayerController.h"
+#include "CoreFramework/PTWPlayerState.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 #include "PTWGameplayTag/GameplayTags.h"
 
 #define LOCTEXT_NAMESPACE "PTWAbyssMiniGameMode"
 
 APTWAbyssMiniGameMode::APTWAbyssMiniGameMode()
 {
+}
+
+void APTWAbyssMiniGameMode::StartCountDown()
+{
+	Super::StartCountDown();
+	
+	ApplyBlackoutStateToAllPlayers(false);
 }
 
 void APTWAbyssMiniGameMode::StartRound()
@@ -31,7 +38,7 @@ void APTWAbyssMiniGameMode::StartRound()
 	}
 
 	bIsBlackoutActive = false;
-	ApplyBlackoutState(false);
+	ApplyBlackoutStateToAllPlayers(false);
 
 	if (MiniGameRule.TimeRule.bUseTimer)
 	{
@@ -42,75 +49,136 @@ void APTWAbyssMiniGameMode::StartRound()
 
 	if (HasAuthority())
 	{
-		GetWorldTimerManager().ClearTimer(IdleRevealTimerHandle);
-		GetWorldTimerManager().SetTimer(
-			IdleRevealTimerHandle,
-			this,
-			&ThisClass::TickIdleReveal,
-			IdleCheckInterval,
-			true
-		);
-
-		GetWorldTimerManager().ClearTimer(BlackoutTimerHandle);
-		GetWorldTimerManager().ClearTimer(BlackoutEndTimerHandle);
-
-		if (bUseBlackoutCycle)
-		{
-			ScheduleBlackout();
-		}
+		StartIdleRevealTracking();
+		StartBlackoutCycle();
 	}
 }
 
 void APTWAbyssMiniGameMode::EndRound()
 {
 	bIsBlackoutActive = false;
-	ApplyBlackoutState(false);
+	ApplyBlackoutStateToAllPlayers(false);
 
 	GetWorldTimerManager().ClearTimer(CoinSpawnTimerHandle);
 
 	if (HasAuthority())
 	{
-		GetWorldTimerManager().ClearTimer(IdleRevealTimerHandle);
-		GetWorldTimerManager().ClearTimer(BlackoutTimerHandle);
-		GetWorldTimerManager().ClearTimer(BlackoutEndTimerHandle);
-
-		ClearAllRevealMarkers();
-		IdleTimeMap.Empty();
+		StopIdleRevealTracking();
+		StopBlackoutCycle();
+		ResetIdleRevealState();
 	}
 
 	Super::EndRound();
 }
 
-void APTWAbyssMiniGameMode::ApplyBlackoutStateToPlayer(APTWPlayerController* PC, bool bEnable)
+void APTWAbyssMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
 {
-	if (!PC) return;
+	Super::HandlePlayerDeath(DeadActor, KillActor);
 
-	PC->Client_SetAbyssDark(bEnable);
-
-	if (APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(PC->GetPawn()))
+	if (!PTWGameState)
 	{
-		Character->SetStealthMode(bEnable);
+		return;
+	}
 
-		if (APTWPlayerState* PS = Character->GetPlayerState<APTWPlayerState>())
-		{
-			if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
-			{
-				if (bEnable)
-				{
-					ASC->RemoveLooseGameplayTag(GameplayTags::State::Abyss::NoFire);
-				}
-				else
-				{
-					ASC->AddLooseGameplayTag(GameplayTags::State::Abyss::NoFire);
-				}
-			}
-		}
+	PTWGameState->UpdateRanking(MiniGameRule);
+	CheckEndGameCondition();
+}
+
+void APTWAbyssMiniGameMode::HandleRespawn(APTWPlayerController* PlayerController)
+{
+	Super::HandleRespawn(PlayerController);
+
+	if (!IsValid(PlayerController))
+	{
+		return;
+	}
+
+	ApplyBlackoutStateToPlayer(PlayerController, bIsBlackoutActive);
+}
+
+void APTWAbyssMiniGameMode::StartBlackoutCycle()
+{
+	GetWorldTimerManager().ClearTimer(BlackoutTimerHandle);
+	GetWorldTimerManager().ClearTimer(BlackoutEndTimerHandle);
+
+	if (!bUseBlackoutCycle)
+	{
+		return;
+	}
+
+	ScheduleNextBlackout();
+}
+
+void APTWAbyssMiniGameMode::StopBlackoutCycle()
+{
+	GetWorldTimerManager().ClearTimer(BlackoutTimerHandle);
+	GetWorldTimerManager().ClearTimer(BlackoutEndTimerHandle);
+}
+
+void APTWAbyssMiniGameMode::ScheduleNextBlackout()
+{
+	if (!HasAuthority() || !GetWorld())
+	{
+		return;
+	}
+
+	if (!bUseBlackoutCycle)
+	{
+		return;
+	}
+
+	const float NextInterval = FMath::FRandRange(BlackoutMinInterval, BlackoutMaxInterval);
+
+	GetWorldTimerManager().SetTimer(
+		BlackoutTimerHandle,
+		this,
+		&ThisClass::BeginBlackout,
+		NextInterval,
+		false
+	);
+}
+
+void APTWAbyssMiniGameMode::BeginBlackout()
+{
+	if (!HasAuthority() || !GetWorld())
+	{
+		return;
+	}
+
+	bIsBlackoutActive = true;
+	ApplyBlackoutStateToAllPlayers(true);
+
+	GetWorldTimerManager().SetTimer(
+		BlackoutEndTimerHandle,
+		this,
+		&ThisClass::FinishBlackout,
+		BlackoutDuration,
+		false
+	);
+}
+
+void APTWAbyssMiniGameMode::FinishBlackout()
+{
+	if (!HasAuthority() || !GetWorld())
+	{
+		return;
+	}
+
+	bIsBlackoutActive = false;
+	ApplyBlackoutStateToAllPlayers(false);
+
+	if (bUseBlackoutCycle)
+	{
+		ScheduleNextBlackout();
 	}
 }
 
-void APTWAbyssMiniGameMode::ApplyBlackoutState(bool bEnable)
+void APTWAbyssMiniGameMode::ApplyBlackoutStateToAllPlayers(bool bEnable)
 {
-	if (!GetWorld()) return;
+	if (!GetWorld())
+	{
+		return;
+	}
 
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
@@ -122,137 +190,214 @@ void APTWAbyssMiniGameMode::ApplyBlackoutState(bool bEnable)
 
 	if (!bEnable)
 	{
-		ClearAllRevealMarkers();
-		IdleTimeMap.Empty();
+		ResetIdleRevealState();
 	}
 }
 
-void APTWAbyssMiniGameMode::ScheduleBlackout()
+void APTWAbyssMiniGameMode::ApplyBlackoutStateToPlayer(APTWPlayerController* PC, bool bEnable)
 {
-	if (!HasAuthority() || !GetWorld()) return;
-	if (!bUseBlackoutCycle) return;
-
-	const float NextInterval = FMath::FRandRange(BlackoutMinInterval, BlackoutMaxInterval);
-
-	GetWorldTimerManager().SetTimer(
-		BlackoutTimerHandle,
-		this,
-		&ThisClass::StartBlackout,
-		NextInterval,
-		false
-	);
-}
-
-void APTWAbyssMiniGameMode::StartBlackout()
-{
-	if (!HasAuthority() || !GetWorld()) return;
-
-	bIsBlackoutActive = true;
-	ApplyBlackoutState(true);
-
-	GetWorldTimerManager().SetTimer(
-		BlackoutEndTimerHandle,
-		this,
-		&ThisClass::EndBlackout,
-		BlackoutDuration,
-		false
-	);
-}
-
-void APTWAbyssMiniGameMode::EndBlackout()
-{
-	if (!HasAuthority() || !GetWorld()) return;
-
-	bIsBlackoutActive = false;
-	ApplyBlackoutState(false);
-
-	if (bUseBlackoutCycle)
+	if (!IsValid(PC))
 	{
-		ScheduleBlackout();
+		return;
+	}
+
+	ApplyBlackoutVisual(PC, bEnable);
+	ApplyBlackoutStealth(PC, bEnable);
+	ApplyBlackoutFireRestriction(PC, bEnable);
+}
+
+void APTWAbyssMiniGameMode::ApplyBlackoutVisual(APTWPlayerController* PC, bool bEnable)
+{
+	if (!IsValid(PC))
+	{
+		return;
+	}
+
+	PC->Client_SetAbyssDark(bEnable);
+}
+
+void APTWAbyssMiniGameMode::ApplyBlackoutStealth(APTWPlayerController* PC, bool bEnable)
+{
+	if (!IsValid(PC))
+	{
+		return;
+	}
+
+	APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(PC->GetPawn());
+	if (!IsValid(Character))
+	{
+		return;
+	}
+
+	Character->SetStealthMode(bEnable);
+}
+
+void APTWAbyssMiniGameMode::ApplyBlackoutFireRestriction(APTWPlayerController* PC, bool bEnable)
+{
+	if (!IsValid(PC))
+	{
+		return;
+	}
+
+	APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(PC->GetPawn());
+	if (!IsValid(Character))
+	{
+		return;
+	}
+
+	APTWPlayerState* PS = Character->GetPlayerState<APTWPlayerState>();
+	if (!IsValid(PS))
+	{
+		return;
+	}
+
+	UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+	if (!IsValid(ASC))
+	{
+		return;
+	}
+
+	if (bEnable)
+	{
+		ASC->RemoveLooseGameplayTag(GameplayTags::State::Abyss::NoFire);
+	}
+	else
+	{
+		ASC->AddLooseGameplayTag(GameplayTags::State::Abyss::NoFire);
 	}
 }
 
-void APTWAbyssMiniGameMode::TickIdleReveal()
+void APTWAbyssMiniGameMode::StartIdleRevealTracking()
 {
-	if (!HasAuthority() || !GetWorld()) return;
+	GetWorldTimerManager().ClearTimer(IdleRevealTimerHandle);
+
+	GetWorldTimerManager().SetTimer(
+		IdleRevealTimerHandle,
+		this,
+		&ThisClass::UpdateIdleReveal,
+		IdleCheckInterval,
+		true
+	);
+}
+
+void APTWAbyssMiniGameMode::StopIdleRevealTracking()
+{
+	GetWorldTimerManager().ClearTimer(IdleRevealTimerHandle);
+}
+
+void APTWAbyssMiniGameMode::UpdateIdleReveal()
+{
+	if (!HasAuthority() || !GetWorld())
+	{
+		return;
+	}
 
 	if (!bIsBlackoutActive)
 	{
-		ClearAllRevealMarkers();
-		IdleTimeMap.Empty();
+		ResetIdleRevealState();
 		return;
 	}
 
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		AController* Controller = It->Get();
-		if (!Controller) continue;
+		if (!IsValid(Controller))
+		{
+			continue;
+		}
 
 		APawn* Pawn = Controller->GetPawn();
 		APlayerState* PS = Controller->PlayerState;
-		if (!Pawn || !PS) continue;
+		if (!IsValid(Pawn) || !IsValid(PS))
+		{
+			continue;
+		}
 
 		const float Speed = Pawn->GetVelocity().Size();
-		float& Acc = IdleTimeMap.FindOrAdd(PS);
+		float& IdleAccumulatedTime = IdleTimeMap.FindOrAdd(PS);
 
 		if (Speed <= IdleSpeedThreshold)
 		{
-			Acc += IdleCheckInterval;
+			IdleAccumulatedTime += IdleCheckInterval;
 
-			if (Acc >= IdleRevealTime)
+			if (IdleAccumulatedTime >= IdleRevealTime)
 			{
 				ShowReveal(Controller);
 			}
 		}
 		else
 		{
-			Acc = 0.0f;
+			IdleAccumulatedTime = 0.0f;
 			HideReveal(Controller);
 		}
 	}
 }
 
+void APTWAbyssMiniGameMode::ResetIdleRevealState()
+{
+	ClearAllRevealMarkers();
+	IdleTimeMap.Empty();
+}
+
 void APTWAbyssMiniGameMode::ShowReveal(AController* Controller)
 {
-	if (!Controller || !RevealMarkerClass || !GetWorld()) return;
+	if (!IsValid(Controller) || !RevealMarkerClass || !GetWorld())
+	{
+		return;
+	}
 
 	APlayerState* PS = Controller->PlayerState;
 	APawn* Pawn = Controller->GetPawn();
-	if (!PS || !Pawn) return;
-
-	if (TObjectPtr<AActor>* Found = RevealMarkerMap.Find(PS))
+	if (!IsValid(PS) || !IsValid(Pawn))
 	{
-		if (IsValid(*Found)) return;
+		return;
 	}
 
-	FActorSpawnParameters Params;
-	Params.Owner = Pawn;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	if (TObjectPtr<AActor>* FoundMarker = RevealMarkerMap.Find(PS))
+	{
+		if (IsValid(*FoundMarker))
+		{
+			return;
+		}
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = Pawn;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	AActor* Marker = GetWorld()->SpawnActor<AActor>(
 		RevealMarkerClass,
 		Pawn->GetActorLocation(),
 		FRotator::ZeroRotator,
-		Params
+		SpawnParams
 	);
 
-	if (!Marker) return;
+	if (!IsValid(Marker))
+	{
+		return;
+	}
 
 	RevealMarkerMap.Add(PS, Marker);
 }
 
 void APTWAbyssMiniGameMode::HideReveal(AController* Controller)
 {
-	if (!Controller) return;
+	if (!IsValid(Controller))
+	{
+		return;
+	}
 
 	APlayerState* PS = Controller->PlayerState;
-	if (!PS) return;
-
-	if (TObjectPtr<AActor>* Found = RevealMarkerMap.Find(PS))
+	if (!IsValid(PS))
 	{
-		if (IsValid(*Found))
+		return;
+	}
+
+	if (TObjectPtr<AActor>* FoundMarker = RevealMarkerMap.Find(PS))
+	{
+		if (IsValid(*FoundMarker))
 		{
-			(*Found)->Destroy();
+			(*FoundMarker)->Destroy();
 		}
 
 		RevealMarkerMap.Remove(PS);
@@ -261,7 +406,7 @@ void APTWAbyssMiniGameMode::HideReveal(AController* Controller)
 
 void APTWAbyssMiniGameMode::ClearAllRevealMarkers()
 {
-	for (auto& Pair : RevealMarkerMap)
+	for (TPair<TObjectPtr<APlayerState>, TObjectPtr<AActor>>& Pair : RevealMarkerMap)
 	{
 		if (IsValid(Pair.Value))
 		{
@@ -270,25 +415,6 @@ void APTWAbyssMiniGameMode::ClearAllRevealMarkers()
 	}
 
 	RevealMarkerMap.Empty();
-}
-
-void APTWAbyssMiniGameMode::HandlePlayerDeath(AActor* DeadActor, AActor* KillActor)
-{
-	Super::HandlePlayerDeath(DeadActor, KillActor);
-
-	if (!PTWGameState) return;
-
-	PTWGameState->UpdateRanking(MiniGameRule);
-	CheckEndGameCondition();
-}
-
-void APTWAbyssMiniGameMode::HandleRespawn(APTWPlayerController* PlayerController)
-{
-	Super::HandleRespawn(PlayerController);
-
-	if (!IsValid(PlayerController)) return;
-
-	ApplyBlackoutStateToPlayer(PlayerController, bIsBlackoutActive);
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -74,8 +74,8 @@ void APTWMainMenuPlayerController::BeginPlay()
 			}
 		}
 		bShowMouseCursor = true;
-		// FInputModeUIOnly InputMode;
-		// SetInputMode(InputMode);
+		FInputModeUIOnly InputMode;
+		SetInputMode(InputMode);
 	}
 }
 
@@ -91,9 +91,10 @@ void APTWMainMenuPlayerController::EndPlay(const EEndPlayReason::Type EndPlayRea
 				UISubsystem->SetDefaultInputPolicy(EUIInputPolicy::GameOnly);
 			}
 		}
+		FInputModeGameOnly InputModeData;
+		SetInputMode(InputModeData);
 		bShowMouseCursor = false;
 	}
-	
 	Super::EndPlay(EndPlayReason);
 }
 

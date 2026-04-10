@@ -5,7 +5,9 @@
 
 #include "PTWGameMode.h"
 #include "PTWLobbyGameMode.h"
+#include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/Character/Component/PTWUIControllerComponent.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
 #include "MiniGame/Data/PTWLobbyItemDefinition.h"
 #include "MiniGame/Data/PTWLobbyItemRow.h"
@@ -53,15 +55,18 @@ int32 UPTWLobbyItemManager::TakePredictionWinReward(APTWPlayerState* PlayerState
 	
 	FUniqueNetIdRepl PredictedId = PlayerState->GetLobbyItemData().PredictedData.PredictedPlayer;
 	if (!PredictedId.IsValid()) return 0;
+	UE_LOG(LogTemp, Error, TEXT("PredictedPtr: %p"), PredictedId.GetUniqueNetId().Get());
 	
 	UPTWScoreSubsystem* ScoreSubsystem = World->GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>();
 	if (!ScoreSubsystem) return 0;
 
 	const TArray<FPTWLastWinnerInfo>& LastWinnerInfos = ScoreSubsystem->GetSavedGameData().LastWinnerInfos;
 	if (LastWinnerInfos.IsEmpty()) return 0;
+	UE_LOG(LogTemp, Error, TEXT("LastWinnerInfos is not null"));
 	
 	for (const FPTWLastWinnerInfo& Info : LastWinnerInfos)
 	{
+		UE_LOG(LogTemp, Error, TEXT("PredictedPtr: %p, WinnerPtr: %p"), PredictedId.GetUniqueNetId().Get(), Info.WinnerId.GetUniqueNetId().Get());
 		if (Info.WinnerId == PredictedId)
 		{
 			AddGold(PlayerState, PredictionWinReward);
@@ -148,11 +153,7 @@ void UPTWLobbyItemManager::HandlePredictionWin(APTWPlayerState* Buyer,
 
 	Buyer->GetLobbyItemData().PredictedData.RewardAmount = LobbyItemDefinition->PredictionReward;
 	
-	// 여기서 투표 ui 출력
-
-	//임시로 구매자가 승리 예측자로 설정
-
-	Buyer->GetLobbyItemData().PredictedData.PredictedPlayer = Buyer->GetUniqueId();
+	Cast<APTWPlayerController>(Buyer->GetPlayerController())->UIControllerComponent->BuyVoteItem();
 }
 
 void UPTWLobbyItemManager::AddGold(APTWPlayerState* Buyer, int32 Gold)

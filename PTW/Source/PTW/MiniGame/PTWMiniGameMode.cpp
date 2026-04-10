@@ -314,8 +314,6 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
 		
-		
-		
 		FTimerHandle LoadingDelayTimer;
 		GetWorldTimerManager().SetTimer(LoadingDelayTimer, FTimerDelegate::CreateLambda([this]()
 		{
@@ -711,12 +709,14 @@ void APTWMiniGameMode::StartResultSequence()
 
 bool APTWMiniGameMode::IsWinner(APTWPlayerState* InPlayerState)
 {
-	if (InPlayerState)
+	if (!InPlayerState) return false;
+	
+	if (MiniGameRule.WinConditionRule.WinType == EPTWWinType::Survival)
 	{
 		return (InPlayerState->GetDeathOrder() == 0);
 	}
-
-	return false;
+	
+	return InPlayerState == PTWGameState->GetRankedPlayers()[0];
 }
 
 void APTWMiniGameMode::ExitSpectatorMode(AController* Controller)

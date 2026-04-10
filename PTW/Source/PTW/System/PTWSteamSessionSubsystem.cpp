@@ -392,40 +392,52 @@ void UPTWSteamSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig
 
 void UPTWSteamSessionSubsystem::QuickMatchGame()
 {
+	const ULocalPlayer* LocalPlayers = GetWorld()->GetFirstLocalPlayerFromController();
+	if (!LocalPlayers) return;
+
+	int32 ControllerId = LocalPlayers->GetControllerId();
+	if (ControllerId == INDEX_NONE) // ControllerId가 -1인지 체크
+	{
+		UE_LOG(Log_Steam, Error, TEXT("ControllerId가 -1입니다! 세션을 시작할 수 없습니다."));
+		return;
+	}
+
+	// 아이디 유효성 검사도 필수
+	if (!LocalPlayers->GetPreferredUniqueNetId().IsValid())
+	{
+		UE_LOG(Log_Steam, Error, TEXT("스팀 NetId가 유효하지 않습니다."));
+		return;
+	}
+	
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
-
-	TSharedPtr<FOnlineSessionSearch> DedicatedSessionSearch = MakeShareable(new FOnlineSessionSearch());
-	DedicatedSessionSearch->bIsLanQuery = false;
-	DedicatedSessionSearch->MaxSearchResults = 100;
-	DedicatedSessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, false, EOnlineComparisonOp::Equals);
-	DedicatedSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+	
+	TSharedPtr<FOnlineSessionSearch> ListenSessionSearch = MakeShareable(new FOnlineSessionSearch());
+	ListenSessionSearch->bIsLanQuery = false;
+	ListenSessionSearch->MaxSearchResults = 1000;
+	ListenSessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, false, EOnlineComparisonOp::Equals);
+	ListenSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
 	
 	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
 		FOnFindSessionsCompleteDelegate::CreateWeakLambda(this, [=, this](bool bWasSuccessful)
 		{
-			if(SessionInterface.IsValid())
-			{
-				SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
-			}
-			
-			if (bWasSuccessful && DedicatedSessionSearch.IsValid())
+			if(!SessionInterface.IsValid()) return;
+
+			if (bWasSuccessful && ListenSessionSearch.IsValid())
 			{
 				UE_LOG(Log_Steam, Display, TEXT("[게임세션 탐색응답] 스팀게임세션 탐색성공 응답"));
-				for (const FOnlineSessionSearchResult& SearchResult : DedicatedSessionSearch->SearchResults)
+				if (!ListenSessionSearch->SearchResults.IsEmpty())
 				{
-					bool bIsPTW = false;
-					if (!SearchResult.Session.SessionSettings.Get(TEXT("PTW"), bIsPTW)) continue;
-					if (!bIsPTW) continue;
-					
-					JoinGameSession(FOnlineSessionSearchResultBP(SearchResult));
-					return;
+					for (const FOnlineSessionSearchResult& SearchResult : ListenSessionSearch->SearchResults)
+					{
+						bool bIsPTW = false;
+						if (!SearchResult.Session.SessionSettings.Get(TEXT("PTW"), bIsPTW) || !bIsPTW) continue;
+						
+						JoinGameSession(FOnlineSessionSearchResultBP(SearchResult), TEXT("?listen"));
+						SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+						return;
+					}
 				}
-			}
-			else
-			{
-				UE_LOG(Log_Steam, Error, TEXT("[게임세션 탐색응답] 스팀게임세션 탐색실패 응답"));
-				return;
 			}
 			FPTWSessionConfig SessionConfig;
 			SessionConfig.bIsDedicatedServer = false;
@@ -434,16 +446,19 @@ void UPTWSteamSessionSubsystem::QuickMatchGame()
 			SessionConfig.MaxRounds = 4;
 			SessionConfig.bIsNoGameLift = false;
 			CreateGameSession(SessionConfig, true);
+			
+			SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 		})
 	);
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	if (SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), DedicatedSessionSearch.ToSharedRef()))
+	if (SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), ListenSessionSearch.ToSharedRef()))
 	{
 		UE_LOG(Log_Steam, Display, TEXT("[게임세션 탐색요청] 스팀게임세션 탐색요청 전송완료"));
 	}
 	else
 	{
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 		UE_LOG(Log_Steam, Error, TEXT("[게임세션 탐색요청] 스팀게임세션 탐색요청 전송실패"));
 	}	
 }

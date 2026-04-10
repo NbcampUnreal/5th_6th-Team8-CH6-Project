@@ -8,8 +8,8 @@
 #include "UI/PTWUISubsystem.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanelSlot.h"
-#include "CoreFramework/MainMenu/PTWMainMenuPlayerController.h"
 #include "System/PTWGameLiftClientSubsystem.h"
+#include "System/PTWSteamSessionSubsystem.h"
 
 void UPTWMainMenu::NativeConstruct()
 {
@@ -85,7 +85,7 @@ void UPTWMainMenu::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 void UPTWMainMenu::OnClickedPlayButton()
 {
-#if WITH_EDITOR || true
+#if WITH_EDITOR && false
 	if (IsValid(ServerBrowserClass))
 	{
 		if (ULocalPlayer* LP = GetOwningLocalPlayer())
@@ -98,11 +98,16 @@ void UPTWMainMenu::OnClickedPlayButton()
 		}
 	}
 #else
-	if (UPTWGameLiftClientSubsystem* GameLiftClientSubsystem = UPTWGameLiftClientSubsystem::Get(this))
+	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
 	{
-		GameLiftClientSubsystem->SearchQuickSession();
 		SetIsEnabled(false);
+		SteamSessionSubsystem->QuickMatchGame();
 	}
+	// if (UPTWGameLiftClientSubsystem* GameLiftClientSubsystem = UPTWGameLiftClientSubsystem::Get(this))
+	// {
+	// 	GameLiftClientSubsystem->SearchQuickSession();
+	// 	SetIsEnabled(false);
+	// }
 #endif
 	
 }

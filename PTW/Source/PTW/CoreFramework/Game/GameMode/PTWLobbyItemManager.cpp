@@ -153,7 +153,13 @@ void UPTWLobbyItemManager::HandlePredictionWin(APTWPlayerState* Buyer,
 
 	Buyer->GetLobbyItemData().PredictedData.RewardAmount = LobbyItemDefinition->PredictionReward;
 	
-	Cast<APTWPlayerController>(Buyer->GetPlayerController())->UIControllerComponent->BuyVoteItem();
+	APTWPlayerController* PlayerController = Cast<APTWPlayerController>(Buyer->GetPlayerController());
+	if (!PlayerController) return;
+	
+	if (!PlayerController->UIControllerComponent) return;
+	
+	PlayerController->UIControllerComponent->BuyVoteItem();
+	
 }
 
 void UPTWLobbyItemManager::AddGold(APTWPlayerState* Buyer, int32 Gold)

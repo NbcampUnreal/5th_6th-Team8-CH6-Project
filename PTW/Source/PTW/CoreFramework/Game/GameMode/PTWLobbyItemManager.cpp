@@ -53,15 +53,18 @@ int32 UPTWLobbyItemManager::TakePredictionWinReward(APTWPlayerState* PlayerState
 	
 	FUniqueNetIdRepl PredictedId = PlayerState->GetLobbyItemData().PredictedData.PredictedPlayer;
 	if (!PredictedId.IsValid()) return 0;
+	UE_LOG(LogTemp, Error, TEXT("PredictedPtr: %p"), PredictedId.GetUniqueNetId().Get());
 	
 	UPTWScoreSubsystem* ScoreSubsystem = World->GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>();
 	if (!ScoreSubsystem) return 0;
 
 	const TArray<FPTWLastWinnerInfo>& LastWinnerInfos = ScoreSubsystem->GetSavedGameData().LastWinnerInfos;
 	if (LastWinnerInfos.IsEmpty()) return 0;
+	UE_LOG(LogTemp, Error, TEXT("LastWinnerInfos is not null"));
 	
 	for (const FPTWLastWinnerInfo& Info : LastWinnerInfos)
 	{
+		UE_LOG(LogTemp, Error, TEXT("PredictedPtr: %p, WinnerPtr: %p"), PredictedId.GetUniqueNetId().Get(), Info.WinnerId.GetUniqueNetId().Get());
 		if (Info.WinnerId == PredictedId)
 		{
 			AddGold(PlayerState, PredictionWinReward);
@@ -153,6 +156,8 @@ void UPTWLobbyItemManager::HandlePredictionWin(APTWPlayerState* Buyer,
 	//임시로 구매자가 승리 예측자로 설정
 
 	Buyer->GetLobbyItemData().PredictedData.PredictedPlayer = Buyer->GetUniqueId();
+
+	
 }
 
 void UPTWLobbyItemManager::AddGold(APTWPlayerState* Buyer, int32 Gold)

@@ -9,6 +9,9 @@
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/EditableText.h"
+#include "Components/SizeBox.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 
 #include "Engine/Engine.h"
 #include "GameFramework/PlayerController.h"
@@ -19,7 +22,9 @@
 #include "CoreFramework/PTWGameUserSettings.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/MainMenu/PTWMainMenuPlayerController.h"
-#include "OptionsWidget/PTWPlayerVoiceVolume.h"
+#include "GameFramework/PlayerState.h"
+#include "OptionsWidget/PTWVoiceVolume.h"
+#include "System/PTWVoiceChatSubsystem.h"
 #include "UI/PTWUISubsystem.h"
 
 void UPTWOptionsWidget::NativeConstruct()
@@ -35,7 +40,7 @@ void UPTWOptionsWidget::NativeConstruct()
 	InitializeUIFromCurrentSettings();
 	CacheInitialSettings();
 	BindEvents();
-
+	
 	if (CategorySwitcher)
 	{
 		CategorySwitcher->SetActiveWidgetIndex(0);
@@ -48,7 +53,7 @@ void UPTWOptionsWidget::NativeDestruct()
 	{
 		RestoreInitialSettings();
 	}
-
+	
 	Super::NativeDestruct();
 }
 
@@ -305,7 +310,7 @@ void UPTWOptionsWidget::UpdateAudioSettings()
 	const float FinalBGM = Master * BGM;
 	const float FinalSFX = Master * SFX;
 	const float FinalUI = Master * UI;
-	const float FinalVoice = Master * Voice * 100.f;
+	const float FinalVoice = Master * Voice;
 	
 	// Master 적용
 	if (MasterSoundClass)

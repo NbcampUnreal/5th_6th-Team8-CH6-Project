@@ -16,7 +16,7 @@ void UPTWGameUserSettings::ApplyAudioSettings(UWorld* World, USoundMix* SoundMix
 	const float FinalBGM = MasterVolume * BGMVolume;
 	const float FinalSFX = MasterVolume * SFXVolume;
 	const float FinalUI = MasterVolume * UIVolume;
-	const float FinalVoice = MasterVolume * VoiceVolume * 100.f;
+	const float FinalVoice = MasterVolume * VoiceVolume;
 	
 	if (MasterClass)
 	{

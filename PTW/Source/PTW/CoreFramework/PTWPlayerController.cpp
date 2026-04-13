@@ -170,6 +170,7 @@ void APTWPlayerController::OnVoicePressed()
 		{
 			if (IOnlineVoicePtr VoiceInterface = Subsystem->GetVoiceInterface())
 			{
+				OnChangedVoiceChatState.Broadcast(true);
 				VoiceInterface->StartNetworkedVoice(0);
 			}
 		}
@@ -184,6 +185,7 @@ void APTWPlayerController::OnVoiceReleased()
 		{
 			if (IOnlineVoicePtr VoiceInterface = Subsystem->GetVoiceInterface())
 			{
+				OnChangedVoiceChatState.Broadcast(false);
 				VoiceInterface->StopNetworkedVoice(0);
 			}
 		}

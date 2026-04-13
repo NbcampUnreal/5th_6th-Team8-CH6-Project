@@ -19,6 +19,7 @@
 #include "CoreFramework/PTWGameUserSettings.h"
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/MainMenu/PTWMainMenuPlayerController.h"
+#include "OptionsWidget/PTWPlayerVoiceVolume.h"
 #include "UI/PTWUISubsystem.h"
 
 void UPTWOptionsWidget::NativeConstruct()
@@ -217,6 +218,12 @@ void UPTWOptionsWidget::InitializeUIFromCurrentSettings()
 		ET_UIVolume->SetText(FormatFloatToText(Settings->UIVolume));
 	}
 
+	if (Slider_VoiceVolume && ET_VoiceVolume)
+	{
+		Slider_VoiceVolume->SetValue(Settings->VoiceVolume);
+		ET_VoiceVolume->SetText(FormatFloatToText(Settings->VoiceVolume));
+	}
+	
 	if (Slider_MouseSensitivity && ET_MouseSensitivity)
 	{
 		Slider_MouseSensitivity->SetValue(Settings->MouseSensitivity);
@@ -281,13 +288,15 @@ void UPTWOptionsWidget::UpdateAudioSettings()
 	const float BGM = Slider_BGMVolume ? Slider_BGMVolume->GetValue() : 1.f;
 	const float SFX = Slider_SFXVolume ? Slider_SFXVolume->GetValue() : 1.f;
 	const float UI = Slider_UIVolume ? Slider_UIVolume->GetValue() : 1.f;
-
+	const float Voice = Slider_VoiceVolume ? Slider_VoiceVolume->GetValue() : 1.f;
+	
 	// Settings 저장
 	Settings->MasterVolume = Master;
 	Settings->BGMVolume = BGM;
 	Settings->SFXVolume = SFX;
 	Settings->UIVolume = UI;
-
+	Settings->VoiceVolume = Voice;
+	
 	UWorld* World = GetWorld();
 	if (!World || !MasterSoundMix) return;
 
@@ -296,7 +305,8 @@ void UPTWOptionsWidget::UpdateAudioSettings()
 	const float FinalBGM = Master * BGM;
 	const float FinalSFX = Master * SFX;
 	const float FinalUI = Master * UI;
-
+	const float FinalVoice = Master * Voice * 100.f;
+	
 	// Master 적용
 	if (MasterSoundClass)
 	{
@@ -353,6 +363,20 @@ void UPTWOptionsWidget::UpdateAudioSettings()
 		);
 	}
 
+	// Voice Input 적용
+	if (VoiceSoundClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(
+			World,
+			MasterSoundMix,
+			VoiceSoundClass,
+			FinalVoice,
+			1.0f,
+			0.0f,
+			true
+		);
+	}
+	
 	// 한 번만 Push (성능 + 안정성)
 	UGameplayStatics::PushSoundMixModifier(World, MasterSoundMix);
 
@@ -580,7 +604,15 @@ void UPTWOptionsWidget::BindEvents()
 	{
 		ET_UIVolume->OnTextCommitted.AddDynamic(this, &UPTWOptionsWidget::OnUIVolumeTextCommitted);
 	}
-
+	if (Slider_VoiceVolume)
+	{
+		Slider_VoiceVolume->OnValueChanged.AddDynamic(this, &UPTWOptionsWidget::OnVoiceVolumeChanged);
+	}
+	if (ET_VoiceVolume)
+	{
+		ET_VoiceVolume->OnTextCommitted.AddDynamic(this, &UPTWOptionsWidget::OnVoiceVolumeTextCommitted);
+	}
+	
 	/* 게임 세팅 */
 	if (Slider_MouseSensitivity)
 	{
@@ -623,7 +655,13 @@ void UPTWOptionsWidget::BindEvents()
 		Button_Cancel->OnClicked.AddDynamic(
 			this, &UPTWOptionsWidget::OnClickedCancel);
 	}
-
+	/* Help 버튼 */
+	if (Button_VoiceHelp)
+	{
+		Button_VoiceHelp->OnClicked.AddDynamic(
+			this, &UPTWOptionsWidget::OnClickedVoiceHelp);
+	}
+	
 	/* 언어 설정 */
 	if (Combo_Language)
 	{
@@ -797,6 +835,23 @@ void UPTWOptionsWidget::OnUIVolumeTextCommitted(const FText& Text, ETextCommit::
 	}
 }
 
+void UPTWOptionsWidget::OnVoiceVolumeChanged(float Value)
+{
+	if (ET_VoiceVolume)
+	{
+		ET_VoiceVolume->SetText(FormatFloatToText(Value));
+	}
+	UpdateAudioSettings();
+}
+
+void UPTWOptionsWidget::OnVoiceVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod)
+{
+	if (ValidateAndApplyTextEntry(Text, Slider_VoiceVolume, ET_VoiceVolume, 0.0f, 1.0f))
+	{
+		UpdateAudioSettings();
+	}
+}
+
 void UPTWOptionsWidget::OnMouseSensitivityChanged(float Value)
 {
 	if (ET_MouseSensitivity)
@@ -879,6 +934,21 @@ void UPTWOptionsWidget::OnClickedCancel()
 		{
 			UISubsystem->PopWidget();
 		}
+	}
+}
+
+void UPTWOptionsWidget::OnClickedVoiceHelp()
+{
+	APlayerController* PC = GetOwningPlayer();
+	
+	FText VoiceHelpText = FText::FromString(TEXT("스팀 오버레이(Shift + Tab)를 열고 [설정] -> [음성] 탭에서 마이크 입력장치 변경 및 볼륨조절이 가능합니다"));
+	if (APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC))
+	{
+		PTWPC->Popup(VoiceHelpText);
+	}
+	else if (APTWMainMenuPlayerController* PTWMainPC = Cast<APTWMainMenuPlayerController>(PC))
+	{
+		PTWMainPC->Popup(VoiceHelpText);
 	}
 }
 

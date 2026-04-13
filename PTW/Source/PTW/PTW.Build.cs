@@ -23,7 +23,8 @@ public class PTW : ModuleRules
             "InputCore",
             "EnhancedInput",
 			"AIModule",
-			"NavigationSystem"
+			"NavigationSystem",
+			"CoreOnline"
 		});
 
         // 2. GAS (Gameplay Ability System) 필수 모듈

@@ -2,9 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "PTWPlayerVoiceVolume.generated.h"
+#include "PTWVoiceVolume.generated.h"
 
-class APTWPlayerState;
+class APlayerState;
 class UTextBlock;
 class UEditableText;
 class USlider;
@@ -12,12 +12,14 @@ class USlider;
  * 다른 플레이어들의 음성채팅 소리를 조절하는 위젯입니다.
  */
 UCLASS()
-class PTW_API UPTWPlayerVoiceVolume : public UUserWidget
+class PTW_API UPTWVoiceVolume : public UUserWidget
 {
 	GENERATED_BODY()
 	
 public:
-	void InitWidget(APTWPlayerState* InTargetPlayerState);
+	void InitWidget(APlayerState* InTargetPlayerState);
+	
+	FORCEINLINE FString GetPlayerId() const { return PlayerId; };
 protected:
 	virtual void NativeConstruct() override;
 	

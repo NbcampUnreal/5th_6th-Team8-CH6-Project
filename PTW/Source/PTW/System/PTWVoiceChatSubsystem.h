@@ -5,12 +5,28 @@
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "PTWVoiceChatSubsystem.generated.h"
 
-/**
- * Steam VoiceChat을 관리하는 서브 시스템입니다.
- */
+USTRUCT(BlueprintType)
+struct FPTWPlayerVoiceInfo
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadWrite)
+	float Volume = 1.0f;
+	
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsMuted = false;
+	
+	UPROPERTY(BlueprintReadOnly, NotReplicated)
+	bool bIsMicActive = false;
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVoiceChatStateUpdated, const FString&, PlayerNetId, bool, bIsTalking);
 
 class FUniqueNetId;
+
+/**
+ * Steam VoiceChat을 관리하는 서브 시스템입니다.
+ */
 UCLASS()
 class PTW_API UPTWVoiceChatSubsystem : public ULocalPlayerSubsystem
 {
@@ -18,10 +34,12 @@ class PTW_API UPTWVoiceChatSubsystem : public ULocalPlayerSubsystem
 
 public:
 	static UPTWVoiceChatSubsystem* Get(const UObject* WorldContextObject);
-	float GetIndividualVoiceVolume(const FString& PlayerID) const;
+	float GetPlayerVoiceVolume(const FString& PlayerID);
 
-	void SetIndividualVoiceVolume(const FString& PlayerID, float NewVolume);
+	void SetPlayerVoiceVolume(const FString& PlayerID, float NewVolume);
 	
+	UFUNCTION()
+	void OnPlayerStateChanged(APlayerState* PlayerState, bool bIsAdded);
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
@@ -29,7 +47,8 @@ protected:
 	void HandlePlayerVoiceStateChanged(TSharedRef<const FUniqueNetId> TalkerId, bool bIsTalking);
 
 public:
-	TMap<FString, float> IndividualVoiceVolumes;
+	TMap<FString, FPTWPlayerVoiceInfo> PlayerVoiceInfoList;
+	
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Voice Chat")
 	FOnVoiceChatStateUpdated OnVoiceStateUpdated;

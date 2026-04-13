@@ -7,6 +7,7 @@
 #include "GameFramework/GameUserSettings.h"
 #include "PTWOptionsWidget.generated.h"
 
+class UVerticalBox;
 class UCheckBox;
 class UComboBoxString;
 class USlider;
@@ -15,7 +16,7 @@ class UWidgetSwitcher;
 class USoundClass;
 class USoundMix;
 class UEditableText;
-class UPTWPlayerVoiceVolume;
+class UPTWVoiceVolume;
 
 USTRUCT()
 struct FOptionSnapshot
@@ -109,6 +110,8 @@ protected:
 	USlider* Slider_VoiceVolume;
 	UPROPERTY(meta = (BindWidget))
 	UEditableText* ET_VoiceVolume;
+	UPROPERTY(meta = (BindWidget))
+	UVerticalBox* Vertical_VoiceVolume;
 	// 마우스 감도
 	UPROPERTY(meta = (BindWidget))
 	USlider* Slider_MouseSensitivity;
@@ -155,11 +158,7 @@ protected:
 	USoundClass* UISoundClass;
 	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
 	USoundClass* VoiceSoundClass;
-	
-	// 보이스챗 플레이어 리스트 위젯
-	UPROPERTY(EditDefaultsOnly, Category = "Settings|Sound|Voice")
-	TSubclassOf<UPTWPlayerVoiceVolume> PlayerVoiceVolumeClass;
-	
+
 private:
 	FOptionSnapshot InitialSnapshot; // 초기값 저장
 	bool bIsDirty = false; // 설정 변경 여부

@@ -43,6 +43,5 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UDataTable> LobbyItemTable;
-
-	int32 PredictionWinReward = 0;
+	
 };

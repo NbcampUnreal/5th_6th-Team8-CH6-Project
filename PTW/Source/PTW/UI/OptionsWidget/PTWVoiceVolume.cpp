@@ -1,17 +1,17 @@
-#include "UI/OptionsWidget/PTWPlayerVoiceVolume.h"
+#include "UI/OptionsWidget/PTWVoiceVolume.h"
 #include "Components/EditableText.h"
 #include "Components/Slider.h"
 #include "Components/TextBlock.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "System/PTWVoiceChatSubsystem.h"
 
-void UPTWPlayerVoiceVolume::InitWidget(APTWPlayerState* TargetPlayerState)
+void UPTWVoiceVolume::InitWidget(APlayerState* TargetPlayerState)
 {
 	if (!TargetPlayerState) return;
 	
 	if (TargetPlayerState->GetUniqueId().IsValid())
 	{
-		PlayerId = TargetPlayerState->GetUniqueId()->ToString();
+		PlayerId = TargetPlayerState->GetUniqueId().ToString();
 	}
 	
 	if (Text_PlayerName)
@@ -21,14 +21,21 @@ void UPTWPlayerVoiceVolume::InitWidget(APTWPlayerState* TargetPlayerState)
 	
 	if (UPTWVoiceChatSubsystem* VoiceSubsystem = UPTWVoiceChatSubsystem::Get(this))
 	{
-		float CurrentVol = VoiceSubsystem->GetIndividualVoiceVolume(PlayerId);
+		float CurrentVol = VoiceSubsystem->GetPlayerVoiceVolume(PlayerId);
 		
-		if (Slider_VoiceVolume) Slider_VoiceVolume->SetValue(CurrentVol);
-		if (ET_VoiceVolume) ET_VoiceVolume->SetText(FormatFloatToText(CurrentVol));
+		if (Slider_VoiceVolume)
+		{
+			Slider_VoiceVolume->SetValue(CurrentVol);
+		}
+		
+		if (ET_VoiceVolume) 
+		{
+			ET_VoiceVolume->SetText(FormatFloatToText(CurrentVol));
+		}
 	}
 }
 
-void UPTWPlayerVoiceVolume::NativeConstruct()
+void UPTWVoiceVolume::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
@@ -36,15 +43,15 @@ void UPTWPlayerVoiceVolume::NativeConstruct()
 
 	if (Slider_VoiceVolume)
 	{
-		Slider_VoiceVolume->OnValueChanged.AddDynamic(this, &UPTWPlayerVoiceVolume::OnVolumeChanged);
+		Slider_VoiceVolume->OnValueChanged.AddDynamic(this, &UPTWVoiceVolume::OnVolumeChanged);
 	}
 	if (ET_VoiceVolume)
 	{
-		ET_VoiceVolume->OnTextCommitted.AddDynamic(this, &UPTWPlayerVoiceVolume::OnVolumeTextCommitted);
+		ET_VoiceVolume->OnTextCommitted.AddDynamic(this, &UPTWVoiceVolume::OnVolumeTextCommitted);
 	}
 }
 
-void UPTWPlayerVoiceVolume::OnVolumeChanged(float Value)
+void UPTWVoiceVolume::OnVolumeChanged(float Value)
 {
 	if (ET_VoiceVolume)
 	{
@@ -54,27 +61,27 @@ void UPTWPlayerVoiceVolume::OnVolumeChanged(float Value)
 	// 로컬 플레이어 컨트롤러에 볼륨 저장
 	if (UPTWVoiceChatSubsystem* VoiceSubsystem = UPTWVoiceChatSubsystem::Get(this))
 	{
-		VoiceSubsystem->SetIndividualVoiceVolume(PlayerId, Value);
+		VoiceSubsystem->SetPlayerVoiceVolume(PlayerId, Value);
 	}
 }
 
-void UPTWPlayerVoiceVolume::OnVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod)
+void UPTWVoiceVolume::OnVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod)
 {
 	FString StringValue = Text.ToString();
 	float NewValue = FCString::Atof(*StringValue);
 	
-	NewValue = FMath::Clamp(NewValue, 0.0f, 1.0f);
+	NewValue = FMath::Clamp(NewValue, 0.0f, 2.0f);
 
 	if (Slider_VoiceVolume) Slider_VoiceVolume->SetValue(NewValue);
 	if (ET_VoiceVolume) ET_VoiceVolume->SetText(FormatFloatToText(NewValue));
 	
 	if (UPTWVoiceChatSubsystem* VoiceSubsystem = UPTWVoiceChatSubsystem::Get(this))
 	{
-		VoiceSubsystem->SetIndividualVoiceVolume(PlayerId, NewValue);
+		VoiceSubsystem->SetPlayerVoiceVolume(PlayerId, NewValue);
 	}
 }
 
-FText UPTWPlayerVoiceVolume::FormatFloatToText(float Value) const
+FText UPTWVoiceVolume::FormatFloatToText(float Value) const
 {
 	FNumberFormattingOptions NumberOptions = FNumberFormattingOptions::DefaultNoGrouping();
 	NumberOptions.SetMaximumFractionalDigits(1);

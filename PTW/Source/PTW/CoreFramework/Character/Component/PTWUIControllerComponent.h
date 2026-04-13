@@ -116,6 +116,9 @@ public:
 	TSubclassOf<class UPTWDevWidget> DevWidgetClass;
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UUserWidget> PredictWinVote;
+	// 폭탄 경고 위젯
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Bomb")
+	TSubclassOf<UPTWBombWarning> BombWarningWidgetClass;
 
 private:
 	UPROPERTY()

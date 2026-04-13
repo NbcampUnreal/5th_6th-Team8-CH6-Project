@@ -37,7 +37,7 @@ int32 UPTWLobbyItemManager::TakeSavingsReward(APTWPlayerState* PlayerState)
 		
 		for (int32 i = SavingDataArray.Num() - 1; i >= 0; i--)
 		{
-			if (SavingDataArray[i].TargetRound == CachedGameState->GetCurrentRound())
+			if (SavingDataArray[i].TargetRound == CachedGameState->GetCurrentRound()+1)
 			{
 				SavingGold += SavingDataArray[i].RewardAmount;
 				SavingDataArray.RemoveAt(i);
@@ -69,9 +69,10 @@ int32 UPTWLobbyItemManager::TakePredictionWinReward(APTWPlayerState* PlayerState
 		UE_LOG(LogTemp, Error, TEXT("PredictedPtr: %p, WinnerPtr: %p"), PredictedId.GetUniqueNetId().Get(), Info.WinnerId.GetUniqueNetId().Get());
 		if (Info.WinnerId == PredictedId)
 		{
-			AddGold(PlayerState, PredictionWinReward);
-			
+			int32 Reward = PlayerState->GetLobbyItemData().PredictedData.RewardAmount;
 			PlayerState->GetLobbyItemData().PredictedData.PredictedPlayer = nullptr;
+
+			return Reward;
 		}
 	}
 	return  0;

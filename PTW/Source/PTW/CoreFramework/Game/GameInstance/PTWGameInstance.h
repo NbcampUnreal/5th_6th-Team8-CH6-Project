@@ -1,6 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "PTWGameInstance.generated.h"
@@ -17,36 +15,44 @@ enum class ELoadingScreenType : uint8
 	MiniGame
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerConnectionSignature, const FString&, UniqueId);
+
 /**
- * 
+ * PTW GameInstance
  */
 UCLASS()
 class PTW_API UPTWGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 
-
 public:
 	UPTWGameInstance(const FObjectInitializer& ObjectInitializer);
-
-	bool bIsFirstLobby = true;
-	int32 CurrentPlayerCount =0;
 	
-	virtual void Init() override;
-
 	/* 트래블 시작 전 호출하여 로딩 데이터를 셋팅 */
 	void PrepareLoadingScreen(ELoadingScreenType InType, FName InMapRowName);
-
+	
 	/* MoviePlayer 로딩 화면 시작 */
 	UFUNCTION()
 	virtual void BeginLoadingScreen(const FString& MapName);
-
+	
 	/* MoviePlayer 로딩 화면 수동 시작 */
 	void DisplayLoadingScreen();
 
 	/* MoviePlayer 로딩 화면 수동 종료 */
 	void StopLoadingScreen();
 
+	/* 플레이어들의 UniqueId를 보관하는 Set */
+	TSet<const FString> PlayerUniqueIds;
+	
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void AddPlayerUniqueId(const FString& UniqueId);
+	
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void RemovePlayerUniqueId(const FString& UniqueId);
+	
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void RemoveAllPlayerUniqueId();
+public:
 	/* 게임 시작 시 사운드 설정 저장값 자동 적용 */
 	UPROPERTY(EditDefaultsOnly, Category = "Audio")
 	USoundMix* MasterSoundMix;
@@ -64,7 +70,12 @@ public:
 	TSubclassOf<class ACharacter> KeepCharacterClassLoaded;
 	UPROPERTY(EditDefaultsOnly, Category = "Class")
 	TSubclassOf<class AActor> KeepResultCharacterClassLoaded;
-
+	
+	bool bIsFirstLobby = true;
+	int32 CurrentPlayerCount = 0;
+	
+protected:
+	virtual void Init() override;
 protected:
 	UPROPERTY()
 	ELoadingScreenType NextLoadingType; // 다음이 미니게임인지 로비인지 저장
@@ -85,4 +96,14 @@ protected:
 	/* 로비일 때 사용할 기본 배경 이미지 */
 	UPROPERTY(EditDefaultsOnly, Category = "Loading")
 	TSoftObjectPtr<UTexture2D> LobbyDefaultImage;
+	
+public:
+	UPROPERTY(BlueprintAssignable, Category = "Network")
+	FOnPlayerConnectionSignature OnPlayerConnected;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Network")
+	FOnPlayerConnectionSignature OnPlayerDisconnected;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Network")
+    FOnPlayerConnectionSignature OnAllPlayersDisconnected;
 };

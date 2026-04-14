@@ -2,21 +2,17 @@
 #include "Components/EditableText.h"
 #include "Components/Slider.h"
 #include "Components/TextBlock.h"
-#include "CoreFramework/PTWPlayerState.h"
 #include "System/PTWVoiceChatSubsystem.h"
 
-void UPTWVoiceVolume::InitWidget(APlayerState* TargetPlayerState)
+void UPTWVoiceVolume::InitWidget(const FString& UniqueId, const FPTWPlayerVoiceInfo& PlayerVoiceInfo)
 {
-	if (!TargetPlayerState) return;
+	if (UniqueId.IsEmpty() || PlayerVoiceInfo.PlayerName.IsEmpty()) return;
 	
-	if (TargetPlayerState->GetUniqueId().IsValid())
-	{
-		PlayerId = TargetPlayerState->GetUniqueId().ToString();
-	}
+	PlayerId = UniqueId;
 	
 	if (Text_PlayerName)
 	{
-		Text_PlayerName->SetText(FText::FromString(TargetPlayerState->GetPlayerName()));
+		Text_PlayerName->SetText(FText::FromString(PlayerVoiceInfo.PlayerName));
 	}
 	
 	if (UPTWVoiceChatSubsystem* VoiceSubsystem = UPTWVoiceChatSubsystem::Get(this))

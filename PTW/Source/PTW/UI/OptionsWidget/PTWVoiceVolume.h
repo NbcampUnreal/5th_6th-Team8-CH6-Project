@@ -8,16 +8,18 @@ class APlayerState;
 class UTextBlock;
 class UEditableText;
 class USlider;
+struct FPTWPlayerVoiceInfo;
 /**
  * 다른 플레이어들의 음성채팅 소리를 조절하는 위젯입니다.
  */
+
 UCLASS()
 class PTW_API UPTWVoiceVolume : public UUserWidget
 {
 	GENERATED_BODY()
 	
 public:
-	void InitWidget(APlayerState* InTargetPlayerState);
+	void InitWidget(const FString& UniqueId, const FPTWPlayerVoiceInfo& PlayerVoiceInfo);
 	
 	FORCEINLINE FString GetPlayerId() const { return PlayerId; };
 protected:

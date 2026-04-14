@@ -292,7 +292,7 @@ void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	
 	Super::HandleSeamlessTravelPlayer(C);
 
-	PlayerReadyToPlay(Cast<APlayerController>(C));
+	//PlayerReadyToPlay(Cast<APlayerController>(C));
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)

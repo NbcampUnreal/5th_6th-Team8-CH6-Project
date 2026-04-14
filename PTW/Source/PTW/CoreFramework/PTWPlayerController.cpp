@@ -419,6 +419,14 @@ void APTWPlayerController::ClientRPC_ShowDamageIndicator_Implementation(FVector 
 	UIControllerComponent->ShowDamageIndicator(DamageCauserLocation);
 }
 
+void APTWPlayerController::Server_NotifyReadyToPlay_Implementation()
+{
+	if (APTWGameMode* GameMode = Cast<APTWGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		GameMode->PlayerReadyToPlay(this);
+	}
+}
+
 void APTWPlayerController::OnChatInputFinished()
 {
 	UIControllerComponent->ChatInputFinished();

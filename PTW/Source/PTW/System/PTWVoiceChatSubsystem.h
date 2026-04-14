@@ -1,14 +1,18 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-// #include "Subsystems/GameInstanceSubsystem.h"
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "PTWVoiceChatSubsystem.generated.h"
+
+class FUniqueNetId;
 
 USTRUCT(BlueprintType)
 struct FPTWPlayerVoiceInfo
 {
 	GENERATED_BODY()
+	
+	UPROPERTY()
+	FString PlayerName = FString("");
 	
 	UPROPERTY(BlueprintReadWrite)
 	float Volume = 1.0f;
@@ -21,8 +25,7 @@ struct FPTWPlayerVoiceInfo
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVoiceChatStateUpdated, const FString&, PlayerNetId, bool, bIsTalking);
-
-class FUniqueNetId;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVoiceChatConnectionSignature, const FString, PlayerNetId);
 
 /**
  * Steam VoiceChat을 관리하는 서브 시스템입니다.
@@ -44,6 +47,13 @@ protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	
+	UFUNCTION()
+	void HandlePlayerConnected(const FString& UniqueId);
+	UFUNCTION()
+	void HandlePlayerDisconnected(const FString& UniqueId);
+	UFUNCTION()
+	void HandleAllPlayersDisconnected(const FString& UniqueId);
+	
 	void HandlePlayerVoiceStateChanged(TSharedRef<const FUniqueNetId> TalkerId, bool bIsTalking);
 
 public:
@@ -53,6 +63,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Voice Chat")
 	FOnVoiceChatStateUpdated OnVoiceStateUpdated;
 	
+	FOnVoiceChatConnectionSignature OnVoiceChatConnected;
+	FOnVoiceChatConnectionSignature OnVoiceChatDisconnected;
+	FOnVoiceChatConnectionSignature OnAllVoiceChatDisconnected;
 protected:
 	FDelegateHandle VoiceStateDelegateHandle;
 };

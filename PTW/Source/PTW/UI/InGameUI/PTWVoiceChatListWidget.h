@@ -13,10 +13,7 @@ UCLASS()
 class PTW_API UPTWVoiceChatListWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
-protected:
-	virtual void NativeConstruct() override;
-	virtual void NativeDestruct() override;
+
 public:
 	void Init();
 	UFUNCTION(BlueprintCallable, Category = "Voice Chat")
@@ -26,6 +23,17 @@ public:
 	
 	UFUNCTION()
 	void HandleChangedVoiceChatState(bool bIsActive);
+	
+protected:
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
+
+	UFUNCTION()
+	void HandlePlayerConnected(const FString& UniqueId);
+	UFUNCTION()
+	void HandlePlayerDisconnected(const FString& UniqueId);
+	UFUNCTION()
+	void HandleAllPlayersConnected(const FString& UniqueId);
 protected:
 	UPROPERTY()
 	TMap<FString, UPTWVoiceChatWidget*> PlayerVoiceChats;

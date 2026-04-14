@@ -320,16 +320,48 @@ void APTWBombActor::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults,
 	TSet<AActor*> ProcessedActors;
 	const FVector ExplosionLocation = GetActorLocation();
 
+	if (BombOwnerPawn && BombOwnerPawn->GetPlayerState())
+	{
+		if (UAbilitySystemComponent* OwnerASC =
+			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(BombOwnerPawn))
+		{
+			FGameplayEffectContextHandle OwnerContext = OwnerASC->MakeEffectContext();
+			OwnerContext.AddSourceObject(this);
+
+			FGameplayEffectSpecHandle OwnerHandle = OwnerASC->MakeOutgoingSpec(
+				DamageEffectClass,
+				1.0f,
+				OwnerContext
+			);
+
+			if (OwnerHandle.IsValid())
+			{
+				OwnerHandle.Data->SetSetByCallerMagnitude(DamageSetByCallerTag, 9999.f);
+				OwnerASC->ApplyGameplayEffectSpecToSelf(*OwnerHandle.Data.Get());
+
+				ProcessedActors.Add(BombOwnerPawn);
+				
+				if (HitImpactCueTag.IsValid())
+				{
+					FGameplayCueParameters OwnerCueParams;
+					OwnerCueParams.Location = BombOwnerPawn->GetActorLocation();
+					OwnerCueParams.Instigator = InstigatorActor ? InstigatorActor : this;
+
+					OwnerASC->ExecuteGameplayCue(HitImpactCueTag, OwnerCueParams);
+				}
+			}
+		}
+	}
+	
 	for (const FOverlapResult& Result : OverlapResults)
 	{
 		AActor* HitActor = Result.GetActor();
 		if (!HitActor || ProcessedActors.Contains(HitActor)) continue;
-
 		if (HitActor == this) continue;
-		
+
 		APawn* HitPawn = Cast<APawn>(HitActor);
 		if (!HitPawn) continue;
-		
+
 		if (!HitPawn->GetPlayerState()) continue;
 
 		ProcessedActors.Add(HitActor);
@@ -341,13 +373,17 @@ void APTWBombActor::ApplyExplosionDamage(TArray<FOverlapResult>& OverlapResults,
 			if (ObstacleHit.GetActor() != HitActor) continue;
 		}
 
-		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
+		UAbilitySystemComponent* TargetASC =
+			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
 		if (!TargetASC) continue;
+
+		FGameplayEffectContextHandle TargetContext = TargetASC->MakeEffectContext();
+		TargetContext.AddSourceObject(this);
 
 		FGameplayEffectSpecHandle NewHandle = TargetASC->MakeOutgoingSpec(
 			DamageEffectClass,
 			1.0f,
-			TargetASC->MakeEffectContext()
+			TargetContext
 		);
 		if (!NewHandle.IsValid()) continue;
 

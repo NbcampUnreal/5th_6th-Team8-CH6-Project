@@ -292,7 +292,7 @@ void APTWMiniGameMode::HandleSeamlessTravelPlayer(AController*& C)
 	
 	Super::HandleSeamlessTravelPlayer(C);
 
-	PlayerReadyToPlay(Cast<APlayerController>(C));
+	//PlayerReadyToPlay(Cast<APlayerController>(C));
 }
 
 void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
@@ -313,6 +313,8 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 	{
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
+
+		UE_LOG(Log_MiniGameMode, Log, TEXT("All Player Success Travel"));
 		
 		FTimerHandle LoadingDelayTimer;
 		GetWorldTimerManager().SetTimer(LoadingDelayTimer, FTimerDelegate::CreateLambda([this]()

@@ -10,6 +10,7 @@
 void UPTWBatterLevelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	bIsLowbattery = false;
 }
 
 void UPTWBatterLevelWidget::NativeDestruct()
@@ -79,12 +80,34 @@ void UPTWBatterLevelWidget::UpdateBatteryLevelBar(float CurrentBatteryLevel, flo
 	{
 		const float Percent = CurrentBatteryLevel / MaxBatteryLevel;
 		BatteryLevelBar->SetPercent(Percent);
-		UpdateBatteryText(Percent);
+		
+		bool bCurrentLow = (Percent < 0.2f); 
+
+		if (bIsLowbattery != bCurrentLow)
+		{
+			UpdateBatteryUI(bCurrentLow);
+		}
 	}
 }
 
-void UPTWBatterLevelWidget::UpdateBatteryText(float Percent)
+void UPTWBatterLevelWidget::UpdateBatteryUI(bool bIsLow)
 {
-	FText BatteryText = FText::Format(FText::FromString("{0}%"), Percent * 100);
-	BatteryLevelTextBlock->SetText(BatteryText);
+	if (!BatteryLevelBar) return;
+	
+	bIsLowbattery = bIsLow;
+	
+	FProgressBarStyle BatteryStyle = BatteryLevelBar->GetWidgetStyle();
+	FLinearColor NextColor = bIsLow ? FLinearColor::Red : FLinearColor::Green;
+	
+	int32 ImageIndex = bIsLow ? 0 : 1;
+	if (BatterFillImage.IsValidIndex(ImageIndex))
+	{
+		UTexture2D* NewTexture = BatterFillImage[ImageIndex];
+		if (NewTexture)
+		{
+			BatteryStyle.FillImage.SetResourceObject(NewTexture);
+			BatteryLevelBar->SetWidgetStyle(BatteryStyle);
+		}
+	}
+	BatteryLevelBar->SetFillColorAndOpacity(NextColor);
 }

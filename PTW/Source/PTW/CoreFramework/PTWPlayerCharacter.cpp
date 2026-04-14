@@ -476,6 +476,14 @@ void APTWPlayerCharacter::InitCharacterState()
 	bIsAbilitiesInitialized = true;
 	GetWorldTimerManager().ClearTimer(InitTimerHandle);
 
+	if (IsLocallyControlled())
+	{
+		if (APTWPlayerController* PlayerController = Cast<APTWPlayerController>(GetController()))
+		{
+			PlayerController->Server_NotifyReadyToPlay(); 
+		}
+	}
+	
 	UE_LOG(LogTemp, Log, TEXT("[InitChar][%s][%s] %s: 초기화 최종 완료!"), *NetRole, *LocalStatus, *PS->GetPlayerName());
 }
 

@@ -26,6 +26,8 @@
 #include "UI/MiniGame/PTWGameStartTimer.h"
 #include "UI/PTWPopupWidget.h"
 
+#include "MiniGame/Item/BombItem/PTWBombActor.h"
+#include "UI/MiniGame/Bomb/PTWBombWarning.h"
 
 UPTWUIControllerComponent::UPTWUIControllerComponent()
 {
@@ -75,6 +77,7 @@ void UPTWUIControllerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason
 	}
 
 	UnbindGameStateDelegates();
+	UnBindBombDelegate();
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -565,10 +568,99 @@ void UPTWUIControllerComponent::UnbindGameStateDelegates()
 	CachedGameState = nullptr;
 }
 
+void UPTWUIControllerComponent::BindBombDelegate(APTWBombActor* NewBomb)
+{
+	FString PlayerName = TEXT("Unknown");
+	if (OwnerPC && OwnerPC->PlayerState)
+	{
+		PlayerName = OwnerPC->PlayerState->GetPlayerName();
+	}
+	UE_LOG(LogTemp, Log, TEXT("[UIController][%s] BindBombDelegate."), *PlayerName);
+
+	// 중복 바인드 방지
+	UnBindBombDelegate();
+
+	CachedBombActor = NewBomb;
+
+	if (CachedBombActor)
+	{
+		CachedBombActor->OnBombOwnerChanged.AddUObject(this, &UPTWUIControllerComponent::HandleBombOwnerChanged);
+	}
+
+	if (!BombWarningWidgetClass || !UISubsystem) return;
+
+	UE_LOG(LogTemp, Log, TEXT("[UIController][%s] BindBombDelegate(ShowSystemWidget)"), *PlayerName);
+
+	UUserWidget* Widget = UISubsystem->ShowSystemWidget(BombWarningWidgetClass, 70);
+	if (UPTWBombWarning* BombWidget = Cast<UPTWBombWarning>(Widget))
+	{
+		BombWidget->SetTargetBomb(CachedBombActor);
+	}
+
+	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, false);
+
+	if (CachedBombActor && CachedBombActor->GetBombOwnerPawn())
+	{
+		HandleBombOwnerChanged(CachedBombActor->GetBombOwnerPawn());
+	}
+}
+
+void UPTWUIControllerComponent::UnBindBombDelegate()
+{
+	if (CachedBombActor)
+	{
+		CachedBombActor->OnBombOwnerChanged.RemoveAll(this);
+		CachedBombActor = nullptr;
+	}
+
+	if (!BombWarningWidgetClass || !UISubsystem) return;
+
+	UISubsystem->HideSystemWidget(BombWarningWidgetClass);
+}
+
 void UPTWUIControllerComponent::Client_FindGhostChaseComponent_Implementation()
 {
 	if (AActor* OwnerActor = GetOwner())
 	{
 		CachedGhostChaseComp = OwnerActor->FindComponentByClass<UPTWGhostChaseControllerComponent>();
 	}
+}
+
+void UPTWUIControllerComponent::HandleBombOwnerChanged(APawn* NewOwnerPawn)
+{
+	if (!OwnerPC || !OwnerPC->IsLocalController()) return;
+
+	FString PlayerName = TEXT("Unknown");
+	if (OwnerPC && OwnerPC->PlayerState)
+	{
+		PlayerName = OwnerPC->PlayerState->GetPlayerName();
+	}
+
+	if (NewOwnerPawn == OwnerPC->GetPawn())
+	{
+		UE_LOG(LogTemp, Log, TEXT("[UIController][%s] HandleBombOwnerChanged : ShowBombUI."), *PlayerName);
+		ShowBombUI();
+
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("[UIController][%s] HandleBombOwnerChanged : HideBombUI."), *PlayerName);
+
+		HideBombUI();
+
+	}
+}
+
+void UPTWUIControllerComponent::ShowBombUI()
+{
+	if (!BombWarningWidgetClass || !UISubsystem) return;
+
+	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, true);
+}
+
+void UPTWUIControllerComponent::HideBombUI()
+{
+	if (!BombWarningWidgetClass || !UISubsystem) return;
+
+	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, false);
 }

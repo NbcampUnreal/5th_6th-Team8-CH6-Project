@@ -12,6 +12,7 @@ class APTWPlayerController;
 class UPTWUISubsystem;
 class UUserWidget;
 class UPTWDevWidget;
+class APTWBombActor;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PTW_API UPTWUIControllerComponent : public UActorComponent
@@ -60,10 +61,10 @@ public:
 	void BindGameStateDelegates();
 	void UnbindGameStateDelegates();
 
-	/* 리팩토링 필요 */
+	// 리팩토링 필요
 	/* 폭탄넘기기 미니게임 BombActor 델리게이트 바인딩 */
-	//void BindBombDelegate(APTWBombActor* NewBomb);
-	//void UnBindBombDelegate();
+	void BindBombDelegate(APTWBombActor* NewBomb);
+	void UnBindBombDelegate();
 
 	/* GhostChase */
 	UFUNCTION(Client, Reliable)
@@ -86,6 +87,12 @@ protected:
 	void HandleGamePhaseChanged(EPTWGamePhase CurrentGamePhase);
 
 	void HandleOpenPredictVoteUI();
+
+	// 리팩토링 필요
+	/* (폭탄넘기기 미니게임) 폭발 경고 UI */
+	void HandleBombOwnerChanged(APawn* NewOwnerPawn);
+	void ShowBombUI();
+	void HideBombUI();
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI|NameTag") 
@@ -132,6 +139,8 @@ private:
 	TObjectPtr<UPTWUISubsystem> UISubsystem;
 	UPROPERTY()
 	TObjectPtr<class APTWGameState> CachedGameState;
+	UPROPERTY()
+	TObjectPtr<APTWBombActor> CachedBombActor;
 
 	bool bAbleRankingBoard = false;
 	bool bAbleChat = false;

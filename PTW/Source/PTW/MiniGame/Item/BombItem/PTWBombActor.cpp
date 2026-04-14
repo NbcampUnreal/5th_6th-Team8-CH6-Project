@@ -27,6 +27,7 @@
 #include "Kismet/GameplayStatics.h"
 
 #include "CoreFramework/PTWPlayerController.h"
+#include "CoreFramework/Character/Component/PTWUIControllerComponent.h"
 
 #define LOCTEXT_NAMESPACE "BombActor"
 
@@ -488,8 +489,11 @@ void APTWBombActor::BindToLocalPlayerController()
 	APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC);
 	if (!PTWPC) return;
 
-	PTWPC->BindBombDelegate(this);
-	
+	if (PTWPC->UIControllerComponent)
+	{
+		PTWPC->UIControllerComponent->BindBombDelegate(this);
+	}
+
 	// 현재 오너 즉시 동기화
 	if (BombOwnerPawn)
 	{
@@ -505,7 +509,10 @@ void APTWBombActor::UnBindToLocalPlayerController()
 	APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC);
 	if (!PTWPC) return;
 
-	PTWPC->UnBindBombDelegate();
+	if (PTWPC->UIControllerComponent)
+	{
+		PTWPC->UIControllerComponent->UnBindBombDelegate();
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

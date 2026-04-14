@@ -42,7 +42,7 @@ public:
 	void StopLoadingScreen();
 
 	/* 플레이어들의 UniqueId를 보관하는 Set */
-	TSet<const FString> PlayerUniqueIds;
+	TSet<FString> PlayerUniqueIds;
 	
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void AddPlayerUniqueId(const FString& UniqueId);

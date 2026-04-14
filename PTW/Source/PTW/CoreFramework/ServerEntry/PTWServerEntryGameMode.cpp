@@ -195,7 +195,6 @@ void APTWServerEntryGameMode::InitGameLift()
 			FPTWSessionConfig SessionConfig;
 			SessionConfig.ServerName = InGameSession.GetName();
 			SessionConfig.MaxPlayers = InGameSession.GetMaximumPlayerSessionCount();
-			SessionConfig.bIsJoinable = false;
 			SessionConfig.bIsDedicatedServer = true;
 			
 			SteamSessionSubsystem->CreateGameSession(SessionConfig, true);

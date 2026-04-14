@@ -213,12 +213,12 @@ void UPTWSteamSessionSubsystem::FindGameSession()
 	SessionSearchQueue.Empty();
 	BPSearchResults.Reset();
 	
-	// TSharedPtr<FOnlineSessionSearch> ListenSessionSearch = MakeShareable(new FOnlineSessionSearch());
-	// ListenSessionSearch->bIsLanQuery = false;
-	// ListenSessionSearch->MaxSearchResults = 100;
-	// ListenSessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, false, EOnlineComparisonOp::Equals);
-	// ListenSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
-	// SessionSearchQueue.Enqueue(ListenSessionSearch);
+	TSharedPtr<FOnlineSessionSearch> ListenSessionSearch = MakeShareable(new FOnlineSessionSearch());
+	ListenSessionSearch->bIsLanQuery = false;
+	ListenSessionSearch->MaxSearchResults = 100;
+	ListenSessionSearch->QuerySettings.Set(SEARCH_DEDICATED_ONLY, false, EOnlineComparisonOp::Equals);
+	ListenSessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+	SessionSearchQueue.Enqueue(ListenSessionSearch);
 	
 	TSharedPtr<FOnlineSessionSearch> DedicatedSessionSearch = MakeShareable(new FOnlineSessionSearch());
 	DedicatedSessionSearch->bIsLanQuery = false;

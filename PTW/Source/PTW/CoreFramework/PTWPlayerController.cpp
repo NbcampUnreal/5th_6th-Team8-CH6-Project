@@ -170,6 +170,7 @@ void APTWPlayerController::OnVoicePressed()
 		{
 			if (IOnlineVoicePtr VoiceInterface = Subsystem->GetVoiceInterface())
 			{
+				OnChangedVoiceChatState.Broadcast(true);
 				VoiceInterface->StartNetworkedVoice(0);
 			}
 		}
@@ -184,6 +185,7 @@ void APTWPlayerController::OnVoiceReleased()
 		{
 			if (IOnlineVoicePtr VoiceInterface = Subsystem->GetVoiceInterface())
 			{
+				OnChangedVoiceChatState.Broadcast(false);
 				VoiceInterface->StopNetworkedVoice(0);
 			}
 		}
@@ -417,6 +419,14 @@ void APTWPlayerController::PostSeamlessTravel()
 void APTWPlayerController::ClientRPC_ShowDamageIndicator_Implementation(FVector DamageCauserLocation)
 {
 	UIControllerComponent->ShowDamageIndicator(DamageCauserLocation);
+}
+
+void APTWPlayerController::Server_NotifyReadyToPlay_Implementation()
+{
+	if (APTWGameMode* GameMode = Cast<APTWGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		GameMode->PlayerReadyToPlay(this);
+	}
 }
 
 void APTWPlayerController::OnChatInputFinished()

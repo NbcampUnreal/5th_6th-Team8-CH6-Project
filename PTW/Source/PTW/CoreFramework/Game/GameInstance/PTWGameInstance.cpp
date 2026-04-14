@@ -36,7 +36,8 @@ void UPTWGameInstance::Init()
 		MasterSoundClass,
 		BGMSoundClass,
 		SFXSoundClass,
-		UISoundClass
+		UISoundClass,
+		VoiceSoundClass
 	);
 }
 

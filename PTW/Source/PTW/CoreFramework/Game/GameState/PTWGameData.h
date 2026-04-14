@@ -26,7 +26,7 @@ struct FPTWLastWinnerInfo
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly)
-	FUniqueNetIdRepl WinnerId;
+	FString WinnerId;
 	
 };
 

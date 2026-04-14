@@ -93,7 +93,7 @@ void UPTWResultSequenceComponent::StartResultSequence()
 			if (bIsWinner)
 			{
 				FPTWLastWinnerInfo WinnerInfo;
-				WinnerInfo.WinnerId = PS->GetUniqueId();
+				WinnerInfo.WinnerId = PS->GetUniqueId().ToString();
 
 				LastWinnerInfo.Add(WinnerInfo);
 				

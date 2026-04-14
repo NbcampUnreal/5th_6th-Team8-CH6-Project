@@ -12,6 +12,7 @@
 /* KillLog 델리게이트 */
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnKillLog, const FString&, const FString&);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpectateTargetChanged, const FString&, TargetName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChangedVoiceChatState, bool, bIsActive);
 
 class APTWPlayerState;
 class UAbilitySystemComponent;
@@ -182,6 +183,7 @@ public:
 
 	FOnSpectateTargetChanged OnSpectateTargetChanged;
 	
+	FOnChangedVoiceChatState OnChangedVoiceChatState;
 protected:
 	// GameLift 접속을 위한 PlayerSessionId를 캐싱
 	FString PlayerSessionId;

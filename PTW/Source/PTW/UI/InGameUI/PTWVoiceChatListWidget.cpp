@@ -1,10 +1,8 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "PTWVoiceChatListWidget.h"
+﻿#include "PTWVoiceChatListWidget.h"
 #include "PTWVoiceChatWidget.h"
 #include "Components/SizeBox.h"
 #include "Components/VerticalBox.h"
+#include "CoreFramework/PTWPlayerController.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "System/PTWVoiceChatSubsystem.h"
@@ -21,7 +19,10 @@ void UPTWVoiceChatListWidget::NativeConstruct()
 		}
 	}
 	
-	
+	if (APTWPlayerController* PC = GetOwningPlayer<APTWPlayerController>())
+	{
+		PC->OnChangedVoiceChatState.AddUniqueDynamic(this, &ThisClass::HandleChangedVoiceChatState);
+	}
 }
 
 void UPTWVoiceChatListWidget::NativeDestruct()
@@ -37,6 +38,11 @@ void UPTWVoiceChatListWidget::NativeDestruct()
 		}
 	}
 	
+	if (APTWPlayerController* PC = GetOwningPlayer<APTWPlayerController>())
+	{
+		PC->OnChangedVoiceChatState.RemoveDynamic(this, &ThisClass::HandleChangedVoiceChatState);
+	}
+	
 	Super::NativeDestruct();
 }
 
@@ -50,17 +56,17 @@ void UPTWVoiceChatListWidget::OnVoiceStateChanged(const FString& PlayerNetId, bo
 	if (PlayerNetId.IsEmpty() || !IsValid(VoiceChatList)) return;
 	
 	FString PlayerName = GetPlayerNameFromNetId(PlayerNetId);
-	USizeBox* TargetWidget = nullptr;
+	UPTWVoiceChatWidget* TargetWidget = nullptr;
     
 	// VoiceChatList에 플레이어가 없으면 추가
 	if (!PlayerVoiceChats.Contains(PlayerNetId))
 	{
-		TargetWidget = NewObject<USizeBox>(this, USizeBox::StaticClass());
-		TargetWidget->SetHeightOverride(32.0f);
+		USizeBox* SizeBox = NewObject<USizeBox>(this, USizeBox::StaticClass());
+		SizeBox->SetHeightOverride(32.0f);
 		
-		UPTWVoiceChatWidget* VoiceChatWidget = CreateWidget<UPTWVoiceChatWidget>(this, VoiceChatWidgetClass);
-		VoiceChatWidget->SetupWidget(PlayerName);
-		TargetWidget->AddChild(VoiceChatWidget);
+		TargetWidget = CreateWidget<UPTWVoiceChatWidget>(this, VoiceChatWidgetClass);
+		TargetWidget->SetupWidget(PlayerName);
+		SizeBox->AddChild(TargetWidget);
 		
 		PlayerVoiceChats.Add(PlayerNetId, TargetWidget);
 		
@@ -74,11 +80,20 @@ void UPTWVoiceChatListWidget::OnVoiceStateChanged(const FString& PlayerNetId, bo
 	
 	if (bIsTalking)
 	{
-		TargetWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		TargetWidget->SetTalkingVoiceIcon();
 	}
 	else
 	{
-		TargetWidget->SetVisibility(ESlateVisibility::Collapsed);
+		TargetWidget->SetEnabledVoiceIcon();
+	}
+	
+	if (GetOwningPlayerState()->GetUniqueId().ToString() != PlayerNetId)
+	{
+		if (UPanelWidget* ParentWrapper = TargetWidget->GetParent())
+		{
+			ESlateVisibility NewVisibility = bIsTalking ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed;
+			ParentWrapper->SetVisibility(NewVisibility);
+		}
 	}
 }
 
@@ -102,4 +117,37 @@ FString UPTWVoiceChatListWidget::GetPlayerNameFromNetId(const FString& TargetNet
 		}
 	}
 	return TEXT("Unknown");
+}
+
+void UPTWVoiceChatListWidget::HandleChangedVoiceChatState(bool bIsActive)
+{
+	FString PlayerNetId = GetOwningPlayerState()->GetUniqueId().ToString();
+	FString PlayerName = GetPlayerNameFromNetId(PlayerNetId);
+	UPTWVoiceChatWidget* TargetWidget = nullptr;
+    
+	// VoiceChatList에 플레이어가 없으면 추가
+	if (!PlayerVoiceChats.Contains(PlayerNetId))
+	{
+		USizeBox* SizeBox = NewObject<USizeBox>(this, USizeBox::StaticClass());
+		SizeBox->SetHeightOverride(32.0f);
+		
+		TargetWidget = CreateWidget<UPTWVoiceChatWidget>(this, VoiceChatWidgetClass);
+		TargetWidget->SetupWidget(PlayerName);
+		SizeBox->AddChild(TargetWidget);
+		
+		PlayerVoiceChats.Add(PlayerNetId, TargetWidget);
+		
+		// 리스트 위젯에 추가
+		VoiceChatList->AddChildToVerticalBox(TargetWidget);
+	}
+	else
+	{
+		TargetWidget = PlayerVoiceChats[PlayerNetId];
+	}
+
+	if (UPanelWidget* ParentWrapper = TargetWidget->GetParent())
+	{
+		ESlateVisibility NewVisibility = bIsActive ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed;
+		ParentWrapper->SetVisibility(NewVisibility);
+	}
 }

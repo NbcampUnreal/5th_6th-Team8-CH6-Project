@@ -60,6 +60,11 @@ public:
 	void BindGameStateDelegates();
 	void UnbindGameStateDelegates();
 
+	/* 리팩토링 필요 */
+	/* 폭탄넘기기 미니게임 BombActor 델리게이트 바인딩 */
+	//void BindBombDelegate(APTWBombActor* NewBomb);
+	//void UnBindBombDelegate();
+
 	/* GhostChase */
 	UFUNCTION(Client, Reliable)
 	void Client_FindGhostChaseComponent();
@@ -116,6 +121,9 @@ public:
 	TSubclassOf<class UPTWDevWidget> DevWidgetClass;
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UUserWidget> PredictWinVote;
+	// 폭탄 경고 위젯
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Bomb")
+	TSubclassOf<class UPTWBombWarning> BombWarningWidgetClass;
 
 private:
 	UPROPERTY()

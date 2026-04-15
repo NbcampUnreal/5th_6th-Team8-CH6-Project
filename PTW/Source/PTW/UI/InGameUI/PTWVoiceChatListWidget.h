@@ -33,7 +33,7 @@ protected:
 	UFUNCTION()
 	void HandlePlayerDisconnected(const FString& UniqueId);
 	UFUNCTION()
-	void HandleAllPlayersConnected(const FString& UniqueId);
+	void HandleAllPlayersConnected();
 protected:
 	UPROPERTY()
 	TMap<FString, UPTWVoiceChatWidget*> PlayerVoiceChats;

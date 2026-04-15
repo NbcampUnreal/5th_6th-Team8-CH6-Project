@@ -24,8 +24,9 @@ struct FPTWPlayerVoiceInfo
 	bool bIsMicActive = false;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVoiceChatStateUpdated, const FString&, PlayerNetId, bool, bIsTalking);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVoiceChatConnectionSignature, const FString, PlayerNetId);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnVoiceChatStateUpdated, const FString&, UniqueId, bool, bIsTalking);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVoiceChatConnectionSignature, const FString, UniqueId);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllVoiceChatDisconnectedSignature);
 
 /**
  * Steam VoiceChat을 관리하는 서브 시스템입니다.
@@ -52,7 +53,7 @@ protected:
 	UFUNCTION()
 	void HandlePlayerDisconnected(const FString& UniqueId);
 	UFUNCTION()
-	void HandleAllPlayersDisconnected(const FString& UniqueId);
+	void HandleAllPlayersDisconnected();
 	
 	void HandlePlayerVoiceStateChanged(TSharedRef<const FUniqueNetId> TalkerId, bool bIsTalking);
 
@@ -65,7 +66,8 @@ public:
 	
 	FOnVoiceChatConnectionSignature OnVoiceChatConnected;
 	FOnVoiceChatConnectionSignature OnVoiceChatDisconnected;
-	FOnVoiceChatConnectionSignature OnAllVoiceChatDisconnected;
+	FOnAllVoiceChatDisconnectedSignature AllVoiceChatDisconnected;
+	
 protected:
 	FDelegateHandle VoiceStateDelegateHandle;
 };

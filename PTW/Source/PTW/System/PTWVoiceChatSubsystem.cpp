@@ -91,9 +91,9 @@ void UPTWVoiceChatSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	}
 	if (UPTWGameInstance* GI = GetWorld()->GetGameInstance<UPTWGameInstance>())
 	{
-		GI->OnPlayerConnected.AddUniqueDynamic(this, &ThisClass::HandlePlayerConnected);
-		GI->OnPlayerDisconnected.AddUniqueDynamic(this, &ThisClass::HandlePlayerDisconnected);
-		GI->OnAllPlayersDisconnected.AddUniqueDynamic(this, &ThisClass::HandleAllPlayersDisconnected);
+		GI->OnSessionPlayerConnected.AddUniqueDynamic(this, &ThisClass::HandlePlayerConnected);
+		GI->OnSessionPlayerDisconnected.AddUniqueDynamic(this, &ThisClass::HandlePlayerDisconnected);
+		GI->OnSessionPlayersCleared.AddUniqueDynamic(this, &ThisClass::HandleAllPlayersDisconnected);
 	}
 }
 
@@ -109,9 +109,9 @@ void UPTWVoiceChatSubsystem::Deinitialize()
 	
 	if (UPTWGameInstance* GI = GetWorld()->GetGameInstance<UPTWGameInstance>())
 	{
-		GI->OnPlayerConnected.RemoveDynamic(this, &ThisClass::HandlePlayerConnected);
-		GI->OnPlayerDisconnected.RemoveDynamic(this, &ThisClass::HandlePlayerDisconnected);
-		GI->OnAllPlayersDisconnected.RemoveDynamic(this, &ThisClass::HandleAllPlayersDisconnected);
+		GI->OnSessionPlayerConnected.RemoveDynamic(this, &ThisClass::HandlePlayerConnected);
+		GI->OnSessionPlayerDisconnected.RemoveDynamic(this, &ThisClass::HandlePlayerDisconnected);
+		GI->OnSessionPlayersCleared.RemoveDynamic(this, &ThisClass::HandleAllPlayersDisconnected);
 	}
 	PlayerVoiceInfoList.Empty();
 	Super::Deinitialize();
@@ -140,14 +140,14 @@ void UPTWVoiceChatSubsystem::HandlePlayerConnected(const FString& UniqueId)
 
 void UPTWVoiceChatSubsystem::HandlePlayerDisconnected(const FString& UniqueId)
 {
-	OnVoiceChatDisconnected.Broadcast(UniqueId);
 	PlayerVoiceInfoList.Remove(UniqueId);
+	OnVoiceChatDisconnected.Broadcast(UniqueId);
 }
 
-void UPTWVoiceChatSubsystem::HandleAllPlayersDisconnected(const FString& UniqueId)
+void UPTWVoiceChatSubsystem::HandleAllPlayersDisconnected()
 {
-	OnAllVoiceChatDisconnected.Broadcast(UniqueId);
 	PlayerVoiceInfoList.Reset();
+	AllVoiceChatDisconnected.Broadcast();
 }
 
 void UPTWVoiceChatSubsystem::HandlePlayerVoiceStateChanged(TSharedRef<const FUniqueNetId> TalkerId, bool bIsTalking)

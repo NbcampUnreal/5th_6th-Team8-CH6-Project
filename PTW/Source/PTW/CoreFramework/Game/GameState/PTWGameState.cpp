@@ -39,42 +39,15 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 }
 
-void APTWGameState::AddPlayerState(APlayerState* PlayerState)
-{
-	Super::AddPlayerState(PlayerState);
-	if (IsValid(PlayerState)) return;
-	
-	FString UniqueId = PlayerState->GetUniqueId().ToString();
-	if (UniqueId.IsEmpty()) return;
-	
-	UPTWGameInstance * GI = GetGameInstance<UPTWGameInstance>();
-	if (!IsValid(GI)) return;
-	
-	GI->AddPlayerUniqueId(UniqueId);
-}
-
-void APTWGameState::RemovePlayerState(APlayerState* PlayerState)
-{
-	if (PlayerState)
-	{
-		FString UniqueId = PlayerState->GetUniqueId().ToString();
-		if (!UniqueId.IsEmpty())
-		{
-			if (UPTWGameInstance * GI = GetGameInstance<UPTWGameInstance>())
-			{
-				GI->RemovePlayerUniqueId(UniqueId);
-			}
-		}
-
-	}
-	Super::RemovePlayerState(PlayerState);
-}
-
 void APTWGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (UPTWGameInstance * GI = GetGameInstance<UPTWGameInstance>())
 	{
-		GI->RemoveAllPlayerUniqueId();	
+		GI->ClearLevelPlayerIds();
+		if (EndPlayReason == EEndPlayReason::Destroyed)
+		{
+			GI->ClearSessionPlayerIds();
+		}
 	}
 	
 	Super::EndPlay(EndPlayReason);

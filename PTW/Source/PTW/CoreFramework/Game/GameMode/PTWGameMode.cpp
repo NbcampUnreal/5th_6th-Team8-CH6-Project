@@ -111,6 +111,18 @@ void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 		GameLiftServerSubsystem->UpdatePlayerCount(TEXT("Join"));
 	}
 #endif
+	APlayerState* PS = NewPlayer->PlayerState;
+	FString UniqueId = IsValid(PS) ? PS->GetUniqueId().ToString() : TEXT("");
+	if (UniqueId.IsEmpty()) return;
+	
+	UPTWGameInstance * GI = GetGameInstance<UPTWGameInstance>();
+	if (!IsValid(GI)) return;
+	
+	GI->AddLevelPlayerId(UniqueId);
+	if (!GI->SessionPlayerIds.Contains(UniqueId))
+	{
+		GI->AddSessionPlayerId(UniqueId);
+	}
 	
 	HandlePlayerJoined(NewPlayer);
 }

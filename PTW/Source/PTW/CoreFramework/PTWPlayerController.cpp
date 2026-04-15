@@ -224,6 +224,7 @@ void APTWPlayerController::BeginPlay()
 
 void APTWPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	OnVoiceReleased();
 	Super::EndPlay(EndPlayReason);
 }
 

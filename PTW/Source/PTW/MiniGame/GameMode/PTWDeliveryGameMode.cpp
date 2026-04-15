@@ -53,7 +53,8 @@ void APTWDeliveryGameMode::GoalPlayer(APTWPlayerCharacter* TargetCharacter, TSub
 	{
 		StartEndCountDown();
 	}
-	GoalPlayers.Add(TargetCharacter);
+	
+	if (!bIsCountDownEnded) GoalPlayers.Add(TargetCharacter);
 	
 	ApplyGameEffect(TargetCharacter, EffectToApply);
 }
@@ -197,6 +198,7 @@ void APTWDeliveryGameMode::UpdateCountDown()
 
 void APTWDeliveryGameMode::StopCountDown()
 {
+	bIsCountDownEnded = true;
 	GetWorld()->GetTimerManager().ClearTimer(CountDownTimerHandle);
 	GetWorld()->GetTimerManager().ClearTimer(RankingTimerHandle);
 	

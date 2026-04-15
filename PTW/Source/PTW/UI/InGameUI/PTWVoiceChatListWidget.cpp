@@ -147,9 +147,9 @@ void UPTWVoiceChatListWidget::NativeConstruct()
 	
 	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
 	{
-		GI->OnPlayerConnected.AddUniqueDynamic(this, &ThisClass::HandlePlayerConnected);
-		GI->OnPlayerDisconnected.AddUniqueDynamic(this, &ThisClass::HandlePlayerDisconnected);
-		GI->OnPlayerDisconnected.AddUniqueDynamic(this, &ThisClass::HandleAllPlayersConnected);
+		GI->OnPlayerEnteredLevel.AddUniqueDynamic(this, &ThisClass::HandlePlayerConnected);
+		GI->OnPlayerLeftLevel.AddUniqueDynamic(this, &ThisClass::HandlePlayerDisconnected);
+		GI->OnLevelPlayersCleared.AddUniqueDynamic(this, &ThisClass::HandleAllPlayersConnected);
 	}
 	
 	Init();
@@ -172,9 +172,9 @@ void UPTWVoiceChatListWidget::NativeDestruct()
 	
 	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
 	{
-		GI->OnPlayerConnected.RemoveDynamic(this, &ThisClass::HandlePlayerConnected);
-		GI->OnPlayerDisconnected.RemoveDynamic(this, &ThisClass::HandlePlayerDisconnected);
-		GI->OnPlayerDisconnected.RemoveDynamic(this, &ThisClass::HandleAllPlayersConnected);
+		GI->OnPlayerEnteredLevel.RemoveDynamic(this, &ThisClass::HandlePlayerConnected);
+		GI->OnPlayerLeftLevel.RemoveDynamic(this, &ThisClass::HandlePlayerDisconnected);
+		GI->OnLevelPlayersCleared.RemoveDynamic(this, &ThisClass::HandleAllPlayersConnected);
 	}
 	
 	Super::NativeDestruct();
@@ -225,7 +225,7 @@ void UPTWVoiceChatListWidget::HandlePlayerDisconnected(const FString& UniqueId)
 	}
 }
 
-void UPTWVoiceChatListWidget::HandleAllPlayersConnected(const FString& UniqueId)
+void UPTWVoiceChatListWidget::HandleAllPlayersConnected()
 {
 	VoiceChatList->ClearChildren();
 	PlayerVoiceChats.Empty();

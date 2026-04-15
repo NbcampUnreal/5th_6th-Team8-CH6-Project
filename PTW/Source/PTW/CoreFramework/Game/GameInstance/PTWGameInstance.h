@@ -15,7 +15,8 @@ enum class ELoadingScreenType : uint8
 	MiniGame
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerConnectionSignature, const FString&, UniqueId);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerUniqueIdSignature, const FString&, UniqueId);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerListClearedSignature);
 
 /**
  * PTW GameInstance
@@ -40,18 +41,25 @@ public:
 
 	/* MoviePlayer 로딩 화면 수동 종료 */
 	void StopLoadingScreen();
-
-	/* 플레이어들의 UniqueId를 보관하는 Set */
-	TSet<FString> PlayerUniqueIds;
 	
-	UFUNCTION(BlueprintCallable, Category = "Network")
-	void AddPlayerUniqueId(const FString& UniqueId);
+	UFUNCTION(BlueprintCallable, Category = "Network|Level")
+	void AddLevelPlayerId(const FString& UniqueId);
 	
-	UFUNCTION(BlueprintCallable, Category = "Network")
-	void RemovePlayerUniqueId(const FString& UniqueId);
+	UFUNCTION(BlueprintCallable, Category = "Network|Level")
+	void RemoveLevelPlayerId(const FString& UniqueId);
 	
-	UFUNCTION(BlueprintCallable, Category = "Network")
-	void RemoveAllPlayerUniqueId();
+	UFUNCTION(BlueprintCallable, Category = "Network|Level")
+	void ClearLevelPlayerIds();
+	
+	UFUNCTION(BlueprintCallable, Category = "Network|Session")
+	void AddSessionPlayerId(const FString& UniqueId);
+	
+	UFUNCTION(BlueprintCallable, Category = "Network|Session")
+	void RemoveSessionPlayerId(const FString& UniqueId);
+	
+	UFUNCTION(BlueprintCallable, Category = "Network|Session")
+	void ClearSessionPlayerIds();
+	
 public:
 	/* 게임 시작 시 사운드 설정 저장값 자동 적용 */
 	UPROPERTY(EditDefaultsOnly, Category = "Audio")
@@ -73,6 +81,19 @@ public:
 	
 	bool bIsFirstLobby = true;
 	int32 CurrentPlayerCount = 0;
+	
+	/** 플레이어들의 UniqueId를 보관하는 휘발성 TSet.\n
+	 * 레벨이동할때 마다, UniqueId를 Set에 추가/제거를 반복합니다. 
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "NetWork")
+	TSet<FString> LevelPlayerIds;
+	
+	/** 플레이어들의 UniqueId를 보관하는 비휘발성 TSet.\n
+	 * 현재 세션에 접속/종료 할때마다 Set에 추가/제거를 반복합니다.
+	 * 레벨이동 후에도 유지됩니다.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "NetWork")
+	TSet<FString> SessionPlayerIds;
 	
 protected:
 	virtual void Init() override;
@@ -98,12 +119,21 @@ protected:
 	TSoftObjectPtr<UTexture2D> LobbyDefaultImage;
 	
 public:
-	UPROPERTY(BlueprintAssignable, Category = "Network")
-	FOnPlayerConnectionSignature OnPlayerConnected;
+	UPROPERTY(BlueprintAssignable, Category = "Network|Level")
+	FOnPlayerUniqueIdSignature OnPlayerEnteredLevel;
 	
-	UPROPERTY(BlueprintAssignable, Category = "Network")
-	FOnPlayerConnectionSignature OnPlayerDisconnected;
+	UPROPERTY(BlueprintAssignable, Category = "Network|Level")
+	FOnPlayerUniqueIdSignature OnPlayerLeftLevel;
 	
-	UPROPERTY(BlueprintAssignable, Category = "Network")
-    FOnPlayerConnectionSignature OnAllPlayersDisconnected;
+	UPROPERTY(BlueprintAssignable, Category = "Network|Level")
+	FOnPlayerListClearedSignature OnLevelPlayersCleared;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Network|Session")
+	FOnPlayerUniqueIdSignature OnSessionPlayerConnected;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Network|Session")
+	FOnPlayerUniqueIdSignature OnSessionPlayerDisconnected;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Network|Session")
+	FOnPlayerListClearedSignature OnSessionPlayersCleared;
 };

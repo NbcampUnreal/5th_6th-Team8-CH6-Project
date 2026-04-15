@@ -50,6 +50,9 @@ protected:
 	
 	UFUNCTION()
 	void OnRep_LobbyItemData();
+	
+	virtual void OnRep_UniqueId() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 public:
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	void SetPlayerData(const FPTWPlayerData& NewData);

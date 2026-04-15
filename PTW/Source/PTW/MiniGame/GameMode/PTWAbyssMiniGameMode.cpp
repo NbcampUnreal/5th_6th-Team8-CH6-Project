@@ -145,6 +145,27 @@ void APTWAbyssMiniGameMode::BeginBlackout()
 		return;
 	}
 
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APTWPlayerController* PC = Cast<APTWPlayerController>(It->Get()))
+		{
+			APTWPlayerCharacter* Character = Cast<APTWPlayerCharacter>(PC->GetPawn());
+			if (!Character) continue;
+
+			APTWPlayerState* PS = Character->GetPlayerState<APTWPlayerState>();
+			if (!PS) continue;
+
+			UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
+			if (!ASC) continue;
+			
+			ASC->RemoveLooseGameplayTag(GameplayTags::State::Abyss::NoFire);
+
+			ASC->RemoveActiveEffectsWithGrantedTags(
+				FGameplayTagContainer(GameplayTags::State::Abyss::NoFire)
+			);
+		}
+	}
+	
 	bIsBlackoutActive = true;
 	ApplyBlackoutStateToAllPlayers(true);
 

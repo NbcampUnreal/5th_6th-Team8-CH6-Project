@@ -300,6 +300,38 @@ void APTWPlayerState::OnRep_LobbyItemData()
 	
 }
 
+void APTWPlayerState::OnRep_UniqueId()
+{
+	Super::OnRep_UniqueId();
+	
+	FString PlayerUniqueId = GetUniqueId().ToString();
+	if (PlayerUniqueId.IsEmpty()) return;
+	
+	UPTWGameInstance * GI = GetGameInstance<UPTWGameInstance>();
+	if (!IsValid(GI)) return;
+	
+	GI->AddLevelPlayerId(PlayerUniqueId);
+	if (!GI->SessionPlayerIds.Contains(PlayerUniqueId))
+	{
+		GI->AddSessionPlayerId(PlayerUniqueId);
+	}
+}
+
+void APTWPlayerState::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	FString PlayerUniqueId = GetUniqueId().ToString();
+	if (UPTWGameInstance * GI = GetGameInstance<UPTWGameInstance>())
+	{
+		GI->RemoveLevelPlayerId(PlayerUniqueId);
+		if (EndPlayReason == EEndPlayReason::Destroyed)
+		{
+			GI->RemoveSessionPlayerId(PlayerUniqueId);
+		}
+	}
+	
+	Super::EndPlay(EndPlayReason);
+}
+
 void APTWPlayerState::ServerRequestPurchase_Implementation(APTWShopNPC* ShopNPC, FName ItemID, int32 Cost)
 {
 	FString NewItemIDStr = ItemID.ToString();

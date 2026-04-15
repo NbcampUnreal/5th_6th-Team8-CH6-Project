@@ -114,20 +114,38 @@ void UPTWGameInstance::StopLoadingScreen()
 	}
 }
 
-void UPTWGameInstance::AddPlayerUniqueId(const FString& UniqueId)
+void UPTWGameInstance::AddLevelPlayerId(const FString& UniqueId)
 {
-	PlayerUniqueIds.Add(UniqueId);
-	OnPlayerConnected.Broadcast(UniqueId);
+	LevelPlayerIds.Add(UniqueId);
+	OnPlayerEnteredLevel.Broadcast(UniqueId);
 }
 
-void UPTWGameInstance::RemovePlayerUniqueId(const FString& UniqueId)
+void UPTWGameInstance::RemoveLevelPlayerId(const FString& UniqueId)
 {
-	PlayerUniqueIds.Remove(UniqueId);
-	OnPlayerDisconnected.Broadcast(UniqueId);
+	LevelPlayerIds.Remove(UniqueId);
+	OnPlayerLeftLevel.Broadcast(UniqueId);
 }
 
-void UPTWGameInstance::RemoveAllPlayerUniqueId()
+void UPTWGameInstance::ClearLevelPlayerIds()
 {
-	PlayerUniqueIds.Empty();
-	OnAllPlayersDisconnected.Broadcast(FString());
+	LevelPlayerIds.Empty();
+	OnLevelPlayersCleared.Broadcast();
+}
+
+void UPTWGameInstance::AddSessionPlayerId(const FString& UniqueId)
+{
+	SessionPlayerIds.Add(UniqueId);
+	OnSessionPlayerConnected.Broadcast(UniqueId);
+}
+
+void UPTWGameInstance::RemoveSessionPlayerId(const FString& UniqueId)
+{
+	SessionPlayerIds.Remove(UniqueId);
+	OnSessionPlayerDisconnected.Broadcast(UniqueId);
+}
+
+void UPTWGameInstance::ClearSessionPlayerIds()
+{
+	SessionPlayerIds.Empty();
+	OnSessionPlayersCleared.Broadcast();
 }

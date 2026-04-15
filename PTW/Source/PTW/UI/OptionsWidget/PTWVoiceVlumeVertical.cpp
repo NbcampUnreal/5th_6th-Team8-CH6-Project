@@ -2,8 +2,6 @@
 #include "PTWVoiceVolume.h"
 #include "Components/SizeBox.h"
 #include "Components/VerticalBoxSlot.h"
-#include "GameFramework/GameStateBase.h"
-#include "GameFramework/PlayerState.h"
 #include "System/PTWVoiceChatSubsystem.h"
 
 
@@ -31,11 +29,13 @@ void UPTWVoiceVlumeVertical::InitWidget()
 				SizeBoxSlot->SetHorizontalAlignment(HAlign_Fill);
 				SizeBoxSlot->SetVerticalAlignment(VAlign_Fill);
 				
-				const FString& MyUniqueId = FString::FromInt(GetOwningLocalPlayer()->GetUniqueID());
+				const FString& MyUniqueId = GetOwningLocalPlayer()->GetPreferredUniqueNetId().ToString();
 				if (UniqueId == MyUniqueId)
 				{
-					SizeBox->SetVisibility(ESlateVisibility::Collapsed);
+					// SizeBox->SetVisibility(ESlateVisibility::Collapsed);
 				}
+				
+				PlayerVoiceVolumes.Add(UniqueId, PlayerVoiceVolume);
 			}
 		}
 	}

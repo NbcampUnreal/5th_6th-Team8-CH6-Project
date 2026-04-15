@@ -87,7 +87,7 @@ struct FPredictedData
 
 	/** 예측 대상 */
 	UPROPERTY()
-	FUniqueNetIdRepl PredictedPlayer = nullptr;
+	FString PredictedPlayer;
 
 	/** 지급될 골드 */
 	UPROPERTY()

@@ -9,6 +9,8 @@
 #include "PTWScoreSubsystem.generated.h"
 
 
+
+
 /**
  * 게임 전체에서 사용되는 점수 및 라운드 정보를 관리하는 Subsystem
  * - 플레이어 누적 데이터 유지
@@ -26,8 +28,10 @@ public:
 	 * @param PlayerName 플레이어를 식별하는 인덱스
 	 * @param PlayerData 저장할 플레이어 데이터
 	 */
-	void SavePlayerData(const FString& PlayerName, const FPTWPlayerData& PlayerData);
-	void SaveLobbyItemData(const FString& PlayerName, const FPTWLobbyItemData& LobbyItemData);
+	void SavePlayerData(const FString& PlayerID, const FPTWPlayerData& PlayerData);
+	void SaveLobbyItemData(const FString& PlayerID, const FPTWLobbyItemData& LobbyItemData);
+
+	void SaveAllPlayerData(const FString& PlayerID, const FPTWPlayerData& PlayerData);
 	/** 현재 게임 라운드 값을 저장
 	 * - 라운드 진행 시 호출되어 상태 갱신
 	 *
@@ -66,4 +70,7 @@ private:
 	
 	UPROPERTY()
 	FPTWGameData SavedGameData;
+
+
+public:
 };

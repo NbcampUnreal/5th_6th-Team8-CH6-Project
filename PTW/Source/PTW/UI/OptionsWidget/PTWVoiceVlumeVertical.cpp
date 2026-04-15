@@ -14,33 +14,15 @@ void UPTWVoiceVlumeVertical::InitWidget()
 		TMap<FString, FPTWPlayerVoiceInfo>& PlayerVoiceInfoList = VoiceChatSubsystem->PlayerVoiceInfoList;
 		if (!IsValid(VoiceVolumeClass)) return;
 		
-		for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
-		{
-			FString UniqueId = PS->GetUniqueId().ToString();
-			if (!PlayerVoiceInfoList.Contains(UniqueId))
-			{
-				PlayerVoiceInfoList.Add(UniqueId, FPTWPlayerVoiceInfo());
-			}
-		}
 		for (auto PlayerVoiceInfoEntry : PlayerVoiceInfoList)
 		{
-			if (!PlayerVoiceVolumes.Contains(PlayerVoiceInfoEntry.Key))
+			const FString& UniqueId = PlayerVoiceInfoEntry.Key;
+			const FPTWPlayerVoiceInfo& PlayerVoiceInfo = PlayerVoiceInfoEntry.Value;
+			if (!PlayerVoiceVolumes.Contains(UniqueId))
 			{
-				APlayerState* TargetPS = nullptr;
-				for (APlayerState* PS : GetWorld()->GetGameState()->PlayerArray)
-				{
-					FString UniqueId = PS->GetUniqueId().ToString();
-					if (PlayerVoiceInfoEntry.Key == UniqueId)
-					{
-						TargetPS = PS;
-						break;
-					}
-				}
-				if (!IsValid(TargetPS)) continue;
-				
 				UPTWVoiceVolume* PlayerVoiceVolume = CreateWidget<UPTWVoiceVolume>(this, VoiceVolumeClass);
-				PlayerVoiceVolume->InitWidget(TargetPS);
-		
+				PlayerVoiceVolume->InitWidget(UniqueId, PlayerVoiceInfo);
+				
 				USizeBox* SizeBox = NewObject<USizeBox>(this);
 				SizeBox->AddChild(PlayerVoiceVolume);
 				SizeBox->SetMinDesiredHeight(60.f);
@@ -48,15 +30,11 @@ void UPTWVoiceVlumeVertical::InitWidget()
 				UVerticalBoxSlot* SizeBoxSlot = AddChildToVerticalBox(SizeBox);
 				SizeBoxSlot->SetHorizontalAlignment(HAlign_Fill);
 				SizeBoxSlot->SetVerticalAlignment(VAlign_Fill);
-			
-				if (TargetPS == GetOwningPlayer()->GetPlayerState<APlayerState>())
+				
+				const FString& MyUniqueId = FString::FromInt(GetOwningLocalPlayer()->GetUniqueID());
+				if (UniqueId == MyUniqueId)
 				{
 					SizeBox->SetVisibility(ESlateVisibility::Collapsed);
-				}
-				FString UniqueId = TargetPS->GetUniqueId().ToString();
-				if (!PlayerVoiceVolumes.Contains(UniqueId))
-				{
-					PlayerVoiceVolumes.Add(UniqueId, PlayerVoiceVolume);
 				}
 			}
 		}

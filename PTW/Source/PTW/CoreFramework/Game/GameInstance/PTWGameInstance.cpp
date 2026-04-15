@@ -1,7 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
+﻿#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "MoviePlayer.h"
 #include "Blueprint/UserWidget.h"
 #include "MiniGame/PTWMiniGameMapRow.h"
@@ -115,4 +112,22 @@ void UPTWGameInstance::StopLoadingScreen()
 	{
 		GetMoviePlayer()->StopMovie();
 	}
+}
+
+void UPTWGameInstance::AddPlayerUniqueId(const FString& UniqueId)
+{
+	PlayerUniqueIds.Add(UniqueId);
+	OnPlayerConnected.Broadcast(UniqueId);
+}
+
+void UPTWGameInstance::RemovePlayerUniqueId(const FString& UniqueId)
+{
+	PlayerUniqueIds.Remove(UniqueId);
+	OnPlayerDisconnected.Broadcast(UniqueId);
+}
+
+void UPTWGameInstance::RemoveAllPlayerUniqueId()
+{
+	PlayerUniqueIds.Empty();
+	OnAllPlayersDisconnected.Broadcast(FString());
 }

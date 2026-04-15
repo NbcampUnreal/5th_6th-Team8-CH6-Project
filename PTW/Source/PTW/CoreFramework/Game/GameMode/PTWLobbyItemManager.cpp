@@ -53,9 +53,9 @@ int32 UPTWLobbyItemManager::TakePredictionWinReward(APTWPlayerState* PlayerState
 	UWorld* World = GetWorld();
 	if (!World) return 0;
 	
-	FUniqueNetIdRepl PredictedId = PlayerState->GetLobbyItemData().PredictedData.PredictedPlayer;
-	if (!PredictedId.IsValid()) return 0;
-	UE_LOG(LogTemp, Error, TEXT("PredictedPtr: %p"), PredictedId.GetUniqueNetId().Get());
+	FString PredictedId = PlayerState->GetLobbyItemData().PredictedData.PredictedPlayer;
+	UE_LOG(LogTemp, Error, TEXT("PredictedPlayer: %s"), *PredictedId);
+	if (PredictedId.IsEmpty()) return 0;
 	
 	UPTWScoreSubsystem* ScoreSubsystem = World->GetGameInstance()->GetSubsystem<UPTWScoreSubsystem>();
 	if (!ScoreSubsystem) return 0;
@@ -66,7 +66,6 @@ int32 UPTWLobbyItemManager::TakePredictionWinReward(APTWPlayerState* PlayerState
 	
 	for (const FPTWLastWinnerInfo& Info : LastWinnerInfos)
 	{
-		UE_LOG(LogTemp, Error, TEXT("PredictedPtr: %p, WinnerPtr: %p"), PredictedId.GetUniqueNetId().Get(), Info.WinnerId.GetUniqueNetId().Get());
 		if (Info.WinnerId == PredictedId)
 		{
 			int32 Reward = PlayerState->GetLobbyItemData().PredictedData.RewardAmount;

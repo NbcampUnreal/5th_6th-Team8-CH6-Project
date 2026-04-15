@@ -156,4 +156,6 @@ private:
 	TMap<APTWPlayerController*, FVector> PlayerSpawnPoints; 
 	
 	TArray<APTWPlayerController*> RankPCList;
+	
+	bool bIsCountDownEnded = false;
 };

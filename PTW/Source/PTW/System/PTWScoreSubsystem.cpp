@@ -4,21 +4,25 @@
 #include "System/PTWScoreSubsystem.h"
 
 #include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 
 
-void UPTWScoreSubsystem::SavePlayerData(const FString& PlayerName, const FPTWPlayerData& PlayerData)
+void UPTWScoreSubsystem::SavePlayerData(const FString& PlayerID, const FPTWPlayerData& PlayerData)
 {
 	if (!GetWorld() || !GetWorld()->GetAuthGameMode()) return;
-	SavedPlayersData.Add(PlayerName, PlayerData);
+	SavedPlayersData.Add(PlayerID, PlayerData);
 }
 
-void UPTWScoreSubsystem::SaveLobbyItemData(const FString& PlayerName, const FPTWLobbyItemData& LobbyItemData)
+void UPTWScoreSubsystem::SaveLobbyItemData(const FString& PlayerID, const FPTWLobbyItemData& LobbyItemData)
 {
 	if (!GetWorld() || !GetWorld()->GetAuthGameMode()) return;
-	UE_LOG(LogTemp, Error, TEXT("Before Save PredictedPlayer: %s"), *LobbyItemData.PredictedData.PredictedPlayer);
-	SavedLobbyItemData.Add(PlayerName, LobbyItemData);
+	SavedLobbyItemData.Add(PlayerID, LobbyItemData);
+}
 
-	UE_LOG(LogTemp, Error, TEXT("Save PredictedPlayer: %s"), *SavedLobbyItemData.Find(PlayerName)->PredictedData.PredictedPlayer)
+void UPTWScoreSubsystem::SavePlayerGameData(const FString& PlayerID, const FPTWPlayerGameData& PlayerGameData)
+{
+	if (!GetWorld() || !GetWorld()->GetAuthGameMode()) return;
+	ConnectedPlayersGameData.Add(PlayerID, PlayerGameData);
 }
 
 void UPTWScoreSubsystem::SaveGameRound(int32 NewGameRound)
@@ -58,6 +62,24 @@ FPTWPlayerData* UPTWScoreSubsystem::FindPlayerData(const FString& PlayerName)
 FPTWLobbyItemData* UPTWScoreSubsystem::FindLobbyItemData(const FString& PlayerName)
 {
 	return SavedLobbyItemData.Find(PlayerName);
+}
+
+FPTWPlayerGameData* UPTWScoreSubsystem::FindPlayerGameData(const FString& PlayerId)
+{
+	return ConnectedPlayersGameData.Find(PlayerId);
+}
+
+void UPTWScoreSubsystem::BeginPlay()
+{
+	UPTWGameInstance* GameInstance = Cast<UPTWGameInstance>(GetWorld()->GetGameInstance());
+	if (!GameInstance) return;
+
+	GameInstance->OnPlayerConnected.AddDynamic(this, &UPTWScoreSubsystem::AddConnectedPlayerId);
+}
+
+void UPTWScoreSubsystem::AddConnectedPlayerId(const FString& ConnectedPlayerId)
+{
+	ConnectedPlayersGameData.Add(ConnectedPlayerId);
 }
 
 

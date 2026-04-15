@@ -25,13 +25,13 @@ public:
 	/** 특정 플레이어의 데이터를 저장
 	 * - PlayerIndex를 키로 플레이어 진행 데이터 갱신
 	 *
-	 * @param PlayerName 플레이어를 식별하는 인덱스
+	 * @param PlayerID 플레이어를 식별하는 인덱스
 	 * @param PlayerData 저장할 플레이어 데이터
 	 */
 	void SavePlayerData(const FString& PlayerID, const FPTWPlayerData& PlayerData);
 	void SaveLobbyItemData(const FString& PlayerID, const FPTWLobbyItemData& LobbyItemData);
 
-	void SaveAllPlayerData(const FString& PlayerID, const FPTWPlayerData& PlayerData);
+	void SavePlayerGameData(const FString& PlayerID, const FPTWPlayerGameData& PlayerGameData);
 	/** 현재 게임 라운드 값을 저장
 	 * - 라운드 진행 시 호출되어 상태 갱신
 	 *
@@ -52,12 +52,18 @@ public:
 	/** 지정한 플레이어의 저장된 데이터가 있으면 반환 */
 	FPTWPlayerData* FindPlayerData(const FString& PlayerName);
 	FPTWLobbyItemData* FindLobbyItemData(const FString& PlayerName);
+
+	FPTWPlayerGameData* FindPlayerGameData(const FString& PlayerId);
 	
 	/** 저장된 라운드 반환 */
 	FORCEINLINE int32 GetCurrentGameRound() const { return SavedGameRound; }
 	FORCEINLINE int32 GetSavedAllPlayerCount() const { return SavedAllPlayerCount; }
 	FORCEINLINE FPTWGameData GetSavedGameData() const { return SavedGameData; }
+protected:
+	virtual void BeginPlay();
+
 private:
+	
 	// 현재 저장 게임 라운드 번호
 	int32 SavedGameRound = 0;
 	int32 SavedAllPlayerCount = 0;
@@ -73,4 +79,9 @@ private:
 
 
 public:
+	//* 세션에 참가한 이력이 있는 플레이어의 게임 데이터 */ 
+	TMap<FString, FPTWPlayerGameData> ConnectedPlayersGameData;
+
+	UFUNCTION()
+	void AddConnectedPlayerId(const FString& ConnectedPlayerId);
 };

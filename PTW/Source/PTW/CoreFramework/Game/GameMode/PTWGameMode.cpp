@@ -573,8 +573,13 @@ void APTWGameMode::SaveGameDataToSubsystem()
 		{
 			if (APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState))
 			{
-				PTWScoreSubsystem->SavePlayerData(PTWPlayerState->GetPlayerName(), PTWPlayerState->GetPlayerData());
-				PTWScoreSubsystem->SaveLobbyItemData(PTWPlayerState->GetPlayerName(), PTWPlayerState->GetLobbyItemData());
+				//PTWScoreSubsystem->SavePlayerData(PTWPlayerState->GetPlayerName(), PTWPlayerState->GetPlayerData());
+				//PTWScoreSubsystem->SaveLobbyItemData(PTWPlayerState->GetPlayerName(), PTWPlayerState->GetLobbyItemData());
+				FPTWPlayerGameData PlayerGameData;
+				PlayerGameData.PlayerData = PTWPlayerState->GetPlayerData();
+				PlayerGameData.LobbyItemData = PTWPlayerState->GetLobbyItemData();
+				
+				PTWScoreSubsystem->SavePlayerGameData(PTWPlayerState->GetUniqueId().ToString(),PlayerGameData);
 			}
 		}
 
@@ -606,15 +611,20 @@ void APTWGameMode::ApplyPlayerDataFromSubsystem(AController* NewPlayer)
 	{
 		if (APTWPlayerState* PTWPlayerState = NewPlayer->GetPlayerState<APTWPlayerState>())
 		{
-			if (FPTWPlayerData* FoundData = PTWScoreSubsystem->FindPlayerData(PTWPlayerState->GetPlayerName()))
-			{
-				PTWPlayerState->SetPlayerData(*FoundData);
+			// if (FPTWPlayerData* FoundData = PTWScoreSubsystem->FindPlayerData(PTWPlayerState->GetPlayerName()))
+			// {
+			// 	PTWPlayerState->SetPlayerData(*FoundData);
+			// 	
+			// }
+			// if (FPTWLobbyItemData* FoundData = PTWScoreSubsystem->FindLobbyItemData(PTWPlayerState->GetPlayerName()))
+			// {
+			// 	PTWPlayerState->SetLobbyItemData(*FoundData);
+			// }
 
-				UE_LOG(LogTemp, Warning, TEXT("Player Gold: %d"), FoundData->Gold);
-			}
-			if (FPTWLobbyItemData* FoundData = PTWScoreSubsystem->FindLobbyItemData(PTWPlayerState->GetPlayerName()))
+			if (FPTWPlayerGameData* FoundData = PTWScoreSubsystem->FindPlayerGameData(PTWPlayerState->GetUniqueId().ToString()))
 			{
-				PTWPlayerState->SetLobbyItemData(*FoundData);
+				PTWPlayerState->SetPlayerData(FoundData->PlayerData);
+				PTWPlayerState->SetLobbyItemData(FoundData->LobbyItemData);
 			}
 		}
 	}

@@ -94,6 +94,11 @@ void APTWPlayerState::SetMiniGameComponent(UActorComponent* NewMiniGameComponent
 	}
 }
 
+void APTWPlayerState::ServerVotePredictedPlayer_Implementation(FUniqueNetIdRepl PredictedPlayer)
+{
+	LobbyItemData.PredictedData.PredictedPlayer = PredictedPlayer.ToString();
+}
+
 void APTWPlayerState::InjectAbility(TSubclassOf<UGameplayAbility> AbilityClass)
 {
 	if (!AbilityClass || !HasAuthority()) return;
@@ -266,7 +271,11 @@ void APTWPlayerState::VotePredictedPlayer(FUniqueNetIdRepl PredictedPlayer)
 {
 	if (HasAuthority())
 	{
-		LobbyItemData.PredictedData.PredictedPlayer = PredictedPlayer;
+		LobbyItemData.PredictedData.PredictedPlayer = PredictedPlayer.ToString();
+	}
+	else
+	{
+		ServerVotePredictedPlayer(PredictedPlayer);
 	}
 }
 

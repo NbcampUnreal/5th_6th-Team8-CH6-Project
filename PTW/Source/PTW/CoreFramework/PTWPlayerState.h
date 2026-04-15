@@ -32,6 +32,7 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 	
@@ -76,6 +77,9 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void ClientPurchaseSuccess(APTWShopNPC* ShopNPC);
+
+	UFUNCTION(Server, Reliable)
+	void ServerVotePredictedPlayer(FUniqueNetIdRepl PredictedPlayer);
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnPlayerDataChanged OnPlayerDataUpdated;

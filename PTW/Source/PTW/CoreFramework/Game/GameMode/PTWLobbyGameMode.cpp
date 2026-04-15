@@ -27,7 +27,7 @@ APTWLobbyGameMode::APTWLobbyGameMode()
 void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
-	
+	// 이 부분은 매칭 방식이 바뀌면 필요 없음 
 	if (UPTWGameInstance* PTWGameInstance = Cast<UPTWGameInstance>(GetGameInstance()))
 	{
 		if (PTWGameInstance->bIsFirstLobby == true && bSkipFirstLobby == false)
@@ -55,7 +55,7 @@ void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options,
 void APTWLobbyGameMode::InitGameState()
 {
 	Super::InitGameState();
-	
+	// 이 부분은 매칭 방식이 바뀌면 필요 없음 
 	if (IsValid(PTWGameState))
 	{
 		if (bIsFirstLobby == true)
@@ -103,10 +103,9 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 	
-	//접속하면 무적 상태로 변경 해야 함
-	
 	if (!IsValid(PTWGameState)) return;
-	
+
+	// 이 부분은 매칭 방식이 바뀌면 필요 없음 
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
 	{
 		if (GameFlowRule.MinPlayersToStart <= PTWGameState->PlayerArray.Num() &&
@@ -127,6 +126,19 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 			StartTimer(GameFlowRule.WaitingTime);
 		}
 	}
+
+	// 매칭 방식 바뀌면 추가
+	
+	APTWPlayerState* PlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
+	if (!PlayerState) return;
+
+	UPTWGameInstance* GameInstance = GetGameInstance<UPTWGameInstance>();
+	if (!GameInstance) return;
+
+	UPTWScoreSubsystem* ScoreSubsystem = GameInstance->GetSubsystem<UPTWScoreSubsystem>();
+	if (!ScoreSubsystem) return;
+
+	
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)

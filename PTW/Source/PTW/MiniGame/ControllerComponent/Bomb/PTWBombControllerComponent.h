@@ -11,7 +11,7 @@ class UPTWUISubsystem;
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class PTW_API UPTWBombControllerComponent : public UPTWBaseControllerComponent
 {
 	GENERATED_BODY()

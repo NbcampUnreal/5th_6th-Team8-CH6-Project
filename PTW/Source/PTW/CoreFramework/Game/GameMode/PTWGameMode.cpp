@@ -567,12 +567,14 @@ void APTWGameMode::SaveGameDataToSubsystem()
 	
 	ScoreSubsystem->SaveServerTravelPlayerCount(GetNumPlayers());
 	ScoreSubsystem->SaveGameData(PTWGameState->GameData);
-
+	ScoreSubsystem->RemoveTravelPlayersId();
+	
 	for (APlayerState* PlayerState : PTWGameState->PlayerArray)
 	{
 		if (APTWPlayerState* PTWPlayerState = Cast<APTWPlayerState>(PlayerState))
 		{
 			SavePlayerGameData(PTWPlayerState);
+			ScoreSubsystem->AddTravelPlayerId(PTWPlayerState->GetUniqueId().ToString(), PTWPlayerState->GetPlayerData().PlayerName);
 		}
 	}
 

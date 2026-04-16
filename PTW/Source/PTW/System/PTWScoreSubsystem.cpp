@@ -30,6 +30,11 @@ FPTWPlayerGameData* UPTWScoreSubsystem::FindPlayerGameData(const FString& Player
 	return ConnectedPlayersGameData.Find(PlayerId);
 }
 
+void UPTWScoreSubsystem::RemoveTravelPlayersId()
+{
+	TravelPlayersId.Empty();
+}
+
 void UPTWScoreSubsystem::BeginPlay()
 {
 	
@@ -38,6 +43,13 @@ void UPTWScoreSubsystem::BeginPlay()
 void UPTWScoreSubsystem::AddConnectedPlayerId(const FString& ConnectedPlayerId)
 {
 	ConnectedPlayersGameData.Add(ConnectedPlayerId);
+}
+
+void UPTWScoreSubsystem::AddTravelPlayerId(const FString& TravelPlayerId, const FString& PlayerName)
+{
+	if (!GetWorld() || !GetWorld()->GetAuthGameMode()) return;
+	
+	TravelPlayersId.Add(TravelPlayerId, PlayerName);
 }
 
 

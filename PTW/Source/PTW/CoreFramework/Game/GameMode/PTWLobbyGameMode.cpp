@@ -493,6 +493,10 @@ void APTWLobbyGameMode::AddGold(APTWPlayerState* PlayerState, int32 Amount)
 	FPTWPlayerData PlayerData = PlayerState->GetPlayerData();
 	PlayerData.Gold += Amount; // 적금 골드를 받을 수 있으면 지급 골드에 추가
 	PlayerState->SetPlayerData(PlayerData);
+
+	if (!PTWGameState) return;
+
+	PTWGameState->UpdateLobbyRankingDataMap(PlayerState->GetUniqueId().ToString(), PlayerState->GetPlayerData());
 }
 
 

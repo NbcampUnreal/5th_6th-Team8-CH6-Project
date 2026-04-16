@@ -302,7 +302,7 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	}
 }
 
-void UPTWSteamSessionSubsystem::LeaveGameSession()
+void UPTWSteamSessionSubsystem::DestroySession()
 {
 	if (!SessionInterface.IsValid()) return;
 	
@@ -366,7 +366,7 @@ void UPTWSteamSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* 
 	ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
 	UE_LOG(Log_Steam, Error, TEXT("[게임세션 오류] 스팀게임세션 끊김발생"));
-	LeaveGameSession();
+	DestroySession();
 }
 
 void UPTWSteamSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig) const

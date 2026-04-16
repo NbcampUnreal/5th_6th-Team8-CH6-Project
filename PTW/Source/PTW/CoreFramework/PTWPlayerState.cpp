@@ -309,21 +309,32 @@ void APTWPlayerState::OnRep_LobbyItemData()
 	
 }
 
+void APTWPlayerState::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	
+	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
+	{
+		GI->RegisterPlayerState(this);
+	}
+}
+
 void APTWPlayerState::OnRep_UniqueId()
 {
 	Super::OnRep_UniqueId();
-	
-	FString PlayerUniqueId = GetUniqueId().ToString();
-	if (PlayerUniqueId.IsEmpty()) return;
-	
-	UPTWGameInstance * GI = GetGameInstance<UPTWGameInstance>();
-	if (!IsValid(GI)) return;
-	
-	GI->AddLevelPlayerId(PlayerUniqueId);
-	if (!GI->SessionPlayerIds.Contains(PlayerUniqueId))
-	{
-		GI->AddSessionPlayerId(PlayerUniqueId);
-	}
+	OnPlayerUniqueIdReplicated.Broadcast(this, GetUniqueId().ToString());
+}
+
+void APTWPlayerState::OnRep_PlayerName()
+{
+	Super::OnRep_PlayerName();
+	OnPlayerNameReplicated.Broadcast(this, GetPlayerName());
+}
+
+void APTWPlayerState::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+	OnPlayerOwnerReplicated.Broadcast(this, GetOwner());
 }
 
 void APTWPlayerState::EndPlay(const EEndPlayReason::Type EndPlayReason)

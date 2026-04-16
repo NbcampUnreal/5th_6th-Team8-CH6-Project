@@ -91,6 +91,7 @@ void UPTWVoiceChatSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	}
 	if (UPTWGameInstance* GI = GetWorld()->GetGameInstance<UPTWGameInstance>())
 	{
+		GI->OnLocalPlayerEnteredLevel.AddUniqueDynamic(this, &ThisClass::HandleLocalPlayerConnected);
 		GI->OnSessionPlayerConnected.AddUniqueDynamic(this, &ThisClass::HandlePlayerConnected);
 		GI->OnSessionPlayerDisconnected.AddUniqueDynamic(this, &ThisClass::HandlePlayerDisconnected);
 		GI->OnSessionPlayersCleared.AddUniqueDynamic(this, &ThisClass::HandleAllPlayersDisconnected);
@@ -109,12 +110,18 @@ void UPTWVoiceChatSubsystem::Deinitialize()
 	
 	if (UPTWGameInstance* GI = GetWorld()->GetGameInstance<UPTWGameInstance>())
 	{
+		GI->OnLocalPlayerEnteredLevel.RemoveDynamic(this, &ThisClass::HandleLocalPlayerConnected);
 		GI->OnSessionPlayerConnected.RemoveDynamic(this, &ThisClass::HandlePlayerConnected);
 		GI->OnSessionPlayerDisconnected.RemoveDynamic(this, &ThisClass::HandlePlayerDisconnected);
 		GI->OnSessionPlayersCleared.RemoveDynamic(this, &ThisClass::HandleAllPlayersDisconnected);
 	}
 	PlayerVoiceInfoList.Empty();
 	Super::Deinitialize();
+}
+
+void UPTWVoiceChatSubsystem::HandleLocalPlayerConnected(const FString& UniqueId)
+{
+	OnLocalVoiceChatConnected.Broadcast(UniqueId);
 }
 
 void UPTWVoiceChatSubsystem::HandlePlayerConnected(const FString& UniqueId)

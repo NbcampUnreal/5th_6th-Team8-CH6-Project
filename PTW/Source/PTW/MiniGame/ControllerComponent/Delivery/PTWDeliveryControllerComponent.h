@@ -7,9 +7,9 @@
 #include "MiniGame/ControllerComponent/PTWBaseControllerComponent.h"
 #include "PTWDeliveryControllerComponent.generated.h"
 
-class UPostProcessComponent;
 class UPTWDeliveryHUD;
 class UPTWBatterLevelWidget;
+class APostProcessVolume;
 
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class PTW_API UPTWDeliveryControllerComponent : public UPTWBaseControllerComponent

@@ -27,7 +27,7 @@
 #include "Kismet/GameplayStatics.h"
 
 #include "CoreFramework/PTWPlayerController.h"
-#include "CoreFramework/Character/Component/PTWUIControllerComponent.h"
+#include "MiniGame/ControllerComponent/Bomb/PTWBombControllerComponent.h"
 
 #define LOCTEXT_NAMESPACE "BombActor"
 
@@ -489,9 +489,11 @@ void APTWBombActor::BindToLocalPlayerController()
 	APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC);
 	if (!PTWPC) return;
 
-	if (PTWPC->UIControllerComponent)
+	UPTWBombControllerComponent* BombComp = PTWPC->FindComponentByClass<UPTWBombControllerComponent>();
+
+	if (BombComp)
 	{
-		PTWPC->UIControllerComponent->BindBombDelegate(this);
+		BombComp->BindBombDelegate(this);
 	}
 
 	// 현재 오너 즉시 동기화
@@ -509,9 +511,11 @@ void APTWBombActor::UnBindToLocalPlayerController()
 	APTWPlayerController* PTWPC = Cast<APTWPlayerController>(PC);
 	if (!PTWPC) return;
 
-	if (PTWPC->UIControllerComponent)
+	UPTWBombControllerComponent* BombComp = PTWPC->FindComponentByClass<UPTWBombControllerComponent>();
+
+	if (BombComp)
 	{
-		PTWPC->UIControllerComponent->UnBindBombDelegate();
+		BombComp->UnBindBombDelegate();
 	}
 }
 

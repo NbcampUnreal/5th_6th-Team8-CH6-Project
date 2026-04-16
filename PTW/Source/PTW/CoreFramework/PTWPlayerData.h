@@ -110,3 +110,19 @@ struct FPTWLobbyItemData
 	FPredictedData PredictedData;
 
 };
+
+/**
+ * 로비 아이템과 플레이어 데이터 저장 구조체
+ */
+USTRUCT(BlueprintType)
+struct FPTWPlayerGameData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere)
+	FPTWLobbyItemData LobbyItemData;
+	
+	UPROPERTY(EditAnywhere)
+	FPTWPlayerData PlayerData;
+
+};

@@ -235,6 +235,7 @@ void APTWGameState::DecreaseCoundDown()
 void APTWGameState::AdvanceRound()
 {
 	CurrentRound++;
+	GameData.CurrentRound = CurrentRound;
 	UE_LOG(LogTemp, Warning, TEXT("Current Round: %d"), CurrentRound);
 }
 
@@ -270,7 +271,7 @@ void APTWGameState::SetRemainTime(int32 NewTime)
 void APTWGameState::SetCurrentRound(int32 NewRound)
 {
 	if (!HasAuthority()) return;
-	
+	GameData.CurrentRound = NewRound;
 	CurrentRound = NewRound;
 	
 	OnRep_CurrentRound();

@@ -4,6 +4,12 @@
 #include "UI/InGameUI/PTWPortalCount.h"
 #include "Components/TextBlock.h"
 #include "CoreFramework/Game/GameState/PTWGameState.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h"
+#include "PTWGameplayTag/GameplayTags.h"
+#include "GameFramework/PlayerState.h"
+
+#define LOCTEXT_NAMESPACE "PTWPortalUI"
 
 void UPTWPortalCount::NativeDestruct()
 {
@@ -13,6 +19,19 @@ void UPTWPortalCount::NativeDestruct()
 	}
 
 	Super::NativeDestruct();
+}
+
+void UPTWPortalCount::InitWithASC(UAbilitySystemComponent* AbilitySystemComponent)
+{
+	if (AbilitySystemComponent)
+	{
+		ASC = AbilitySystemComponent;
+
+		ASC->RegisterGameplayTagEvent(GameplayTags::State::InPortal, EGameplayTagEventType::NewOrRemoved)
+			.AddUObject(this, &UPTWPortalCount::OnPortalTagChanged);
+	}
+
+	InitializeGameState();
 }
 
 void UPTWPortalCount::InitializeGameState()
@@ -53,13 +72,41 @@ void UPTWPortalCount::UpdatePortalText(int32 Current, int32 Required)
 {
 	if (PortalCountText)
 	{
-		// 최적화된 FText 생성 (Current / Required)
-		FText FormattedText = FText::Format(
-			NSLOCTEXT("UI", "PortalCountFormat", "{0} / {1}"),
-			FText::AsNumber(Current),
-			FText::AsNumber(Required)
-		);
+		APlayerController* PC = GetOwningPlayer();
+		if (!PC) return;
 
-		PortalCountText->SetText(FormattedText);
+		APlayerState* PS = PC->PlayerState;
+		if (!PS) return;
+
+		if (!ASC) return;
+
+		bool bIsInPortal = ASC && ASC->HasMatchingGameplayTag(GameplayTags::State::InPortal);
+
+		if (bIsInPortal)
+		{
+			FText FormattedText = FText::Format(
+				LOCTEXT("PortalCountFormat", "{0} / {1}"),
+				FText::AsNumber(Current),
+				FText::AsNumber(Required)
+			);
+
+			PortalCountText->SetText(FormattedText);
+		}
+		else
+		{
+			PortalCountText->SetText(
+				LOCTEXT("PortalMoveMessage", "포탈로 이동하여 준비완료를 하세요")
+			);
+		}
 	}
 }
+
+void UPTWPortalCount::OnPortalTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	if (PTWGameState)
+	{
+		UpdatePortalText(PTWGameState->GetPortalCurrent(), PTWGameState->GetPortalRequired());
+	}
+}
+
+#undef LOCTEXT_NAMESPACE

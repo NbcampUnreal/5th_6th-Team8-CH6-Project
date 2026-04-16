@@ -468,10 +468,7 @@ void APTWLobbyGameMode::ReturnToMainMenu()
 	UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>();
 	if (!GI) return;
 	
-	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
-	{
-		SteamSessionSubsystem->LeaveGameSession();
-	}
+	GI->LeaveGameSession();
 }
 
 void APTWLobbyGameMode::ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId)

@@ -339,16 +339,6 @@ void APTWPlayerState::OnRep_Owner()
 
 void APTWPlayerState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	FString PlayerUniqueId = GetUniqueId().ToString();
-	if (UPTWGameInstance * GI = GetGameInstance<UPTWGameInstance>())
-	{
-		GI->RemoveLevelPlayerId(PlayerUniqueId);
-		if (EndPlayReason == EEndPlayReason::Destroyed)
-		{
-			GI->RemoveSessionPlayerId(PlayerUniqueId);
-		}
-	}
-	
 	Super::EndPlay(EndPlayReason);
 }
 

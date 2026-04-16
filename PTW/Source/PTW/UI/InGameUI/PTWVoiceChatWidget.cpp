@@ -14,7 +14,7 @@ void UPTWVoiceChatWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UPTWVoiceChatWidget::SetupWidget(FString InTalkerName)
+void UPTWVoiceChatWidget::InitializeWidget(FString InTalkerName)
 {
 	TalkerName = InTalkerName;
 	TalkerNameText->SetText(FText::FromString(TalkerName));

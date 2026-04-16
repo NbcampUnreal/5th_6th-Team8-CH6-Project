@@ -46,7 +46,7 @@ public:
 	void FindGameSession();
 	void SearchForGameSessions();
 	void JoinGameSession(const FOnlineSessionSearchResultBP& SearchResult, const FString Options = TEXT(""));
-	void LeaveGameSession();
+	void DestroySession();
 
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;

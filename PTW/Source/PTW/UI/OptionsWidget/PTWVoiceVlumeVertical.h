@@ -14,8 +14,10 @@ class PTW_API UPTWVoiceVlumeVertical : public UVerticalBox
 	GENERATED_BODY()
 	
 public:
-	void InitWidget();
+	void InitializeWidget();
 	
+	UFUNCTION()
+	void HandleVoiceChatDisconnected();
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;

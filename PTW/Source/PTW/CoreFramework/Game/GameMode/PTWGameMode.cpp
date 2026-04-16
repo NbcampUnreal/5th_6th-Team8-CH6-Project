@@ -111,16 +111,15 @@ void APTWGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 #endif
 	APlayerState* PS = NewPlayer->PlayerState;
-	FString UniqueId = IsValid(PS) ? PS->GetUniqueId().ToString() : TEXT("");
-	if (UniqueId.IsEmpty()) return;
+	FString UniqueId = IsValid(PS) && PS->GetUniqueId().IsValid() ? PS->GetUniqueId().ToString() : TEXT("");
 	
-	UPTWGameInstance * GI = GetGameInstance<UPTWGameInstance>();
-	if (!IsValid(GI)) return;
-	
-	GI->AddLevelPlayerId(UniqueId);
-	if (!GI->SessionPlayerIds.Contains(UniqueId))
+	if (UPTWGameInstance * GI = GetGameInstance<UPTWGameInstance>())
 	{
-		GI->AddSessionPlayerId(UniqueId);
+		if (!UniqueId.IsEmpty() && !PS->GetPlayerName().IsEmpty())
+		{
+			GI->HandlePlayerUniqueIdReplicated(PS, UniqueId);
+			GI->HandlePlayerNameReplicated(PS, PS->GetPlayerName());
+		}
 	}
 	
 	HandlePlayerJoined(NewPlayer);

@@ -75,6 +75,7 @@ private:
 	FTimerHandle BlackoutTimerHandle;
 	FTimerHandle BlackoutEndTimerHandle;
 	FTimerHandle IdleRevealTimerHandle;
+	FTimerHandle RespawnStateRetryTimerHandle;
 
 	TMap<TObjectPtr<APlayerState>, float> IdleTimeMap;
 

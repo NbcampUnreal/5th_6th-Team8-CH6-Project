@@ -5,7 +5,6 @@
 
 #include "CoreFramework/PTWPlayerController.h"
 #include "CoreFramework/PTWPlayerState.h"
-#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "Debug/PTWLogCategorys.h"
 #include "MiniGame/PTWMiniGameRule.h"
 #include "System/Prop/PTWPropSubsystem.h"
@@ -41,15 +40,6 @@ void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void APTWGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (UPTWGameInstance * GI = GetGameInstance<UPTWGameInstance>())
-	{
-		GI->ClearLevelPlayerIds();
-		if (EndPlayReason == EEndPlayReason::Destroyed)
-		{
-			GI->ClearSessionPlayerIds();
-		}
-	}
-	
 	Super::EndPlay(EndPlayReason);
 }
 

@@ -9,6 +9,8 @@
 #include "System/Prop/PTWPropData.h"
 #include "PTWGameState.generated.h"
 
+struct FPTWPlayerData;
+struct FPTWPlayerGameData;
 class APTWPlayerState;
 
 
@@ -139,6 +141,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundChanged, int32, CurrentRound
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpdateRankedPlayers, TArray<APTWPlayerState*>, RankedPlayers);
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUpdateLobbyRankingData, const TArray<FPTWLobbyRankingData>&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUpdateMiniGameRankingData, const TArray<FPTWMiniGameRankingData>&);
 
 /**
 * 킬로그 방송을 위한 델리게이트
@@ -218,6 +222,14 @@ public:
 	void ResetChaosItemEntries();
 	void AddPlayedMap(FName MapRowName);
 
+	//* ScoreSubsystem에 있는 데이터 전달 */
+	void AddLobbyRankingDataMap(const TMap<FString, FPTWPlayerGameData>& InData);
+	void UpdateLobbyRankingDataMap(const FString& PlayerId, const FPTWPlayerData& PlayerData);
+	void SortLobbyRankingData();
+	
+	void AddMiniGameRankingDataMap(const TMap<FString, FString>& InData);
+	void UpdateMiniGameRankingDataMap(APlayerState* InPlayerState);
+	void SortMiniGameRankingData();
 	UPROPERTY()
 	FPTWGameData GameData;
 	
@@ -239,6 +251,8 @@ public:
 	void SetMaxMiniGameRound(int32 NewMaxRound);
 
 	void SetWinTeamId(int32 TeamId);
+
+	void SetCurrentMiniGameRule(const FPTWMiniGameRule& Rule);
 #pragma endregion
 
 #pragma region Event
@@ -265,7 +279,10 @@ public:
 	/** 랭킹 플레이어 갱신 이벤트 */
 	UPROPERTY(BlueprintAssignable, Category="GameFlow|Event")
 	FOnUpdateRankedPlayers OnUpdateRankedPlayers;
-
+	
+	FOnUpdateLobbyRankingData OnUpdateLobbyRankingData;
+	FOnUpdateMiniGameRankingData OnUpdateMiniGameRankingData;
+	
 	/** 킬로그 이벤트: UI가 이 이벤트를 구독합니다. */
 	UPROPERTY(BlueprintAssignable, Category = "GameFlow|Event")
 	FOnKilllogBroadcastSignature OnKilllogBroadcast;
@@ -317,6 +334,8 @@ public:
 #pragma endregion
 	
 protected:
+	virtual void BeginPlay() override;
+	
 	/** 복제 설정 */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -335,6 +354,9 @@ protected:
 	bool bMiniGameCountdown = false;
 	UPROPERTY(ReplicatedUsing = OnRep_MiniGameCountDownValue)
 	int32 MiniGameCountDown = 0;
+
+	UPROPERTY()
+	FPTWMiniGameRule CurrentMiniGameRule;
 
 #pragma region Replication
 	/** 남은 시간(초) - 서버에서 갱신, 클라이언트로 복제 */
@@ -362,6 +384,23 @@ protected:
 
 	UFUNCTION()
 	void OnRep_RankedPlayers();
+	
+	/** 랭킹 데이터 로비, 미니 게임 분리 */
+	TMap<FString, FPTWLobbyRankingData> LobbyRankingDataMap;
+	
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_LobbyRankingData, Category = "GameFlow|Rank")
+	TArray<FPTWLobbyRankingData> LobbyRankingData;
+	
+	UFUNCTION()
+	void OnRep_LobbyRankingData();
+
+	TMap<FString, FPTWMiniGameRankingData> MiniGameRankingDataMap;
+	
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_MiniGameRankingData, Category = "GameFlow|Rank")
+	TArray<FPTWMiniGameRankingData> MiniGameRankingData;
+	
+	UFUNCTION()
+	void OnRep_MiniGameRankingData();
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_RouletteData, Category = "GameFlow|Roulette")
 	FPTWRouletteData RouletteData;

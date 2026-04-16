@@ -29,8 +29,8 @@
 #include "Inventory/Instance/PTWItemInstance.h"
 #include "Inventory/Instance/PTWWeaponInstance.h"
 #include "MiniGame/PTWMiniGameMapRow.h"
+#include "System/PTWScoreSubsystem.h"
 
-class UPTWScoreSubsystem;
 
 #pragma region public
 
@@ -138,6 +138,7 @@ void APTWMiniGameMode::InitGameState()
 	{
 		PTWGameState->SetCurrentPhase(EPTWGamePhase::Loading);
 		PTWGameState->SetMaxMiniGameRound(MiniGameRule.TimeRule.Round);
+		PTWGameState->SetCurrentMiniGameRule(MiniGameRule);
 	}
 }
 
@@ -333,13 +334,15 @@ void APTWMiniGameMode::PlayerReadyToPlay(APlayerController* Controller)
 
 void APTWMiniGameMode::StartGame()
 {
-	if (!PTWGameState) return;
+	if (!PTWGameState || !ScoreSubsystem) return;
 	if (bIsGameStarted) return;
 
 	bIsGameStarted = true;
 	
 	AssignTeam();
 
+	PTWGameState->AddMiniGameRankingDataMap(ScoreSubsystem->GetTravelPlayersId());
+	
 	AGameStateBase* GS = GetWorld()->GetGameState();
 	if (!GS) return;
 
@@ -602,14 +605,16 @@ void APTWMiniGameMode::ApplyRoundPropRandom()
 
 void APTWMiniGameMode::AddKillDeathCount(APlayerState* DeadPlayerState, APlayerState* KillPlayerState)
 {
-	if (!IsValid(DeadPlayerState)) return;
+	if (!IsValid(DeadPlayerState) || !IsValid(PTWGameState)) return;
 	
 	if (IPTWPlayerDataInterface* DeadPlayerData = Cast<IPTWPlayerDataInterface>(DeadPlayerState))
 	{
 		DeadPlayerData->AddDeathCount(1);
 		DeadPlayerData->SetDeathOrder(CurrentDeathOrder++);
-	}
 
+		PTWGameState->UpdateMiniGameRankingDataMap(DeadPlayerState);
+	}
+	
 	if (DeadPlayerState == KillPlayerState) return;
 
 	if (!IsValid(KillPlayerState)) return;
@@ -617,6 +622,7 @@ void APTWMiniGameMode::AddKillDeathCount(APlayerState* DeadPlayerState, APlayerS
 	if (IPTWPlayerDataInterface* KillPlayerData = Cast<IPTWPlayerDataInterface>(KillPlayerState))
 	{
 		KillPlayerData->AddKillCount();
+		PTWGameState->UpdateMiniGameRankingDataMap(KillPlayerState);
 		AddRoundScore(KillPlayerState, MiniGameRule.KillRule.KillScore);
 		
 	}
@@ -643,6 +649,7 @@ void APTWMiniGameMode::AddRoundScore(APlayerState* ScoreTarget, int32 ScoreValue
 		}
 	}
 	PTWGameState->UpdateRanking(MiniGameRule);
+	PTWGameState->UpdateMiniGameRankingDataMap(ScoreTarget);
 	CheckEndGameCondition();
 }
 

@@ -33,6 +33,7 @@ public:
 	FPTWPlayerGameData* FindPlayerGameData(const FString& PlayerId);
 	
 	FORCEINLINE FPTWGameData GetSavedGameData() const { return SavedGameData; }
+	FORCEINLINE TMap<FString, FPTWPlayerGameData> GetConnectedPlayersGameData() const {return ConnectedPlayersGameData;} 
 	FORCEINLINE int32 GetServerTravelPlayerCount() const { return ServerTravelPlayerCount; }
 protected:
 	virtual void BeginPlay();

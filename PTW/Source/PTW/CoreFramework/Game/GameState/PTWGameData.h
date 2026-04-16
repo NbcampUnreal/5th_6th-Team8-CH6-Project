@@ -50,7 +50,7 @@ struct FPTWGameData
 };
 
 USTRUCT(Blueprintable)
-struct FPTWLobbyRankingData
+struct FPTWBaseRankingData
 {
 	GENERATED_BODY()
 	
@@ -59,11 +59,38 @@ struct FPTWLobbyRankingData
 };
 
 USTRUCT(Blueprintable)
-struct FPTWMiniGameRankingData 
+struct FPTWLobbyRankingData : public FPTWBaseRankingData
 {
 	GENERATED_BODY()
 	
 	UPROPERTY(BlueprintReadOnly)
-	FString PlayerName;
+	int32 Score;
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 Gold;
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FString> InventoryItemIDs;
+	
+	UPROPERTY(BlueprintReadOnly)
+	bool bLeftGame;
+};
+
+USTRUCT(Blueprintable)
+struct FPTWMiniGameRankingData : public FPTWBaseRankingData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 Score;
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 Kill;
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 Death;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bLeftGame;
 	
 };

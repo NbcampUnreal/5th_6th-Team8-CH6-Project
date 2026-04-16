@@ -9,6 +9,7 @@
 #include "System/Prop/PTWPropData.h"
 #include "PTWGameState.generated.h"
 
+struct FPTWPlayerGameData;
 class APTWPlayerState;
 
 
@@ -218,6 +219,8 @@ public:
 	void ResetChaosItemEntries();
 	void AddPlayedMap(FName MapRowName);
 
+	//* ScoreSubsystem에 있는 데이터 전달 */
+	void AddLobbyRankingDataMap(const TMap<FString, FPTWPlayerGameData>& InData);
 	UPROPERTY()
 	FPTWGameData GameData;
 	
@@ -317,6 +320,8 @@ public:
 #pragma endregion
 	
 protected:
+	virtual void BeginPlay() override;
+	
 	/** 복제 설정 */
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -362,6 +367,23 @@ protected:
 
 	UFUNCTION()
 	void OnRep_RankedPlayers();
+	
+	/** 랭킹 데이터 로비, 미니 게임 분리 */
+	TMap<FString, FPTWLobbyRankingData> LobbyRankingDataMap;
+	
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_LobbyRankingData, Category = "GameFlow|Rank")
+	TArray<FPTWLobbyRankingData> LobbyRankingData;
+	
+	UFUNCTION()
+	void OnRep_LobbyRankingData();
+
+	TMap<FString, FPTWMiniGameRankingData> MiniGameRankingDataMap;
+	
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_MiniGameRankingData, Category = "GameFlow|Rank")
+	TArray<FPTWMiniGameRankingData> MiniGameRankingData;
+	
+	UFUNCTION()
+	void OnRep_MiniGameRankingData();
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_RouletteData, Category = "GameFlow|Roulette")
 	FPTWRouletteData RouletteData;

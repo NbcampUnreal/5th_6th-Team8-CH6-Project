@@ -18,6 +18,13 @@ APTWGameState::APTWGameState()
 }
 
 
+void APTWGameState::BeginPlay()
+{
+	Super::BeginPlay();
+
+	
+}
+
 void APTWGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -354,6 +361,28 @@ void APTWGameState::SetWinTeamId(int32 TeamId)
 	WinTeamId = TeamId;
 }
 
+void APTWGameState::AddLobbyRankingDataMap(const TMap<FString, FPTWPlayerGameData>& InData)
+{
+	if (!HasAuthority()) return;
+
+	LobbyRankingDataMap.Empty();
+	
+	for (const auto& Pair : InData)
+	{
+		const FString& PlayerId = Pair.Key;
+		const FPTWPlayerGameData& PlayerGameData = Pair.Value;
+		
+		FPTWLobbyRankingData LobbyData;
+		LobbyData.PlayerName = PlayerGameData.PlayerData.PlayerName;
+		LobbyData.Score = PlayerGameData.PlayerData.TotalWinPoints;
+		LobbyData.Gold = PlayerGameData.PlayerData.Gold;
+		LobbyData.InventoryItemIDs = PlayerGameData.PlayerData.InventoryItemIDs;
+		
+		LobbyRankingDataMap.Add(PlayerId, LobbyData);
+	}
+
+}
+
 void APTWGameState::Server_SetPropSeed_Implementation(int32 NewSeed)
 {
 	if (!HasAuthority()) return;
@@ -431,6 +460,14 @@ void APTWGameState::OnRep_CurrentGamePhase()
 void APTWGameState::OnRep_RankedPlayers()
 {
 	OnUpdateRankedPlayers.Broadcast(RankedPlayers);
+}
+
+void APTWGameState::OnRep_LobbyRankingData()
+{
+}
+
+void APTWGameState::OnRep_MiniGameRankingData()
+{
 }
 
 void APTWGameState::OnRep_RouletteData()

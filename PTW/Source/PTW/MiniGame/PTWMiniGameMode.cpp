@@ -30,7 +30,6 @@
 #include "Inventory/Instance/PTWWeaponInstance.h"
 #include "MiniGame/PTWMiniGameMapRow.h"
 
-class UPTWScoreSubsystem;
 
 #pragma region public
 

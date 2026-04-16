@@ -12,8 +12,8 @@
 
 class UPTWInventoryComponent;
 class UPTWDeliveryAttributeSet;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDataChanged, const FPTWPlayerData&, NewData);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerRoundDataChanged, const FPTWPlayerRoundData&, NewData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerDataChanged, const FString&, PlayerId , const FPTWPlayerData&, NewData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerRoundDataChanged, const FString&, PlayerId, const FPTWPlayerRoundData&, NewData);
 
 class UGameplayAbility;
 class UGameplayEffect;

@@ -95,7 +95,8 @@ namespace GameplayTags
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Idle, "State.Idle");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Bomb, "State.Bomb");
 		PTW_API UE_DEFINE_GAMEPLAY_TAG(Stun, "State.Stun");
-		
+		PTW_API UE_DEFINE_GAMEPLAY_TAG(InPortal, "State.InPortal");
+
 		namespace Passive
 		{
 			PTW_API UE_DEFINE_GAMEPLAY_TAG(ReflectShield, "State.Passive.ReflectShield");

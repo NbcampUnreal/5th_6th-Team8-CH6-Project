@@ -4,33 +4,19 @@
 #include "System/PTWScoreSubsystem.h"
 
 #include "CoreFramework/PTWPlayerState.h"
+#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 
 
-void UPTWScoreSubsystem::SavePlayerData(const FString& PlayerName, const FPTWPlayerData& PlayerData)
+void UPTWScoreSubsystem::SavePlayerGameData(const FString& PlayerID, const FPTWPlayerGameData& PlayerGameData)
 {
 	if (!GetWorld() || !GetWorld()->GetAuthGameMode()) return;
-	SavedPlayersData.Add(PlayerName, PlayerData);
+	ConnectedPlayersGameData.Add(PlayerID, PlayerGameData);
 }
 
-void UPTWScoreSubsystem::SaveLobbyItemData(const FString& PlayerName, const FPTWLobbyItemData& LobbyItemData)
+void UPTWScoreSubsystem::SaveServerTravelPlayerCount(int32 NewPlayerCount)
 {
 	if (!GetWorld() || !GetWorld()->GetAuthGameMode()) return;
-	UE_LOG(LogTemp, Error, TEXT("Before Save PredictedPlayer: %s"), *LobbyItemData.PredictedData.PredictedPlayer);
-	SavedLobbyItemData.Add(PlayerName, LobbyItemData);
-
-	UE_LOG(LogTemp, Error, TEXT("Save PredictedPlayer: %s"), *SavedLobbyItemData.Find(PlayerName)->PredictedData.PredictedPlayer)
-}
-
-void UPTWScoreSubsystem::SaveGameRound(int32 NewGameRound)
-{
-	if (!GetWorld() || !GetWorld()->GetAuthGameMode()) return;
-	SavedGameRound = NewGameRound;
-}
-
-void UPTWScoreSubsystem::SaveAllPlayerCount(int32 NewPlayerCount)
-{
-	if (!GetWorld() || !GetWorld()->GetAuthGameMode()) return;
-	SavedAllPlayerCount = NewPlayerCount;
+	ServerTravelPlayerCount = NewPlayerCount;
 }
 
 void UPTWScoreSubsystem::SaveGameData(const FPTWGameData& GameData)
@@ -39,25 +25,19 @@ void UPTWScoreSubsystem::SaveGameData(const FPTWGameData& GameData)
 	SavedGameData = GameData;
 }
 
-void UPTWScoreSubsystem::IncreasePlayerCount()
+FPTWPlayerGameData* UPTWScoreSubsystem::FindPlayerGameData(const FString& PlayerId)
 {
-	if (!GetWorld() || !GetWorld()->GetAuthGameMode()) return;
-	++SavedAllPlayerCount;
+	return ConnectedPlayersGameData.Find(PlayerId);
 }
 
-void UPTWScoreSubsystem::DecreasePlayerCount()
+void UPTWScoreSubsystem::BeginPlay()
 {
-	if (!GetWorld() || !GetWorld()->GetAuthGameMode()) return;
-	--SavedAllPlayerCount;
-}
-FPTWPlayerData* UPTWScoreSubsystem::FindPlayerData(const FString& PlayerName)
-{
-	return SavedPlayersData.Find(PlayerName);
+	
 }
 
-FPTWLobbyItemData* UPTWScoreSubsystem::FindLobbyItemData(const FString& PlayerName)
+void UPTWScoreSubsystem::AddConnectedPlayerId(const FString& ConnectedPlayerId)
 {
-	return SavedLobbyItemData.Find(PlayerName);
+	ConnectedPlayersGameData.Add(ConnectedPlayerId);
 }
 
 

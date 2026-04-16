@@ -1,15 +1,16 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ActiveGameplayEffectHandle.h"
 #include "PTWLobbyPortal.generated.h"
 
 class UBoxComponent;
 enum class EPTWGamePhase : uint8;
 class APTWGameState;
-
+class UGameplayEffect;
 /**
  * 로비에서 플레이어의 포탈 진입/이탈을 감지하는 액터
  * - 오버랩된 플레이어를 추적하여 현재 포탈 진입 인원 집계
@@ -75,5 +76,8 @@ protected:
 	UFUNCTION()
 	void OnRep_PortalEnabled();
 
-	
+	UPROPERTY(EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<UGameplayEffect> InPortalEffectClass;
+	UPROPERTY()
+	TMap<TObjectPtr<APlayerState>, FActiveGameplayEffectHandle> PortalEffectHandles;
 };

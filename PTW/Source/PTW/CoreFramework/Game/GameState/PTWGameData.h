@@ -34,7 +34,11 @@ USTRUCT(Blueprintable)
 struct FPTWGameData 
 {
 	GENERATED_BODY()
-	// 미니 게임이 끝나면 데이터 삭제 
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 CurrentRound;
+	
+	// 미니 게임이 끝나면 데이터 삭제
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FPTWChaosItemEntry> ChaosItemEntries;
 
@@ -43,4 +47,23 @@ struct FPTWGameData
 
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FPTWLastWinnerInfo> LastWinnerInfos;
+};
+
+USTRUCT(Blueprintable)
+struct FPTWLobbyRankingData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadOnly)
+	FString PlayerName;
+};
+
+USTRUCT(Blueprintable)
+struct FPTWMiniGameRankingData 
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadOnly)
+	FString PlayerName;
+	
 };

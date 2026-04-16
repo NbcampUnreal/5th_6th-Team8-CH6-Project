@@ -9,6 +9,8 @@
 #include "PTWGameMode.generated.h"
 
 
+class UPTWScoreSubsystem;
+class APTWPlayerState;
 class APTWGameState;
 
 /** 게임의 전체 흐름과 시작 조건을 관리하는 GameMode
@@ -109,10 +111,11 @@ protected:
 	FPTWGameData CachedGameData;
 private:
 	// 현재 라운드/플레이어 데이터를 Subsystem으로 저장
+	void SavePlayerGameData(UPTWScoreSubsystem* ScoreSubsystem, APTWPlayerState* PlayerState);
 	void SaveGameDataToSubsystem();
 
 	// 로그인한 플레이어에게 Subsystem 저장 데이터를 적용
-	void ApplyPlayerDataFromSubsystem(AController* NewPlayer);
+	void ApplyPlayerGameDataFromSubsystem(AController* NewPlayer);
 
 	
 	

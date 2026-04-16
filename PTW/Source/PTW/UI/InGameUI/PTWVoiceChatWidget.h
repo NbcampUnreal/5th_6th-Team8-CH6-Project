@@ -20,7 +20,7 @@ protected:
 	virtual void NativeDestruct() override;
 	
 public:
-	void SetupWidget(FString InTalkerName);
+	void InitializeWidget(FString InTalkerName);
 	FString GetTalkerName() const { return TalkerName; };
 
 	void SetEnabledVoiceIcon();

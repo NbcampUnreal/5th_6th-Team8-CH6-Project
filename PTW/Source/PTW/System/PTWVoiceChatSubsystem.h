@@ -41,15 +41,10 @@ public:
 	float GetPlayerVoiceVolume(const FString& PlayerID);
 
 	void SetPlayerVoiceVolume(const FString& PlayerID, float NewVolume);
-	
-	UFUNCTION()
-	void OnPlayerStateChanged(APlayerState* PlayerState, bool bIsAdded);
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	
-	UFUNCTION()
-	void HandleLocalPlayerConnected(const FString& UniqueId);
 	UFUNCTION()
 	void HandlePlayerConnected(const FString& UniqueId);
 	UFUNCTION()
@@ -57,7 +52,7 @@ protected:
 	UFUNCTION()
 	void HandleAllPlayersDisconnected();
 	
-	void HandlePlayerVoiceStateChanged(TSharedRef<const FUniqueNetId> TalkerId, bool bIsTalking);
+	void HandlePlayerTalkingStateChanged(TSharedRef<const FUniqueNetId> TalkerId, bool bIsTalking);
 
 public:
 	TMap<FString, FPTWPlayerVoiceInfo> PlayerVoiceInfoList;
@@ -66,7 +61,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Voice Chat")
 	FOnVoiceChatStateUpdated OnVoiceStateUpdated;
 	
-	FOnVoiceChatConnectionSignature OnLocalVoiceChatConnected;
 	FOnVoiceChatConnectionSignature OnVoiceChatConnected;
 	FOnVoiceChatConnectionSignature OnVoiceChatDisconnected;
 	FOnAllVoiceChatDisconnectedSignature AllVoiceChatDisconnected;

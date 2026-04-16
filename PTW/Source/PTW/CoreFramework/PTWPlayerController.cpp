@@ -114,12 +114,9 @@ void APTWPlayerController::Client_DisplayLoadingScreen_Implementation()
 
 void APTWPlayerController::Client_OpenMainMenu_Implementation()
 {
-	UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>();
-	if (!GI) return;
-	
-	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
+	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
 	{
-		SteamSessionSubsystem->LeaveGameSession();
+		GI->LeaveGameSession();
 	}
 }
 

@@ -5,12 +5,31 @@
 #include "System/PTWVoiceChatSubsystem.h"
 
 
-void UPTWVoiceVlumeVertical::InitWidget()
+void UPTWVoiceVlumeVertical::InitializeWidget()
 {
 	if (UPTWVoiceChatSubsystem* VoiceChatSubsystem = UPTWVoiceChatSubsystem::Get(this))
 	{
 		TMap<FString, FPTWPlayerVoiceInfo>& PlayerVoiceInfoList = VoiceChatSubsystem->PlayerVoiceInfoList;
 		if (!IsValid(VoiceVolumeClass)) return;
+		
+		for (auto It = PlayerVoiceVolumes.CreateIterator(); It; ++It)
+		{
+			const FString& UniqueId = It.Key();
+			if (!PlayerVoiceInfoList.Contains(UniqueId))
+			{
+				if (!IsValid(It.Value()))
+				{
+					It.RemoveCurrent();
+					continue;
+				}
+				
+				if (UPanelWidget* ParentWrapper = It.Value()->GetParent())
+				{
+					ParentWrapper->RemoveFromParent();
+				}
+				It.RemoveCurrent();
+			}
+		}
 		
 		for (auto PlayerVoiceInfoEntry : PlayerVoiceInfoList)
 		{
@@ -41,9 +60,14 @@ void UPTWVoiceVlumeVertical::InitWidget()
 	}
 }
 
+void UPTWVoiceVlumeVertical::HandleVoiceChatDisconnected()
+{
+	
+}
+
 TSharedRef<SWidget> UPTWVoiceVlumeVertical::RebuildWidget()
 {
-	InitWidget();
+	InitializeWidget();
 	return Super::RebuildWidget();
 }
 

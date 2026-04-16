@@ -3,9 +3,25 @@
 #include "CoreMinimal.h"
 #include "PTWGameInstance.generated.h"
 
+class APTWPlayerState;
 class UPTWLoadingWidgetBase;
 class USoundMix;
 class USoundClass;
+
+USTRUCT(BlueprintType)
+struct FReadyPlayerInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString UniqueId = TEXT("");
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString PlayerName = TEXT("");
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	AActor* Owner = nullptr;
+};
 
 UENUM(BlueprintType)
 enum class ELoadingScreenType : uint8
@@ -42,21 +58,38 @@ public:
 	/* MoviePlayer 로딩 화면 수동 종료 */
 	void StopLoadingScreen();
 	
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void RegisterPlayerState(APTWPlayerState* PlayerState);
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void UnRegisterPlayerState(AActor* DestroyedActor);
+	
+	void OnWorldInitialized(UWorld* World, const UWorld::InitializationValues IVS);
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void RegisterGameState(AGameStateBase* GameState);
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void UnRegisterGameState(AActor* Actor, EEndPlayReason::Type EndPlayReason);
+	
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void HandlePlayerUniqueIdReplicated(APlayerState* PlayerState, const FString& UniqueId);
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void HandlePlayerNameReplicated(APlayerState* PlayerState, const FString& PlayerName);
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void HandlePlayerOwnerReplicated(APlayerState* PlayerState, AActor* Owner);
+	
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	void CheckAndRegisterPlayer(APlayerState* PlayerState);
+	
 	UFUNCTION(BlueprintCallable, Category = "Network|Level")
 	void AddLevelPlayerId(const FString& UniqueId);
-	
 	UFUNCTION(BlueprintCallable, Category = "Network|Level")
 	void RemoveLevelPlayerId(const FString& UniqueId);
-	
 	UFUNCTION(BlueprintCallable, Category = "Network|Level")
 	void ClearLevelPlayerIds();
 	
 	UFUNCTION(BlueprintCallable, Category = "Network|Session")
 	void AddSessionPlayerId(const FString& UniqueId);
-	
 	UFUNCTION(BlueprintCallable, Category = "Network|Session")
 	void RemoveSessionPlayerId(const FString& UniqueId);
-	
 	UFUNCTION(BlueprintCallable, Category = "Network|Session")
 	void ClearSessionPlayerIds();
 	
@@ -82,6 +115,9 @@ public:
 	bool bIsFirstLobby = true;
 	int32 CurrentPlayerCount = 0;
 	
+	UPROPERTY()
+	TMap<APlayerState*, FReadyPlayerInfo> ReadyPlayers;
+	
 	/** 플레이어들의 UniqueId를 보관하는 휘발성 TSet.\n
 	 * 레벨이동할때 마다, UniqueId를 Set에 추가/제거를 반복합니다. 
 	 */
@@ -97,6 +133,7 @@ public:
 	
 protected:
 	virtual void Init() override;
+	virtual void Shutdown() override;
 protected:
 	UPROPERTY()
 	ELoadingScreenType NextLoadingType; // 다음이 미니게임인지 로비인지 저장
@@ -120,20 +157,21 @@ protected:
 	
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Network|Level")
-	FOnPlayerUniqueIdSignature OnPlayerEnteredLevel;
+	FOnPlayerUniqueIdSignature OnLocalPlayerEnteredLevel;
+	UPROPERTY(BlueprintAssignable, Category = "Network|Level")
+	FOnPlayerUniqueIdSignature OnLocalSessionPlayerConnected;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Network|Level")
+	FOnPlayerUniqueIdSignature OnPlayerEnteredLevel;
+	UPROPERTY(BlueprintAssignable, Category = "Network|Level")
 	FOnPlayerUniqueIdSignature OnPlayerLeftLevel;
-	
 	UPROPERTY(BlueprintAssignable, Category = "Network|Level")
 	FOnPlayerListClearedSignature OnLevelPlayersCleared;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Network|Session")
 	FOnPlayerUniqueIdSignature OnSessionPlayerConnected;
-	
 	UPROPERTY(BlueprintAssignable, Category = "Network|Session")
 	FOnPlayerUniqueIdSignature OnSessionPlayerDisconnected;
-	
 	UPROPERTY(BlueprintAssignable, Category = "Network|Session")
 	FOnPlayerListClearedSignature OnSessionPlayersCleared;
 };

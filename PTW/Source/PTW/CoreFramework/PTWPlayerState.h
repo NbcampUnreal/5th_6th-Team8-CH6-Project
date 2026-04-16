@@ -22,6 +22,10 @@ class UAttributeSet;
 class UPTWWeaponAttributeSet;
 class APTWShopNPC;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerUniqueIdReplicated, APlayerState*, PlayerState, const FString&, UniqueId);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerNameReplicated, APlayerState*, PlayerState, const FString&, PlayerName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerOwnerReplicated, APlayerState*, PlayerState, AActor*, OwnerActor);
+
 UCLASS()
 class PTW_API APTWPlayerState : public APlayerState, public IAbilitySystemInterface, public IPTWPlayerDataInterface
 {
@@ -51,7 +55,10 @@ protected:
 	UFUNCTION()
 	void OnRep_LobbyItemData();
 	
+	virtual void PostInitializeComponents() override;
 	virtual void OnRep_UniqueId() override;
+	virtual void OnRep_PlayerName() override;
+	virtual void OnRep_Owner() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 public:
 	UFUNCTION(BlueprintCallable, Category = "Data")
@@ -155,4 +162,14 @@ public:
 	void ResetInventoryItemId();
 
 	bool bIsReadyToPlay = false;
+	
+public:
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnPlayerUniqueIdReplicated OnPlayerUniqueIdReplicated;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnPlayerNameReplicated OnPlayerNameReplicated;
+	
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnPlayerOwnerReplicated OnPlayerOwnerReplicated;
 };

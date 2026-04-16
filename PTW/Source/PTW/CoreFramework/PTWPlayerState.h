@@ -67,7 +67,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	void SetLobbyItemData(const FPTWLobbyItemData& NewData);
 	FPTWLobbyItemData& GetLobbyItemData() {return LobbyItemData;}
-
+	
 	void SetMiniGameComponent(UActorComponent* NewMiniGameComponent);
 	FORCEINLINE UActorComponent* GetMiniGameComponent(){return MiniGameComponent;}
 	

@@ -65,4 +65,6 @@ protected:
 	
 	UPROPERTY()
 	float TraveledDistance = 0.0f;
+	
+	//Git Test
 };

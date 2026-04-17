@@ -367,6 +367,7 @@ void UPTWSteamSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* 
 {
 	UE_LOG(Log_Steam, Error, TEXT("[게임세션 오류] 스팀게임세션 끊김발생"));
 	DestroySession();
+	
 }
 
 void UPTWSteamSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig) const

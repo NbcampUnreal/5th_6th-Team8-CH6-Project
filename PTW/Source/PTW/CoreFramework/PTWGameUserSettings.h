@@ -20,7 +20,8 @@ public:
 		USoundClass* MasterClass,
 		USoundClass* BGMClass,
 		USoundClass* SFXClass,
-		USoundClass* UIClass);
+		USoundClass* UIClass,
+		USoundClass* VoiceClass);
 
 	// 언어 적용 함수
 	void ApplyLanguageSettings();
@@ -37,6 +38,9 @@ public:
 	UPROPERTY(Config)
 	float UIVolume = 1.f;
 
+	UPROPERTY(Config)
+	float VoiceVolume = 1.f;
+	
 	UPROPERTY(config)
 	float MouseSensitivity = 1.f;
 
@@ -45,5 +49,9 @@ public:
 	FString SelectedLanguage = TEXT("en");
 
 	/* KeyGuide On/Off */
+	void SetbKeyGuideOn(bool KeyGuide);
+	FORCEINLINE bool GetbKeyGuideOn() { return bKeyGuideOn; }
+
+private:
 	bool bKeyGuideOn = true;
 };

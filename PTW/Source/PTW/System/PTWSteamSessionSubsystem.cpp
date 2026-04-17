@@ -1,15 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "PTWSteamSessionSubsystem.h"
 #include "OnlineSubsystem.h"
-#include "Algo/RandomShuffle.h"
 #include "Kismet/GameplayStatics.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Online/OnlineSessionNames.h"
 #include "System/Session/PTWSessionConfig.h"
-
-DEFINE_LOG_CATEGORY(SteamSession);
+#include "Debug/PTWLogCategorys.h"
 
 #define LOCTEXT_NAMESPACE "STEAMSESSIONSUBSYSTEM"
 
@@ -26,45 +22,7 @@ UPTWSteamSessionSubsystem* UPTWSteamSessionSubsystem::Get(const UObject* WorldCo
 	return nullptr;
 }
 
-void UPTWSteamSessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-	
-	if (IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get())
-	{
-		SessionInterface = OnlineSubsystem->GetSessionInterface();
-	}
-	
-	if (GEngine)
-	{
-		GEngine->OnNetworkFailure().AddUObject(this, &ThisClass::HandleNetworkFailure);
-	}
-	
-	SessionSearchQueue.Empty();
-	BPSearchResults.Reset();
-}
-
-void UPTWSteamSessionSubsystem::Deinitialize()
-{
-	if (GEngine)
-	{
-		GEngine->OnNetworkFailure().RemoveAll(this);
-	}
-	SessionInterface = nullptr;
-	
-	Super::Deinitialize();
-}
-
-bool UPTWSteamSessionSubsystem::IsUsingSteamSubsystem()
-{
-	if (IOnlineSubsystem* SI = IOnlineSubsystem::Get())
-	{
-		return SI->GetSubsystemName() == FName("Steam");
-	}
-	return false;
-}
-
-FString UPTWSteamSessionSubsystem::GetSteamServerID()
+FString UPTWSteamSessionSubsystem::GetSteamServerID() const
 {
 	if (SessionInterface.IsValid())
 	{
@@ -121,11 +79,12 @@ void UPTWSteamSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfi
 	if(!SessionInterface.IsValid()) return;
 	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 	
+	// 이미 생성된 세션이 존재할 경우 파괴
     if (SessionInterface->GetNamedSession(NAME_GameSession))
     {
-        // 이미 세션이 생성되어 있으면 세션 정리
         SessionInterface->DestroySession(NAME_GameSession);
     }
+	
     CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(
         FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete, SessionConfig, bTravelOnSuccess));
 	
@@ -152,11 +111,13 @@ void UPTWSteamSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfi
     
     if (SessionInterface->CreateSession(0, NAME_GameSession, *SessionSettings))
     {
-    	UE_LOG(SteamSession, Display, TEXT("[게임세션 생성요청] 스팀게임세션 생성요청 전송완료"));
+    	UE_LOG(Log_Steam, Display, TEXT("[게임세션 생성요청] 스팀게임세션 생성요청 전송완료"));
     }
 	else
     {
         SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
+		
+		// 서버는 AlarmUI 미표시
 		#if !UE_SERVER
     	if (OnSteamSessionMessageReceived.IsBound())
     	{
@@ -164,7 +125,7 @@ void UPTWSteamSessionSubsystem::CreateGameSession(FPTWSessionConfig SessionConfi
     		OnSteamSessionMessageReceived.Broadcast(ErrorMessage);
     	}
 		#endif
-    	UE_LOG(SteamSession, Error, TEXT("[게임세션 생성요청] 스팀게임세션 생성요청 전송실패"));
+    	UE_LOG(Log_Steam, Error, TEXT("[게임세션 생성요청] 스팀게임세션 생성요청 전송실패"));
     }
 }
 
@@ -175,7 +136,7 @@ void UPTWSteamSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool 
 	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(DestroySessionDelegateHandle);
 	if (bWasSuccessful)
 	{
-		UE_LOG(SteamSession, Display, TEXT("[게임세션 생성응답] 스팀게임세션 생성성공 응답"));
+		UE_LOG(Log_Steam, Display, TEXT("[게임세션 생성응답] 스팀게임세션 생성성공 응답"));
 		if (bTravelOnSuccess)
 		{
 			OpenServerLevel("lobby", SessionConfig);
@@ -183,7 +144,7 @@ void UPTWSteamSessionSubsystem::OnCreateSessionComplete(FName SessionName, bool 
 	}
 	else
 	{
-		UE_LOG(SteamSession, Error, TEXT("[게임세션 생성응답] 스팀게임세션 생성실패 응답"));
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 생성응답] 스팀게임세션 생성실패 응답"));
 	}
 }
 
@@ -198,7 +159,7 @@ void UPTWSteamSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResult
 	
 	if (SessionInterface->JoinSession(0, NAME_GameSession, SearchResult))
 	{
-		UE_LOG(SteamSession, Display, TEXT("[게임세션 접속요청] 스팀게임세션 접속요청 전송완료"));
+		UE_LOG(Log_Steam, Display, TEXT("[게임세션 접속요청] 스팀게임세션 접속요청 전송완료"));
 	}
 	else
 	{
@@ -208,7 +169,7 @@ void UPTWSteamSessionSubsystem::JoinGameSession(const FOnlineSessionSearchResult
 			FText ErrorMessage = LOCTEXT("JoinSteamSessionFailed", "스팀세션 접속에 실패했습니다.");
 			OnSteamSessionMessageReceived.Broadcast(ErrorMessage);
 		}
-		UE_LOG(SteamSession, Error, TEXT("[게임세션 접속요청] 스팀게임세션 접속요청 전송실패"));
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 접속요청] 스팀게임세션 접속요청 전송실패"));
 	}
 }
 
@@ -216,29 +177,31 @@ void UPTWSteamSessionSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoin
 {
 	if (Result != EOnJoinSessionCompleteResult::Success)
 	{
-		UE_LOG(SteamSession, Error, TEXT("[게임세션 접속응답] 스팀게임세션 접속실패 응답 (Code: %d)"), (int32)Result);
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 접속응답] 스팀게임세션 접속실패 응답 (Code: %d)"), (int32)Result);
 		return;
 	}
 	if (!SessionInterface.IsValid()) return;
 	
 	SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+	
 	FString ConnectString;
 	if (SessionInterface->GetResolvedConnectString(SessionName, ConnectString))
 	{
+		UE_LOG(Log_Steam, Display, TEXT("[게임세션 접속응답] 스팀게임세션 접속성공 응답"));
 		ConnectString += Options; 
 		if (APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController())
 		{
-			UE_LOG(LogTemp, Log, TEXT("Executing ClientTravel to: %s"), *ConnectString);
 			PlayerController->ClientTravel(ConnectString, TRAVEL_Absolute);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to find LocalPlayerController for ClientTravel!"));
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to resolve ConnectString! The session might be gone or Steam P2P failed."));
+		if (OnSteamSessionMessageReceived.IsBound())
+		{
+			FText ErrorMessage = LOCTEXT("JoinSteamSessionFailed", "스팀세션 접속에 실패했습니다.");
+			OnSteamSessionMessageReceived.Broadcast(ErrorMessage);
+		}
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 접속실패] 세션 접속 정보 해석 실패. 유효하지 않은 세션 또는 네트워크 상태 확인"));
 	}
 }
 
@@ -285,12 +248,12 @@ void UPTWSteamSessionSubsystem::SearchForGameSessions()
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	if (SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef()))
 	{
-		UE_LOG(LogTemp, Log, TEXT("Session search started..."));
+		UE_LOG(Log_Steam, Display, TEXT("[게임세션 탐색요청] 스팀게임세션 탐색요청 전송완료"));
 	}
 	else
 	{
 		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
-		UE_LOG(LogTemp, Warning, TEXT("Failed to start session search."));
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 탐색요청] 스팀게임세션 탐색요청 전송실패"));
 	}
 }
 
@@ -306,7 +269,7 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	
 	if (bWasSuccessful && SessionSearch.IsValid())
 	{
-		UE_LOG(LogTemp, Log, TEXT("Search Complete! Found %d sessions."), SessionSearch->SearchResults.Num());
+		UE_LOG(Log_Steam, Display, TEXT("[게임세션 탐색응답] 스팀게임세션 탐색성공 응답"));
 		TArray<FOnlineSessionSearchResultBP> BPSearchResultInstances;
 		for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
 		{
@@ -319,6 +282,8 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 		}
 		
 		BPSearchResults += BPSearchResultInstances;
+		
+		// 마지막 탐색에서 리스트 반환
 		if(SessionSearchQueue.IsEmpty())
 		{
 			if (OnAllSessionSearchFinished.IsBound())
@@ -333,92 +298,30 @@ void UPTWSteamSessionSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Session search failed."));
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 탐색응답] 스팀게임세션 탐색실패 응답"));
 	}
 }
 
-void UPTWSteamSessionSubsystem::OnQuickMatchFindSessionsComplete()
+void UPTWSteamSessionSubsystem::DestroySession()
 {
-	if(!SessionInterface.IsValid()) return;
-	OnAllSessionSearchFinished.RemoveDynamic(this, &ThisClass::OnQuickMatchFindSessionsComplete);
-
-	TArray<FOnlineSessionSearchResultBP> BPAvailableSearchResults;
-	for (FOnlineSessionSearchResultBP& BPSearchResult : BPSearchResults)
-	{
-		FOnlineSessionSearchResult& SessionData = BPSearchResult.OnlineSessionSearchResult;
-		if (SessionData.IsValid() && SessionData.Session.NumOpenPublicConnections > 0)
-		{
-			BPAvailableSearchResults.Add(BPSearchResult);
-		}
-	}
+	if (!SessionInterface.IsValid()) return;
 	
-	if (!BPAvailableSearchResults.IsEmpty())
-	{
-		Algo::RandomShuffle(BPAvailableSearchResults);
-		for (FOnlineSessionSearchResultBP& BPAvailableSearchResult : BPAvailableSearchResults)
-		{
-			FOnlineSessionSearchResult& SessionData = BPAvailableSearchResult.OnlineSessionSearchResult;
-			if (SessionData.IsValid() && SessionData.Session.NumOpenPublicConnections > 0)
-			{
-				JoinGameSession(BPAvailableSearchResult);
-				return;
-			}
-		}
-	}
-	
-	CreateGameSession(FPTWSessionConfig(), true);
-}
-
-void UPTWSteamSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig)
-{
-	FString Options;
-	if (!IsRunningDedicatedServer())
-	{
-		Options += FString::Printf(TEXT("?listen"));
-	}
-	
-	// Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxPlayers.ToString(), SessionConfig.MaxPlayers);
-	// Options += FString::Printf(TEXT("?%s=%d"), *PTWSessionKey::MaxRounds.ToString(), SessionConfig.MaxRounds);
-	
-	if (IsRunningDedicatedServer())
-	{
-		GetWorld()->ServerTravel(MapName.ToString() + Options);
-	}
-	else
-	{
-		UGameplayStatics::OpenLevel(this, MapName, true, Options);
-	}
-	
-}
-
-void UPTWSteamSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, 
-	ENetworkFailure::Type FailureType, const FString& ErrorString)
-{
-	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] HandleNetworkFailure() called"));
-	LeaveGameSession();
-}
-
-void UPTWSteamSessionSubsystem::LeaveGameSession()
-{
-	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] LeaveGameSession() called"));
-	
-	if (SessionInterface.IsValid())
-	{
-		DestroySessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(
-			FOnDestroySessionCompleteDelegate::CreateUObject(this, &ThisClass::OnDestroySessionComplete));
+	DestroySessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(
+		FOnDestroySessionCompleteDelegate::CreateUObject(this, &ThisClass::OnDestroySessionComplete));
 		
-		SessionInterface->DestroySession(NAME_GameSession);
+	if (SessionInterface->DestroySession(NAME_GameSession))
+	{
+		UE_LOG(Log_Steam, Display, TEXT("[게임세션 파괴요청] 스팀게임세션 파괴요청 전송완료"));
 	}
 	else
 	{
-		OnDestroySessionComplete(NAME_GameSession, true);
+		UE_LOG(Log_Steam, Error, TEXT("[게임세션 파괴요청] 스팀게임세션 파괴요청 전송실패"));
+		OnDestroySessionComplete(NAME_GameSession, false);
 	}
 }
 
 void UPTWSteamSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	UE_LOG(LogTemp, Log, TEXT("[PTWSessionSubsystem] OnDestroySessionComplete() called"));
-	
 	if (SessionInterface.IsValid())
 	{
 		SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionDelegateHandle);
@@ -430,53 +333,57 @@ void UPTWSteamSessionSubsystem::OnDestroySessionComplete(FName SessionName, bool
 	}
 }
 
-bool UPTWSteamSessionSubsystem::UnregisterPlayer(FName SessionName, const FUniqueNetId& PlayerId)
+void UPTWSteamSessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	if (SessionInterface.IsValid())
+	Super::Initialize(Collection);
+	
+	if (IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get())
 	{
-		return SessionInterface->UnregisterPlayer(NAME_GameSession, PlayerId);
-		// UE_LOG(LogTemp, Log, TEXT("Player unregistered from session to clear ghost slot."));
+		SessionInterface = OnlineSubsystem->GetSessionInterface();
+	}
+	
+	if (GEngine)
+	{
+		GEngine->OnNetworkFailure().AddUObject(this, &ThisClass::HandleNetworkFailure);
+	}
+	
+	SessionSearchQueue.Empty();
+	BPSearchResults.Reset();
+}
+
+void UPTWSteamSessionSubsystem::Deinitialize()
+{
+	if (GEngine)
+	{
+		GEngine->OnNetworkFailure().RemoveAll(this);
+	}
+	SessionInterface = nullptr;
+	
+	Super::Deinitialize();
+}
+
+void UPTWSteamSessionSubsystem::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, 
+	ENetworkFailure::Type FailureType, const FString& ErrorString)
+{
+	UE_LOG(Log_Steam, Error, TEXT("[게임세션 오류] 스팀게임세션 끊김발생"));
+	DestroySession();
+}
+
+void UPTWSteamSessionSubsystem::OpenServerLevel(FName MapName, FPTWSessionConfig SessionConfig) const
+{
+	FString Options;
+	if (!IsRunningDedicatedServer())
+	{
+		Options += FString::Printf(TEXT("?listen"));
+	}
+
+	if (IsRunningDedicatedServer())
+	{
+		GetWorld()->ServerTravel(MapName.ToString() + Options);
 	}
 	else
 	{
-		return false;
-	}
-}
-
-void UPTWSteamSessionSubsystem::ExitGameSession()
-{
-	if (SessionInterface.IsValid())
-	{
-		if (SessionInterface.IsValid())
-		{
-			SessionInterface->DestroySession(NAME_GameSession); 
-			UE_LOG(LogTemp, Log, TEXT("Server's Steam Session Destroyed."));
-		}
-	}
-}
-
-void UPTWSteamSessionSubsystem::QuickMatchGameSession()
-{
-	if(!SessionInterface.IsValid()) return;
-	OnAllSessionSearchFinished.AddUniqueDynamic(this, &UPTWSteamSessionSubsystem::OnQuickMatchFindSessionsComplete);
-	
-	FindGameSession();
-}
-
-void UPTWSteamSessionSubsystem::UpdateGameSeesionPlayerCount(int32 CurrentPlayerCount)
-{
-	if(!SessionInterface.IsValid()) return;
-
-	FNamedOnlineSession* Session = SessionInterface->GetNamedSession(NAME_GameSession);
-	if (Session)
-	{
-		int32 MaxPlayers = Session->SessionSettings.NumPublicConnections;
-		
-		Session->NumOpenPublicConnections = FMath::Max(0, MaxPlayers - CurrentPlayerCount);
-		SessionInterface->UpdateSession(NAME_GameSession, Session->SessionSettings, true);
-        
-		
-		UE_LOG(LogTemp, Log, TEXT("Steam Session Updated: %d / %d slots open"), Session->NumOpenPublicConnections, MaxPlayers);
+		UGameplayStatics::OpenLevel(this, MapName, true, Options);
 	}
 }
 

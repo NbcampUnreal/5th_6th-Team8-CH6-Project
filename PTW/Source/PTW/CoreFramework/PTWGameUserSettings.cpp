@@ -8,7 +8,7 @@
 #include "Internationalization/Internationalization.h"
 #include "Internationalization/Culture.h"
 
-void UPTWGameUserSettings::ApplyAudioSettings(UWorld* World, USoundMix* SoundMix, USoundClass* MasterClass, USoundClass* BGMClass, USoundClass* SFXClass, USoundClass* UIClass)
+void UPTWGameUserSettings::ApplyAudioSettings(UWorld* World, USoundMix* SoundMix, USoundClass* MasterClass, USoundClass* BGMClass, USoundClass* SFXClass, USoundClass* UIClass, USoundClass* VoiceClass)
 {
 	if (!World || !SoundMix) return;
 
@@ -16,7 +16,8 @@ void UPTWGameUserSettings::ApplyAudioSettings(UWorld* World, USoundMix* SoundMix
 	const float FinalBGM = MasterVolume * BGMVolume;
 	const float FinalSFX = MasterVolume * SFXVolume;
 	const float FinalUI = MasterVolume * UIVolume;
-
+	const float FinalVoice = MasterVolume * VoiceVolume;
+	
 	if (MasterClass)
 	{
 		UGameplayStatics::SetSoundMixClassOverride(
@@ -40,7 +41,13 @@ void UPTWGameUserSettings::ApplyAudioSettings(UWorld* World, USoundMix* SoundMix
 		UGameplayStatics::SetSoundMixClassOverride(
 			World, SoundMix, UIClass, FinalUI, 1.0f, 0.0f, true);
 	}
-
+	
+	if (VoiceClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(
+			World, SoundMix, VoiceClass, FinalVoice, 1.0f, 0.0f, true);
+	}
+	
 	UGameplayStatics::PushSoundMixModifier(World, SoundMix);
 }
 
@@ -50,4 +57,9 @@ void UPTWGameUserSettings::ApplyLanguageSettings()
 	{
 		FInternationalization::Get().SetCurrentCulture(SelectedLanguage);
 	}
+}
+
+void UPTWGameUserSettings::SetbKeyGuideOn(bool KeyGuide)
+{
+	bKeyGuideOn = KeyGuide;
 }

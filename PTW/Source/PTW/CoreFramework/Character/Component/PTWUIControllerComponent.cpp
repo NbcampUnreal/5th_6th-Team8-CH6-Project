@@ -26,6 +26,8 @@
 #include "UI/MiniGame/PTWGameStartTimer.h"
 #include "UI/PTWPopupWidget.h"
 
+#include "MiniGame/Item/BombItem/PTWBombActor.h"
+#include "UI/MiniGame/Bomb/PTWBombWarning.h"
 
 UPTWUIControllerComponent::UPTWUIControllerComponent()
 {
@@ -60,8 +62,6 @@ void UPTWUIControllerComponent::InitializeUIComponent(APTWPlayerController* InPC
 	{
 		World->GetTimerManager().SetTimer(NameTagTimerHandle, this, &UPTWUIControllerComponent::UpdateNameTagsVisibility, NameTagUpdateInterval, true);
 	}
-
-	//CreateUI();
 }
 
 void UPTWUIControllerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -77,59 +77,39 @@ void UPTWUIControllerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason
 	}
 
 	UnbindGameStateDelegates();
+	UnBindBombDelegate();
 
 	Super::EndPlay(EndPlayReason);
 }
 
 void UPTWUIControllerComponent::CreateUI()
 {
-	UE_LOG(LogTemp, Warning, TEXT("======================================="));
-	UE_LOG(LogTemp, Warning, TEXT("[UIComponent] CreateUI 함수 진입!"));
-
 	if (!OwnerPC)
 	{
-		UE_LOG(LogTemp, Error, TEXT("[UIComponent] 실패: OwnerPC가 Null입니다! (초기화 안됨)"));
 		return;
 	}
 
 	if (!OwnerPC->IsLocalController())
 	{
-		UE_LOG(LogTemp, Log, TEXT("[UIComponent] 패스: 로컬 컨트롤러가 아닙니다. (서버/다른 클라이언트)"));
 		return;
 	}
 
 	if (!UISubsystem)
 	{
-		UE_LOG(LogTemp, Error, TEXT("[UIComponent] 실패: UISubsystem이 Null입니다!"));
 		return;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("[UIComponent] 필수 조건 통과. UI 생성을 시작합니다."));
-
-	// 2. 본격적인 UI 생성
 	UISubsystem->ClearAllUI();
 	UISubsystem->StackReset();
-	UE_LOG(LogTemp, Log, TEXT("[UIComponent] UISubsystem ClearAllUI 완료."));
 
-	// ★ HUD 생성부 검사
 	if (HUDClass)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[UIComponent] HUDClass 확인됨. ShowHUD 호출..."));
 		UISubsystem->ShowHUD(HUDClass);
 	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("[UIComponent] 치명적 문제: HUDClass가 Null입니다! (블루프린트 세팅 확인 필요)"));
-	}
 
-	// 나머지 UI 생성부 검사
 	if (RankingBoardClass)
 	{
 		UISubsystem->CreatePersistentWidget(RankingBoardClass, 10);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[UIComponent] RankingBoardClass가 Null입니다."));
 	}
 
 	if (ChatListClass)
@@ -137,7 +117,6 @@ void UPTWUIControllerComponent::CreateUI()
 		if (UUserWidget* ChatListWidget = UISubsystem->CreatePersistentWidget(ChatListClass, 70))
 		{
 			ChatListWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			UE_LOG(LogTemp, Log, TEXT("[UIComponent] ChatList 세팅 완료."));
 		}
 		UISubsystem->SetChatListClass(ChatListClass);
 		bAbleChat = true;
@@ -162,7 +141,7 @@ void UPTWUIControllerComponent::CreateUI()
 
 		if (PTWSettings)
 		{
-			bKeyGuideOn = PTWSettings->bKeyGuideOn;
+			bKeyGuideOn = PTWSettings->GetbKeyGuideOn();
 			UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, bKeyGuideOn);
 		}
 		else
@@ -171,13 +150,6 @@ void UPTWUIControllerComponent::CreateUI()
 			UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, true);
 		}
 	}
-	/*if (DelegateUI)
-	{
-		UISubsystem->CreatePersistentWidget(DelegateUI, 1);
-		UISubsystem->SetWidgetVisibility(DelegateUI, true);
-	}*/
-
-	UE_LOG(LogTemp, Warning, TEXT("[UIComponent] CreateUI 로직 완료!"));
 }
 
 void UPTWUIControllerComponent::ReInitializeUI()
@@ -191,6 +163,8 @@ void UPTWUIControllerComponent::ReInitializeUI()
 void UPTWUIControllerComponent::ToggleRankingBoard(bool bShow)
 {
 	if (!OwnerPC || !UISubsystem || !RankingBoardClass) return;
+
+	if (!bAbleRankingBoard) return;
 
 	if (bShow)
 	{
@@ -252,6 +226,9 @@ void UPTWUIControllerComponent::ChatInputFinished()
 
 void UPTWUIControllerComponent::ToggleKeyGuide()
 {
+	UGameUserSettings* BaseSettings = UGameUserSettings::GetGameUserSettings();
+	UPTWGameUserSettings* PTWSettings = Cast<UPTWGameUserSettings>(BaseSettings);
+
 	if (!OwnerPC || !UISubsystem || !KeyGuideWidgetClass) return;
 
 	bKeyGuideOn = !bKeyGuideOn;
@@ -259,6 +236,10 @@ void UPTWUIControllerComponent::ToggleKeyGuide()
 	if (UISubsystem)
 	{
 		UISubsystem->SetWidgetVisibility(KeyGuideWidgetClass, bKeyGuideOn);
+	}
+	if (PTWSettings)
+	{
+		PTWSettings->SetbKeyGuideOn(bKeyGuideOn);
 	}
 }
 
@@ -304,8 +285,6 @@ void UPTWUIControllerComponent::HandleRoulettePhaseChanged(FPTWRouletteData Roul
 {
 	const UEnum* EnumPtr = StaticEnum<EPTWRoulettePhase>();
 	FString PhaseName = EnumPtr ? EnumPtr->GetNameStringByValue((int64)RouletteData.CurrentPhase) : TEXT("Invalid");
-
-	UE_LOG(LogTemp, Warning, TEXT("PTWPlayerController : HandleRoulettePhaseChanged - %s"), *PhaseName);
 
 	if (!UISubsystem)
 	{
@@ -376,11 +355,36 @@ void UPTWUIControllerComponent::HandleGamePhaseChanged(EPTWGamePhase CurrentGame
 	}
 }
 
+void UPTWUIControllerComponent::HandleOpenPredictVoteUI()
+{
+	if (UISubsystem && PredictWinVote)
+	{
+		UISubsystem->PushWidget(PredictWinVote, EUIInputPolicy::UIOnly);
+	}
+}
+
 void UPTWUIControllerComponent::ShowDamageIndicator(FVector DamageCauserLocation)
 {
 	if (!OwnerPC || !UISubsystem) return;
 
 	UISubsystem->ShowDamageIndicator(DamageCauserLocation);
+}
+
+void UPTWUIControllerComponent::BuyVoteItem()
+{
+	if (GetOwner()->HasAuthority())
+	{
+		Client_OpenPredictVoteUI();
+	}
+	else
+	{
+		HandleOpenPredictVoteUI();
+	}
+}
+
+void UPTWUIControllerComponent::Client_OpenPredictVoteUI_Implementation()
+{
+	HandleOpenPredictVoteUI();
 }
 
 void UPTWUIControllerComponent::Client_ShowNotification_Implementation(const FNotificationData& Data)
@@ -525,7 +529,6 @@ void UPTWUIControllerComponent::BindGameStateDelegates()
 	APTWGameState* GS = GetWorld() ? GetWorld()->GetGameState<APTWGameState>() : nullptr;
 	if (!IsValid(GS))
 	{
-		// 아직 GameState 안 왔으면 0.2초 후 재시도
 		World->GetTimerManager().SetTimer(
 			GameStateBindRetryHandle,
 			this,
@@ -565,10 +568,99 @@ void UPTWUIControllerComponent::UnbindGameStateDelegates()
 	CachedGameState = nullptr;
 }
 
+void UPTWUIControllerComponent::BindBombDelegate(APTWBombActor* NewBomb)
+{
+	FString PlayerName = TEXT("Unknown");
+	if (OwnerPC && OwnerPC->PlayerState)
+	{
+		PlayerName = OwnerPC->PlayerState->GetPlayerName();
+	}
+	UE_LOG(LogTemp, Log, TEXT("[UIController][%s] BindBombDelegate."), *PlayerName);
+
+	// 중복 바인드 방지
+	UnBindBombDelegate();
+
+	CachedBombActor = NewBomb;
+
+	if (CachedBombActor)
+	{
+		CachedBombActor->OnBombOwnerChanged.AddUObject(this, &UPTWUIControllerComponent::HandleBombOwnerChanged);
+	}
+
+	if (!BombWarningWidgetClass || !UISubsystem) return;
+
+	UE_LOG(LogTemp, Log, TEXT("[UIController][%s] BindBombDelegate(ShowSystemWidget)"), *PlayerName);
+
+	UUserWidget* Widget = UISubsystem->ShowSystemWidget(BombWarningWidgetClass, 70);
+	if (UPTWBombWarning* BombWidget = Cast<UPTWBombWarning>(Widget))
+	{
+		BombWidget->SetTargetBomb(CachedBombActor);
+	}
+
+	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, false);
+
+	if (CachedBombActor && CachedBombActor->GetBombOwnerPawn())
+	{
+		HandleBombOwnerChanged(CachedBombActor->GetBombOwnerPawn());
+	}
+}
+
+void UPTWUIControllerComponent::UnBindBombDelegate()
+{
+	if (CachedBombActor)
+	{
+		CachedBombActor->OnBombOwnerChanged.RemoveAll(this);
+		CachedBombActor = nullptr;
+	}
+
+	if (!BombWarningWidgetClass || !UISubsystem) return;
+
+	UISubsystem->HideSystemWidget(BombWarningWidgetClass);
+}
+
 void UPTWUIControllerComponent::Client_FindGhostChaseComponent_Implementation()
 {
 	if (AActor* OwnerActor = GetOwner())
 	{
 		CachedGhostChaseComp = OwnerActor->FindComponentByClass<UPTWGhostChaseControllerComponent>();
 	}
+}
+
+void UPTWUIControllerComponent::HandleBombOwnerChanged(APawn* NewOwnerPawn)
+{
+	if (!OwnerPC || !OwnerPC->IsLocalController()) return;
+
+	FString PlayerName = TEXT("Unknown");
+	if (OwnerPC && OwnerPC->PlayerState)
+	{
+		PlayerName = OwnerPC->PlayerState->GetPlayerName();
+	}
+
+	if (NewOwnerPawn == OwnerPC->GetPawn())
+	{
+		UE_LOG(LogTemp, Log, TEXT("[UIController][%s] HandleBombOwnerChanged : ShowBombUI."), *PlayerName);
+		ShowBombUI();
+
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("[UIController][%s] HandleBombOwnerChanged : HideBombUI."), *PlayerName);
+
+		HideBombUI();
+
+	}
+}
+
+void UPTWUIControllerComponent::ShowBombUI()
+{
+	if (!BombWarningWidgetClass || !UISubsystem) return;
+
+	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, true);
+}
+
+void UPTWUIControllerComponent::HideBombUI()
+{
+	if (!BombWarningWidgetClass || !UISubsystem) return;
+
+	UISubsystem->SetWidgetVisibility(BombWarningWidgetClass, false);
 }

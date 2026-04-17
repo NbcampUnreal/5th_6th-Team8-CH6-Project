@@ -27,7 +27,7 @@ APTWLobbyGameMode::APTWLobbyGameMode()
 void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
-	
+	// 이 부분은 매칭 방식이 바뀌면 필요 없음 
 	if (UPTWGameInstance* PTWGameInstance = Cast<UPTWGameInstance>(GetGameInstance()))
 	{
 		if (PTWGameInstance->bIsFirstLobby == true && bSkipFirstLobby == false)
@@ -55,7 +55,7 @@ void APTWLobbyGameMode::InitGame(const FString& MapName, const FString& Options,
 void APTWLobbyGameMode::InitGameState()
 {
 	Super::InitGameState();
-	
+	// 이 부분은 매칭 방식이 바뀌면 필요 없음 
 	if (IsValid(PTWGameState))
 	{
 		if (bIsFirstLobby == true)
@@ -103,10 +103,9 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 	
-	//접속하면 무적 상태로 변경 해야 함
-	
 	if (!IsValid(PTWGameState)) return;
-	
+
+	// 이 부분은 매칭 방식이 바뀌면 필요 없음 
 	if (PTWGameState->GetCurrentGamePhase() == EPTWGamePhase::PreGameLobby)
 	{
 		if (GameFlowRule.MinPlayersToStart <= PTWGameState->PlayerArray.Num() &&
@@ -127,6 +126,19 @@ void APTWLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 			StartTimer(GameFlowRule.WaitingTime);
 		}
 	}
+
+	// 매칭 방식 바뀌면 추가
+	
+	APTWPlayerState* PlayerState = NewPlayer->GetPlayerState<APTWPlayerState>();
+	if (!PlayerState) return;
+
+	UPTWGameInstance* GameInstance = GetGameInstance<UPTWGameInstance>();
+	if (!GameInstance) return;
+
+	// UPTWScoreSubsystem* ScoreSubsystem = GameInstance->GetSubsystem<UPTWScoreSubsystem>();
+	// if (!ScoreSubsystem) return;
+
+	
 }
 
 void APTWLobbyGameMode::Logout(AController* Exiting)
@@ -155,7 +167,9 @@ void APTWLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController
 	
 	// 데이터 초기화 및 골드 지급
 	PTWPlayerState->ResetInventoryItemId();
-	AddGold(PTWPlayerState, RoundClearBonusGold + LobbyItemManager->TakeSavingsReward(PTWPlayerState));
+	int32 LobbyItemReward = LobbyItemManager->TakeGoldReward(PTWPlayerState);
+	AddGold(PTWPlayerState, RoundClearBonusGold + LobbyItemReward);
+	
 }
 
 void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
@@ -173,6 +187,7 @@ void APTWLobbyGameMode::PlayerReadyToPlay(APlayerController* Controller)
 	
 	if (ReadyPlayer >= AllPlayer)
 	{
+		// 나중에 이부분 함수화 예정
 		if (bAllPlayerReady) return;
 		bAllPlayerReady = true;
 		
@@ -186,10 +201,13 @@ void APTWLobbyGameMode::StartGameLobby()
 {
 	if (bIsGameStarted) return;
 	bIsGameStarted = true;
-	if (!IsValid(PTWGameState)) return;
-
+	if (!IsValid(PTWGameState) || !IsValid(ScoreSubsystem)) return;
+	
 	GetWorldTimerManager().ClearTimer(TestTimer);
 	ClearTimer();
+
+	PTWGameState->AddLobbyRankingDataMap(ScoreSubsystem->GetConnectedPlayersGameData());
+	
 	// 최대 라운드에 도달 하면 게임 종료
 	if (PTWGameState->GetCurrentRound() >= GameFlowRule.MaxRound)
 	{
@@ -227,7 +245,6 @@ void APTWLobbyGameMode::StartGameLobby()
 		//SetInputBlock(false);
 	}
 	
-	//게임 로비 진입 5초 후 룰렛 시작
 	if (!GetWorldTimerManager().IsTimerActive(TimerHandle))
 	{
 		StartTimer(GameFlowRule.NextMiniGameWaitTime);
@@ -451,17 +468,14 @@ void APTWLobbyGameMode::ReturnToMainMenu()
 	UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>();
 	if (!GI) return;
 	
-	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
-	{
-		SteamSessionSubsystem->LeaveGameSession();
-	}
+	GI->LeaveGameSession();
 }
 
-void APTWLobbyGameMode::ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId, APTWPlayerState* WinTarget)
+void APTWLobbyGameMode::ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId)
 {
 	if (!LobbyItemManager) return;
 	
-	LobbyItemManager->ApplyLobbyItem(Buyer, ItemId, WinTarget);
+	LobbyItemManager->ApplyLobbyItem(Buyer, ItemId);
 }
 
 void APTWLobbyGameMode::AddChaosItemEntry(const FPTWChaosItemEntry& Entry)
@@ -476,6 +490,10 @@ void APTWLobbyGameMode::AddGold(APTWPlayerState* PlayerState, int32 Amount)
 	FPTWPlayerData PlayerData = PlayerState->GetPlayerData();
 	PlayerData.Gold += Amount; // 적금 골드를 받을 수 있으면 지급 골드에 추가
 	PlayerState->SetPlayerData(PlayerData);
+
+	if (!PTWGameState) return;
+
+	PTWGameState->UpdateLobbyRankingDataMap(PlayerState->GetUniqueId().ToString(), PlayerState->GetPlayerData());
 }
 
 

@@ -12,6 +12,7 @@
 /* KillLog 델리게이트 */
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnKillLog, const FString&, const FString&);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpectateTargetChanged, const FString&, TargetName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChangedVoiceChatState, bool, bIsActive);
 
 class APTWPlayerState;
 class UAbilitySystemComponent;
@@ -39,7 +40,7 @@ class PTW_API APTWPlayerController : public APlayerController
 
 public:
 	APTWPlayerController();
-
+	
 	/* 관전 시스템 함수 */
 	void StartSpectating();
 	UFUNCTION(NetMulticast, Reliable)
@@ -67,6 +68,10 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendChatMessage(const FString& Message);
 
+	/* 플레이어가 레벨 이동 후 준비 완료를 알리는 RPC */
+	UFUNCTION(Server, Reliable)
+	void Server_NotifyReadyToPlay();
+	
 	/* 채팅창 종료 시 호출될 콜백 (ChatInput 위젯에서 호출) */
 	void OnChatInputFinished();
 
@@ -178,6 +183,7 @@ public:
 
 	FOnSpectateTargetChanged OnSpectateTargetChanged;
 	
+	FOnChangedVoiceChatState OnChangedVoiceChatState;
 protected:
 	// GameLift 접속을 위한 PlayerSessionId를 캐싱
 	FString PlayerSessionId;

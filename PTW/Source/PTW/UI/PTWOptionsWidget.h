@@ -7,6 +7,7 @@
 #include "GameFramework/GameUserSettings.h"
 #include "PTWOptionsWidget.generated.h"
 
+class UVerticalBox;
 class UCheckBox;
 class UComboBoxString;
 class USlider;
@@ -15,6 +16,7 @@ class UWidgetSwitcher;
 class USoundClass;
 class USoundMix;
 class UEditableText;
+class UPTWVoiceVolume;
 
 USTRUCT()
 struct FOptionSnapshot
@@ -104,6 +106,12 @@ protected:
 	USlider* Slider_UIVolume;
 	UPROPERTY(meta = (BindWidget))
 	UEditableText* ET_UIVolume;
+	UPROPERTY(meta = (BindWidget)) // Voice
+	USlider* Slider_VoiceVolume;
+	UPROPERTY(meta = (BindWidget))
+	UEditableText* ET_VoiceVolume;
+	UPROPERTY(meta = (BindWidget))
+	UVerticalBox* Vertical_VoiceVolume;
 	// 마우스 감도
 	UPROPERTY(meta = (BindWidget))
 	USlider* Slider_MouseSensitivity;
@@ -132,7 +140,10 @@ protected:
 	// 게임설정 버튼
 	UPROPERTY(meta = (BindWidget))
 	UButton* Button_Game;
-
+	// 보이스볼륨 도움말 버튼
+	UPROPERTY(meta = (BindWidget))
+	UButton* Button_VoiceHelp;
+	
 	/* 에디터에서 할당할 SoundMix */
 	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
 	USoundMix* MasterSoundMix;
@@ -145,6 +156,8 @@ protected:
 	USoundClass* SFXSoundClass;
 	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
 	USoundClass* UISoundClass;
+	UPROPERTY(EditAnywhere, Category = "Settings|Sound")
+	USoundClass* VoiceSoundClass;
 
 private:
 	FOptionSnapshot InitialSnapshot; // 초기값 저장
@@ -199,7 +212,11 @@ private:
 	void OnUIVolumeChanged(float Value);
 	UFUNCTION()
 	void OnUIVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
-
+	UFUNCTION()
+	void OnVoiceVolumeChanged(float Value);
+	UFUNCTION()
+	void OnVoiceVolumeTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	
 	UFUNCTION()
 	void OnMouseSensitivityChanged(float Value);
 	UFUNCTION()
@@ -216,6 +233,9 @@ private:
 	UFUNCTION()
 	void OnClickedCancel();
 
+	UFUNCTION()
+	void OnClickedVoiceHelp();
+	
 	/* 카테고리 전환 */
 
 	UFUNCTION()

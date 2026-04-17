@@ -80,6 +80,20 @@ struct FSavingData
 	int32 RewardAmount = 0;
 };
 
+USTRUCT(BlueprintType)
+struct FPredictedData
+{
+	GENERATED_BODY()
+
+	/** 예측 대상 */
+	UPROPERTY()
+	FString PredictedPlayer;
+
+	/** 지급될 골드 */
+	UPROPERTY()
+	int32 RewardAmount = 0;
+};
+
 /**
  * 로비 아이템 관련 데이터를 저장하는 구조체
  */
@@ -93,6 +107,22 @@ struct FPTWLobbyItemData
 	
 	// 승리 예측 플레이어
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<APTWPlayerState> PredictedPlayer = nullptr;
+	FPredictedData PredictedData;
+
+};
+
+/**
+ * 로비 아이템과 플레이어 데이터 저장 구조체
+ */
+USTRUCT(BlueprintType)
+struct FPTWPlayerGameData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere)
+	FPTWLobbyItemData LobbyItemData;
+	
+	UPROPERTY(EditAnywhere)
+	FPTWPlayerData PlayerData;
 
 };

@@ -5,9 +5,9 @@
 #include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
-#include "GameFramework/PlayerState.h"           // PlayerState 접근을 위해 필요
-#include "AbilitySystemInterface.h"              // IAbilitySystemInterface 정의
-#include "AbilitySystemComponent.h"              // UAbilitySystemComponent 반환 타입을 위해 필요
+#include "GameFramework/PlayerState.h"           
+#include "AbilitySystemInterface.h"              
+#include "AbilitySystemComponent.h"
 
 #include "UI/InGameUI/PTWDamageIndicator.h"
 #include "UI/ChatWidget/PTWChatInput.h"
@@ -22,7 +22,6 @@ void UPTWUISubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UPTWUISubsystem::Deinitialize()
 {
-	// 화면에서 모두 제거 (Destroy는 안 함)
 	for (FUIStackEntry& Entry : WidgetStack)
 	{
 		if (Entry.Widget)
@@ -48,7 +47,6 @@ UAbilitySystemComponent* UPTWUISubsystem::GetLocalPlayerASC() const
 		return nullptr;
 	}
 
-	// PlayerState에서 가져오기
 	if (IAbilitySystemInterface* ASCInterface = Cast<IAbilitySystemInterface>(PC->PlayerState))
 	{
 		return ASCInterface->GetAbilitySystemComponent();
@@ -272,6 +270,32 @@ void UPTWUISubsystem::ShowDamageIndicator(const FVector& DamageCauserLocation)
 
 	Indicator->AddToViewport(50); 
 	Indicator->Init(DamageCauserLocation);
+}
+
+void UPTWUISubsystem::ShowHitIndicator(TSubclassOf<UUserWidget> WidgetClass, bool bHeadShot)
+{
+	if (!WidgetClass) return;
+
+	UUserWidget* Widget = CreatePersistentWidget(WidgetClass, 10);
+	if (!Widget) return;
+
+	Widget->SetVisibility(ESlateVisibility::Visible);
+
+	// ⭐ 타이머 리셋
+	GetWorld()->GetTimerManager().ClearTimer(HitIndicatorTimerHandle);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		HitIndicatorTimerHandle,
+		[this, Widget]()
+		{
+			if (IsValid(Widget))
+			{
+				Widget->SetVisibility(ESlateVisibility::Hidden);
+			}
+		},
+		0.1f,
+		false
+	);
 }
 
 UUserWidget* UPTWUISubsystem::GetOrCreateWidget(TSubclassOf<UUserWidget> WidgetClass)

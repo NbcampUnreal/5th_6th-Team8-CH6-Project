@@ -1,13 +1,13 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
+﻿#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "MoviePlayer.h"
 #include "Blueprint/UserWidget.h"
 #include "MiniGame/PTWMiniGameMapRow.h"
 #include "UI/LoadingScreen/PTWLoadingMiniGame.h"
 #include "UI/LoadingScreen/PTWLoadingWidgetBase.h"
 #include "CoreFramework/PTWGameUserSettings.h"
+#include "CoreFramework/PTWPlayerState.h"
+#include "GameFramework/GameStateBase.h"
+#include "System/PTWSteamSessionSubsystem.h"
 
 UPTWGameInstance::UPTWGameInstance(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -36,8 +36,17 @@ void UPTWGameInstance::Init()
 		MasterSoundClass,
 		BGMSoundClass,
 		SFXSoundClass,
-		UISoundClass
+		UISoundClass,
+		VoiceSoundClass
 	);
+	FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &ThisClass::OnWorldInitialized);
+}
+
+void UPTWGameInstance::Shutdown()
+{
+	FWorldDelegates::OnPostWorldInitialization.RemoveAll(this);
+	
+	Super::Shutdown();
 }
 
 void UPTWGameInstance::PrepareLoadingScreen(ELoadingScreenType InType, FName InMapRowName)
@@ -113,5 +122,133 @@ void UPTWGameInstance::StopLoadingScreen()
 	if (GetMoviePlayer()->IsMovieCurrentlyPlaying())
 	{
 		GetMoviePlayer()->StopMovie();
+	}
+}
+
+void UPTWGameInstance::RegisterPlayerState(APTWPlayerState* PlayerState)
+{
+	if (!PlayerState) return;
+	
+	PlayerState->OnPlayerUniqueIdReplicated.AddDynamic(this, &ThisClass::HandlePlayerUniqueIdReplicated);
+	PlayerState->OnPlayerNameReplicated.AddDynamic(this, &ThisClass::HandlePlayerNameReplicated);
+	
+	PlayerState->OnDestroyed.RemoveDynamic(this, &ThisClass::UnRegisterPlayerState);
+}
+
+void UPTWGameInstance::UnRegisterPlayerState(AActor* DestroyedActor)
+{
+	APTWPlayerState* PlayerState = Cast<APTWPlayerState>(DestroyedActor);
+	if (!PlayerState) return;
+	
+	PlayerState->OnPlayerUniqueIdReplicated.RemoveDynamic(this, &ThisClass::HandlePlayerUniqueIdReplicated);
+	PlayerState->OnPlayerNameReplicated.RemoveDynamic(this, &ThisClass::HandlePlayerNameReplicated);
+	
+	FString PlayerUniqueId = PlayerState->GetUniqueId().ToString();
+	RemoveLevelPlayerId(PlayerUniqueId);
+}
+
+void UPTWGameInstance::OnWorldInitialized(UWorld* World, const UWorld::InitializationValues IVS)
+{
+	if (World && World->IsGameWorld())
+	{
+		World->GameStateSetEvent.AddUObject(this, &ThisClass::RegisterGameState);
+	}
+}
+
+void UPTWGameInstance::RegisterGameState(AGameStateBase* GameState)
+{
+	GameState->OnEndPlay.AddUniqueDynamic(this, &ThisClass::UnRegisterGameState);
+}
+
+void UPTWGameInstance::UnRegisterGameState(AActor* Actor, EEndPlayReason::Type EndPlayReason)
+{
+	if (Actor)
+	{
+		Actor->OnEndPlay.RemoveDynamic(this, &ThisClass::UnRegisterGameState);
+	}
+	
+	ClearLevelPlayerIds();
+}
+
+void UPTWGameInstance::HandlePlayerUniqueIdReplicated(APlayerState* PlayerState, const FString& UniqueId)
+{
+	if (!TempReadyPlayers.Contains(PlayerState))
+	{
+		TempReadyPlayers.Add(PlayerState, FReadyPlayerInfo());
+	}
+	
+	TempReadyPlayers[PlayerState].UniqueId = UniqueId;
+	CheckAndRegisterPlayer(PlayerState);
+}
+
+void UPTWGameInstance::HandlePlayerNameReplicated(APlayerState* PlayerState, const FString& PlayerName)
+{
+	if (PlayerName.IsEmpty() || PlayerName == TEXT("Player")) return;
+	if (!TempReadyPlayers.Contains(PlayerState))
+	{
+		TempReadyPlayers.Add(PlayerState, FReadyPlayerInfo());
+	}
+	
+	TempReadyPlayers[PlayerState].PlayerName = PlayerName;
+	CheckAndRegisterPlayer(PlayerState);
+}
+
+void UPTWGameInstance::CheckAndRegisterPlayer(APlayerState* PlayerState)
+{
+	const FReadyPlayerInfo ReadyPlayerInfo = TempReadyPlayers[PlayerState];
+	
+	if (!ReadyPlayerInfo.UniqueId.IsEmpty() && !ReadyPlayerInfo.PlayerName.IsEmpty())
+	{
+		TempReadyPlayers.Remove(PlayerState);
+		AddLevelPlayerId(ReadyPlayerInfo.UniqueId);
+		AddSessionPlayerId(ReadyPlayerInfo.UniqueId);
+	}
+}
+
+void UPTWGameInstance::AddLevelPlayerId(const FString& UniqueId)
+{
+	if (LevelPlayerIds.Contains(UniqueId)) return;
+	LevelPlayerIds.Add(UniqueId);
+	OnPlayerEnteredLevel.Broadcast(UniqueId);
+}
+
+void UPTWGameInstance::RemoveLevelPlayerId(const FString& UniqueId)
+{
+	LevelPlayerIds.Remove(UniqueId);
+	OnPlayerLeftLevel.Broadcast(UniqueId);
+}
+
+void UPTWGameInstance::ClearLevelPlayerIds()
+{
+	LevelPlayerIds.Empty();
+	OnLevelPlayersCleared.Broadcast();
+}
+
+void UPTWGameInstance::AddSessionPlayerId(const FString& UniqueId)
+{
+	if (SessionPlayerIds.Contains(UniqueId)) return;
+	SessionPlayerIds.Add(UniqueId);
+	OnSessionPlayerConnected.Broadcast(UniqueId);
+}
+
+void UPTWGameInstance::RemoveSessionPlayerId(const FString& UniqueId)
+{
+	SessionPlayerIds.Remove(UniqueId);
+	OnSessionPlayerDisconnected.Broadcast(UniqueId);
+}
+
+void UPTWGameInstance::ClearSessionPlayerIds()
+{
+	SessionPlayerIds.Empty();
+	OnSessionPlayersCleared.Broadcast();
+}
+
+void UPTWGameInstance::LeaveGameSession()
+{
+	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
+	{
+		TempReadyPlayers.Empty();
+		ClearSessionPlayerIds();
+		SteamSessionSubsystem->DestroySession();	
 	}
 }

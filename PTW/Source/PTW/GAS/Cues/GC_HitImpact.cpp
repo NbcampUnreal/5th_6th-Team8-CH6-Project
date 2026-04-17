@@ -13,8 +13,9 @@ bool UGC_HitImpact::OnExecute_Implementation(AActor* MyTarget, const FGameplayCu
 	const FRotator Rotation = Parameters.Normal.Rotation();
 	
 	APawn* TargetPawn = Cast<APawn>(MyTarget);
+	bool bHitWall = Parameters.AggregatedSourceTags.HasTag(GameplayTags::GameplayCue::Hit::Wall);
 	
-	if (Parameters.AggregatedSourceTags.HasTag(GameplayTags::GameplayCue::Hit::Wall))
+	if (bHitWall)
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
@@ -36,7 +37,7 @@ bool UGC_HitImpact::OnExecute_Implementation(AActor* MyTarget, const FGameplayCu
 		}
 	}
 	
-	if (ImpactSound)
+	if (PlayerImpactSound)
 	{
 		APawn* InstPawn = Cast<APawn>(Parameters.Instigator.Get());
 		
@@ -55,7 +56,8 @@ bool UGC_HitImpact::OnExecute_Implementation(AActor* MyTarget, const FGameplayCu
 		
 		if (bIsTarget || bIsInstigator)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, Location);
+			if (!bHitWall) UGameplayStatics::PlaySoundAtLocation(GetWorld(), PlayerImpactSound, Location);
+			else UGameplayStatics::PlaySoundAtLocation(GetWorld(), ETCImpactSound, Location);
 		}
 	}
 	

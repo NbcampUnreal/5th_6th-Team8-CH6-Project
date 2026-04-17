@@ -1,12 +1,8 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿#include "PTWVoiceChatWidget.h"
 
-
-#include "PTWVoiceChatWidget.h"
-
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "CoreFramework/PTWPlayerController.h"
-#include "GameFramework/PlayerState.h"
-#include "System/PTWVoiceChatSubsystem.h"
 
 void UPTWVoiceChatWidget::NativeConstruct()
 {
@@ -18,8 +14,24 @@ void UPTWVoiceChatWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UPTWVoiceChatWidget::SetupWidget(FString InTalkerName)
+void UPTWVoiceChatWidget::InitializeWidget(FString InTalkerName)
 {
 	TalkerName = InTalkerName;
 	TalkerNameText->SetText(FText::FromString(TalkerName));
+}
+
+void UPTWVoiceChatWidget::SetEnabledVoiceIcon()
+{
+	if (IsValid(EnabledVoiceIcon))
+	{
+		CurrentVoiceIcon->SetBrushFromTexture(EnabledVoiceIcon);
+	}
+}
+
+void UPTWVoiceChatWidget::SetTalkingVoiceIcon()
+{
+	if (IsValid(EnabledVoiceIcon))
+	{
+		CurrentVoiceIcon->SetBrushFromTexture(TalkingVoiceIcon);
+	}
 }

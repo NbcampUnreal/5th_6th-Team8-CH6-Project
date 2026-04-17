@@ -23,16 +23,7 @@ public:
 	virtual void NativeDestruct() override;
 	void InitWithASC(UAbilitySystemComponent* ASC);
 
-protected:
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UProgressBar> BatteryLevelBar;
-	
-	UPROPERTY(meta=(BindWidget))
-	TObjectPtr<UTextBlock> BatteryLevelTextBlock;
-
 private:
-	UPROPERTY()
-	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 	
 	void BindGASDelegates(UAbilitySystemComponent* ASC);
 	
@@ -42,8 +33,23 @@ private:
 
 	void UpdateBatteryLevelBar(float CurrentBatteryLevel, float MaxBatteryLevel);
 	
-	void UpdateBatteryText(float Percent);
+	void UpdateBatteryUI(bool bIsLow);
+
+protected:
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UProgressBar> BatteryLevelBar;
 	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<UTextBlock> BatteryLevelTextBlock;
+	
+	UPROPERTY(EditDefaultsOnly)
+	TArray<UTexture2D*> BatterFillImage;
+
+private:
+	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 	FDelegateHandle BatterLevelChangedHandle;
 	FDelegateHandle MaxBatterLevelChangedHandle;
+	
+	bool bIsLowbattery;
 };

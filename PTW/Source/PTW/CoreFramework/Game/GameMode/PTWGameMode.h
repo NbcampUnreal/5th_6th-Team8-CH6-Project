@@ -9,6 +9,8 @@
 #include "PTWGameMode.generated.h"
 
 
+class UPTWScoreSubsystem;
+class APTWPlayerState;
 class APTWGameState;
 
 /** 게임의 전체 흐름과 시작 조건을 관리하는 GameMode
@@ -22,9 +24,27 @@ class PTW_API APTWGameMode : public AGameMode
 	GENERATED_BODY()
 
 public:
-	
 	APTWGameMode();
+	
+	/** 모든 플레이어가 로딩되었는지 확인 */
+	void CheckAllPlayersLoaded();
 
+	/** 준비 완료된 플레이어 처리 **/
+	virtual void PlayerReadyToPlay(APlayerController* Controller);
+	
+	/** 모든 클라이언트의 로딩 화면을 끄라는 RPC */
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_CloseLoadingScreen();
+
+	/** 공통 입장 처리 로직 */
+	void HandlePlayerJoined(AController* JoinedController);
+
+	/* 트래블후 플레이어 초기 세팅 함수 */
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
+
+	/* 외부에서 다음 트래블 맵을 강제로 설정하기 위한 함수 */
+	void SetTravelLevelName(const FString& InLevelName);
+	
 	/** 타이머 종료 시 호출(타이머 정리 및 종료 후 처리 트리거) */
 	UFUNCTION()
 	virtual void EndTimer();
@@ -51,25 +71,6 @@ protected:
 	void PrepareAllPlayersLoadingScreen(ELoadingScreenType Type, FName MapRowName);
 
 	virtual FString InitNewPlayer(APlayerController* NewPlayer, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal) override;
-public:
-	/** 모든 플레이어가 로딩되었는지 확인 */
-	void CheckAllPlayersLoaded();
-
-	/** 준비 완료된 플레이어 처리 **/
-	virtual void PlayerReadyToPlay(APlayerController* Controller);
-	
-	/** 모든 클라이언트의 로딩 화면을 끄라는 RPC */
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_CloseLoadingScreen();
-
-	/** 공통 입장 처리 로직 */
-	void HandlePlayerJoined(AController* JoinedController);
-
-	/* 트래블후 플레이어 초기 세팅 함수 */
-	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
-
-	/* 외부에서 다음 트래블 맵을 강제로 설정하기 위한 함수 */
-	void SetTravelLevelName(const FString& InLevelName);
 
 protected:
 	/** 지정한 시간(초) 기준으로 타이머를 시작 */
@@ -79,7 +80,7 @@ protected:
 	void ClearTimer();
 	
 	/** 설정된 TravelLevelName으로 레벨 이동 처리 */
-	void TravelLevel();
+	virtual void TravelLevel();
 
 	/** 플레이어를 시작 위치로 이동시키는 함수 */
 	void MovePlayerToStart(AController* Controller);
@@ -107,16 +108,17 @@ protected:
 	int32 AllPlayer = 0;
 
 	FPTWGameData CachedGameData;
+	
+	UPROPERTY()
+	TObjectPtr<UPTWScoreSubsystem> ScoreSubsystem;
 private:
 	// 현재 라운드/플레이어 데이터를 Subsystem으로 저장
+	void SavePlayerGameData(APTWPlayerState* PlayerState);
 	void SaveGameDataToSubsystem();
 
 	// 로그인한 플레이어에게 Subsystem 저장 데이터를 적용
-	void ApplyPlayerDataFromSubsystem(AController* NewPlayer);
-
-	
+	void ApplyPlayerGameDataFromSubsystem(AController* NewPlayer);
 	
 	int32 CurrentRound;
-
 	
 };

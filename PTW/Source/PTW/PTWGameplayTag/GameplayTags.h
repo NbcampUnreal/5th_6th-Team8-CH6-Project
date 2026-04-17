@@ -99,6 +99,7 @@ namespace GameplayTags
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Idle);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Bomb);
 		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Stun);
+		PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InPortal);
 		
 		namespace Passive
 		{
@@ -203,6 +204,7 @@ namespace GameplayTags
 		namespace Hit
 		{
 			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Wall);
+			PTW_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Confirm);
 		}
 		namespace MiniGame
 		{

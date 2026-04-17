@@ -62,7 +62,7 @@ class PTW_API APTWLobbyGameMode : public APTWGameMode
 public:
 	APTWLobbyGameMode();
 
-	void ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId, APTWPlayerState* WinTarget = nullptr);
+	void ApplyLobbyItem(APTWPlayerState* Buyer, const FName ItemId);
 	void AddChaosItemEntry(const FPTWChaosItemEntry& Entry);
 	void AddGold(APTWPlayerState* PlayerState, int32 Amount);
 	

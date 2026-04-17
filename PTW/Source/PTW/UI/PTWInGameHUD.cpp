@@ -51,7 +51,7 @@ void UPTWInGameHUD::InitializeUI(UAbilitySystemComponent* ASC)
 			}
 		}
 	}
-	if (PortalCount) PortalCount->InitializeGameState();
+	if (PortalCount) PortalCount->InitWithASC(ASC);
 }
 
 void UPTWInGameHUD::ShowNotification(const FNotificationData& Data)

@@ -6,6 +6,7 @@
 
 class UVerticalBox;
 class UPTWVoiceChatWidget;
+
 /**
  * 플레이어 VoiceChat 위젯들을 보관하는 위젯
  */
@@ -16,7 +17,7 @@ class PTW_API UPTWVoiceChatListWidget : public UUserWidget
 
 public:
 	UFUNCTION()
-	virtual void InitializeWidget(const FString& InUniqueId);
+	virtual void InitializeWidget();
 	UFUNCTION(BlueprintCallable, Category = "Voice Chat")
 	void OnVoiceStateChanged(const FString& UniqueId, bool bIsTalking);
 	

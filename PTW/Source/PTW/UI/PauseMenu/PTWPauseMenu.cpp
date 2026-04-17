@@ -3,11 +3,11 @@
 
 #include "UI/PauseMenu/PTWPauseMenu.h"
 #include "Components/Button.h"
+#include "CoreFramework/Game/GameInstance/PTWGameInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "UI/PTWUISubsystem.h"
 #include "GameFramework/PlayerController.h"
-#include "System/PTWSteamSessionSubsystem.h"
 
 void UPTWPauseMenu::NativeConstruct()
 {
@@ -102,13 +102,9 @@ void UPTWPauseMenu::OnClickedOptions()
 
 void UPTWPauseMenu::OnClickedLeaveGame()
 {
-	if (UGameInstance* GI = GetGameInstance())
+	if (UPTWGameInstance* GI = GetGameInstance<UPTWGameInstance>())
 	{
-		if (UPTWSteamSessionSubsystem* SteamSessionSubsystem =
-			UPTWSteamSessionSubsystem::Get(this))
-		{
-			SteamSessionSubsystem->LeaveGameSession();
-		}
+		GI->LeaveGameSession();
 	}
 }
 

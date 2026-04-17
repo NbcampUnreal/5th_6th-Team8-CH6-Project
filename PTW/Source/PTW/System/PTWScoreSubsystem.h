@@ -29,10 +29,16 @@ public:
 	UFUNCTION()
 	void AddConnectedPlayerId(const FString& ConnectedPlayerId);
 
+	void AddTravelPlayerId(const FString& TravelPlayerId, const FString& PlayerName);
+	
 	/** 지정한 플레이어의 저장된 데이터가 있으면 반환 */
 	FPTWPlayerGameData* FindPlayerGameData(const FString& PlayerId);
+
+	void RemoveTravelPlayersId();
 	
 	FORCEINLINE FPTWGameData GetSavedGameData() const { return SavedGameData; }
+	FORCEINLINE TMap<FString, FPTWPlayerGameData> GetConnectedPlayersGameData() const {return ConnectedPlayersGameData;}
+	FORCEINLINE TMap<FString, FString> GetTravelPlayersId() const { return TravelPlayersId; }
 	FORCEINLINE int32 GetServerTravelPlayerCount() const { return ServerTravelPlayerCount; }
 protected:
 	virtual void BeginPlay();
@@ -45,6 +51,9 @@ private:
 
 	//* 세션에 참가한 이력이 있는 플레이어의 게임 데이터 */ 
 	TMap<FString, FPTWPlayerGameData> ConnectedPlayersGameData;
+
+	//* 다음 레벨로 이동 한 플레이어 데이터 */ 
+	TMap<FString, FString> TravelPlayersId;
 public:
 	
 	bool bIsFirstLobby = true;

@@ -7,8 +7,16 @@
 #include "System/PTWVoiceChatSubsystem.h"
 
 
-void UPTWVoiceChatListWidget::InitializeWidget(const FString& InUniqueId)
+void UPTWVoiceChatListWidget::InitializeWidget()
 {
+	if (!GetOwningPlayerState() || !GetOwningPlayerState()->GetUniqueId().IsValid() || 
+		GetOwningPlayerState()->GetPlayerName().IsEmpty() || GetOwningPlayerState()->GetPlayerName() == TEXT("Player"))
+	{
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::InitializeWidget, 0.25f, false);
+		return;
+	}
+	
 	UPTWVoiceChatSubsystem* VoiceChatSubsystem = UPTWVoiceChatSubsystem::Get(this);
 	if (!IsValid(VoiceChatSubsystem)) return;
 	
@@ -17,7 +25,10 @@ void UPTWVoiceChatListWidget::InitializeWidget(const FString& InUniqueId)
 	VoiceChatSubsystem->AllVoiceChatDisconnected.AddUniqueDynamic(this, &ThisClass::HandleAllPlayersConnected);
 	VoiceChatSubsystem->OnVoiceStateUpdated.AddUniqueDynamic(this, &ThisClass::OnVoiceStateChanged);
 	
-	VoiceChatSubsystem->OnLocalVoiceChatConnected.RemoveDynamic(this, &ThisClass::InitializeWidget);
+	if (APTWPlayerController* PC = GetOwningPlayer<APTWPlayerController>())
+	{
+		PC->OnChangedVoiceChatState.AddUniqueDynamic(this, &ThisClass::HandleChangedVoiceChatState);
+	}
 	
 	TMap<FString, FPTWPlayerVoiceInfo>& PlayerVoiceInfoList = VoiceChatSubsystem->PlayerVoiceInfoList;
 	for (auto PlayerVoiceInfoEnty : PlayerVoiceInfoList)
@@ -82,28 +93,13 @@ void UPTWVoiceChatListWidget::HandleChangedVoiceChatState(bool bIsActive)
 void UPTWVoiceChatListWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
-	if (UPTWVoiceChatSubsystem* VoiceChatSubsystem = UPTWVoiceChatSubsystem::Get(this))
-	{
-		VoiceChatSubsystem->OnLocalVoiceChatConnected.AddUniqueDynamic(this, &ThisClass::InitializeWidget);
-	}
-	
-	if (APTWPlayerController* PC = GetOwningPlayer<APTWPlayerController>())
-	{
-		PC->OnChangedVoiceChatState.AddUniqueDynamic(this, &ThisClass::HandleChangedVoiceChatState);
-	}
-	if (GetOwningPlayerState() && GetOwningPlayerState()->GetUniqueId().IsValid() && 
-		!GetOwningPlayerState()->GetPlayerName().IsEmpty() && GetOwningPlayerState()->GetPlayerName() != TEXT("Player"))
-	{
-		InitializeWidget(GetOwningPlayerState()->GetUniqueId().ToString());
-	}
+	InitializeWidget();
 }
 
 void UPTWVoiceChatListWidget::NativeDestruct()
 {
 	if (UPTWVoiceChatSubsystem* VoiceChatSubsystem = UPTWVoiceChatSubsystem::Get(this))
 	{
-		VoiceChatSubsystem->OnLocalVoiceChatConnected.RemoveDynamic(this, &ThisClass::InitializeWidget);
 		VoiceChatSubsystem->OnVoiceChatConnected.RemoveDynamic(this, &ThisClass::HandlePlayerConnected);
 		VoiceChatSubsystem->OnVoiceChatDisconnected.RemoveDynamic(this, &ThisClass::HandlePlayerDisconnected);
 		VoiceChatSubsystem->AllVoiceChatDisconnected.RemoveDynamic(this, &ThisClass::HandleAllPlayersConnected);
@@ -135,7 +131,7 @@ void UPTWVoiceChatListWidget::HandlePlayerConnected(const FString& UniqueId)
 		SizeBox->SetHeightOverride(32.0f);
 	
 		TargetWidget = CreateWidget<UPTWVoiceChatWidget>(this, VoiceChatWidgetClass);
-		TargetWidget->SetupWidget(PlayerVoiceInfo.PlayerName);
+		TargetWidget->InitializeWidget(PlayerVoiceInfo.PlayerName);
 		SizeBox->AddChild(TargetWidget);
 	
 		PlayerVoiceChats.Add(UniqueId, TargetWidget);
@@ -168,9 +164,9 @@ void UPTWVoiceChatListWidget::HandlePlayerDisconnected(const FString& UniqueId)
 	{
 		if (UPanelWidget* ParentWrapper = PlayerVoiceChats[UniqueId]->GetParent())
 		{
-			PlayerVoiceChats.Remove(UniqueId);
 			ParentWrapper->RemoveFromParent();
 		}
+		PlayerVoiceChats.Remove(UniqueId);
 	}
 }
 

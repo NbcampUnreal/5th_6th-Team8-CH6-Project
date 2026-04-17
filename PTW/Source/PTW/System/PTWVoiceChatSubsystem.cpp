@@ -49,34 +49,6 @@ void UPTWVoiceChatSubsystem::SetPlayerVoiceVolume(const FString& PlayerID, float
 	}
 }
 
-void UPTWVoiceChatSubsystem::OnPlayerStateChanged(APlayerState* PlayerState, bool bIsAdded)
-{
-	if (!PlayerState) return;
-	if (bIsAdded)
-	{
-		FString UniqueId = PlayerState->GetUniqueId().ToString();
-		if (UniqueId.IsEmpty()) return;
-		
-		if (PlayerVoiceInfoList.Contains(UniqueId))
-		{
-			PlayerVoiceInfoList[UniqueId] = FPTWPlayerVoiceInfo();
-		}
-		else
-		{
-			PlayerVoiceInfoList.Add(UniqueId, FPTWPlayerVoiceInfo());
-		}
-	}
-	else
-	{
-		FString UniqueId = PlayerState->GetUniqueId().ToString();
-		if (PlayerVoiceInfoList.Contains(UniqueId))
-		{
-			PlayerVoiceInfoList.Remove(UniqueId);
-		}
-	}
-}
-
-
 void UPTWVoiceChatSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
@@ -86,12 +58,11 @@ void UPTWVoiceChatSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		if (IOnlineVoicePtr VoiceInterface = OnlineSubsystem->GetVoiceInterface())
 		{
 			VoiceStateDelegateHandle = VoiceInterface->AddOnPlayerTalkingStateChangedDelegate_Handle(
-				FOnPlayerTalkingStateChangedDelegate::CreateUObject(this, &ThisClass::HandlePlayerVoiceStateChanged));
+				FOnPlayerTalkingStateChangedDelegate::CreateUObject(this, &ThisClass::HandlePlayerTalkingStateChanged));
 		}
 	}
 	if (UPTWGameInstance* GI = GetWorld()->GetGameInstance<UPTWGameInstance>())
 	{
-		GI->OnLocalPlayerEnteredLevel.AddUniqueDynamic(this, &ThisClass::HandleLocalPlayerConnected);
 		GI->OnSessionPlayerConnected.AddUniqueDynamic(this, &ThisClass::HandlePlayerConnected);
 		GI->OnSessionPlayerDisconnected.AddUniqueDynamic(this, &ThisClass::HandlePlayerDisconnected);
 		GI->OnSessionPlayersCleared.AddUniqueDynamic(this, &ThisClass::HandleAllPlayersDisconnected);
@@ -110,7 +81,6 @@ void UPTWVoiceChatSubsystem::Deinitialize()
 	
 	if (UPTWGameInstance* GI = GetWorld()->GetGameInstance<UPTWGameInstance>())
 	{
-		GI->OnLocalPlayerEnteredLevel.RemoveDynamic(this, &ThisClass::HandleLocalPlayerConnected);
 		GI->OnSessionPlayerConnected.RemoveDynamic(this, &ThisClass::HandlePlayerConnected);
 		GI->OnSessionPlayerDisconnected.RemoveDynamic(this, &ThisClass::HandlePlayerDisconnected);
 		GI->OnSessionPlayersCleared.RemoveDynamic(this, &ThisClass::HandleAllPlayersDisconnected);
@@ -119,21 +89,16 @@ void UPTWVoiceChatSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UPTWVoiceChatSubsystem::HandleLocalPlayerConnected(const FString& UniqueId)
-{
-	OnLocalVoiceChatConnected.Broadcast(UniqueId);
-}
-
 void UPTWVoiceChatSubsystem::HandlePlayerConnected(const FString& UniqueId)
 {
 	// TODO: 세이브파일에 데이터가 저장된다면 여기서 설정하면 될 것 같음.
 	FPTWPlayerVoiceInfo PlayerVoiceInfo;
-	
+
 	if (AGameStateBase* GS = GetWorld()->GetGameState())
 	{
 		for (APlayerState* PS : GS->PlayerArray)
 		{
-			if (IsValid(PS) && PS->GetUniqueId().ToString() == UniqueId)
+			if (IsValid(PS) && PS->GetUniqueId().IsValid() && PS->GetUniqueId().ToString() == UniqueId)
 			{
 				PlayerVoiceInfo.PlayerName =  PS->GetPlayerName();
 				break;
@@ -157,9 +122,8 @@ void UPTWVoiceChatSubsystem::HandleAllPlayersDisconnected()
 	AllVoiceChatDisconnected.Broadcast();
 }
 
-void UPTWVoiceChatSubsystem::HandlePlayerVoiceStateChanged(TSharedRef<const FUniqueNetId> TalkerId, bool bIsTalking)
+void UPTWVoiceChatSubsystem::HandlePlayerTalkingStateChanged(TSharedRef<const FUniqueNetId> TalkerId, bool bIsTalking)
 {
 	FString TalkerIdString = TalkerId->ToString();
-	
 	OnVoiceStateUpdated.Broadcast(TalkerIdString, bIsTalking);
 }

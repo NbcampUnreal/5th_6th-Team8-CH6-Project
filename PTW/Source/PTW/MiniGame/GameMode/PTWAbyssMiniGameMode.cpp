@@ -60,6 +60,7 @@ void APTWAbyssMiniGameMode::EndRound()
 	ApplyBlackoutStateToAllPlayers(false);
 
 	GetWorldTimerManager().ClearTimer(CoinSpawnTimerHandle);
+	GetWorldTimerManager().ClearTimer(RespawnStateRetryTimerHandle);
 
 	if (HasAuthority())
 	{
@@ -88,12 +89,30 @@ void APTWAbyssMiniGameMode::HandleRespawn(APTWPlayerController* PlayerController
 {
 	Super::HandleRespawn(PlayerController);
 
-	if (!IsValid(PlayerController))
+	if (!IsValid(PlayerController) || !GetWorld())
 	{
 		return;
 	}
-
+	
 	ApplyBlackoutStateToPlayer(PlayerController, bIsBlackoutActive);
+	
+	FTimerDelegate RetryDelegate;
+	RetryDelegate.BindLambda([this, PlayerController]()
+	{
+		if (!IsValid(this) || !IsValid(PlayerController))
+		{
+			return;
+		}
+
+		ApplyBlackoutStateToPlayer(PlayerController, bIsBlackoutActive);
+	});
+
+	GetWorldTimerManager().SetTimer(
+		RespawnStateRetryTimerHandle,
+		RetryDelegate,
+		0.2f,
+		false
+	);
 }
 
 void APTWAbyssMiniGameMode::StartBlackoutCycle()
@@ -437,7 +456,5 @@ void APTWAbyssMiniGameMode::ClearAllRevealMarkers()
 
 	RevealMarkerMap.Empty();
 }
-
+// m
 #undef LOCTEXT_NAMESPACE
-
-// asd

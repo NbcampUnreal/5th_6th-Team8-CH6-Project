@@ -7,6 +7,7 @@
 #include "CoreFramework/PTWGameUserSettings.h"
 #include "CoreFramework/PTWPlayerState.h"
 #include "GameFramework/GameStateBase.h"
+#include "System/PTWSteamSessionSubsystem.h"
 
 UPTWGameInstance::UPTWGameInstance(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -44,6 +45,7 @@ void UPTWGameInstance::Init()
 void UPTWGameInstance::Shutdown()
 {
 	FWorldDelegates::OnPostWorldInitialization.RemoveAll(this);
+	
 	Super::Shutdown();
 }
 
@@ -129,7 +131,6 @@ void UPTWGameInstance::RegisterPlayerState(APTWPlayerState* PlayerState)
 	
 	PlayerState->OnPlayerUniqueIdReplicated.AddDynamic(this, &ThisClass::HandlePlayerUniqueIdReplicated);
 	PlayerState->OnPlayerNameReplicated.AddDynamic(this, &ThisClass::HandlePlayerNameReplicated);
-	PlayerState->OnPlayerOwnerReplicated.AddDynamic(this, &ThisClass::HandlePlayerOwnerReplicated);
 	
 	PlayerState->OnDestroyed.RemoveDynamic(this, &ThisClass::UnRegisterPlayerState);
 }
@@ -141,7 +142,9 @@ void UPTWGameInstance::UnRegisterPlayerState(AActor* DestroyedActor)
 	
 	PlayerState->OnPlayerUniqueIdReplicated.RemoveDynamic(this, &ThisClass::HandlePlayerUniqueIdReplicated);
 	PlayerState->OnPlayerNameReplicated.RemoveDynamic(this, &ThisClass::HandlePlayerNameReplicated);
-	PlayerState->OnPlayerOwnerReplicated.RemoveDynamic(this, &ThisClass::HandlePlayerOwnerReplicated);
+	
+	FString PlayerUniqueId = PlayerState->GetUniqueId().ToString();
+	RemoveLevelPlayerId(PlayerUniqueId);
 }
 
 void UPTWGameInstance::OnWorldInitialized(UWorld* World, const UWorld::InitializationValues IVS)
@@ -169,54 +172,36 @@ void UPTWGameInstance::UnRegisterGameState(AActor* Actor, EEndPlayReason::Type E
 
 void UPTWGameInstance::HandlePlayerUniqueIdReplicated(APlayerState* PlayerState, const FString& UniqueId)
 {
-	if (!ReadyPlayers.Contains(PlayerState))
+	if (!TempReadyPlayers.Contains(PlayerState))
 	{
-		ReadyPlayers.Add(PlayerState, FReadyPlayerInfo());
+		TempReadyPlayers.Add(PlayerState, FReadyPlayerInfo());
 	}
 	
-	ReadyPlayers[PlayerState].UniqueId = UniqueId;
+	TempReadyPlayers[PlayerState].UniqueId = UniqueId;
 	CheckAndRegisterPlayer(PlayerState);
 }
 
 void UPTWGameInstance::HandlePlayerNameReplicated(APlayerState* PlayerState, const FString& PlayerName)
 {
-	if (PlayerName == TEXT("Player")) return;
-	if (!ReadyPlayers.Contains(PlayerState))
+	if (PlayerName.IsEmpty() || PlayerName == TEXT("Player")) return;
+	if (!TempReadyPlayers.Contains(PlayerState))
 	{
-		ReadyPlayers.Add(PlayerState, FReadyPlayerInfo());
+		TempReadyPlayers.Add(PlayerState, FReadyPlayerInfo());
 	}
 	
-	ReadyPlayers[PlayerState].PlayerName = PlayerName;
-	CheckAndRegisterPlayer(PlayerState);
-}
-
-void UPTWGameInstance::HandlePlayerOwnerReplicated(APlayerState* PlayerState, AActor* Owner)
-{
-	if (!IsValid(Owner)) return;
-	if (!ReadyPlayers.Contains(PlayerState))
-	{
-		ReadyPlayers.Add(PlayerState, FReadyPlayerInfo());
-	}
-	
-	ReadyPlayers[PlayerState].Owner = Owner;
+	TempReadyPlayers[PlayerState].PlayerName = PlayerName;
 	CheckAndRegisterPlayer(PlayerState);
 }
 
 void UPTWGameInstance::CheckAndRegisterPlayer(APlayerState* PlayerState)
 {
-	const FReadyPlayerInfo& ReadyPlayerInfo= ReadyPlayers[PlayerState];
+	const FReadyPlayerInfo ReadyPlayerInfo = TempReadyPlayers[PlayerState];
 	
 	if (!ReadyPlayerInfo.UniqueId.IsEmpty() && !ReadyPlayerInfo.PlayerName.IsEmpty())
 	{
-		const FString& UniqueId = ReadyPlayers[PlayerState].UniqueId;
-		AddLevelPlayerId(UniqueId);
-		AddSessionPlayerId(UniqueId);
-		
-		if (IsValid(ReadyPlayerInfo.Owner))
-		{
-			// My UniqueId
-			OnLocalPlayerEnteredLevel.Broadcast(ReadyPlayerInfo.UniqueId);
-		}
+		TempReadyPlayers.Remove(PlayerState);
+		AddLevelPlayerId(ReadyPlayerInfo.UniqueId);
+		AddSessionPlayerId(ReadyPlayerInfo.UniqueId);
 	}
 }
 
@@ -256,4 +241,14 @@ void UPTWGameInstance::ClearSessionPlayerIds()
 {
 	SessionPlayerIds.Empty();
 	OnSessionPlayersCleared.Broadcast();
+}
+
+void UPTWGameInstance::LeaveGameSession()
+{
+	if (UPTWSteamSessionSubsystem* SteamSessionSubsystem = UPTWSteamSessionSubsystem::Get(this))
+	{
+		TempReadyPlayers.Empty();
+		ClearSessionPlayerIds();
+		SteamSessionSubsystem->DestroySession();	
+	}
 }
